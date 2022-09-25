@@ -7,32 +7,34 @@ This project implements logics (currently only propositional logic, but with mor
 
 ## Examples
 
-    using Logic
+``` julia
+using Logic
 
-    truth_table(↔)
-    #=
-    2×2 Matrix{Pair{Tuple{DataType, DataType}, DataType}}:
-     (⊤, ⊥)=>⊥  (⊤, ⊤)=>⊤
-     (⊥, ⊥)=>⊤  (⊥, ⊤)=>⊥
-    =#
-    
-    ∧(⊤, ⊥)
-    #=
-    Language(
-      And(), Language(
-        Proposition{Nothing}
-      ) Language(
-        Not(), Language(
-          Proposition{Nothing}
-        ) 
-      ) 
+truth_table(↔)
+#=
+2×2 Matrix{Pair{Tuple{DataType, DataType}, DataType}}:
+ (⊤, ⊥)=>⊥  (⊤, ⊤)=>⊤
+ (⊥, ⊥)=>⊤  (⊥, ⊤)=>⊥
+=#
+
+∧(⊤, ⊥)
+#=
+Language(
+  And(), Language(
+    Proposition{Nothing}
+  ) Language(
+    Not(), Language(
+      Proposition{Nothing}
     ) 
-    =#
-    
-    ∧(⊤, ⊥)()
-    #=
-    ⊥
-    =#
+  ) 
+) 
+=#
+
+∧(⊤, ⊥)()
+#=
+⊥
+=#
+```
 
 
 ## Known Bugs
