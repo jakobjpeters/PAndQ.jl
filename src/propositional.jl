@@ -44,7 +44,7 @@ Base.:⊼(p, q) = ¬(∧(p, q))                      # \nand - not (p and q)
 # @infix Base.⊼(p, q) = ¬(p ∧ q)
 Base.:⊻(p, q) = ∧(∨(p, q), ⊼(p, q))             # \veebar - (p or q) and not (p and q)
 # @infix Base.⊻(p, q) = (p ∨ q) ∧ (p ⊼ q)
-@infix →(p, q) = ¬p ∨ q                         # \rightarrow - if p then q
+@infix →(p, q) = ¬(p ∧ ¬q)                         # \rightarrow - if p then q
 @infix ←(p, q) = q → p                          # \leftarrow - if q then p
 @infix ↔(p, q) = (p → q) ∧ (p ← q)              # \leftrightarrow - if and only if p then q
 
@@ -54,12 +54,11 @@ function truth_table(operator)
 end
 
 function truth_table(operator::typeof(¬))
-    pairs = ⨉(⊤, ⊥)
-    return map(p_q -> p_q => operator(p_q...)(), pairs)
+    return map(p -> p => operator(p)(), [⊤, ⊥])
 end
 
 length(p::Proposition) = 1
 length(ϕ::Tuple{Boolean, Vararg}) = 1 + mapreduce(length, +, Base.tail(ϕ))
 
-Base.print(x::T, indent) where T <: Proposition = print(repeat("  ", indent), T)
+Base.print(p::T, indent) where T <: Proposition = print(repeat("  ", indent), p)
 
