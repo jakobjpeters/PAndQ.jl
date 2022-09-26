@@ -1,7 +1,7 @@
 
 module Logic
 
-import Base.length, Base.print
+import Base.length, Base.print, Base.show
 
 include("core.jl")
 include("set.jl")

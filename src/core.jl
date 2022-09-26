@@ -1,6 +1,4 @@
 
-import Base.println
-
 abstract type Operator end
 abstract type Language end
 
@@ -10,14 +8,16 @@ abstract type Language end
 length(ϕ::Language) = length(ϕ.ϕ)
 depth(ϕ::Language) = depth(ϕ.ϕ)
 
-Base.print(x::T, indent) where T <: Operator = print(repeat("  ", indent), T, "(), ")
-Base.print(ϕ::Tuple{Operator, Vararg}, indent) = map(arg -> print(arg, indent), ϕ)
-function Base.print(ϕ::Language, indent = 0)
+print(x::T, indent) where T <: Operator = print(repeat("  ", indent), T, "(), ")
+print(ϕ::Tuple{Operator, Vararg}, indent) = map(arg -> print(arg, indent), ϕ)
+function print(ϕ::Language, indent = 0)
     print("Language(\n")
+# function Base.print(ϕ::T, indent = 0) where T <: Language
+#     print(T, "(\n")
     print(ϕ.ϕ, indent + 1)
     print("\n", repeat("  ", indent), ") ")
 end
-Base.println(ϕ::Language) = map(arg -> print(arg), [ϕ, "\n"])
+show(io::IO, ϕ::Language) = print(ϕ)
 
 function infix(expression)
     if expression isa Symbol

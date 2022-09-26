@@ -60,5 +60,5 @@ end
 length(p::Proposition) = 1
 length(ϕ::Tuple{Boolean, Vararg}) = 1 + mapreduce(length, +, Base.tail(ϕ))
 
-Base.print(p::T, indent) where T <: Proposition = print(repeat("  ", indent), p)
+print(p::T, indent) where T <: Proposition = print(repeat("  ", indent), p)
 
