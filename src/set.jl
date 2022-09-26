@@ -16,3 +16,4 @@
 # ⊅(A, B) = ¬⊃(A, B)                          # \nsupset      - A not supserset of B
 
 ⨉ = Iterators.product # \bigtimes - cartesian product
+cartesian_product = ⨉

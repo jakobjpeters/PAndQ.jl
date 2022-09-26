@@ -16,12 +16,13 @@ export
     Operator, Language,
 
     # set.jl
-    ⨉,
+    ⨉, cartesian_product,
 
     # propositional logic
-    Valuation, ⊤, ⊥, # boolean primitives
+    Valuation, ⊤, ⊥, tautology, contradiction, # boolean primitives
     Boolean, Not, And, # functionally complete boolean operators
-    ¬, ∧, ⊼, ⊽, ∨, ⊻, →, ←, ↔, # boolean operators
+    ¬, ∧, ⊼, ⊽, ∨, ⊻, →, ←, ↔, # boolean operator symbols
+    not, and, nand, nor, or, xor, imply_r, imply_l, imply_lr, # boolean operator words
     Proposition, P, # language
     truth_table,
 

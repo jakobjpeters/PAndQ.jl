@@ -60,19 +60,19 @@ truth_table(↔)
 ## Functions
 
 ``` julia
-¬(p, q)    # not p                         \neg
-∧(p, q)    # p and q                       \wedge
-⊼(p, q)    # not (p and q)                 \nand
-⊽(p, q)    # not (p or q)                  \nor
-∨(p, q)    # p or q                        \vee
-⊻(p, q)    # (p or q) and not (p and q)    \veebar
-→(p, q)    # p implies q                   \rightarrow
-←(p, q)    # q implies p                   \leftarrow
-↔(p, q)    # p implies q implies p         \leftrightarrow
+¬(p, q)    # not           \neg
+∧(p, q)    # and           \wedge
+⊼(p, q)    # Logic.nand    \nand
+⊽(p, q)    # Logic.nor     \nor
+∨(p, q)    # or            \vee
+⊻(p, q)    # Logic.xor     \veebar
+→(p, q)    # imply_r       \rightarrow
+←(p, q)    # imply_l       \leftarrow
+↔(p, q)    # imply_lr      \leftrightarrow
 
-⨉(A, B)    # cartesian product             \bigtimes
-⊤          # tautology                     \top
-⊥          # contradiction                 \bot
+⨉(A, B)    # cartesian product    \bigtimes
+⊤          # tautology            \top
+⊥          # contradiction        \bot
 
 @infix f = ϕ      # syntactic sugar - doesn't do anything yet
 truth_table(f)    # vector of all input => output for boolean operation f
