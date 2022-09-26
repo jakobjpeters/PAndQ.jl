@@ -11,16 +11,16 @@ This project implements logics (currently only propositional logic, but with mor
 using Logic
 
 p = Proposition("Modal logic is hard")
-q = ¬(Proposition("This code has bugs"))
-r = →(p, q)
+q = ¬Proposition("This code has bugs")
+r = p → q
 
 r()
 # ⊥
 
-∨(⊤, r)()
+(⊤ ∨ r)()
 # ⊤
 
-∧(p, q)
+p ∧ q
 #=
 Language(
   And(), Language(
@@ -60,18 +60,21 @@ truth_table(↔)
 ## Functions
 
 ``` julia
-¬(p, q)    # not p                    \neg
-∧(p, q)    # p and q                  \wedge
-∨(p, q)    # p or q                   \vee
-→(p, q)    # p implies q              \rightarrow
-←(p, q)    # q implies p              \leftarrow
-↔(p, q)    # p implies q implies p    \leftrightarrow
+¬(p, q)    # not p                         \neg
+∧(p, q)    # p and q                       \wedge
+⊼(p, q)    # not (p and q)                 \nand
+⊽(p, q)    # not (p or q)                  \nor
+∨(p, q)    # p or q                        \vee
+⊻(p, q)    # (p or q) and not (p and q)    \veebar
+→(p, q)    # p implies q                   \rightarrow
+←(p, q)    # q implies p                   \leftarrow
+↔(p, q)    # p implies q implies p         \leftrightarrow
 
-⨉(A, B)    # cartesian product        \bigtimes
-⊤          # tautology                \top
-⊥          # contradiction            \bot
+⨉(A, B)    # cartesian product             \bigtimes
+⊤          # tautology                     \top
+⊥          # contradiction                 \bot
 
-@infix f = ϕ      # syntactic sugar for formulae - only partially implemented
+@infix f = ϕ      # syntactic sugar - doesn't do anything yet
 truth_table(f)    # vector of all input => output for boolean operation f
 length(p)         # total number of operators and propositions in a formula
 depth(p)          # maximum nested modal operators
@@ -80,7 +83,7 @@ depth(p)          # maximum nested modal operators
 
 ## Known Bugs
 
-- Printing in the REPL does not work yet, use a script instead
+
 
 
 ## To Do
@@ -88,6 +91,8 @@ depth(p)          # maximum nested modal operators
 - Implement
     - Sets
     - First order logic
+    - Second order logic
+    - Higher order logic
     - Modal logic
 
 
