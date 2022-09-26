@@ -22,7 +22,7 @@ end
 abstract type Valuation end
 struct ⊤ <: Valuation end
 struct ⊥ <: Valuation end
-(::⊤)() = Proposition()
+(::⊤)() = P(Proposition())
 (::⊥)() = ¬(⊤())
 (::Proposition)() = ⊤
 (::Not)(::Type{⊤}) = ⊥
@@ -31,24 +31,22 @@ struct ⊥ <: Valuation end
 (::And)(::Type{⊤}, ::Type{⊤}) = ⊤
 
 # logical operators
-¬(p::P) = P((Not(), p))                # \neg - not p
-¬(p::Proposition) = ¬(P(p))
-¬(p) = ¬(p())
-∧(p::P, q::P) = P(((And(), p, q)))          # \wedge - p and q
-∧(p::Proposition, q) = ∧(P(p), q)
-∧(p, q) = ∧(q(), p)
-Base.:⊽(p, q) = ∧(¬(p), ¬(q))                    # \nor - not (p or q)
-# @infix Base.⊽(p, q) = ¬p ∧ ¬q
-@infix ∨(p, q) = ¬(p ⊽ q)                       # \vee - p or q
-Base.:⊼(p, q) = ¬(∧(p, q))                      # \nand - not (p and q)
-# @infix Base.⊼(p, q) = ¬(p ∧ q)
-Base.:⊻(p, q) = ∧(∨(p, q), ⊼(p, q))             # \veebar - (p or q) and not (p and q)
-# @infix Base.⊻(p, q) = (p ∨ q) ∧ (p ⊼ q)
-@infix →(p, q) = ¬(p ∧ ¬q)                         # \rightarrow - if p then q
-@infix ←(p, q) = q → p                          # \leftarrow - if q then p
-@infix ↔(p, q) = (p → q) ∧ (p ← q)              # \leftrightarrow - if and only if p then q
+¬(p::P) = P((Not(), p))               # \neg - not p
+¬(p::Proposition) = ¬P(p)
+¬(p) = ¬p()
+∧(p::P, q::P) = P(((And(), p, q)))    # \wedge - p and q
+∧(p::Proposition, q) = P(p) ∧ q
+∧(p, q) = q() ∧ p
+⊼(p, q) = ¬(p ∧ q)                    # \nand - not (p and q)
+⊽(p, q) = ¬p ∧ ¬q                     # \nor - not (p or q)
+∨(p, q) = ¬(p ⊽ q)                    # \vee - p or q
+⊻(p, q) = (p ∨ q) ∧ (p ⊼ q)           # \veebar - (p or q) and not (p and q)
+→(p, q) = ¬(p ∧ ¬q)                   # \rightarrow - if p then q
+←(p, q) = q → p                       # \leftarrow - if q then p
+↔(p, q) = (p → q) ∧ (p ← q)           # \leftrightarrow - if and only if p then q
 
 function truth_table(operator)
+    # @infix pairs = [⊤, ⊥] ⨉ [⊥, ⊤]
     pairs = ⨉([⊤, ⊥], [⊥, ⊤])
     return map(p_q -> p_q => operator(p_q...)(), pairs)
 end

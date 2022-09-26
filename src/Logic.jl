@@ -12,7 +12,7 @@ include("modal.jl")
 
 export
     # core.jl
-    @infix, length, depth, print, # utility
+    @infix, depth, length, # utility
     Operator, Language,
 
     # set.jl
@@ -21,8 +21,7 @@ export
     # propositional logic
     Valuation, ⊤, ⊥, # boolean primitives
     Boolean, Not, And, # functionally complete boolean operators
-    ¬, ∧, ∨, →, ←, ↔, # boolean operators
-    # Base.⊽, Base.⊼, Base.⊻,
+    ¬, ∧, ⊼, ⊽, ∨, ⊻, →, ←, ↔, # boolean operators
     Proposition, P, # language
     truth_table,
 
