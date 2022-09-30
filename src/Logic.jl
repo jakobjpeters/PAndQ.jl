@@ -23,7 +23,7 @@ export
     Boolean, Not, And, # functionally complete boolean operators
     ¬, ∧, ⊼, ⊽, ∨, ⊻, →, ←, ↔, # boolean operator symbols
     not, and, nand, nor, or, xor, imply_r, imply_l, imply_lr, # boolean operator words
-    Proposition, P, # language
+    Proposition, PL, # language
     truth_table,
 
     # modal logic

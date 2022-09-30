@@ -10,20 +10,16 @@ function main()
         println()
     end
 
-    p = Proposition("Propositional logic is fun")
-    q = Proposition("Modal logic is hard")
-    r = ¬Proposition("This code has bugs")
-    s = q → r
+    p = Proposition("Modal logic is hard")
+    q = ¬Proposition("This code has bugs")
+    r = p → q
 
-    println(q ∧ r)
+    println("r ≡ ", r())
+    println("⊤ ∨ s ≡ ", (⊤ ∨ r)())
     println()
 
-    println("s ≡ ", s())
-    println("p ∨ s ≡ ", (p ∨ s)())
-    println()
-
-    println("length(s): ", length(s))
-    println("depth(s): ", depth(s))
+    println("length(s): ", length(r))
+    println("depth(s): ", depth(r))
 end
 
 main()

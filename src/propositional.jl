@@ -11,7 +11,7 @@ end
 
 Proposition() = Proposition(nothing)
 
-struct P <: Language
+struct PL <: Language
     ϕ::Union{
         Proposition,
         Tuple{Not, Language},
@@ -19,10 +19,13 @@ struct P <: Language
     }
 end
 
+Language(p, q::L) where L <: Language = L(p ∧ q)
+Language(p, qs::L...) where L <: Language = L(p ∧ first(qs), tail(qs))
+
 abstract type Valuation end
-struct ⊤ <: Valuation end
-struct ⊥ <: Valuation end
-(::⊤)() = P(Proposition())
+struct ⊤ <: Valuation end    # \top
+struct ⊥ <: Valuation end    # \bot
+(::⊤)() = PL(Proposition())
 (::⊥)() = ¬(⊤())
 (::Proposition)() = ⊤
 (::Not)(::Type{⊤}) = ⊥
@@ -31,11 +34,11 @@ struct ⊥ <: Valuation end
 (::And)(::Type{⊤}, ::Type{⊤}) = ⊤
 
 # logical operators
-¬(p::P) = P((Not(), p))               # not p
-¬(p::Proposition) = ¬P(p)
+¬(p::PL) = PL((Not(), p))               # not p
+¬(p::Proposition) = ¬PL(p)
 ¬(p) = ¬p()
-∧(p::P, q::P) = P(((And(), p, q)))    # p and q
-∧(p::Proposition, q) = P(p) ∧ q
+∧(p::PL, q::PL) = PL(((And(), p, q)))    # p and q
+∧(p::Proposition, q) = PL(p) ∧ q
 ∧(p, q) = q() ∧ p
 ⊼(p, q) = ¬(p ∧ q)                    # not (p and q)
 ⊽(p, q) = ¬p ∧ ¬q                     # not (p or q)
@@ -44,6 +47,11 @@ struct ⊥ <: Valuation end
 →(p, q) = ¬(p ∧ ¬q)                   # if p then q
 ←(p, q) = q → p                       # if q then p
 ↔(p, q) = (p → q) ∧ (p ← q)           # if p then q and if q then p
+
+# make this a macro
+# operator(params...) = (params...) -> operator(params)
+# ¬(p) = p -> ¬p
+# ∧(p, q) = (p, q) -> p ∧ q
 
 tautology = ⊤
 contradiction = ⊥
@@ -71,4 +79,3 @@ length(p::Proposition) = 1
 length(ϕ::Tuple{Boolean, Vararg}) = 1 + mapreduce(length, +, Base.tail(ϕ))
 
 print(p::T, indent) where T <: Proposition = print(repeat("  ", indent), p)
-

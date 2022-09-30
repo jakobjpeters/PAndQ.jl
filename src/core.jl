@@ -37,3 +37,36 @@ end
 macro infix(expression)
     return :($(expression.args[1]) = $(infix(expression.args[2].args[2])))
 end
+
+
+# @symbol a b c
+# #=
+# a = Proposition("a")
+# b = Proposition("b")
+# c = Proposition("c")
+# =#
+
+# struct World
+#     states::Dict{Language, Language}
+# end
+
+# #=
+# returns
+#     ⊤ if tautology
+#     ⊥ if contradiction
+#     ? if contingency
+# =#
+# # satisfiable
+# # unsatisfiable
+
+# # return vector of possible worlds
+# # if no possible worlds, contradiction
+# # if ϕ is in all possible worlds, tautology
+# # if ϕ is in no possible worlds, contradiction
+# prove(w::world, f::Language) = w.states[f](f)
+
+# ⊢ # \vdash
+# ⊣ # \dashv
+
+# ≡(f1, f2) = truth_table(f1) == truth_table(f2) # \equiv - logical equivalence
+# equivalent = ≡

@@ -14,10 +14,10 @@ depth(ϕ::Tuple{Modal, Agent, Language}) = 1 + depth(Base.tail(ϕ))
 depth(ϕ::Tuple{Boolean, Vararg}) = maximum(depth, Base.tail(ϕ))
 depth(p::Proposition) = 0
 
-struct M <: Language
+struct ML <: Language
     ϕ::Union{
-        P,
-        Tuple{Modal, Agent, M}
+        PL,
+        Tuple{Modal, Agent, ML}
     }
 end
 

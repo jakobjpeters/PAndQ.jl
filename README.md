@@ -83,7 +83,9 @@ depth(p)          # maximum nested modal operators
 
 ## Known Bugs
 
-
+- @inline
+    - doesn't do anything (yet)
+    - doesn't work (yet)
 
 
 ## To Do
