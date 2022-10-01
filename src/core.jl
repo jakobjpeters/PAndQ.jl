@@ -2,13 +2,21 @@
 abstract type Operator end
 abstract type Language end
 
-(ϕ::Tuple{Operator, Vararg})() = first(ϕ)(map(x -> x(), Base.tail(ϕ))...)
-(ϕ::Language)() = ϕ.ϕ()
+(ϕ::Tuple{Operator, Vararg})(states = Dict{Primitive, Union{Valuation, Vector{Valuation}}}()) = first(ϕ)(map(ϕ -> ϕ.ϕ(states), Base.tail(ϕ))...)
+function (ϕ::Language)()
+    states = ϕ.ϕ()
+    worlds = Dict{Primitive, Valuation}
+
+    unknowns = Iterators.filter(key -> states[key] isa Vector, keys(states))
+    worlds = ⨉(map(unknown -> ⨉([unknown], [⊤, ⊥]), unknowns)...)
+
+    return collect(Set(map(world -> ϕ.ϕ(Dict(world)), worlds)))
+end
 
 length(ϕ::Language) = length(ϕ.ϕ)
 depth(ϕ::Language) = depth(ϕ.ϕ)
 
-print(x::T, indent) where T <: Operator = print(repeat("  ", indent), T, "(), ")
+print(x::O, indent) where O <: Operator = print(repeat("  ", indent), O, "(), ")
 print(ϕ::Tuple{Operator, Vararg}, indent) = map(arg -> print(arg, indent), ϕ)
 function print(ϕ::Language, indent = 0)
     print("Language(\n")

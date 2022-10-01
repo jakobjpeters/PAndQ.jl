@@ -6,7 +6,7 @@ import Base.length, Base.print, Base.show
 include("core.jl")
 include("set.jl")
 include("propositional.jl")
-# include("first_order.jl")
+include("first_order.jl")
 include("modal.jl")
 # include("minimize.jl")
 
@@ -23,8 +23,11 @@ export
     Boolean, Not, And, # functionally complete boolean operators
     ¬, ∧, ⊼, ⊽, ∨, ⊻, →, ←, ↔, # boolean operator symbols
     not, and, nand, nor, or, xor, imply_r, imply_l, imply_lr, # boolean operator words
-    Proposition, PL, # language
+    Primitive, PL, # language
     truth_table,
+
+    # first_order
+    ∀, ∃, ∄,
 
     # modal logic
     Modal, Know, Believe, # modal operators

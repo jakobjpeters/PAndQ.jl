@@ -12,7 +12,7 @@ end
 length(ϕ::Tuple{Modal, Agent, Language}) = 1 + length(Base.tail(ϕ))
 depth(ϕ::Tuple{Modal, Agent, Language}) = 1 + depth(Base.tail(ϕ))
 depth(ϕ::Tuple{Boolean, Vararg}) = maximum(depth, Base.tail(ϕ))
-depth(p::Proposition) = 0
+depth(p::Primitive) = 0
 
 struct ML <: Language
     ϕ::Union{
