@@ -12,7 +12,7 @@ include("modal.jl")
 
 export
     # core.jl
-    @infix, depth, length, # utility
+    @infix, @primitive, depth, length, # utility
     Operator, Language,
 
     # set.jl

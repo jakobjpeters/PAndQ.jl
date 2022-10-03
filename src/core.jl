@@ -47,13 +47,6 @@ macro infix(expression)
 end
 
 
-# @symbol a b c
-# #=
-# a = Proposition("a")
-# b = Proposition("b")
-# c = Proposition("c")
-# =#
-
 # struct World
 #     states::Dict{Language, Language}
 # end

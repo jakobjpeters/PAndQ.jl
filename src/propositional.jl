@@ -6,6 +6,19 @@ struct Primitive{S <: Union{String, Nothing}}
 end
 
 Primitive() = Primitive(nothing)
+
+#=
+Source:
+https://github.com/ctrekker/Deductive.jl
+=#
+macro primitive(expressions...)
+    primitives = map(expression -> :($(esc(expression)) = Primitive($(string(expression)))), expressions)
+    return quote
+        $(primitives...)
+    end
+end
+
+# (p::Primitive)(states) = Dict(p => get(states, p, [⊤, ⊥]))
 (p::Primitive)(states) = get(states, p, Dict(p => [⊤, ⊥]))
 
 abstract type Valuation end
