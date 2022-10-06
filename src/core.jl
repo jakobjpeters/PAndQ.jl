@@ -2,16 +2,23 @@
 abstract type Operator end
 abstract type Language end
 
+struct World
+    primitives
+    valuation::DataType
+end
+# show(io::IO, world::World) = println(world.primitives, ", ", world.valuation)
+# show(io::IO, worlds::Vector{World}) = print(eltype(worlds), "[\n", worlds..., "]")
+
 (ϕ::Tuple{Operator, Vararg})(states = Dict{Primitive, Union{Valuation, Vector{Valuation}}}()) = first(ϕ)(map(ϕ -> ϕ.ϕ(states), Base.tail(ϕ))...)
 function (ϕ::Language)()
-    states = ϕ.ϕ()
-    worlds = Dict{Primitive, Valuation}
-
-    unknowns = Iterators.filter(key -> states[key] isa Vector, keys(states))
-    worlds = ⨉(map(unknown -> ⨉([unknown], [⊤, ⊥]), unknowns)...)
-
-    return collect(Set(map(world -> ϕ.ϕ(Dict(world)), worlds)))
+    primitives = ϕ.ϕ()
+    worlds = ⨉(map(primitive -> ⨉([primitive], [⊤, ⊥]), collect(primitives))...)
+    return vec(map(world -> World(world, ϕ.ϕ(Dict(world))), worlds))
 end
+
+# function valuate(ϕ::Language...)
+
+# end
 
 length(ϕ::Language) = length(ϕ.ϕ)
 depth(ϕ::Language) = depth(ϕ.ϕ)

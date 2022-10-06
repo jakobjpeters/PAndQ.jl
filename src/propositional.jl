@@ -15,11 +15,11 @@ macro primitive(expressions...)
     primitives = map(expression -> :($(esc(expression)) = Primitive($(string(expression)))), expressions)
     return quote
         $(primitives...)
+        nothing
     end
 end
 
-# (p::Primitive)(states) = Dict(p => get(states, p, [⊤, ⊥]))
-(p::Primitive)(states) = get(states, p, Dict(p => [⊤, ⊥]))
+(p::Primitive)(states) = get(states, p, Set([p]))
 
 abstract type Valuation end
 struct ⊥ <: Valuation end # \bot
@@ -35,7 +35,7 @@ struct And <: Boolean end
 (::Not)(p) = p
 (::And)(::Type{⊤}, ::Type{⊤}) = ⊤
 (::And)(p::Type, q::Type) = ⊥
-(::And)(p, q) = merge(p, q)
+(::And)(p, q) = union(p, q)
 
 struct PL <: Language
     ϕ::Union{
@@ -49,10 +49,10 @@ end
 # Language(p, qs::L...) where L <: Language = L(p ∧ first(qs), tail(qs))
 
 # logical operators
-¬(p::PL) = PL((Not(), p))               # not p
+¬(p::PL) = PL((Not(), p))              # not p
 ¬(p::Primitive) = ¬PL(p)
 ¬(p) = ¬p()
-∧(p::PL, q::PL) = PL(((And(), p, q)))    # p and q
+∧(p::PL, q::PL) = PL(((And(), p, q)))  # p and q
 ∧(p::Language, q) = q ∧ p
 ∧(p::Primitive, q) = PL(p) ∧ q
 ∧(p, q) = p() ∧ q
@@ -64,29 +64,20 @@ end
 ←(p, q) = q → p                       # if q then p
 ↔(p, q) = (p → q) ∧ (p ← q)           # if p then q and if q then p
 
-tautology = ⊤
-contradiction = ⊥
-not = ¬        # \neg
-and = ∧        # \wedge
-nand = ⊼       # \nand
-nor = ⊽        # \nor
-or = ∨         # \vee
-xor = ⊻        # \veebar
-imply_r = →    # \rightarrow
-imply_l = ←    # \leftarrow
-imply_r = ↔    # \leftrightarrow
-
-function truth_table(operator)
-    # @infix pairs = [⊤, ⊥] ⨉ [⊥, ⊤]
-    pairs = ⨉([⊤, ⊥], [⊥, ⊤])
-    return map(p_q -> p_q => operator(p_q...)(), pairs)
-end
-
-function truth_table(operator::typeof(¬))
-    return map(p -> p => operator(p)(), [⊤, ⊥])
-end
+tautology = ⊤       # \top  
+contradiction = ⊥   # \bot
+not = ¬             # \neg
+and = ∧             # \wedge
+nand = ⊼            # \nand
+nor = ⊽             # \nor
+or = ∨              # \vee
+xor = ⊻             # \veebar
+imply_r = →         # \rightarrow
+imply_l = ←         # \leftarrow
+imply_r = ↔         # \leftrightarrow
 
 length(p::Primitive) = 1
 length(ϕ::Tuple{Boolean, Vararg}) = 1 + mapreduce(length, +, Base.tail(ϕ))
 
-print(p::T, indent) where T <: Primitive = print(repeat("  ", indent), p)
+# show(io::IO, p::Primitive) = print("Primitive(\"", p.statement, "\")")
+# print(p::Primitive, indent) = print(repeat("  ", indent), p)

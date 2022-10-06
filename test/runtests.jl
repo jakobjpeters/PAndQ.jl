@@ -4,15 +4,18 @@ using Logic
 function main()
     boolean_operators = [¬, ∧, ⊼, ⊽, ∨, ⊻, →, ←, ↔]
 
-    for f in boolean_operators
-        println("Truth table of: ", f)
-        println(truth_table(f))
-        println()
-    end
-
     p = Primitive("Modal logic is hard")
     q = Primitive("This code has bugs")
     r = p → q
+
+    for f in boolean_operators
+        if f == ¬
+            println(f(p))
+        else
+            println(f(p, q))
+        end
+        println()
+    end
 
     println("r ≡ ", r())
     println("⊤ ∨ s ≡ ", (⊤ ∨ r)())
