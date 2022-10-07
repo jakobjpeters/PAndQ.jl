@@ -79,5 +79,4 @@ imply_r = ↔         # \leftrightarrow
 length(p::Primitive) = 1
 length(ϕ::Tuple{Boolean, Vararg}) = 1 + mapreduce(length, +, Base.tail(ϕ))
 
-# show(io::IO, p::Primitive) = print("Primitive(\"", p.statement, "\")")
-# print(p::Primitive, indent) = print(repeat("  ", indent), p)
+print(p::Primitive, indent = 0) = print(repeat("  ", indent), p)

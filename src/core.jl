@@ -3,11 +3,11 @@ abstract type Operator end
 abstract type Language end
 
 struct World
-    primitives
+    primitives::Tuple#{Primitive, DataType}
     valuation::DataType
 end
-# show(io::IO, world::World) = println(world.primitives, ", ", world.valuation)
-# show(io::IO, worlds::Vector{World}) = print(eltype(worlds), "[\n", worlds..., "]")
+
+show(io::IO, worlds::Vector{World}) = display(worlds)
 
 (ϕ::Tuple{Operator, Vararg})(states = Dict{Primitive, Union{Valuation, Vector{Valuation}}}()) = first(ϕ)(map(ϕ -> ϕ.ϕ(states), Base.tail(ϕ))...)
 function (ϕ::Language)()

@@ -24,7 +24,6 @@ export
     ¬, ∧, ⊼, ⊽, ∨, ⊻, →, ←, ↔, # boolean operator symbols
     not, and, nand, nor, or, xor, imply_r, imply_l, imply_lr, # boolean operator words
     Primitive, PL, # language
-    truth_table,
 
     # first_order
     ∀, ∃, ∄,
