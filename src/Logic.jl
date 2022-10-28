@@ -12,18 +12,16 @@ include("modal.jl")
 
 export
     # core.jl
-    @primitive, depth, length, # utility
-    Operator, Language, valuate,
+    @primitive, depth, length, valuate, # utility
 
     # set.jl
     ⨉, cartesian_product,
 
     # propositional logic
-    Valuation, ⊤, ⊥, tautology, contradiction, # boolean primitives
-    Boolean, Not, And, # functionally complete boolean operators
-    ¬, ∧, ⊼, ⊽, ∨, ⊻, →, ←, ↔, # boolean operator symbols
-    not, and, nand, nor, or, xor, imply_r, imply_l, imply_lr, # boolean operator words
-    Primitive, PL, # language
+    ⊤, ⊥, Tautology, Contradiction, # concrete valuations
+    ¬, ∧, ⊼, ⊽, ∨, ⊻, →, ←, ↔, # boolean operators
+    not, and, nand, nor, or, xor, if_then, then_if, only_if, # boolean operator alias'
+    Primitive, Proposition, # language
 
     # first_order
     ∀, ∃, ∄,
