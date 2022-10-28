@@ -3,14 +3,24 @@ using Documenter
 using Logic
 import Logic: Valuation, Boolean, And, Not
 
+if !ispath("assets/Logic.svg")
+    include("logo.jl")
+    make_logo()
+end
+
 DocMeta.setdocmeta!(Logic, :DocTestSetup,
     :(using Logic; import Logic: Valuation, Boolean, And, Not);
 recursive=true)
 
 makedocs(
-    sitename = "Logic",
+    sitename = "Logic.jl",
     format = Documenter.HTML(),
-    modules = [Logic]
+    modules = [Logic],
+    pages = [
+        "index.md",
+        "propositional.md",
+        "internals.md"
+    ]
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.
