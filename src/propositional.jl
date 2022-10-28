@@ -45,14 +45,14 @@ struct PL <: Language
     }
 end
 
-# Language(p, q::L) where L <: Language = L(p ∧ q)
-# Language(p, qs::L...) where L <: Language = L(p ∧ first(qs), tail(qs))
+const _not = Not()
+const _and = And()
 
 # logical operators
-¬(p::PL) = PL((Not(), p))              # not p
+¬(p::PL) = PL((_not, p))              # not p
 ¬(p::Primitive) = ¬PL(p)
 ¬(p) = ¬p()
-∧(p::PL, q::PL) = PL(((And(), p, q)))  # p and q
+∧(p::PL, q::PL) = PL(((_and, p, q)))  # p and q
 ∧(p::Language, q) = q ∧ p
 ∧(p::Primitive, q) = PL(p) ∧ q
 ∧(p, q) = p() ∧ q
