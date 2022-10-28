@@ -12,8 +12,8 @@ include("modal.jl")
 
 export
     # core.jl
-    @infix, @primitive, depth, length, # utility
-    Operator, Language,
+    @primitive, depth, length, # utility
+    Operator, Language, valuate,
 
     # set.jl
     ⨉, cartesian_product,
