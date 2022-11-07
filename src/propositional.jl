@@ -1,142 +1,114 @@
 
 import Base.⊼, Base.⊽, Base.⊻
 
+# data types
+
 """
-    Primitive{S <: Union{String, Nothing}}
-    Primitive(s = nothing)
+    Language
+
+Supertype of [`Primitive`](@ref) and [`Compound`](@ref).
+"""
+abstract type Language end
+
+"""
+    Compound <: Language
+
+Supertype of [`Propositional`](@ref) and [`Modal`](@ref).
+Subtype of [`Language`](@ref).
+"""
+abstract type Compound <: Language end
+
+"""
+    Primitive{S <: Union{String, Nothing}} <: Language
+    Primitive{S}([s = nothing])
 
 Primitive proposition.
 
-See also [`Proposition`](@ref).
+See also [`Language`](@ref) and [`Compound`](@ref).
 
 # Usage
 ```jldoctest
-julia> p = Primitive("Logic is fun")
-Primitive{String}("Logic is fun")
+julia> # p = Primitive("Logic is fun")
 
-julia> ¬p
-Language(
-  Not(), Language(
-    Primitive{String}("Logic is fun")
-  )
-)
+julia> # (¬p)()
+
 ```
 """
-struct Primitive{S <: Union{String, Nothing}}
+struct Primitive{S <: Union{String, Nothing}} <: Language
     statement::S
 
     Primitive(s::S = nothing) where S = new{S}(s)
 end
 
-(p::Primitive)(states) = get(states, p, Set([p]))
-
 """
-    @primitive
+    Valuation{V <: Union{Val{:⊥}, Val{:⊤}}, P <: Union{Primitive, Vector{<:Primitive}}}
+    Valuation(::V, [p::P = Primitive()])
+    Valuation(v, ps...)
 
-Instantiate 'Primitive' propositions.
-
-# Examples
-```
-julia> @primitive p q
-
-julia> p
-Primitive{String}("p")
-
-julia> q
-Primitive{String}("q")
-```
+Container for [`Tautology`](@ref) and [`Contradiction`](@ref) of [`Primitive`](@ref).
 """
-macro primitive(expressions...)
-    primitives = map(expression -> :($(esc(expression)) = Primitive($(string(expression)))), expressions)
-    return quote
-        $(primitives...)
-        nothing
-    end
+struct Valuation{V <: Union{Val{:⊥}, Val{:⊤}}, P <: Union{Primitive, Vector{<:Primitive}}}
+    p::P
+
+    Valuation(::V, p::P = Primitive()) where {V, P} = new{V, P}(p)
 end
-#=
-Source:
-https://github.com/ctrekker/Deductive.jl
-=#
+
+Valuation(::V, p) where V <: Valuation{<:Val} = Valuation(first(V.parameters)(), p)
+Valuation(v, ps...) = Valuation(v, collect(ps))
 
 """
-    Valuation
+    ⊥
+    Contradiction
 
-Supertype of [`⊤`](@ref) and [`⊥`](@ref).
-"""
-abstract type Valuation end
+The constant 'Contradiction'.
 
-"""
-    ⊥ <: Valuation
+'⊥' can be typed by '\\bot<tab>'.
 
-Contradiction/false, depending on context.
-
-See also [`Contradiction`](@ref).
+See also [`Valuation`](@ref) and [`Tautology`](@ref).
 
 # Usage
 ```jldoctest
-julia> ¬⊥
-⊤
+julia> # ¬⊥
 
-julia> Proposition(⊥)
-Language(
-  And(), Language(
-    Primitive{Nothing}(nothing)
-  ) Language(
-    Not(), Language(
-      Primitive{Nothing}(nothing)
-    )
-  )
-)
+julia> # Propositional(Contradiction)()
 ```
 """
-struct ⊥ <: Valuation end
+const Contradiction = Valuation(Val(:⊥))
+const ⊥ = Contradiction
 
 """
-    Contradiction <: Valuation
+    ⊤
+    Tautology
 
-Alias for [`⊥`](@ref).
-"""
-Contradiction = ⊥
+The constant 'Tautology'.
 
-"""
-    ⊤ <: Valuation
+'⊤' can be typed by '\\top<tab>'.
 
-Tautology/true, depending on context.
-
-See also [`Tautology`](@ref).
+See also [`Valuation`](@ref) and [`Contradiction`](@ref).
 
 # Usage
 ```jldoctest
-julia> ¬⊤
-⊥
+julia> # ¬⊤
 
-julia> Proposition(⊤)
-Language(
-  Not(), Language(
-    And(), Language(
-      Primitive{Nothing}(nothing)
-    ) Language(
-      Not(), Language(
-        Primitive{Nothing}(nothing)
-      ) 
-    ) 
-  ) 
-)
+julia> # Propositional(Tautology)()
 ```
 """
-struct ⊤ <: Valuation end
+const Tautology = Valuation(Val(:⊤))
+const ⊤ = Tautology
 
 """
-    Tautology <: Valuation
+Operator
 
-Alias for [`⊤`](@ref).
+Supertype of [`Boolean`](@ref) and [`Modal`](@ref).
 """
-Tautology = ⊤
+abstract type Operator end
 
 """
     Boolean <: Operator
 
-Supertype of [`Not`](@ref) and [`And`](@ref).
+Supertype of [`Not`](@ref) and [`And`](@ref). Together, these two connectives are functionally complete.
+
+See also [`Operator`](@ref) and [Boolean Operators](@ref).
 """
 abstract type Boolean <: Operator end
 
@@ -145,382 +117,292 @@ abstract type Boolean <: Operator end
 
 Singleton type representing logical negation.
 
-See also [`Proposition`](@ref), [`¬`](@ref), and [`not`](@ref).
+See also [`Boolean`](@ref), [`Propositional`](@ref), and [`And`](@ref).
 
 # Usage
 ```jldoctest
-julia> Not()(⊤)
-⊥
+julia> # Not()(⊤)
 
-julia> Not()(⊥)
-⊤
+julia> # Not()(⊥)
 ```
 """
 struct Not <: Boolean end
-(::Not)(::Type{⊥}) = ⊤
-(::Not)(::Type{⊤}) = ⊥
-(::Not)(p) = p
+const _not = Not()
+(::Not)(p::Valuation{Val{:⊤}}) = Valuation(⊥, p.p)
+(::Not)(p::Valuation{Val{:⊥}}) = Valuation(⊤, p.p)
+(::Not)(p::Primitive) = ¬Propositional(p)
+(::Not)(p::Compound) = Propositional((_not, p))
 
 """
     And <: Boolean
 
 Singleton type representing logical conjunction.
 
-See also [`Proposition`](@ref), [`∧`](@ref), and [`And`](@ref).
+See also [`Boolean`](@ref), [`Propositional`](@ref), and [`Not`](@ref).
 
 # Usage
 ```jldoctest
-julia> And()(⊤, ⊤)
-⊤
+julia> # And()(⊤, ⊤)
 
-julia> And()(⊤, ⊥)
-⊥
+julia> # And()(⊤, ⊥)
 
-julia> And()(⊥, ⊤)
-⊥
+julia> # And()(⊥, ⊤)
 
-julia> And()(⊥, ⊥)
-⊥
+julia> # And()(⊥, ⊥)
 ```
 """
 struct And <: Boolean end
-(::And)(::Type{⊤}, ::Type{⊤}) = ⊤
-(::And)(p::Type, q::Type) = ⊥
-(::And)(p, q) = union(p, q)
+const _and = And()
+(::And)(p::Valuation{Val{:⊤}}, q::Valuation{Val{:⊤}}) = Valuation(⊤, (collect(Set([p.p; q.p]))))
+(::And)(p::Valuation, q::Valuation) = Valuation(⊥, (collect(Set([p.p; q.p]))))
 
 """
-    Proposition{T <: Union{
-        Primitive,
-        Tuple{Not, Language},
-        Tuple{And, Language, Language}
-    }} <: Language
+    Propositional{
+        L <: Union{
+            Primitive,
+            Tuple{Not, Language},
+            Tuple{And, Language, Language}
+        }
+    } <: Compound
+    Propositional{L}(ϕ)
 
-Abstract syntax tree for propositional logic.
+Abstract syntax tree representing a compound proposition.
+
+See also [`Language`](@ref), [`Compound`](@ref), [`Primitive`](@ref), [`Not`](@ref), and [`And`](@ref).
 
 # Examples
-```
-julia> p = Proposition(Primitive())
-Language(
-    Primitive{Nothing}(nothing)
-)
+```jldoctest
+julia> # p = Propositional(Primitive())
 
 julia> # (¬p)()
 
 ```
 """
-struct Proposition{T <: Union{
-    Primitive,
-    Tuple{Not, Language},
-    Tuple{And, Language, Language}
-}} <: Language
-    ϕ::T
+struct Propositional{
+    L <: Union{
+        Primitive,
+        Tuple{Not, Compound},
+        Tuple{And, Compound, Compound}
+    }
+} <: Compound
+    ϕ::L
 end
 
-Proposition(::Type{⊥}, p = Primitive()) = p ∧ ¬p
-Proposition(::Type{⊤}, p = Primitive()) = ¬Proposition(⊥, p)
+Propositional(::Valuation{Val{:⊥}}, p = Primitive()) = p ∧ ¬p
+Propositional(::Valuation{Val{:⊤}}, p = Primitive()) = ¬Propositional(⊥, p)
+(v::Valuation)() = Propositional(v)
 
-# logical operators
-
-const _not = Not()
-const _and = And()
+# boolean operators
 
 """
     ¬p
+    ¬(p)
+    not(p)
 
 Logical 'not' operator.
 
 '¬' can be typed by '\\neg<tab>'.
 
-See also [`not`](@ref).
+See also [`Not`](@ref).
 
 # Examples
 ```jldoctest
-julia> ¬⊤
-⊥
+julia> # ¬⊤
 
-julia> ¬⊥
-⊤
+julia> # not(⊥)
 ```
 """
-¬(p::Type{<:Valuation}) = _not(p)
-¬(p::Primitive) = ¬Proposition(p)
-¬(p::Proposition) = Proposition((_not, p))
-
-"""
-    not(p)
-
-Alias for [`¬`](@ref).
-"""
-not = ¬
+function not end
+const ¬ = not
+¬p = _not(p)
 
 """
     p ∧ q
+    ∧(p, q)
+    and(p, q)
 
 Logical 'and' operator.
 
 '∧' can be typed by '\\wedge<tab>'.
 
-See also [`and`](@ref).
+See also [`And`](@ref).
 
 # Examples
 ```jldoctest
-julia> ⊤ ∧ ⊤
-⊤
+julia> # ⊤ ∧ ⊤
 
-julia> ⊤ ∧ ⊥
-⊥
+julia> # ⊤ ∧ ⊥
 
-julia> ⊥ ∧ ⊤
-⊥
+julia> # ∧(⊥, ⊤)
 
-julia> ⊥ ∧ ⊥
-⊥
+julia> # and(⊥, ⊥)
 ```
 """
-∧(p::Type{<:Valuation}, q::Type{<:Valuation}) = _and(p, q)
-∧(p, q) = Proposition(p) ∧ q
-∧(p::Language, q) = q ∧ p
-∧(p::Proposition, q::Proposition) = Proposition(((_and, p, q)))
-
-"""
-    and(p, q)
-
-Alias for [`∧`](@ref).
-"""
-and = ∧
+function and end
+const ∧ = and
+p ∧ q = _and(p, q)
 
 """
     p ⊼ q
+    ⊼(p, q)
+    nand(p, q)
 
 Logical 'nand' operator.
 
 '⊼' can be typed by '\\nand<tab>'.
 
-See also [`nand`](@ref).
-
 # Examples
 ```jldoctest
-julia> ⊤ ⊼ ⊤
-⊥
+julia> # ⊤ ⊼ ⊤
 
-julia> ⊤ ⊼ ⊥
-⊤
+julia> # ⊤ ⊼ ⊥
 
-julia> ⊥ ⊼ ⊤
-⊤
+julia> # ⊼(⊥, ⊤)
 
-julia> ⊥ ⊼ ⊥
-⊤
+julia> # nand(⊥, ⊥)
 ```
 """
-⊼(p, q) = ¬(p ∧ q)
-
-"""
-    nand(p, q)
-
-Alias for [`⊼`](@ref).
-"""
-nand = ⊼
+nand
+p ⊼ q = ¬(p ∧ q)
 
 """
     p ⊽ q
+    ⊽(p, q)
+    nor(p, q)
 
 Logical 'nor' operator.
 
 '⊽' can be typed by '\\nor<tab>'.
 
-See also [`nor`](@ref).
-
 # Examples
 ```jldoctest
-julia> ⊤ ⊽ ⊤
-⊥
+julia> # ⊤ ⊽ ⊤
 
-julia> ⊤ ⊽ ⊥
-⊥
+julia> # ⊤ ⊽ ⊥
 
-julia> ⊥ ⊽ ⊤
-⊥
+julia> # ⊽(⊥, ⊤)
 
-julia> ⊥ ⊽ ⊥
-⊤
+julia> # nor(⊥, ⊥)
 ```
 """
-⊽(p, q) = ¬p ∧ ¬q
-
-"""
-    nor(p, q)
-
-Alias for [`⊽`](@ref).
-"""
-nor = ⊽
+nor
+p ⊽ q = ¬p ∧ ¬q
 
 """
     p ∨ q
+    ∨(p, q)
+    or(p, q)
 
 Logical 'or' operator.
 
 '∨' can be typed by '\\vee<tab>'.
 
-See also [`∨`](@ref).
-
 # Examples
 ```jldoctest
-julia> ⊤ ∨ ⊤
-⊤
+julia> # ⊤ ∨ ⊤
 
-julia> ⊤ ∨ ⊥
-⊤
+julia> # ⊤ ∨ ⊥
 
-julia> ⊥ ∨ ⊤
-⊤
+julia> # ∨(⊥, ⊤)
 
-julia> ⊥ ∨ ⊥
-⊥
+julia> # or(⊥, ⊥)
 ```
 """
-∨(p, q) = ¬(p ⊽ q)
-
-"""
-    or(p, q)
-
-Alias for [`∨`](@ref).
-"""
-or = ∨
+function or end
+const ∨ = or
+p ∨ q = ¬(p ⊽ q)
 
 """
     p ⊻ q
+    ⊻(p, q)
+    xor(p, q)
 
 Logical 'xor' operator.
 
 '⊻' can be typed by '\\xor<tab>'.
 
-See also [`xor`](@ref).
-
 # Examples
 ```jldoctest
-julia> ⊤ ⊻ ⊤
-⊥
+julia> # ⊤ ⊻ ⊤
 
-julia> ⊤ ⊻ ⊥
-⊤
+julia> # ⊤ ⊻ ⊥
 
-julia> ⊥ ⊻ ⊤
-⊤
+julia> # ⊻(⊥, ⊤)
 
-julia> ⊥ ⊻ ⊥
-⊥
+julia> # xor(⊥, ⊥)
 ```
 """
-⊻(p, q) = (p ∨ q) ∧ (p ⊼ q)
-
-"""
-    xor(p, q)
-
-Alias for [`⊻`](@ref).
-"""
-xor = ⊻
+xor
+p ⊻ q = (p ∨ q) ∧ (p ⊼ q)
 
 """
     p → q
+    →(p, q)
+    if_then(p, q)
 
 Logical 'if_then' operator.
 
 '→' can be typed by '\\rightarrow<tab>'.
 
-See also [`if_then`](@ref).
-
 # Examples
 ```jldoctest
-julia> ⊤ → ⊤
-⊤
+julia> # ⊤ → ⊤
 
-julia> ⊤ → ⊥
-⊥
+julia> # ⊤ → ⊥
 
-julia> ⊥ → ⊤
-⊤
+julia> # →(⊥, ⊤)
 
-julia> ⊥ → ⊥
-⊤
+julia> # if_then(⊥, ⊥)
 ```
 """
-→(p, q) = ¬(p ∧ ¬q)
-
-"""
-    if_then(p, q)
-
-Alias for [`→`](@ref).
-"""
-if_then = →
+function if_then end
+const → = if_then
+p → q = ¬(p ∧ ¬q)
 
 """
     p ← q
+    ←(p, q)
+    then_if(p, q)
 
 Logical 'then_if' operator.
 
 '←' can be typed by '\\leftarrow<tab>'.
 
-See also [`then_if`](@ref).
-
 # Examples
 ```jldoctest
-julia> ⊤ ← ⊤
-⊤
+julia> # ⊤ ← ⊤
 
-julia> ⊤ ← ⊥
-⊤
+julia> # ⊤ ← ⊥
 
-julia> ⊥ ← ⊤
-⊥
+julia> # ←(⊥, ⊤)
 
-julia> ⊥ ← ⊥
-⊤
+julia> # then_if(⊥, ⊥)
 ```
 """
-←(p, q) = q → p
-
-"""
-    then_if(p, q)
-
-Alias for [`←`](@ref).
-"""
-then_if = ←
+function then_if end
+const ← = then_if
+p ← q = q → p
 
 """
     p ↔ q
+    ↔(p, q)
+    only_if(p, q)
 
 Logical 'only_if' operator.
 
 '↔' can be typed by '\\leftrightarrow<tab>'.
 
-See also [`only_if`](@ref).
-
 # Examples
 ```jldoctest
-julia> ⊤ ↔ ⊤
-⊤
+julia> # ⊤ ↔ ⊤
 
-julia> ⊤ ↔ ⊥
-⊥
+julia> # ⊤ ↔ ⊥
 
-julia> ⊥ ↔ ⊤
-⊥
+julia> # ↔(⊥, ⊤)
 
-julia> ⊥ ↔ ⊥
-⊤
+julia> # only_if(⊥, ⊥)
 ```
 """
-↔(p, q) = (p → q) ∧ (p ← q)
-
-"""
-    only_if(p, q)
-
-Alias for [`↔`](@ref).
-"""
-only_if = ↔
-
-length(p::Primitive) = 1
-length(ϕ::Tuple{Boolean, Vararg}) = 1 + mapreduce(length, +, Base.tail(ϕ))
-
-print(p::Primitive, indent = 0) = print(repeat("  ", indent), p)
+function only_if end
+const ↔ = only_if
+p ↔ q = (p → q) ∧ (p ← q)

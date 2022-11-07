@@ -1,25 +1,26 @@
 
-abstract type Modal <: Operator end
-struct Believe <: Modal end
-struct Know <: Modal end
+abstract type temp_modal <: Operator end
+struct Believe <: temp_modal end
+struct Know <: temp_modal end
 
-(operator::Modal)(agent, formula) = ϵ(formula, agent.operators[operator])
-
-struct Agent{L <: Language}
-    operations::Dict{<:Modal, Vector{L}} # Set{M} needs iterate(::Language) defined
+struct Agent
+    operations::Dict{<:temp_modal, Vector{Compound}} # Set{M} needs iterate(::Language) defined
 end
 
-length(ϕ::Tuple{Modal, Agent, Language}) = 1 + length(Base.tail(ϕ))
-depth(ϕ::Tuple{Modal, Agent, Language}) = 1 + depth(Base.tail(ϕ))
-depth(ϕ::Tuple{Boolean, Vararg}) = maximum(depth, Base.tail(ϕ))
-depth(p::Primitive) = 0
-
-struct ML <: Language
-    ϕ::Union{
-        PL,
-        Tuple{Modal, Agent, ML}
-    }
+struct Modal <: Compound
+    ϕ::Tuple{temp_modal, Agent, Compound}
 end
+
+
+
+
+
+
+
+
+
+
+(operator::temp_modal)(agent, formula) = ϵ(formula, agent.operators[operator])
 
 function (agent::Agent)(states)
 

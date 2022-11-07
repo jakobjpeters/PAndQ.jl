@@ -1,5 +1,5 @@
 
-using Logic
+using PAQ
 
 function main()
     boolean_operators = [¬, ∧, ⊼, ⊽, ∨, ⊻, →, ←, ↔]

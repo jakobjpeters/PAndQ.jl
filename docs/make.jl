@@ -1,25 +1,25 @@
 
 using Documenter
-using Logic
-import Logic: Valuation, Boolean, And, Not
+using PAQ
+import PAQ: Valuation, Boolean, And, Not
 
-if !ispath("assets/Logic.svg")
+if !ispath("assets/logo.svg")
     include("logo.jl")
     make_logo()
 end
 
-DocMeta.setdocmeta!(Logic, :DocTestSetup,
-    :(using Logic; import Logic: Valuation, Boolean, And, Not);
+DocMeta.setdocmeta!(PAQ, :DocTestSetup,
+    :(using PAQ; import PAQ: Valuation, Boolean, And, Not);
 recursive=true)
 
 makedocs(
     sitename = "Logic.jl",
     format = Documenter.HTML(),
-    modules = [Logic],
+    modules = [PAQ],
     pages = [
-        "index.md",
-        "propositional.md",
-        "internals.md"
+        "Home" => "index.md",
+        "Logic" => "PAQ.md",
+        "Internals" => "internals.md"
     ]
 )
 
