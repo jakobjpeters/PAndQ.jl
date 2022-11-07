@@ -1,91 +1,39 @@
 
+# P∧Q.jl
 
-## About
+Do you like logic? If so, then you've come to the right package! Check out the [documentation](https://jakobjpeters.github.io/PAQ.jl/index.html).
 
-This project implements logics (currently only propositional logic, but with more to come) written from scratch.
-
-
-## Examples
-
-``` julia
-using Logic
-
-p = Proposition("Modal logic is hard")
-q = ¬Proposition("This code has bugs")
-r = p → q
-
-r()
-# ⊥
-
-(⊤ ∨ r)()
-# ⊤
-
-p ∧ q
-#=
-Language(
-  And(), Language(
-    Proposition{String}("Modal logic is hard")
-  ) Language(
-    Not(), Language(
-      Proposition{String}("This code has bugs")
-    ) 
-  ) 
-) 
-=#
-
-⊥()
-# ⊥()
-
-⊥()()
-#=
-Language(
-  Not(), Language(
-    Proposition{Nothing}(nothing)
-  ) 
-)
-=#
-
-⊥()()()
-# ⊥
-
-truth_table(↔)
-#=
-2×2 Matrix{Pair{Tuple{DataType, DataType}, DataType}}:
- (⊤, ⊥)=>⊥  (⊤, ⊤)=>⊤
- (⊥, ⊥)=>⊤  (⊥, ⊤)=>⊥
-=#
-```
+*Please mind your ```ps ∧ qs```.*
 
 
-## Functions
+## Introduction
 
-``` julia
-¬(p, q)    # not           \neg
-∧(p, q)    # and           \wedge
-⊼(p, q)    # Logic.nand    \nand
-⊽(p, q)    # Logic.nor     \nor
-∨(p, q)    # or            \vee
-⊻(p, q)    # Logic.xor     \veebar
-→(p, q)    # imply_r       \rightarrow
-←(p, q)    # imply_l       \leftarrow
-↔(p, q)    # imply_lr      \leftrightarrow
+P∧Q.jl is designed to have an intuitive interface by enabling you to write code in logical symbols. This is thanks to Julia's support for [Unicode](https://docs.julialang.org/en/v1/manual/unicode-input/) and infix operators. Alternatively, every symbol has a written alias.
 
-⨉(A, B)    # cartesian product    \bigtimes
-⊤          # tautology            \top
-⊥          # contradiction        \bot
 
-@infix f = ϕ      # syntactic sugar - doesn't do anything yet
-truth_table(f)    # vector of all input => output for boolean operation f
-length(p)         # total number of operators and propositions in a formula
-depth(p)          # maximum nested modal operators
+## Getting Started
+
+```julia
+julia> import Pkg
+
+julia> Pkg.add(url = "https://github.com/jakobjpeters/PAQ.jl")
+
+julia> using PAQ
+
+julia> ¬⊤ ∧ ⊤
+
+julia> @primitive p q
+
+julia> r = p → q
+
+julia> r
 ```
 
 
 ## Known Bugs
 
-- @inline
-    - doesn't do anything (yet)
-    - doesn't work (yet)
+- ```@inline``` doesn't do anything *yet*.
+- pretty printing needs improvements and completeness.
 
 
 ## To Do
