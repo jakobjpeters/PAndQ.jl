@@ -8,7 +8,7 @@ if !ispath("assets/logo.svg")
 end
 
 DocMeta.setdocmeta!(PAQ, :DocTestSetup,
-    :(using PAQ; import PAQ: Valuation, Boolean, And, Not);
+    :(using PAQ);
 recursive=true)
 
 makedocs(
