@@ -1,7 +1,6 @@
 
 using Documenter
 using PAQ
-import PAQ: Valuation, Boolean, And, Not
 
 if !ispath("assets/logo.svg")
     include("logo.jl")
@@ -13,13 +12,17 @@ DocMeta.setdocmeta!(PAQ, :DocTestSetup,
 recursive=true)
 
 makedocs(
-    sitename = "Logic.jl",
+    sitename = "PAQ.jl",
     format = Documenter.HTML(),
     modules = [PAQ],
     pages = [
         "Home" => "index.md",
-        "Logic" => "PAQ.md",
-        "Internals" => "internals.md"
+        "Tutorial" => "tutorial.md",
+        "Manual" => [
+            "Types" => "types.md",
+            "Boolean Operators" => "boolean_operators.md",
+            "Utility" => "utility.md"
+        ]
     ]
 )
 

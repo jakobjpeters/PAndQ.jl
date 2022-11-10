@@ -4,21 +4,23 @@ import Base.length, Base.print, Base.show
 """
     @primitive
 
-Instantiate [`Primitive`](@ref) propositions.
+Instantiates [`Primitive`](@ref) propositions.
 
 # Examples
 ```jldoctest
 julia> @primitive p q
 
 julia> p
+Primitive("p")
 
 julia> q
+Primitive("q")
 ```
 """
 macro primitive(expressions...)
     primitive = expression -> :($(esc(expression)) = Primitive($(string(expression))))
     primitives = map(primitive, expressions)
-    
+
     return quote
         $(primitives...)
         nothing
@@ -28,6 +30,29 @@ end
 Source:
 https://github.com/ctrekker/Deductive.jl
 =#
+
+_truth_table(f, parameters) = [parameters...] .=> reduce(vcat, map(f, parameters))
+"""
+    truth_table(operator)
+
+Return a vector of every possible ```input => output``` pair where the inputs are [```Valuation```](@ref)s.
+
+```jldoctest
+julia> truth_table(¬)
+2-element Vector{Pair}:
+ ⊤ => ⊥
+ ⊥ => ⊤
+
+julia> truth_table(∧)
+4-element Vector{Pair}:
+ (⊤, ⊥) => ⊥
+ (⊥, ⊥) => ⊥
+ (⊤, ⊤) => ⊤
+ (⊥, ⊤) => ⊥
+```
+"""
+truth_table(operator) = _truth_table(parameter -> operator(parameter...), ⨉([⊤, ⊥], [⊥, ⊤]))
+truth_table(operator::Union{Not, typeof(not)}) = _truth_table(parameter -> operator(parameter), [⊤, ⊥])
 
 
 depth(ϕ::Compound) = depth(ϕ.ϕ)

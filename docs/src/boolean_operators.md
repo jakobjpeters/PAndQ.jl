@@ -1,23 +1,5 @@
 
-# P∧Q
-
-## Propositional
-
-### Types
-
-```@docs
-Language
-Compound
-Primitive
-@primitive
-Propositional
-Valuation
-Tautology
-Contradiction
-Operator
-```
-
-### Boolean Operators
+# Boolean Operators
 
 | Name                    | Symbol                 | Tab completion   |
 |:----------------------- |:---------------------- |:---------------  |
