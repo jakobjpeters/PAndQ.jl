@@ -25,7 +25,7 @@ export
     Language, Compound, Primitive, Propositional, # propositions
 
     # first_order
-    ∀, ∃, ∄,
+    # ∀, ∃, ∄,
 
     # modal logic
     temp_modal, Know, Believe, # modal operators
