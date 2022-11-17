@@ -151,6 +151,12 @@ Source:
 Van Ditmarsch, Hans, et al. Handbook of epistemic logic. College Publications, 2015.
 =#
 
+Propositional(::Not, p::Compound) = Propositional((_not, p))
+Propositional(::Not, p::Primitive) = Propositional(_not, Propositional(p))
+Propositional(::And, p::Compound, q::Compound) = Propositional((_and, p, q))
+Propositional(::And, p::Primitive, q::Union{Primitive, Compound}) = Propositional(_and, q, Propositional(p))
+Propositional(::And, p::Compound, q::Primitive) = Propositional(_and, q, p)
+
 """
     Valuation{V <: Union{Val{:⊥}, Val{:⊤}}} <: Language
     Valuation(::V)
