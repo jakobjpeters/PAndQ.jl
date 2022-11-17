@@ -146,6 +146,10 @@ struct Propositional{
 } <: Compound
     ϕ::L
 end
+#=
+Source:
+Van Ditmarsch, Hans, et al. Handbook of epistemic logic. College Publications, 2015.
+=#
 
 """
     Valuation{V <: Union{Val{:⊥}, Val{:⊤}}} <: Language

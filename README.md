@@ -58,7 +58,3 @@ julia> using PAQ
     - Higher order logic
     - Modal logic
 
-
-## References
-
-Van Ditmarsch, Hans, et al. Handbook of epistemic logic. College Publications, 2015.
