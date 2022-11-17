@@ -5,4 +5,5 @@
 @primitive
 primitives
 truth_table
+valuate
 ```
