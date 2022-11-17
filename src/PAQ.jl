@@ -12,7 +12,7 @@ include("pretty.jl")
 
 export
     # core.jl
-    @primitive, depth, length, valuate, truth_table, # utility
+    @primitive, primitives, depth, length, valuate, truth_table, # utility
 
     # set.jl
     ⨉, cartesian_product,

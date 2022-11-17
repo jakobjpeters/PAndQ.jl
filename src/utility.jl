@@ -31,6 +31,35 @@ Source:
 https://github.com/ctrekker/Deductive.jl
 =#
 
+
+"""
+    primitives(p)
+    primitives(ps...)
+
+Returns a vector of [`Primitive`](@ref) propositions contained in ```p```.
+
+Note that some primitives may optimized out of a statement, such as in ```p ∧ ⊥```.
+
+# Examples
+```jldoctest
+julia> @primitive p q r
+
+julia> primitives(p)
+1-element Vector{Primitive{String}}:
+ Primitive("p")
+
+julia> primitives(p ∧ q, r)
+3-element Vector{Primitive{String}}:
+ Primitive("q")
+ Primitive("p")
+ Primitive("r")
+```
+"""
+primitives(ps::Union{Primitive, Compound}...) = mapreduce(primitives, vcat, ps)
+primitives(p::Compound) = union(primitives(p.ϕ))
+primitives(ϕ::Tuple{Operator, Vararg}) = mapreduce(p -> primitives(p.ϕ), vcat, Base.tail(ϕ))
+primitives(p::Primitive) = [p]
+
 _truth_table(f, parameters) = [parameters...] .=> reduce(vcat, map(f, parameters))
 """
     truth_table(operator)
