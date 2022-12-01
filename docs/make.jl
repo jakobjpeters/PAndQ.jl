@@ -2,14 +2,18 @@
 using Documenter
 using PAQ
 
-if !ispath("assets/logo.svg")
+const DIR = @__DIR__
+if !ispath(DIR * "/src/assets/logo.svg")
     include("logo.jl")
-    make_logo()
+    make_logo(DIR)
 end
 
-DocMeta.setdocmeta!(PAQ, :DocTestSetup,
-    :(using PAQ);
-recursive=true)
+DocMeta.setdocmeta!(
+    PAQ,
+    :DocTestSetup,
+    :(using PAQ),
+    recursive=true
+)
 
 makedocs(
     sitename = "PAQ.jl",

@@ -1,13 +1,13 @@
 
 using Luxor
 
-function make_logo()
-    mkpath("src/assets")
+function make_logo(DIR)
+    mkpath(DIR * "/src/assets")
 
     dots_address = "https://raw.githubusercontent.com/JuliaLang/julia-logo-graphics/b5551ca7946b4a25746c045c15fbb8806610f8d0/images/julia-dots.svg"
     dots_svg = download(dots_address)
     dots = readsvg(dots_svg)
-    Drawing(dots.width, dots.height, :svg, "src/assets/logo.svg")
+    Drawing(dots.width, dots.height, :svg, DIR * "/src/assets/logo.svg")
     placeimage(dots)
 
     fontface("JuliaMono")
