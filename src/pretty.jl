@@ -11,7 +11,5 @@ function show(io::IO, ϕ::C, indent::Int = 0) where C <: Compound
     print(io, "\n", repeat("  ", indent), ") ")
 end
 
-
-show(io::IO, p::Primitive{String}) = print(io, "Primitive(\"", p.statement, "\")")
-show(io::IO, p::Primitive{Nothing}) = print(io, "Primitive(", p.statement, ")")
-show(io::IO, ::Valuation{V}) where V <: Val = print(io, first(V.parameters))
+show(io::IO, p::Primitive) = print(io, "Primitive(\"", p.statement, "\")")
+show(io::IO, ::Truth{V}) where V = print(io, first(V.parameters))

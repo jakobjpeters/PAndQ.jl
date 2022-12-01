@@ -4,7 +4,7 @@
 
 Set of well-formed logical formulae.
 
-Supertype of [`Primitive`](@ref), [`Compound`](@ref), and [`Valuation`](@ref).
+Supertype of [`Primitive`](@ref), [`Compound`](@ref), and [`Truth`](@ref).
 """
 abstract type Language end
 
@@ -19,8 +19,8 @@ Supertype of [`Propositional`](@ref) and [`Modal`](@ref).
 abstract type Compound <: Language end
 
 """
-    Primitive{S <: Union{String, Nothing}} <: Language
-    Primitive{S}([s = nothing])
+    Primitive <: Language
+    Primitive([statement::String = ""])
 
 Primitive proposition.
 
@@ -36,14 +36,14 @@ julia> ¬p
 Propositional(
   Not(), Propositional(
     Primitive("Logic is fun")
-  ) 
+  )
 )
 ```
 """
-struct Primitive{S <: Union{String, Nothing}} <: Language
-    statement::S
+struct Primitive <: Language
+    statement::String
 
-    Primitive(s::S = nothing) where S = new{S}(s)
+    Primitive(statement::String = "") = new(statement)
 end
 
 """
@@ -119,11 +119,11 @@ const _and = And()
     Propositional{
         L <: Union{
             Primitive,
-            Tuple{Not, Language},
-            Tuple{And, Language, Language}
+            Tuple{Not, Compound},
+            Tuple{And, Compound, Compound}
         }
     } <: Compound <: Language
-    Propositional{L}(ϕ)
+    Propositional(ϕ::L)
 
 Abstract syntax tree representing a compound proposition.
 
@@ -133,16 +133,16 @@ See also [`Primitive`](@ref), [`Not`](@ref), and [`And`](@ref).
 
 # Examples
 ```jldoctest
-julia> p = Propositional(Primitive())
+julia> p = Propositional(Primitive("p"))
 Propositional(
-  Primitive(nothing)
+  Primitive("p")
 )
 
 julia> ¬p
 Propositional(
   Not(), Propositional(
-    Primitive(nothing)
-  ) 
+    Primitive("p")
+  )
 )
 ```
 """
@@ -167,13 +167,13 @@ Propositional(::And, p::Primitive, q::Union{Primitive, Compound}) = Propositiona
 Propositional(::And, p::Compound, q::Primitive) = Propositional(_and, q, p)
 
 """
-    Valuation{V <: Union{Val{:⊥}, Val{:⊤}}} <: Language
-    Valuation(::V)
+    Truth{V <: Union{Val{:⊥}, Val{:⊤}}} <: Language
+    Truth(::V)
 
 Container for [`Tautology`](@ref) and [`Contradiction`](@ref).
 Subtype of [`Language`](@ref).
 """
-struct Valuation{V <: Union{Val{:⊥}, Val{:⊤}}} <: Language end
+struct Truth{V <: Union{Val{:⊥}, Val{:⊤}}} <: Language end
 
 """
     ⊥
@@ -181,7 +181,7 @@ struct Valuation{V <: Union{Val{:⊥}, Val{:⊤}}} <: Language end
 
 A constant which is false in every possible interpretation.
 
-One of two valid instances of [`Valuation`](@ref), the other instance being [`Tautology`](@ref).
+One of two valid instances of [`Truth`](@ref), the other instance being [`Tautology`](@ref).
 
 '⊥' can be typed by '\\bot<tab>'.
 
@@ -191,18 +191,10 @@ julia> ¬⊥
 ⊤
 
 julia> Contradiction()
-Propositional(
-  And(), Propositional(
-    Primitive(nothing)
-  ) Propositional(
-    Not(), Propositional(
-      Primitive(nothing)
-    ) 
-  ) 
-) 
+⊥
 ```
 """
-const Contradiction = Valuation{Val{:⊥}}()
+const Contradiction = Truth{Val{:⊥}}()
 const ⊥ = Contradiction
 
 """
@@ -211,7 +203,7 @@ const ⊥ = Contradiction
 
 A constant which is true in every possible interpretation.
 
-One of two valid instances of [`Valuation`](@ref), the other instance being [`Contradiction`](@ref).
+One of two valid instances of [`Truth`](@ref), the other instance being [`Contradiction`](@ref).
 
 '⊤' can be typed by '\\top<tab>'.
 
@@ -221,18 +213,8 @@ julia> ¬⊤
 ⊥
 
 julia> Tautology()
-Propositional(
-  Not(), Propositional(
-    And(), Propositional(
-      Primitive(nothing)
-    ) Propositional(
-      Not(), Propositional(
-        Primitive(nothing)
-      ) 
-    ) 
-  ) 
-)
+⊤
 ```
 """
-const Tautology = Valuation{Val{:⊤}}()
+const Tautology = Truth{Val{:⊤}}()
 const ⊤ = Tautology
