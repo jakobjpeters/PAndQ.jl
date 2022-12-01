@@ -2,3 +2,7 @@ name = "PAQ"
 uuid = "0e9bd771-5675-474a-ac7f-e6301f653425"
 authors = ["Jakob Peters <jakobj.peters@gmail.com>"]
 version = "0.1.0"
+
+[deps]
+Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
+PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"

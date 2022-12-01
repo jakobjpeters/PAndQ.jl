@@ -75,11 +75,15 @@ Subtype of [`Boolean`](@ref) and [`Operator`](@ref).
 See also [`And`](@ref).
 
 # Examples
-```jldoctest
-julia> truth_table(PAQ.Not())
-2-element Vector{Pair}:
- ⊤ => ⊥
- ⊥ => ⊤
+```jldoctest; setup = :(@primitive p)
+julia> @truth_table PAQ.Not()(p)
+┌───────────┬────────────────┐
+│         p │ (PAQ.Not())(p) │
+│ Primitive │  Propositional │
+├───────────┼────────────────┤
+│         ⊤ │              ⊥ │
+│         ⊥ │              ⊤ │
+└───────────┴────────────────┘
 ```
 """
 struct Not <: Boolean end
@@ -94,13 +98,18 @@ Subtype of [`Boolean`](@ref) and [`Operator`](@ref).
 See also [`Not`](@ref).
 
 # Examples
-```jldoctest
-julia> truth_table(PAQ.And())
-4-element Vector{Pair}:
- (⊤, ⊥) => ⊥
- (⊥, ⊥) => ⊥
- (⊤, ⊤) => ⊤
- (⊥, ⊤) => ⊥
+```jldoctest; setup = :(@primitive p q)
+julia> @truth_table PAQ.And()(p, q)
+┌───────────┬───────────┬───────────────────┐
+│         p │         q │ (PAQ.And())(p, q) │
+│ Primitive │ Primitive │     Propositional │
+├───────────┼───────────┼───────────────────┤
+│         ⊤ │         ⊤ │                 ⊤ │
+│         ⊤ │         ⊥ │                 ⊥ │
+├───────────┼───────────┼───────────────────┤
+│         ⊥ │         ⊤ │                 ⊥ │
+│         ⊥ │         ⊥ │                 ⊥ │
+└───────────┴───────────┴───────────────────┘
 ```
 """
 struct And <: Boolean end

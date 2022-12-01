@@ -13,11 +13,15 @@ Logical 'not' operator.
 See also [`Not`](@ref).
 
 # Examples
-```jldoctest
-julia> truth_table(¬)
-2-element Vector{Pair}:
- ⊤ => ⊥
- ⊥ => ⊤
+```jldoctest; setup = :(@primitive p)
+julia> @truth_table ¬p
+┌───────────┬───────────────┐
+│         p │            ¬p │
+│ Primitive │ Propositional │
+├───────────┼───────────────┤
+│         ⊤ │             ⊥ │
+│         ⊥ │             ⊤ │
+└───────────┴───────────────┘
 ```
 """
 function not end
@@ -36,13 +40,18 @@ Logical 'and' operator.
 See also [`And`](@ref).
 
 # Examples
-```jldoctest
-julia> truth_table(∧)
-4-element Vector{Pair}:
- (⊤, ⊥) => ⊥
- (⊥, ⊥) => ⊥
- (⊤, ⊤) => ⊤
- (⊥, ⊤) => ⊥
+```jldoctest; setup = :(@primitive p q)
+julia> @truth_table p ∧ q
+┌───────────┬───────────┬───────────────┐
+│         p │         q │         p ∧ q │
+│ Primitive │ Primitive │ Propositional │
+├───────────┼───────────┼───────────────┤
+│         ⊤ │         ⊤ │             ⊤ │
+│         ⊤ │         ⊥ │             ⊥ │
+├───────────┼───────────┼───────────────┤
+│         ⊥ │         ⊤ │             ⊥ │
+│         ⊥ │         ⊥ │             ⊥ │
+└───────────┴───────────┴───────────────┘
 ```
 """
 function and end
@@ -59,13 +68,18 @@ Logical 'nand' operator.
 '⊼' can be typed by '\\nand<tab>'.
 
 # Examples
-```jldoctest
-julia> truth_table(⊼)
-4-element Vector{Pair}:
- (⊤, ⊥) => ⊤
- (⊥, ⊥) => ⊤
- (⊤, ⊤) => ⊥
- (⊥, ⊤) => ⊤
+```jldoctest; setup = :(@primitive p q)
+julia> @truth_table p ⊼ q
+┌───────────┬───────────┬───────────────┐
+│         p │         q │         p ⊼ q │
+│ Primitive │ Primitive │ Propositional │
+├───────────┼───────────┼───────────────┤
+│         ⊤ │         ⊤ │             ⊥ │
+│         ⊤ │         ⊥ │             ⊤ │
+├───────────┼───────────┼───────────────┤
+│         ⊥ │         ⊤ │             ⊤ │
+│         ⊥ │         ⊥ │             ⊤ │
+└───────────┴───────────┴───────────────┘
 ```
 """
 nand
@@ -81,13 +95,18 @@ Logical 'nor' operator.
 '⊽' can be typed by '\\nor<tab>'.
 
 # Examples
-```jldoctest
-julia> truth_table(⊽)
-4-element Vector{Pair}:
- (⊤, ⊥) => ⊥
- (⊥, ⊥) => ⊤
- (⊤, ⊤) => ⊥
- (⊥, ⊤) => ⊥
+```jldoctest; setup = :(@primitive p q)
+julia> @truth_table p ⊽ q
+┌───────────┬───────────┬───────────────┐
+│         p │         q │         p ⊽ q │
+│ Primitive │ Primitive │ Propositional │
+├───────────┼───────────┼───────────────┤
+│         ⊤ │         ⊤ │             ⊥ │
+│         ⊤ │         ⊥ │             ⊥ │
+├───────────┼───────────┼───────────────┤
+│         ⊥ │         ⊤ │             ⊥ │
+│         ⊥ │         ⊥ │             ⊤ │
+└───────────┴───────────┴───────────────┘
 ```
 """
 nor
@@ -103,13 +122,18 @@ Logical 'or' operator.
 '∨' can be typed by '\\vee<tab>'.
 
 # Examples
-```jldoctest
-julia> truth_table(∨)
-4-element Vector{Pair}:
- (⊤, ⊥) => ⊤
- (⊥, ⊥) => ⊥
- (⊤, ⊤) => ⊤
- (⊥, ⊤) => ⊤
+```jldoctest; setup = :(@primitive p q)
+julia> @truth_table p ∨ q
+┌───────────┬───────────┬───────────────┐
+│         p │         q │         p ∨ q │
+│ Primitive │ Primitive │ Propositional │
+├───────────┼───────────┼───────────────┤
+│         ⊤ │         ⊤ │             ⊤ │
+│         ⊤ │         ⊥ │             ⊤ │
+├───────────┼───────────┼───────────────┤
+│         ⊥ │         ⊤ │             ⊤ │
+│         ⊥ │         ⊥ │             ⊥ │
+└───────────┴───────────┴───────────────┘
 ```
 """
 function or end
@@ -126,13 +150,18 @@ Logical 'xor' operator.
 '⊻' can be typed by '\\xor<tab>'.
 
 # Examples
-```jldoctest
-julia> truth_table(⊻)
-4-element Vector{Pair}:
- (⊤, ⊥) => ⊤
- (⊥, ⊥) => ⊥
- (⊤, ⊤) => ⊥
- (⊥, ⊤) => ⊤
+```jldoctest; setup = :(@primitive p q)
+julia> @truth_table p ⊻ q
+┌───────────┬───────────┬───────────────┐
+│         p │         q │         p ⊻ q │
+│ Primitive │ Primitive │ Propositional │
+├───────────┼───────────┼───────────────┤
+│         ⊤ │         ⊤ │             ⊥ │
+│         ⊤ │         ⊥ │             ⊤ │
+├───────────┼───────────┼───────────────┤
+│         ⊥ │         ⊤ │             ⊤ │
+│         ⊥ │         ⊥ │             ⊥ │
+└───────────┴───────────┴───────────────┘
 ```
 """
 xor
@@ -148,13 +177,18 @@ Logical 'if_then' operator.
 '→' can be typed by '\\rightarrow<tab>'.
 
 # Examples
-```jldoctest
-julia> truth_table(→)
-4-element Vector{Pair}:
- (⊤, ⊥) => ⊥
- (⊥, ⊥) => ⊤
- (⊤, ⊤) => ⊤
- (⊥, ⊤) => ⊤
+```jldoctest; setup = :(@primitive p q)
+julia> @truth_table p → q
+┌───────────┬───────────┬───────────────┐
+│         q │         p │         p → q │
+│ Primitive │ Primitive │ Propositional │
+├───────────┼───────────┼───────────────┤
+│         ⊤ │         ⊤ │             ⊤ │
+│         ⊤ │         ⊥ │             ⊤ │
+├───────────┼───────────┼───────────────┤
+│         ⊥ │         ⊤ │             ⊥ │
+│         ⊥ │         ⊥ │             ⊤ │
+└───────────┴───────────┴───────────────┘
 ```
 """
 function if_then end
@@ -171,13 +205,18 @@ Logical 'then_if' operator.
 '←' can be typed by '\\leftarrow<tab>'.
 
 # Examples
-```jldoctest
-julia> truth_table(←)
-4-element Vector{Pair}:
- (⊤, ⊥) => ⊤
- (⊥, ⊥) => ⊤
- (⊤, ⊤) => ⊤
- (⊥, ⊤) => ⊥
+```jldoctest; setup = :(@primitive p q)
+julia> @truth_table p ← q
+┌───────────┬───────────┬───────────────┐
+│         p │         q │         p ← q │
+│ Primitive │ Primitive │ Propositional │
+├───────────┼───────────┼───────────────┤
+│         ⊤ │         ⊤ │             ⊤ │
+│         ⊤ │         ⊥ │             ⊤ │
+├───────────┼───────────┼───────────────┤
+│         ⊥ │         ⊤ │             ⊥ │
+│         ⊥ │         ⊥ │             ⊤ │
+└───────────┴───────────┴───────────────┘
 ```
 """
 function then_if end
@@ -194,13 +233,18 @@ Logical 'only_if' operator.
 '↔' can be typed by '\\leftrightarrow<tab>'.
 
 # Examples
-```jldoctest
-julia> truth_table(↔)
-4-element Vector{Pair}:
- (⊤, ⊥) => ⊥
- (⊥, ⊥) => ⊤
- (⊤, ⊤) => ⊤
- (⊥, ⊤) => ⊥
+```jldoctest; setup = :(@primitive p q)
+julia> @truth_table p ↔ q
+┌───────────┬───────────┬───────────────┐
+│         q │         p │         p ↔ q │
+│ Primitive │ Primitive │ Propositional │
+├───────────┼───────────┼───────────────┤
+│         ⊤ │         ⊤ │             ⊤ │
+│         ⊤ │         ⊥ │             ⊥ │
+├───────────┼───────────┼───────────────┤
+│         ⊥ │         ⊤ │             ⊥ │
+│         ⊥ │         ⊥ │             ⊤ │
+└───────────┴───────────┴───────────────┘
 ```
 """
 function only_if end
