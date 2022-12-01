@@ -9,18 +9,17 @@ import Base.length, Base.print, Base.show
 
 Instantiates [`Primitive`](@ref) propositions.
 
+Examples
+```jldoctest
+julia> @primitive p q
 
+julia> p
+Primitive("p")
+
+julia> q
+Primitive("q")
+```
 """
-# Examples
-# ```jldoctest
-# julia> @primitive p q
-
-# julia> p
-# Primitive("p")
-
-# julia> q
-# Primitive("q")
-# ```
 macro primitive(expressions...)
     primitive = expression -> :($(esc(expression)) = Primitive($(string(expression))))
     primitives = map(primitive, expressions)
@@ -55,7 +54,7 @@ julia> primitives(p ∧ q, r)
  Primitive("r")
 ```
 """
-primitives(ps::Union{Primitive, Compound}...) = primitives(reduce(∧, ps))
+primitives(ps::Language...) = union(mapreduce(primitives, vcat, ps))
 primitives(p::Compound) = union(primitives(p.ϕ))
 primitives(ϕ::Tuple{Operator, Vararg}) = mapreduce(p -> primitives(p.ϕ), vcat, Base.tail(ϕ))
 primitives(p::Primitive) = [p]
@@ -85,7 +84,7 @@ julia> interpret(valuation, p → q)
 ⊤
 ```
 """
-interpret(valuation, ϕ::Union{Primitive, Compound}) = ϕ(Dict(map(p -> p => valuation(p), primitives(ϕ))))
+interpret(valuation, ϕ::Language) = ϕ(Dict(map(p -> p => valuation(p), primitives(ϕ))))
 
 # TODO: use ordered dicts?
 function truth_table(trees, nodes)
