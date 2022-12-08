@@ -86,9 +86,10 @@ julia> interpret(valuation, p → q)
 """
 interpret(valuation, ϕ::Language) = ϕ(Dict(map(p -> p => valuation(p), primitives(ϕ))))
 
-# TODO: use ordered dicts?
+# TODO: clean up
+# TODO: implement own ordered set with merging
 function truth_table(trees, nodes)
-    cs = first.(filter(tree -> first(tree) isa Compound, trees))
+    cs = map(first, filter(tree -> first(tree) isa Compound, trees))
     ps = primitives(cs...)
 
     comma = (x, y) -> x == y ? x : x * ", " * y
@@ -96,28 +97,34 @@ function truth_table(trees, nodes)
         comma,
         # TODO: simplify?
         Dict(map(p -> p => p.statement, filter(p -> !in(p, map(first, nodes)), ps))),
-        Dict.(filter(node -> first(node) isa Primitive, nodes))...
+        map(Dict, filter(node -> first(node) isa Primitive, nodes))...
     )
 
     n = length(ps)
     truth_sets = multiset_permutations([⊤, ⊥], [n, n], n)
     valuations = map(truth_set -> zip(ps, truth_set), truth_sets)
 
+    c_keys = []
     c_map = Dict()
     for c in trees
         x = Truth[]
+
         for valuation in valuations
             push!(x, interpret(p -> Dict(valuation)[p], first(c)))
         end
+
         mergewith!(comma, c_map, Dict(x => last(c)))
+        c_keys = union!(c_keys, tuple(x))
     end
 
     interpretations = mapreduce(permutedims, vcat, truth_sets)
     interpretations = reduce(hcat, keys(c_map), init = interpretations)
 
     header = (
-        map(p -> merge(p_map, c_map)[p], vcat(ps, collect(keys(c_map)))),
-        map(nameof ∘ typeof, vcat(ps, cs)),
+        map(p -> merge(p_map, c_map)[p], vcat(ps, c_keys)),
+
+        # TODO: length(cs) > length(c_map)
+        map(nameof ∘ typeof, vcat(ps, cs))
         # incorrect order of compounds
         # [map(p -> "\"" * p.statement * "\"", ps)..., map(c -> map(c -> c.statement, primitives(c)), cs)...]
     )
@@ -141,7 +148,7 @@ See also [`Primitive`](@ref) and [`Compound`](@ref).
 ```jldoctest; setup = :(@primitive p q)
 julia> @truth_table p∧q p→q
 ┌───────────┬───────────┬───────────────┬───────────────┐
-│         p │         q │         p → q │         p ∧ q │
+│         p │         q │         p ∧ q │         p → q │
 │ Primitive │ Primitive │ Propositional │ Propositional │
 ├───────────┼───────────┼───────────────┼───────────────┤
 │         ⊤ │         ⊤ │             ⊤ │             ⊤ │
@@ -158,8 +165,8 @@ macro truth_table(expressions...)
 
     return :(
         truth_table(
-            Propositional[$(map(esc, expressions)...)] .=> string.($expressions),
-            [$(map(esc, propositions)...)] .=> string.($propositions)
+            map(Pair, Propositional[$(map(esc, expressions)...)], map(string, $expressions)),
+            map(Pair, [$(map(esc, propositions)...)], map(string, $propositions))
         )
     )
 end
@@ -170,11 +177,13 @@ end
 Returns a boolean of whether propositions p and q are logically equivalent.
 
 # Examples
-```jldoctest; setup = :(@primitive p q)
-julia>
+```
+
 ```
 """
-equivalent(p::Language, q::Language) = truth_set(p) == truth_set(q)
+equivalent(p::Language, q::Language) = p ↔ q == ⊤
+# import Base.==
+# Base.==(p::Language, q::Language) = equivalent(p, q)
 
 
 
