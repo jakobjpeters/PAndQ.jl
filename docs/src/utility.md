@@ -2,8 +2,8 @@
 # Utility
 
 ```@docs
-@primitive
 primitives
-truth_table
-valuate
+@primitive
+@truth_table
+interpret
 ```

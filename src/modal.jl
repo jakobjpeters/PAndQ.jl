@@ -7,7 +7,7 @@ struct Agent
     operations::Dict{<:temp_modal, Vector{Compound}} # Set{M} needs iterate(::Language) defined
 end
 
-struct Modal <: Compound
+struct Modal # <: Compound
     ϕ::Tuple{temp_modal, Agent, Compound}
 end
 

@@ -10,7 +10,7 @@ Boolean
 Not
 And
 Propositional
-Valuation
-Tautology
-Contradiction
+Truth
+tautology
+contradiction
 ```

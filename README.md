@@ -3,7 +3,7 @@
 
 Do you like logic? If so, then you've come to the right package! Check out the [documentation](https://jakobjpeters.github.io/PAQ.jl/).
 
-*Please mind your ```ps ∧ qs```.*
+*Please mind your ```Ps ∧ Qs```.*
 
 
 ## Introduction
@@ -45,16 +45,3 @@ julia> using PAQ
 
 
 ## Known Bugs
-
-- ```@inline``` doesn't do anything *yet*.
-
-
-## To Do
-
-- Implement
-    - Sets
-    - First order logic
-    - Second order logic
-    - Higher order logic
-    - Modal logic
-

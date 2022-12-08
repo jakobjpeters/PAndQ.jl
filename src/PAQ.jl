@@ -18,7 +18,7 @@ export
     ⨉, cartesian_product,
 
     # propositional logic
-    Truth, ⊤, ⊥, Tautology, Contradiction, # valuations
+    Truth, ⊤, ⊥, tautology, contradiction, # valuations
     Operator, Boolean, Not, And, # functionally complete operations
     ¬, ∧, ⊼, ⊽, ∨, ⊻, →, ←, ↔, # boolean operators
     not, and, nand, nor, or, xor, if_then, then_if, only_if, # boolean operator alias'

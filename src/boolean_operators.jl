@@ -6,9 +6,9 @@ import Base.⊼, Base.⊽, Base.⊻
     ¬(p)
     not(p)
 
-Logical 'not' operator.
+Logical ```not``` operator.
 
-'¬' can be typed by '\\neg<tab>'.
+```¬``` can be typed by ```\\neg<tab>```.
 
 See also [`Not`](@ref).
 
@@ -33,9 +33,9 @@ const ¬ = not
     ∧(p, q)
     and(p, q)
 
-Logical 'and' operator.
+Logical ```and``` operator.
 
-'∧' can be typed by '\\wedge<tab>'.
+```∧``` can be typed by ```\\wedge<tab>```.
 
 See also [`And`](@ref).
 
@@ -63,9 +63,9 @@ p ∧ q = _and(p, q)
     ⊼(p, q)
     nand(p, q)
 
-Logical 'nand' operator.
+Logical ```nand``` operator.
 
-'⊼' can be typed by '\\nand<tab>'.
+```⊼``` can be typed by ```\\nand<tab>```.
 
 # Examples
 ```jldoctest; setup = :(@primitive p q)
@@ -90,9 +90,9 @@ p ⊼ q = ¬(p ∧ q)
     ⊽(p, q)
     nor(p, q)
 
-Logical 'nor' operator.
+Logical ```nor``` operator.
 
-'⊽' can be typed by '\\nor<tab>'.
+```⊽``` can be typed by ```\\nor<tab>```.
 
 # Examples
 ```jldoctest; setup = :(@primitive p q)
@@ -117,9 +117,9 @@ p ⊽ q = ¬p ∧ ¬q
     ∨(p, q)
     or(p, q)
 
-Logical 'or' operator.
+Logical ```or``` operator.
 
-'∨' can be typed by '\\vee<tab>'.
+'```∨```' can be typed by ```\\vee<tab>```.
 
 # Examples
 ```jldoctest; setup = :(@primitive p q)
@@ -145,9 +145,9 @@ p ∨ q = ¬(p ⊽ q)
     ⊻(p, q)
     xor(p, q)
 
-Logical 'xor' operator.
+Logical ```xor``` operator.
 
-'⊻' can be typed by '\\xor<tab>'.
+```⊻``` can be typed by ```\\xor<tab>```.
 
 # Examples
 ```jldoctest; setup = :(@primitive p q)
@@ -172,9 +172,9 @@ p ⊻ q = (p ∨ q) ∧ (p ⊼ q)
     →(p, q)
     if_then(p, q)
 
-Logical 'if_then' operator.
+Logical ```if_then``` operator.
 
-'→' can be typed by '\\rightarrow<tab>'.
+```→``` can be typed by ```\\rightarrow<tab>```.
 
 # Examples
 ```jldoctest; setup = :(@primitive p q)
@@ -200,9 +200,9 @@ p → q = ¬(p ∧ ¬q)
     ←(p, q)
     then_if(p, q)
 
-Logical 'then_if' operator.
+Logical ```then_if``` operator.
 
-'←' can be typed by '\\leftarrow<tab>'.
+```←``` can be typed by ```\\leftarrow<tab>```.
 
 # Examples
 ```jldoctest; setup = :(@primitive p q)
@@ -228,9 +228,9 @@ p ← q = q → p
     ↔(p, q)
     only_if(p, q)
 
-Logical 'only_if' operator.
+Logical ```only_if``` operator.
 
-'↔' can be typed by '\\leftrightarrow<tab>'.
+```↔``` can be typed by ```\\leftrightarrow<tab>```.
 
 # Examples
 ```jldoctest; setup = :(@primitive p q)

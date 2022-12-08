@@ -14,7 +14,7 @@ abstract type Language end
 Compound proposition.
 
 Subtype of [`Language`](@ref).
-Supertype of [`Propositional`](@ref) and [`Modal`](@ref).
+Supertype of [`Propositional`](@ref).
 """
 abstract type Compound <: Language end
 
@@ -49,9 +49,9 @@ end
 """
     Operator
 
-Set of functions that operate on [`well-formed formulae`](@ref Language).
+Set of functions that operate on a logical [`Language`](@ref).
 
-Supertype of [`Boolean`](@ref) and [`Modal`](@ref).
+Supertype of [`Boolean`](@ref).
 """
 abstract type Operator end
 
@@ -69,10 +69,10 @@ abstract type Boolean <: Operator end
 """
     Not <: Boolean <: Operator
 
-Singleton type representing logical negation that operates on a [`well-formed formulae`](@ref Language).
+Singleton type representing logical negation.
 
 Subtype of [`Boolean`](@ref) and [`Operator`](@ref).
-See also [`And`](@ref).
+See also [`And`](@ref) and [`Language`](@ref).
 
 # Examples
 ```jldoctest; setup = :(@primitive p)
@@ -92,10 +92,10 @@ const _not = Not()
 """
     And <: Boolean <: Operator
 
-Singleton type representing logical conjunction that operates on two [`well-formed formulae`](@ref Language).
+Singleton type representing logical conjunction.
 
 Subtype of [`Boolean`](@ref) and [`Operator`](@ref).
-See also [`Not`](@ref).
+See also [`Not`](@ref) and [`Language`](@ref).
 
 # Examples
 ```jldoctest; setup = :(@primitive p q)
@@ -128,7 +128,6 @@ const _and = And()
 Abstract syntax tree representing a compound proposition.
 
 Subtype of [`Compound`](@ref) and [`Language`](@ref).
-
 See also [`Primitive`](@ref), [`Not`](@ref), and [`And`](@ref).
 
 # Examples
@@ -170,51 +169,51 @@ Propositional(::And, p::Compound, q::Primitive) = Propositional(_and, q, p)
     Truth{V <: Union{Val{:⊥}, Val{:⊤}}} <: Language
     Truth(::V)
 
-Container for [`Tautology`](@ref) and [`Contradiction`](@ref).
+Container for the constants [`tautology`](@ref) and [`contradiction`](@ref).
 Subtype of [`Language`](@ref).
 """
 struct Truth{V <: Union{Val{:⊥}, Val{:⊤}}} <: Language end
 
 """
     ⊥
-    Contradiction
+    contradiction
 
 A constant which is false in every possible interpretation.
 
-One of two valid instances of [`Truth`](@ref), the other instance being [`Tautology`](@ref).
+One of two valid instances of [`Truth`](@ref), the other instance being [`tautology`](@ref).
 
-'⊥' can be typed by '\\bot<tab>'.
+```⊥``` can be typed by ```\\bot<tab>```.
 
 # Examples
 ```jldoctest
 julia> ¬⊥
 ⊤
 
-julia> Contradiction()
+julia> contradiction()
 ⊥
 ```
 """
-const Contradiction = Truth{Val{:⊥}}()
-const ⊥ = Contradiction
+const contradiction = Truth{Val{:⊥}}()
+const ⊥ = contradiction
 
 """
     ⊤
-    Tautology
+    tautology
 
 A constant which is true in every possible interpretation.
 
-One of two valid instances of [`Truth`](@ref), the other instance being [`Contradiction`](@ref).
+One of two valid instances of [`Truth`](@ref), the other instance being [`contradiction`](@ref).
 
-'⊤' can be typed by '\\top<tab>'.
+```⊤``` can be typed by ```\\top<tab>```.
 
 # Examples
 ```jldoctest
 julia> ¬⊤
 ⊥
 
-julia> Tautology()
+julia> tautology()
 ⊤
 ```
 """
-const Tautology = Truth{Val{:⊤}}()
-const ⊤ = Tautology
+const tautology = Truth{Val{:⊤}}()
+const ⊤ = tautology
