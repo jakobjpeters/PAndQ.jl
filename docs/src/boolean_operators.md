@@ -1,17 +1,17 @@
 
 # Boolean Operators
 
-| Name                    | Symbol                 | Tab completion   |
-|:----------------------- |:---------------------- |:---------------  |
-| [`not`](@ref)           | [`¬`](@ref not)        | \\neg            |
-| [`and`](@ref)           | [`∧`](@ref and)        | \\wedge          |
-| [`PAQ.nand`](@ref)      | [`⊼`](@ref PAQ.nand)   | \\nand           |
-| [`PAQ.nor`](@ref)       | [`⊽`](@ref PAQ.nor)    | \\nor            |
-| [`or`](@ref)            | [`∨`](@ref or)         | \\vee            |
-| [`PAQ.xor`](@ref)       | [`⊻`](@ref PAQ.xor)    | \\xor            |
-| [`if_then`](@ref)       | [`→`](@ref if_then)    | \\rightarrow     |
-| [`then_if`](@ref)       | [`←`](@ref then_if)    | \\leftarrow      |
-| [`only_if`](@ref)       | [`↔`](@ref only_if)    | \\leftrightarrow |
+| Name               | Symbol | Tab completion   |
+|:-------------------|:-------|:-----------------|
+| [`not`](@ref)      | ¬      | \\neg            |
+| [`and`](@ref)      | ∧      | \\wedge          |
+| [`PAQ.nand`](@ref) | ⊼      | \\nand           |
+| [`PAQ.nor`](@ref)  | ⊽      | \\nor            |
+| [`or`](@ref)       | ∨      | \\vee            |
+| [`PAQ.xor`](@ref)  | ⊻      | \\xor            |
+| [`if_then`](@ref)  | →      | \\rightarrow     |
+| [`then_if`](@ref)  | ←      | \\leftarrow      |
+| [`only_if`](@ref)  | ↔      | \\leftrightarrow |
 
 ```@docs
 not

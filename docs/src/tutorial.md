@@ -39,13 +39,9 @@ julia> @truth_table ¬p
 ```
 
 !!! info
-    For now, think of the symbols ```⊤``` and ```⊥``` as true and false, respectively. An exact definition of them will be given in a couple of paragraphs.
+    For now, think of the symbols ```⊤``` and ```⊥``` as *true* and *false*, respectively. An exact definition of them will be given in a couple of paragraphs.
 
-!!! info
-    The documentation for each symbol provides instructions on how to type it.
-    See also Julia's documentation on [Unicode Input](https://docs.julialang.org/en/v1/manual/unicode-input/). 
-
-Statements can also depend on multiple primitive propositions. The logical [`and`](@ref) connective is true when both ```p``` and ```q``` are true and is false otherwise. This is expressed as ```and(p, q)```, ```∧(p, q)```, or ```p ∧ q```. Repeatedly combining the connectives not and and can produce any possible truth table. Therefore, they are referred to as [functionally complete](https://en.wikipedia.org/wiki/Functional_completeness). For example, the connective [`or`](@ref) is equivalent to ```¬(¬p ∧ ¬q)```.
+Statements can also depend on multiple primitive propositions. The logical [`and`](@ref) connective is true when both ```p``` and ```q``` are true and is false otherwise. This is expressed as ```and(p, q)```, ```∧(p, q)```, or ```p ∧ q```. Repeatedly combining the connectives ```not``` and ```and``` can produce any possible truth table. As such, they are referred to as [functionally complete](https://en.wikipedia.org/wiki/Functional_completeness). For example, the connective [`or`](@ref) is equivalent to ```¬(¬p ∧ ¬q)```.
 
 ```jldoctest tutorial
 julia> @truth_table or(p, q) ¬(¬p ∧ ¬q)
@@ -67,10 +63,10 @@ julia> @truth_table or(p, q) ¬(¬p ∧ ¬q)
 
 ### Truth Values
 
-Consider ```p ∧ ¬p```. Using the earlier example, this proposition states that both "Logic is fun" and "Logic is not fun". Since these statements are mutually exclusive, their conjunction forms a [`contradiction`](@ref). A contradiction is a statement that is false in every possible interpretation. In other words, the statement ```p ∧ ¬p``` is false regardless of whether ```p```'s truth value is true or false. A contradiction can be expressed as ```contradiction``` or with the symbol ```⊥```. Negating a contradiction, in this case ```¬(p ∧ ¬p)```, results in a statement that is true in every possible interpretation. This is called a [`tautology`](@ref) and can be expressed as ```tautology``` or with the symbol ```⊤```. Contradiction and tautology symbols are also be used to express *true* and *false*, respectively, such as in ```@truth_table```.
+Consider the proposition ```p ∧ ¬p```. Using the earlier example, this states that both "Logic is fun" and "Logic is not fun". Since these statements are mutually exclusive, their conjunction forms a [`contradiction`](@ref). A contradiction is a statement that is false in every possible interpretation. In other words, the statement ```p ∧ ¬p``` is false regardless of whether ```p```'s truth value is true or false. A contradiction can be expressed as ```contradiction``` or with the symbol ```⊥```. The negation of a contradiction, in this case ```¬(p ∧ ¬p)```, results in a statement that is true in every possible interpretation. This is called a [`tautology`](@ref) and can be expressed as ```tautology``` or with the symbol ```⊤```. Contradiction and tautology symbols are also be used to express the concepts of *true* and *false*, respectively.
 
 !!! info
-    Note that ```⊤``` is a Unicode symbol, not an uppercase "t".
+    Note that ```⊤``` is a Unicode symbol, not an uppercase "t". The documentation for each symbol provides instructions on how to type it. For example, ```⊤``` can be typed by ```\\top<tab>```. See also Julia's documentation on [Unicode Input](https://docs.julialang.org/en/v1/manual/unicode-input/).
 
 ```jldoctest
 julia> ¬⊥
@@ -111,7 +107,7 @@ Since we may want to refer to compound statements defined differently, ψ has th
 Remember, every infix operator is a function. They also each have a written alias.
 
 ```jldoctest tutorial
-julia> p ∧ q == ∧(p, q) == and(p, q)
+julia> p ∧ q === ∧(p, q) === and(p, q)
 true
 ```
 

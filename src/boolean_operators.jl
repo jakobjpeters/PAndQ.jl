@@ -119,7 +119,7 @@ p ⊽ q = ¬p ∧ ¬q
 
 Logical ```or``` operator.
 
-'```∨```' can be typed by ```\\vee<tab>```.
+```∨``` can be typed by ```\\vee<tab>```.
 
 # Examples
 ```jldoctest; setup = :(@primitive p q)
