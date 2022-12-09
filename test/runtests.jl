@@ -1,8 +1,18 @@
 
+using Test
+using Documenter
 using PAQ
 
-function main()
-    nothing
-end
+DocMeta.setdocmeta!(
+    PAQ,
+    :DocTestSetup,
+    :(
+        using PAQ;
+        @primitive p q
+    ),
+    recursive=true
+)
 
-main()
+@testset "All" begin
+    doctest(PAQ)
+end
