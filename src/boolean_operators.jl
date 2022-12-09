@@ -13,7 +13,7 @@ Logical ```not``` operator.
 See also [`Not`](@ref).
 
 # Examples
-```jldoctest; setup = :(@primitive p)
+```jldoctest
 julia> @truth_table ¬p
 ┌───────────┬───────────────┐
 │         p │            ¬p │
@@ -40,7 +40,7 @@ Logical ```and``` operator.
 See also [`And`](@ref).
 
 # Examples
-```jldoctest; setup = :(@primitive p q)
+```jldoctest
 julia> @truth_table p ∧ q
 ┌───────────┬───────────┬───────────────┐
 │         p │         q │         p ∧ q │
@@ -68,7 +68,7 @@ Logical ```nand``` operator.
 ```⊼``` can be typed by ```\\nand<tab>```.
 
 # Examples
-```jldoctest; setup = :(@primitive p q)
+```jldoctest
 julia> @truth_table p ⊼ q
 ┌───────────┬───────────┬───────────────┐
 │         p │         q │         p ⊼ q │
@@ -95,7 +95,7 @@ Logical ```nor``` operator.
 ```⊽``` can be typed by ```\\nor<tab>```.
 
 # Examples
-```jldoctest; setup = :(@primitive p q)
+```jldoctest
 julia> @truth_table p ⊽ q
 ┌───────────┬───────────┬───────────────┐
 │         p │         q │         p ⊽ q │
@@ -122,7 +122,7 @@ Logical ```or``` operator.
 ```∨``` can be typed by ```\\vee<tab>```.
 
 # Examples
-```jldoctest; setup = :(@primitive p q)
+```jldoctest
 julia> @truth_table p ∨ q
 ┌───────────┬───────────┬───────────────┐
 │         p │         q │         p ∨ q │
@@ -150,7 +150,7 @@ Logical ```xor``` operator.
 ```⊻``` can be typed by ```\\xor<tab>```.
 
 # Examples
-```jldoctest; setup = :(@primitive p q)
+```jldoctest
 julia> @truth_table p ⊻ q
 ┌───────────┬───────────┬───────────────┐
 │         p │         q │         p ⊻ q │
@@ -177,7 +177,7 @@ Logical ```if_then``` operator.
 ```→``` can be typed by ```\\rightarrow<tab>```.
 
 # Examples
-```jldoctest; setup = :(@primitive p q)
+```jldoctest
 julia> @truth_table p → q
 ┌───────────┬───────────┬───────────────┐
 │         q │         p │         p → q │
@@ -205,7 +205,7 @@ Logical ```then_if``` operator.
 ```←``` can be typed by ```\\leftarrow<tab>```.
 
 # Examples
-```jldoctest; setup = :(@primitive p q)
+```jldoctest
 julia> @truth_table p ← q
 ┌───────────┬───────────┬───────────────┐
 │         p │         q │         p ← q │
@@ -233,7 +233,7 @@ Logical ```only_if``` operator.
 ```↔``` can be typed by ```\\leftrightarrow<tab>```.
 
 # Examples
-```jldoctest; setup = :(@primitive p q)
+```jldoctest
 julia> @truth_table p ↔ q
 ┌───────────┬───────────┬───────────────┐
 │         q │         p │         p ↔ q │
