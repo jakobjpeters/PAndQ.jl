@@ -42,7 +42,7 @@ Returns a vector of [`Primitive`](@ref) propositions contained in ```p```.
 Note that some primitives may optimized out of a statement, such as in ```p ∧ ⊥```.
 
 # Examples
-```jldoctest; setup = :(@primitive p q r)
+```jldoctest
 julia> primitives(p)
 1-element Vector{Primitive}:
  Primitive("p")
@@ -72,7 +72,7 @@ A valuation is a function that maps from the
 
 See also [`Primitive`](@ref), [`Compound`](@ref), and [`Truth`](@ref).
 
-```jldoctest; setup = :(@primitive p q)
+```jldoctest
 julia> mapping = Dict(p => ⊥, q => ⊤);
 
 julia> valuation = r -> mapping[r];
@@ -88,6 +88,7 @@ interpret(valuation, ϕ::Language) = ϕ(Dict(map(p -> p => valuation(p), primiti
 
 # TODO: clean up
 # TODO: implement own ordered set with merging
+# TODO: support Primitive and Truth
 function truth_table(trees, nodes)
     cs = map(first, filter(tree -> first(tree) isa Compound, trees))
     ps = primitives(cs...)
@@ -128,7 +129,7 @@ function truth_table(trees, nodes)
         # incorrect order of compounds
         # [map(p -> "\"" * p.statement * "\"", ps)..., map(c -> map(c -> c.statement, primitives(c)), cs)...]
     )
-    
+
     # cropping?
     pretty_table(
         interpretations,
@@ -145,7 +146,7 @@ Print a truth table for the given [`Compound`](@ref) propositions.
 See also [`Primitive`](@ref) and [`Compound`](@ref).
 
 # Examples
-```jldoctest; setup = :(@primitive p q)
+```jldoctest
 julia> @truth_table p∧q p→q
 ┌───────────┬───────────┬───────────────┬───────────────┐
 │         p │         q │         p ∧ q │         p → q │
@@ -154,8 +155,8 @@ julia> @truth_table p∧q p→q
 │         ⊤ │         ⊤ │             ⊤ │             ⊤ │
 │         ⊤ │         ⊥ │             ⊥ │             ⊥ │
 ├───────────┼───────────┼───────────────┼───────────────┤
-│         ⊥ │         ⊤ │             ⊤ │             ⊥ │
-│         ⊥ │         ⊥ │             ⊤ │             ⊥ │
+│         ⊥ │         ⊤ │             ⊥ │             ⊤ │
+│         ⊥ │         ⊥ │             ⊥ │             ⊤ │
 └───────────┴───────────┴───────────────┴───────────────┘
 ```
 """

@@ -1,7 +1,7 @@
 
 # Contributing
 
-When interacting with other people, please [*mind your ```ps ∧ qs```*](https://en.wikipedia.org/wiki/Mind_your_Ps_and_Qs).
+When interacting with other people, please [*mind your ```Ps ∧ Qs```*](https://en.wikipedia.org/wiki/Mind_your_Ps_and_Qs).
 
 
 ## Issues

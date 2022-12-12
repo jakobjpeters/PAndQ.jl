@@ -66,7 +66,7 @@ julia> @truth_table or(p, q) ¬(¬p ∧ ¬q)
 Consider the proposition ```p ∧ ¬p```. Using the earlier example, this states that both "Logic is fun" and "Logic is not fun". Since these statements are mutually exclusive, their conjunction forms a [`contradiction`](@ref). A contradiction is a statement that is false in every possible interpretation. In other words, the statement ```p ∧ ¬p``` is false regardless of whether ```p```'s truth value is true or false. A contradiction can be expressed as ```contradiction``` or with the symbol ```⊥```. The negation of a contradiction, in this case ```¬(p ∧ ¬p)```, results in a statement that is true in every possible interpretation. This is called a [`tautology`](@ref) and can be expressed as ```tautology``` or with the symbol ```⊤```. Contradiction and tautology symbols are also be used to express the concepts of *true* and *false*, respectively.
 
 !!! info
-    Note that ```⊤``` is a Unicode symbol, not an uppercase "t". The documentation for each symbol provides instructions on how to type it. For example, ```⊤``` can be typed by ```\\top<tab>```. See also Julia's documentation on [Unicode Input](https://docs.julialang.org/en/v1/manual/unicode-input/).
+    Note that ```⊤``` is a Unicode symbol, not an uppercase "t". The documentation for each symbol provides instructions on how to type it. For example, ```⊤``` can be typed by ```\top<tab>```. See also Julia's documentation on [Unicode Input](https://docs.julialang.org/en/v1/manual/unicode-input/).
 
 ```jldoctest
 julia> ¬⊥

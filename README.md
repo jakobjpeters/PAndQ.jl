@@ -3,8 +3,6 @@
 
 Do you like logic? If so, then you've come to the right package! Check out the [documentation](https://jakobjpeters.github.io/PAQ.jl/).
 
-*Please mind your ```Ps ∧ Qs```.*
-
 
 ## Introduction
 
