@@ -77,13 +77,13 @@ See also [`And`](@ref) and [`Language`](@ref).
 # Examples
 ```jldoctest; setup = :(@primitive p)
 julia> @truth_table PAQ.Not()(p)
-┌───────────┬────────────────┐
-│         p │ (PAQ.Not())(p) │
-│ Primitive │  Propositional │
-├───────────┼────────────────┤
-│         ⊤ │              ⊥ │
-│         ⊥ │              ⊤ │
-└───────────┴────────────────┘
+┌────────────────┬────────────────┐
+│              p │ (PAQ.Not())(p) │
+│ Primitive("p") │  Propositional │
+├────────────────┼────────────────┤
+│              ⊤ │              ⊥ │
+│              ⊥ │              ⊤ │
+└────────────────┴────────────────┘
 ```
 """
 struct Not <: Boolean end
@@ -100,16 +100,16 @@ See also [`Not`](@ref) and [`Language`](@ref).
 # Examples
 ```jldoctest; setup = :(@primitive p q)
 julia> @truth_table PAQ.And()(p, q)
-┌───────────┬───────────┬───────────────────┐
-│         p │         q │ (PAQ.And())(p, q) │
-│ Primitive │ Primitive │     Propositional │
-├───────────┼───────────┼───────────────────┤
-│         ⊤ │         ⊤ │                 ⊤ │
-│         ⊤ │         ⊥ │                 ⊥ │
-├───────────┼───────────┼───────────────────┤
-│         ⊥ │         ⊤ │                 ⊥ │
-│         ⊥ │         ⊥ │                 ⊥ │
-└───────────┴───────────┴───────────────────┘
+┌────────────────┬────────────────┬───────────────────┐
+│              p │              q │ (PAQ.And())(p, q) │
+│ Primitive("p") │ Primitive("q") │     Propositional │
+├────────────────┼────────────────┼───────────────────┤
+│              ⊤ │              ⊤ │                 ⊤ │
+│              ⊤ │              ⊥ │                 ⊥ │
+├────────────────┼────────────────┼───────────────────┤
+│              ⊥ │              ⊤ │                 ⊥ │
+│              ⊥ │              ⊥ │                 ⊥ │
+└────────────────┴────────────────┴───────────────────┘
 ```
 """
 struct And <: Boolean end
@@ -158,12 +158,13 @@ end
 Source:
 Van Ditmarsch, Hans, et al. Handbook of epistemic logic. College Publications, 2015.
 =#
-
+# preserve ordering
+Propositional(::And, p::Primitive, q::Compound) = Propositional(_and, Propositional(p), q)
+Propositional(::And, p::Compound, q::Primitive) = Propositional(_and, p, Propositional(q))
+Propositional(::And, p::Primitive, q::Primitive) = Propositional(_and, Propositional(p), Propositional(q))
+Propositional(::And, p::Compound, q::Compound) = Propositional((_and, p, q))
 Propositional(::Not, p::Compound) = Propositional((_not, p))
 Propositional(::Not, p::Primitive) = Propositional(_not, Propositional(p))
-Propositional(::And, p::Compound, q::Compound) = Propositional((_and, p, q))
-Propositional(::And, p::Primitive, q::Language) = Propositional(_and, q, Propositional(p))
-Propositional(::And, p::Compound, q::Primitive) = Propositional(_and, q, p)
 
 """
     Truth{V <: Union{Val{:⊥}, Val{:⊤}}} <: Language

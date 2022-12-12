@@ -35,7 +35,7 @@ https://github.com/ctrekker/Deductive.jl
 =#
 
 """
-    primitives(ps...)
+    get_primitives(ps...)
 
 Returns a vector of [`Primitive`](@ref) propositions contained in ```p```.
 
@@ -43,24 +43,26 @@ Note that some primitives may optimized out of a statement, such as in ```p ∧ 
 
 # Examples
 ```jldoctest
-julia> primitives(p)
+julia> get_primitives(p)
 1-element Vector{Primitive}:
  Primitive("p")
 
-julia> primitives(p ∧ q, r)
+julia> get_primitives(p ∧ q, r)
 3-element Vector{Primitive}:
  Primitive("p")
  Primitive("q")
  Primitive("r")
 ```
 """
-primitives(ps::Language...) = union(mapreduce(primitives, vcat, ps))
-primitives(p::Compound) = union(primitives(p.ϕ))
-primitives(ϕ::Tuple{Operator, Vararg}) = mapreduce(p -> primitives(p.ϕ), vcat, Base.tail(ϕ))
-primitives(p::Primitive) = [p]
+get_primitives(ps::Language...) = union(mapreduce(get_primitives, vcat, ps))
+get_primitives(p::Compound) = union(get_primitives(p.ϕ))
+get_primitives(ϕ::Tuple{Operator, Vararg}) = mapreduce(p -> get_primitives(p.ϕ), vcat, Base.tail(ϕ))
+get_primitives(p::Primitive) = [p]
+get_primitives(::Truth) = Primitive[]
 
+(p::Truth)(worlds) = p
 (p::Primitive)(worlds) = worlds[p]
-(p::Propositional{<:Primitive})(states) = p.ϕ(states)
+(p::Propositional{<:Primitive})(worlds) = p.ϕ(worlds)
 (p::Propositional{<:Tuple})(worlds) = first(p.ϕ)(map(ϕ -> ϕ(worlds), Base.tail(p.ϕ))...)
 """
     interpret(valuation, ϕ::Union{Primitive, Compound})
@@ -84,57 +86,80 @@ julia> interpret(valuation, p → q)
 ⊤
 ```
 """
-interpret(valuation, ϕ::Language) = ϕ(Dict(map(p -> p => valuation(p), primitives(ϕ))))
+interpret(valuation, ϕ::Language) = ϕ(Dict(map(p -> p => valuation(p), get_primitives(ϕ))))
 
-# TODO: clean up
-# TODO: implement own ordered set with merging
-# TODO: support Primitive and Truth
-function truth_table(trees, nodes)
-    cs = map(first, filter(tree -> first(tree) isa Compound, trees))
-    ps = primitives(cs...)
-
-    comma = (x, y) -> x == y ? x : x * ", " * y
-    p_map = mergewith!(
-        comma,
-        # TODO: simplify?
-        Dict(map(p -> p => p.statement, filter(p -> !in(p, map(first, nodes)), ps))),
-        map(Dict, filter(node -> first(node) isa Primitive, nodes))...
-    )
-
-    n = length(ps)
+# TODO: simplify logic
+# TODO: fix subheader of `@truth_table ⊥ p ∧ ¬p`
+# TODO: fix `@truth_table p ∧ ¬(p ∧ ¬p)`
+function truth_table(trees, trees_str, leaves, leaves_str)
+    primitives = get_primitives(trees...)
+    n = length(primitives)
     truth_sets = multiset_permutations([⊤, ⊥], [n, n], n)
-    valuations = map(truth_set -> zip(ps, truth_set), truth_sets)
+    valuations = map(truth_set -> zip(primitives, truth_set), truth_sets)
 
-    c_keys = []
-    c_map = Dict()
-    for c in trees
-        x = Truth[]
+    merge_string = (x, y) -> x == y || y == "" ? x : x * ", " * y
 
-        for valuation in valuations
-            push!(x, interpret(p -> Dict(valuation)[p], first(c)))
+    _sub_header = Language[]
+    labels = String[]
+    assignments = Vector{Truth}[]
+    for (tree, tree_str) in zip(trees, trees_str)
+        truths = Truth[]
+
+        if tree isa Primitive
+            continue
         end
 
-        mergewith!(comma, c_map, Dict(x => last(c)))
-        c_keys = union!(c_keys, tuple(x))
+        for valuation in valuations
+            push!(truths, interpret(p -> Dict(valuation)[p], tree))
+        end
+
+        if truths in assignments
+            i = findfirst(assignment -> assignment == truths, assignments)
+            labels[i] = merge_string(labels[i], tree_str)
+        else
+            push!(_sub_header, tree)
+            push!(labels, tree_str)
+            push!(assignments, truths)
+        end
     end
 
-    interpretations = mapreduce(permutedims, vcat, truth_sets)
-    interpretations = reduce(hcat, keys(c_map), init = interpretations)
+    valuation_matrix = mapreduce(permutedims, vcat, truth_sets)
+    assignment_matrix = reduce(hcat, assignments, init = Matrix(undef, 2^n, 0))
+    interpretations = hcat(valuation_matrix, assignment_matrix)
 
-    header = (
-        map(p -> merge(p_map, c_map)[p], vcat(ps, c_keys)),
+    make_header = (ps, ps_str) -> begin
+        ___header = Dict{Primitive, Vector{String}}()
 
-        # TODO: length(cs) > length(c_map)
-        map(nameof ∘ typeof, vcat(ps, cs))
-        # incorrect order of compounds
-        # [map(p -> "\"" * p.statement * "\"", ps)..., map(c -> map(c -> c.statement, primitives(c)), cs)...]
-    )
+        for (p, p_str) in zip(ps, ps_str)
+            if p isa Primitive
+                if p in keys(___header)
+                    push!(___header[p], p_str)
+                else
+                    ___header[p] = [p_str]
+                end
+            end
+        end
 
-    # cropping?
+        return ___header
+    end
+
+    header_domains = [
+        (leaves, leaves_str),
+        (trees, trees_str),
+        (primitives, map(primitive -> "", primitives))
+    ]
+    headers = map(header_domain -> make_header(header_domain...), header_domains)
+    __header = mergewith!(union ∘ vcat, headers...)
+    _header = map(primitive -> reduce(merge_string, __header[primitive]), primitives)
+    push!(_header, labels...)
+
+    sub_header = [primitives; map(nameof ∘ typeof, _sub_header)]
+    header = (_header, sub_header)
+
     pretty_table(
         interpretations,
         header = header,
-        body_hlines = collect(0:2:2^length(ps)),
+        body_hlines = collect(0:2:2^n),
         crop = :none
     )
 end
@@ -148,16 +173,16 @@ See also [`Primitive`](@ref) and [`Compound`](@ref).
 # Examples
 ```jldoctest
 julia> @truth_table p∧q p→q
-┌───────────┬───────────┬───────────────┬───────────────┐
-│         p │         q │         p ∧ q │         p → q │
-│ Primitive │ Primitive │ Propositional │ Propositional │
-├───────────┼───────────┼───────────────┼───────────────┤
-│         ⊤ │         ⊤ │             ⊤ │             ⊤ │
-│         ⊤ │         ⊥ │             ⊥ │             ⊥ │
-├───────────┼───────────┼───────────────┼───────────────┤
-│         ⊥ │         ⊤ │             ⊥ │             ⊤ │
-│         ⊥ │         ⊥ │             ⊥ │             ⊤ │
-└───────────┴───────────┴───────────────┴───────────────┘
+┌────────────────┬────────────────┬───────────────┬───────────────┐
+│              p │              q │         p ∧ q │         p → q │
+│ Primitive("p") │ Primitive("q") │ Propositional │ Propositional │
+├────────────────┼────────────────┼───────────────┼───────────────┤
+│              ⊤ │              ⊤ │             ⊤ │             ⊤ │
+│              ⊤ │              ⊥ │             ⊥ │             ⊥ │
+├────────────────┼────────────────┼───────────────┼───────────────┤
+│              ⊥ │              ⊤ │             ⊥ │             ⊤ │
+│              ⊥ │              ⊥ │             ⊥ │             ⊤ │
+└────────────────┴────────────────┴───────────────┴───────────────┘
 ```
 """
 macro truth_table(expressions...)
@@ -166,8 +191,10 @@ macro truth_table(expressions...)
 
     return :(
         truth_table(
-            map(Pair, Propositional[$(map(esc, expressions)...)], map(string, $expressions)),
-            map(Pair, [$(map(esc, propositions)...)], map(string, $propositions))
+            [$(map(esc, expressions)...)],
+            map(string, $expressions),
+            [$(map(esc, propositions)...)],
+            map(string, $propositions)
         )
     )
 end
