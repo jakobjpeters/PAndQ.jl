@@ -6,7 +6,7 @@ import Base.⊼, Base.⊽, Base.⊻
     ¬(p)
     not(p)
 
-Logical ```not``` operator.
+Logical "negation" operator.
 
 ```¬``` can be typed by ```\\neg<tab>```.
 
@@ -33,7 +33,7 @@ const ¬ = not
     ∧(p, q)
     and(p, q)
 
-Logical ```and``` operator.
+Logical "conjunction" operator.
 
 ```∧``` can be typed by ```\\wedge<tab>```.
 
@@ -63,7 +63,7 @@ p ∧ q = _and(p, q)
     ⊼(p, q)
     nand(p, q)
 
-Logical ```nand``` operator.
+Logical "non-conjunction" operator.
 
 ```⊼``` can be typed by ```\\nand<tab>```.
 
@@ -90,7 +90,7 @@ p ⊼ q = ¬(p ∧ q)
     ⊽(p, q)
     nor(p, q)
 
-Logical ```nor``` operator.
+Logical "non-disjunction" operator.
 
 ```⊽``` can be typed by ```\\nor<tab>```.
 
@@ -117,7 +117,7 @@ p ⊽ q = ¬p ∧ ¬q
     ∨(p, q)
     or(p, q)
 
-Logical ```or``` operator.
+Logical "disjunction" operator.
 
 ```∨``` can be typed by ```\\vee<tab>```.
 
@@ -145,7 +145,7 @@ p ∨ q = ¬(p ⊽ q)
     ⊻(p, q)
     xor(p, q)
 
-Logical ```xor``` operator.
+Logical "exclusive disjunction" operator.
 
 ```⊻``` can be typed by ```\\xor<tab>```.
 
@@ -172,7 +172,7 @@ p ⊻ q = (p ∨ q) ∧ (p ⊼ q)
     →(p, q)
     if_then(p, q)
 
-Logical ```if_then``` operator.
+Logical "implication" operator.
 
 ```→``` can be typed by ```\\rightarrow<tab>```.
 
@@ -196,11 +196,39 @@ const → = if_then
 p → q = ¬(p ∧ ¬q)
 
 """
+    p ↛ q
+    ↛(p, q)
+    not_if_then(p, q)
+
+Logical ```non-implication``` operator.
+
+```↛``` can be typed by ```\\nrightarrow<tab>```.
+
+# Examples
+```jldoctest
+julia> @truth_table p ↛ q
+┌────────────────┬────────────────┬───────────────┐
+│              p │              q │         p ↛ q │
+│ Primitive("p") │ Primitive("q") │ Propositional │
+├────────────────┼────────────────┼───────────────┤
+│              ⊤ │              ⊤ │             ⊥ │
+│              ⊤ │              ⊥ │             ⊤ │
+├────────────────┼────────────────┼───────────────┤
+│              ⊥ │              ⊤ │             ⊥ │
+│              ⊥ │              ⊥ │             ⊥ │
+└────────────────┴────────────────┴───────────────┘
+```
+"""
+function not_if_then end
+const ↛ = not_if_then
+p ↛ q = p ∧ ¬q
+
+"""
     p ← q
     ←(p, q)
     then_if(p, q)
 
-Logical ```then_if``` operator.
+Logical "converse implication" operator.
 
 ```←``` can be typed by ```\\leftarrow<tab>```.
 
@@ -224,11 +252,39 @@ const ← = then_if
 p ← q = ¬(¬p ∧ q)
 
 """
+    p ↚ q
+    ↚(p, q)
+    not_then_if(p, q)
+
+Logical "converse non-implication" operator.
+
+```↚``` can be typed by ```\\nleftarrow<tab>```.
+
+# Examples
+```jldoctest
+julia> @truth_table p ↚ q
+┌────────────────┬────────────────┬───────────────┐
+│              p │              q │         p ↚ q │
+│ Primitive("p") │ Primitive("q") │ Propositional │
+├────────────────┼────────────────┼───────────────┤
+│              ⊤ │              ⊤ │             ⊥ │
+│              ⊤ │              ⊥ │             ⊥ │
+├────────────────┼────────────────┼───────────────┤
+│              ⊥ │              ⊤ │             ⊤ │
+│              ⊥ │              ⊥ │             ⊥ │
+└────────────────┴────────────────┴───────────────┘
+```
+"""
+function not_then_if end
+const ↚ = not_then_if
+p ↚ q = ¬p ∧ q
+
+"""
     p ↔ q
     ↔(p, q)
-    only_if(p, q)
+    xnor(p, q)
 
-Logical ```only_if``` operator.
+Logical "exclusive non-disjunction" operator.
 
 ```↔``` can be typed by ```\\leftrightarrow<tab>```.
 
@@ -247,6 +303,6 @@ julia> @truth_table p ↔ q
 └────────────────┴────────────────┴───────────────┘
 ```
 """
-function only_if end
-const ↔ = only_if
+function xnor end
+const ↔ = xnor
 p ↔ q = (p → q) ∧ (p ← q)
