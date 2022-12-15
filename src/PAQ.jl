@@ -6,7 +6,6 @@ include("types.jl")
 include("functor.jl")
 include("boolean_operators.jl")
 # include("first_order.jl")
-include("modal.jl")
 include("utility.jl")
 include("pretty.jl")
 
@@ -26,10 +25,6 @@ export
 
     # first_order
     # ∀, ∃, ∄,
-
-    # modal logic
-    temp_modal, Know, Believe, # modal operators
-    Agent, K # language
 
 return nothing
 end # module

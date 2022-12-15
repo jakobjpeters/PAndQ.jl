@@ -1,6 +1,14 @@
 
-(::Truth{Val{:⊥}})() = ⊥
-(::Truth{Val{:⊤}})() = ⊤
+using Combinatorics
+
+function (p::Language)()
+    primitives = get_primitives(p)
+    n = length(primitives)
+    truth_sets = multiset_permutations([⊤, ⊥], [n, n], n)
+    valuations = map(truth_set -> map(Pair{Primitive, Truth}, primitives, truth_set), truth_sets)
+    truths = map(valuation -> interpret(p -> Dict(valuation)[p], p), valuations)
+    return map(Pair, valuations, truths)
+end
 
 (::Not)(p::Truth{Val{:⊤}}) = ⊥
 (::Not)(p::Truth{Val{:⊥}}) = ⊤
@@ -12,9 +20,4 @@
 (::And)(::Truth{Val{:⊤}}, q::Language) = q # identity law
 (::And)(::Truth{Val{:⊥}}, q::Language) = ⊥ # domination law
 (::And)(p::Union{Primitive, Compound}, q::Truth) = q ∧ p # commutative law
-
-function (::And)(p::Language, q::Language)
-    # p() == q() && return p # idempotent law - type unstable
-    p == q && return p # idempotent law - type unstable
-    return Propositional(_and, p, q)
-end
+(::And)(p::Language, q::Language) = Propositional(_and, p, q)

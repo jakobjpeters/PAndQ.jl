@@ -4,7 +4,10 @@
 
 Set of well-formed logical formulae.
 
+Calling an instance of ```Language``` will return a vector of valid interpretations.
+
 Supertype of [`Primitive`](@ref), [`Compound`](@ref), and [`Truth`](@ref).
+```
 """
 abstract type Language end
 
@@ -29,15 +32,13 @@ See also [`Compound`](@ref).
 
 # Examples
 ```jldoctest
-julia> p = Primitive("Logic is fun")
-Primitive("Logic is fun")
+julia> p
+Primitive("p")
 
-julia> ¬p
-Propositional(
-  Not(), Propositional(
-    Primitive("Logic is fun")
-  )
-)
+julia> p()
+2-element Vector{Pair{Vector{Pair{Primitive, Truth}}}}:
+ [Primitive("p") => ⊤] => ⊤
+ [Primitive("p") => ⊥] => ⊥
 ```
 """
 struct Primitive <: Language
@@ -132,17 +133,33 @@ See also [`Primitive`](@ref), [`Not`](@ref), and [`And`](@ref).
 
 # Examples
 ```jldoctest
-julia> p = Propositional(Primitive("p"))
-Propositional(
-  Primitive("p")
-)
-
 julia> ¬p
 Propositional(
   Not(), Propositional(
     Primitive("p")
   )
 )
+
+julia> (¬p)()
+2-element Vector{Pair{Vector{Pair{Primitive, Truth}}}}:
+ [Primitive("p") => ⊤] => ⊥
+ [Primitive("p") => ⊥] => ⊤
+
+julia> p ∧ q
+Propositional(
+  And(), Propositional(
+    Primitive("p")
+  ) Propositional(
+    Primitive("q")
+  ) 
+)
+
+julia> (p ∧ q)()
+4-element Vector{Pair{Vector{Pair{Primitive, Truth}}}}:
+ [Primitive("p") => ⊤, Primitive("q") => ⊤] => ⊤
+ [Primitive("p") => ⊤, Primitive("q") => ⊥] => ⊥
+ [Primitive("p") => ⊥, Primitive("q") => ⊤] => ⊥
+ [Primitive("p") => ⊥, Primitive("q") => ⊥] => ⊥
 ```
 """
 struct Propositional{
@@ -176,28 +193,6 @@ Subtype of [`Language`](@ref).
 struct Truth{V <: Union{Val{:⊥}, Val{:⊤}}} <: Language end
 
 """
-    ⊥
-    contradiction
-
-A constant which is false in every possible interpretation.
-
-One of two valid instances of [`Truth`](@ref), the other instance being [`tautology`](@ref).
-
-```⊥``` can be typed by ```\\bot<tab>```.
-
-# Examples
-```jldoctest
-julia> ¬⊥
-⊤
-
-julia> contradiction()
-⊥
-```
-"""
-const contradiction = Truth{Val{:⊥}}()
-const ⊥ = contradiction
-
-"""
     ⊤
     tautology
 
@@ -213,8 +208,32 @@ julia> ¬⊤
 ⊥
 
 julia> tautology()
-⊤
+1-element Vector{Pair{Vector{Pair{Primitive, Truth}}, Truth{Val{:⊤}}}}:
+ [] => ⊤
 ```
 """
 const tautology = Truth{Val{:⊤}}()
 const ⊤ = tautology
+
+"""
+    ⊥
+    contradiction
+
+A constant which is false in every possible interpretation.
+
+One of two valid instances of [`Truth`](@ref), the other instance being [`tautology`](@ref).
+
+```⊥``` can be typed by ```\\bot<tab>```.
+
+# Examples
+```jldoctest
+julia> ¬⊥
+⊤
+
+julia> contradiction()
+1-element Vector{Pair{Vector{Pair{Primitive, Truth}}, Truth{Val{:⊥}}}}:
+ [] => ⊥
+```
+"""
+const contradiction = Truth{Val{:⊥}}()
+const ⊥ = contradiction
