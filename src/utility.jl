@@ -2,7 +2,7 @@
 using Combinatorics
 using PrettyTables
 
-import Base.length, Base.print, Base.show
+import Base.length
 
 """
     @primitive(ps...)
