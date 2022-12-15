@@ -133,33 +133,24 @@ See also [`Primitive`](@ref), [`Not`](@ref), and [`And`](@ref).
 
 # Examples
 ```jldoctest
-julia> ¬p
-Propositional(
-  Not(), Propositional(
-    Primitive("p")
-  )
-)
-
-julia> (¬p)()
-2-element Vector{Pair{Vector{Pair{Primitive, Truth}}}}:
- [Primitive("p") => ⊤] => ⊥
- [Primitive("p") => ⊥] => ⊤
-
-julia> p ∧ q
+julia> p ∧ ¬p
 Propositional(
   And(), Propositional(
     Primitive("p")
   ) Propositional(
-    Primitive("q")
+    Not(), Propositional(
+      Primitive("p")
+    ) 
   ) 
 )
 
-julia> (p ∧ q)()
-4-element Vector{Pair{Vector{Pair{Primitive, Truth}}}}:
- [Primitive("p") => ⊤, Primitive("q") => ⊤] => ⊤
- [Primitive("p") => ⊤, Primitive("q") => ⊥] => ⊥
- [Primitive("p") => ⊥, Primitive("q") => ⊤] => ⊥
- [Primitive("p") => ⊥, Primitive("q") => ⊥] => ⊥
+julia> (p ∧ ¬p)()
+2-element Vector{Pair{Vector{Pair{Primitive, Truth}}, Truth{Val{:⊥}}}}:
+ [Primitive("p") => ⊤] => ⊥
+ [Primitive("p") => ⊥] => ⊥
+
+julia> (p → q) ∧ (p ← q) == ¬(p ⊻ q)
+true
 ```
 """
 struct Propositional{

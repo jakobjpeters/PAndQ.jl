@@ -58,7 +58,7 @@ julia> @truth_table or(p, q) ¬(¬p ∧ ¬q)
 ```
 
 !!! info
-    The first two cells of each row in this table is an [interpretation](https://en.wikipedia.org/wiki/Interpretation_(logic)), which allows the truth value of the corresponding last cell to be determined. More generally, interpretations are an assignment of meaning to logical symbols. A function that maps logical symbols to their meaning is called a [valuation](https://en.wikipedia.org/wiki/Valuation_(logic)) function.
+    The first two cells of each row in this table is an [interpretation](https://en.wikipedia.org/wiki/Interpretation_(logic)), which allows the truth value of the corresponding last cell to be determined. More generally, interpretations are an assignment of meaning to logical symbols. A function that maps logical symbols or formulae to their meaning is called a [valuation](https://en.wikipedia.org/wiki/Valuation_(logic)) function.
 
 
 ### Truth Values

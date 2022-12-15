@@ -35,11 +35,13 @@ https://github.com/ctrekker/Deductive.jl
 =#
 
 """
-    get_primitives(ps...)
+    get_primitives(ps::Language...)
 
 Returns a vector of [`Primitive`](@ref) propositions contained in ```p```.
 
-Note that some primitives may optimized out of a statement, such as in ```p ∧ ⊥```.
+Note that some primitives may optimized out of an expression, such as in ```p ∧ ⊥```.
+
+See also [`Language`](@ref).
 
 # Examples
 ```jldoctest
@@ -65,14 +67,13 @@ get_primitives(::Truth) = Primitive[]
 (p::Propositional{<:Primitive})(worlds) = p.ϕ(worlds)
 (p::Propositional{<:Tuple})(worlds) = first(p.ϕ)(map(ϕ -> ϕ(worlds), Base.tail(p.ϕ))...)
 """
-    interpret(valuation, ϕ::Union{Primitive, Compound})
+    interpret(valuation, ϕ)
 
-Given a valuation, 
+Given a valuation function that maps from the [`Primitive`](@ref)
+propositions in ```ϕ``` to their respective [`Truth`](@ref) values,
+assign a truth value to ```ϕ```.
 
-A valuation is a function that maps from the
-[`Primitive`](@ref) propositions in ```ϕ``` to their respective [`Truth`](@ref) values.
-
-See also [`Primitive`](@ref), [`Compound`](@ref), and [`Truth`](@ref).
+See also [`Language`](@ref).
 
 ```jldoctest
 julia> mapping = Dict(p => ⊥, q => ⊤);
@@ -86,12 +87,12 @@ julia> interpret(valuation, p → q)
 ⊤
 ```
 """
-interpret(valuation, ϕ::Language) = ϕ(Dict(map(p -> p => valuation(p), get_primitives(ϕ))))
+interpret(valuation, ϕ) = ϕ(Dict(map(p -> p => valuation(p), get_primitives(ϕ))))
 
 # TODO: simplify logic
 # TODO: fix subheader of `@truth_table ⊥ p ∧ ¬p`
 # TODO: fix `@truth_table p ∧ ¬(p ∧ ¬p)`
-function truth_table(trees, trees_str, leaves, leaves_str)
+function truth_table(trees::Vector{<:Language}, trees_str, leaves, leaves_str)
     primitives = get_primitives(trees...)
     n = length(primitives)
     truth_sets = multiset_permutations([⊤, ⊥], [n, n], n)
@@ -103,15 +104,11 @@ function truth_table(trees, trees_str, leaves, leaves_str)
     labels = String[]
     assignments = Vector{Truth}[]
     for (tree, tree_str) in zip(trees, trees_str)
-        truths = Truth[]
-
         if tree isa Primitive
             continue
         end
 
-        for valuation in valuations
-            push!(truths, interpret(p -> Dict(valuation)[p], tree))
-        end
+        truths = map(valuation -> interpret(p -> Dict(valuation)[p], tree), valuations)
 
         if truths in assignments
             i = findfirst(assignment -> assignment == truths, assignments)
@@ -164,11 +161,12 @@ function truth_table(trees, trees_str, leaves, leaves_str)
     )
 end
 """
-    @truth_table(ps...)
+    @truth_table p
+    @truth_table(ps::Language...)
 
-Print a truth table for the given [`Compound`](@ref) propositions.
+Print a truth table for the given propositions.
 
-See also [`Primitive`](@ref) and [`Compound`](@ref).
+See also [`Language`](@ref).
 
 # Examples
 ```jldoctest
@@ -200,13 +198,29 @@ macro truth_table(expressions...)
 end
 
 """
-    equivalent(p::Language, q::Language)
+    p == q
+    ==(p::Language, q::Language)
+    isequal(p::Language, q::Language)
 
-Returns a boolean of whether propositions p and q are logically equivalent.
+Returns a boolean indicating whether ```p``` and ```q``` are logically equivalent.
+
+See also [`Language`](@ref).
+
+!!! info
+    The ```≡``` symbol is sometimes used to represent logical equivalence.
+    However, Julia uses ```≡``` as an alias for the builtin function ```===```
+    which cannot have methods added to it.
 
 # Examples
 ```
+julia> p == ¬p
+false
 
+julia> julia> p ∨ q == ¬(¬q ∧ ¬p)
+true
+
+julia> isequal((p → q) ∧ (p ← q), ¬(p ⊻ q))
+true
 ```
 """
 Base.:(==)(p::Language, q::Language) = first(union(map(last, (p ↔ q)()))) == ⊤

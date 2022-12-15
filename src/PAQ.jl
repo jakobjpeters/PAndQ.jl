@@ -10,21 +10,22 @@ include("utility.jl")
 include("pretty.jl")
 
 export
-    # core.jl
-    @primitive, @truth_table, get_primitives, depth, length, interpret, # utility
+    # utility.jl
+    @primitive, @truth_table, get_primitives, depth, length, interpret, ==,
 
     # set.jl
     ⨉, cartesian_product,
 
-    # propositional logic
-    Truth, ⊤, ⊥, tautology, contradiction, # valuations
-    Operator, Boolean, Not, And, # functionally complete operations
-    ¬, ∧, ⊼, ⊽, ∨, ⊻, →, ↛, ←, ↚, ↔, # boolean operators
-    not, and, nand, nor, or, xor, if_then, not_if_then, then_if, not_then_if, xnor, # boolean operator alias'
+    # types.jl
     Language, Compound, Primitive, Propositional, # propositions
+    Truth, ⊤, ⊥, tautology, contradiction, # valuations
+
+    # propositional logic
+    Operator, Boolean, Not, And, # boolean operators
+    ¬, ∧, ⊼, ⊽, ∨, ⊻, →, ↛, ←, ↚, ↔, # boolean operators
+    not, and, nand, nor, or, xor, if_then, not_if_then, then_if, not_then_if, xnor # boolean operator alias'
 
     # first_order
-    # ∀, ∃, ∄,
-
+    # ∀, ∃, ∄
 return nothing
 end # module
