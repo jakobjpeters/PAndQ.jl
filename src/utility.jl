@@ -209,47 +209,6 @@ Returns a boolean of whether propositions p and q are logically equivalent.
 
 ```
 """
-equivalent(p::Language, q::Language) = p ↔ q == ⊤
-# import Base.==
-# Base.==(p::Language, q::Language) = equivalent(p, q)
-
-
-
-
-
-
-
-
-
-
-depth(ϕ::Compound) = depth(ϕ.ϕ)
-# depth(ϕ::Tuple{temp_modal, Agent, Language}) = 1 + depth(Base.tail(ϕ))
-depth(ϕ::Tuple{Boolean, Vararg}) = maximum(depth, Base.tail(ϕ))
-depth(p::Primitive) = 0
-
-# length(ϕ::Compound) = length(ϕ.ϕ)
-# length(p::Primitive) = 1
-# length(ϕ::Tuple{Boolean, Vararg}) = 1 + mapreduce(length, +, Base.tail(ϕ))
-# length(ϕ::Tuple{Modal, Agent, Language}) = 1 + length(Base.tail(ϕ))
-
-
-# #=
-# returns
-#     ⊤ if tautology
-#     ⊥ if contradiction
-#     ? if contingency
-# =#
-# # satisfiable
-# # unsatisfiable
-
-# # return vector of possible worlds
-# # if no possible worlds, contradiction
-# # if ϕ is in all possible worlds, tautology
-# # if ϕ is in no possible worlds, contradiction
-# prove(w::world, f::Language) = w.states[f](f)
-
-# ⊢ # \vdash
-# ⊣ # \dashv
-
-# ≡(ϕ::Language, ψ) = ϕ() == ψ() # \equiv - logical equivalence
-# equivalent = ≡
+Base.:(==)(p::Language, q::Language) = first(union(map(last, (p ↔ q)()))) == ⊤
+Base.:(==)(p::Primitive, q::Primitive) = p === q
+Base.:(==)(p::Truth, q::Truth) = p === q
