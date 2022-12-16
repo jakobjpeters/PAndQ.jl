@@ -16,8 +16,8 @@
 ```@docs
 not
 and
-nand
-nor
+Base.nand
+Base.nor
 or
 xor
 xnor
