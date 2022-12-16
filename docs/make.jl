@@ -26,9 +26,11 @@ makedocs(
         "Home" => "index.md",
         "Tutorial" => "tutorial.md",
         "Manual" => [
-            "Types" => "types.md",
-            "Boolean Operators" => "boolean_operators.md",
-            "Utility" => "utility.md"
+            "Abstract Types" => "manual/abstract_types.md",
+            "Propositional Logic" => "manual/propositional_logic.md",
+            "Boolean Operators" => "manual/boolean_operators.md",
+            "Semantics" => "manual/semantics.md",
+            "Internals" => "manual/internals.md"
         ]
     ]
 )

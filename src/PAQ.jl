@@ -1,33 +1,39 @@
 
 module PAQ
 
+using Combinatorics
+
 include("set.jl")
-include("types.jl")
-include("functor.jl")
+include("abstract_types.jl")
+include("propositional_logic.jl")
 include("boolean_operators.jl")
-# include("first_order.jl")
-include("utility.jl")
-include("pretty.jl")
+# include("predicate_logic.jl")
+include("semantics.jl")
+include("pretty_printing.jl")
 
 export
-    # utility.jl
-    @primitive, @truth_table, # macros
-    get_primitives, interpret, ==,
-    is_tautology, is_contradiction, is_satisfiable, is_falsifiable, is_contingency,
-
     # set.jl
     ⨉, cartesian_product,
 
-    # types.jl
-    Language, Compound, Primitive, Propositional, # propositions
-    Truth, ⊤, ⊥, tautology, contradiction, # valuations
+    # abstract_types.jl
+    Language, Compound, Operator,
 
-    # propositional logic
-    Operator, Boolean, Not, And, # boolean operators
-    ¬, ∧, ⊼, ⊽, ∨, ⊻, →, ↛, ←, ↚, ↔, # boolean operators
-    not, and, nand, nor, or, xor, if_then, not_if_then, then_if, not_then_if, xnor # boolean operator alias'
+    # propositional_logic.jl
+    Primitive, Boolean, Not, And, Propositional,
+    Truth, tautology, ⊤, contradiction, ⊥, 
+    @primitive, get_primitives,
 
-    # first_order
-    # ∀, ∃, ∄
+    # boolean_operators.jl
+    not, and, nand, nor, or, xor, xnor, if_then, not_if_then, then_if, not_then_if,
+    ¬, ∧, ⊼, ⊽, ∨, ⊻, ↔, →, ↛, ←, ↚,
+
+    # semantics.jl
+    is_tautology, is_contradiction, is_contingency, is_satisfiable, is_falsifiable,
+    ==, @truth_table
+
+    # pretty_printing.jl
+    print, show
+
 return nothing
+
 end # module

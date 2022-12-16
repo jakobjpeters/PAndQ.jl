@@ -32,7 +32,7 @@ const ¬ = not
 """
     p ∧ q
     ∧(p, q)
-    and(p, q)
+    and(p::Language, q::Language)
 
 Logical "conjunction" operator.
 
@@ -174,6 +174,35 @@ xor
 p ⊻ q = (p ∨ q) ∧ (p ⊼ q)
 
 """
+    p ↔ q
+    ↔(p, q)
+    xnor(p, q)
+
+Logical "exclusive non-disjunction" or "bi-directional implication" operator.
+
+```↔``` can be typed by ```\\leftrightarrow<tab>```.
+
+# Examples
+```jldoctest
+julia> @truth_table p ↔ q
+┌───────────┬───────────┬───────────────┐
+│ p         │ q         │ p ↔ q         │
+│ Primitive │ Primitive │ Propositional │
+│ "p"       │ "q"       │               │
+├───────────┼───────────┼───────────────┤
+│ ⊤         │ ⊤         │ ⊤             │
+│ ⊤         │ ⊥         │ ⊥             │
+├───────────┼───────────┼───────────────┤
+│ ⊥         │ ⊤         │ ⊥             │
+│ ⊥         │ ⊥         │ ⊤             │
+└───────────┴───────────┴───────────────┘
+```
+"""
+function xnor end
+const ↔ = xnor
+p ↔ q = (p → q) ∧ (p ← q)
+
+"""
     p → q
     →(p, q)
     if_then(p, q)
@@ -289,31 +318,3 @@ function not_then_if end
 const ↚ = not_then_if
 p ↚ q = ¬p ∧ q
 
-"""
-    p ↔ q
-    ↔(p, q)
-    xnor(p, q)
-
-Logical "exclusive non-disjunction" operator.
-
-```↔``` can be typed by ```\\leftrightarrow<tab>```.
-
-# Examples
-```jldoctest
-julia> @truth_table p ↔ q
-┌───────────┬───────────┬───────────────┐
-│ p         │ q         │ p ↔ q         │
-│ Primitive │ Primitive │ Propositional │
-│ "p"       │ "q"       │               │
-├───────────┼───────────┼───────────────┤
-│ ⊤         │ ⊤         │ ⊤             │
-│ ⊤         │ ⊥         │ ⊥             │
-├───────────┼───────────┼───────────────┤
-│ ⊥         │ ⊤         │ ⊥             │
-│ ⊥         │ ⊥         │ ⊤             │
-└───────────┴───────────┴───────────────┘
-```
-"""
-function xnor end
-const ↔ = xnor
-p ↔ q = (p → q) ∧ (p ← q)

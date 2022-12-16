@@ -1,4 +1,8 @@
 
+⨉ = Iterators.product # \bigtimes - cartesian product
+cartesian_product = ⨉
+
+
 # import Base.∈, Base.∉, Base.⊆, Base.⊈, Base.⊇, Base.⊉, Base.∪, Base.∩
 
 # set theory
@@ -15,5 +19,3 @@
 # ⊃(A, B) = ⊂(B, A)                           # \supset       - A superset of B
 # ⊅(A, B) = ¬⊃(A, B)                          # \nsupset      - A not supserset of B
 
-⨉ = Iterators.product # \bigtimes - cartesian product
-cartesian_product = ⨉
