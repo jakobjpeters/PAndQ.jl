@@ -85,7 +85,7 @@ julia> @truth_table p ⊼ q
 └───────────┴───────────┴───────────────┘
 ```
 """
-Base.nand(p, q) = ¬(p ∧ q)
+Base.:⊼(p::Language, q::Language) = ¬(p ∧ q)
 
 """
     p ⊽ q
@@ -112,7 +112,7 @@ julia> @truth_table p ⊽ q
 └───────────┴───────────┴───────────────┘
 ```
 """
-Base.nor(p, q) = ¬p ∧ ¬q
+Base.:⊽(p::Language, q::Language) = ¬p ∧ ¬q
 
 """
     p ∨ q
