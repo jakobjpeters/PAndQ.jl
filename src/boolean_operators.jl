@@ -85,8 +85,7 @@ julia> @truth_table p ⊼ q
 └───────────┴───────────┴───────────────┘
 ```
 """
-Base.nand
-p ⊼ q = ¬(p ∧ q)
+Base.nand(p, q) = ¬(p ∧ q)
 
 """
     p ⊽ q
@@ -113,8 +112,7 @@ julia> @truth_table p ⊽ q
 └───────────┴───────────┴───────────────┘
 ```
 """
-Base.nor
-p ⊽ q = ¬p ∧ ¬q
+Base.nor(p, q) = ¬p ∧ ¬q
 
 """
     p ∨ q
@@ -170,8 +168,7 @@ julia> @truth_table p ⊻ q
 └───────────┴───────────┴───────────────┘
 ```
 """
-Base.xor
-p ⊻ q = (p ∨ q) ∧ (p ⊼ q)
+Base.xor(p, q) = (p ∨ q) ∧ (p ⊼ q)
 
 """
     p ↔ q
