@@ -198,6 +198,134 @@ macro truth_table(expressions...)
 end
 
 """
+    is_tautology(p::Language)
+
+Returns a boolean on whether the given proposition is a [`tautology`](@ref).
+
+This function is equivalent to ```p == ⊤```.
+
+See also [`Language`](@ref) and [`==`](@ref).
+
+# Examples
+```jldoctest
+julia> is_tautology(⊤)
+true
+
+julia> is_tautology(p)
+false
+
+julia> is_tautology(¬(p ∧ ¬p))
+true
+```
+"""
+is_tautology(p::Language) = union(map(last, p())) == [⊤]
+
+"""
+    is_contradiction(p::Language)
+
+Returns a boolean on whether the given proposition is a [`contradiction`](@ref).
+
+This function is equivalent to ```p == ⊥```.
+
+See also [`Language`](@ref) and [`==`](@ref).
+
+# Examples
+```jldoctest
+julia> is_contradiction(⊥)
+true
+
+julia> is_contradiction(p)
+false
+
+julia> is_contradiction(p ∧ ¬p)
+true
+```
+"""
+is_contradiction(p::Language) = p == ⊥
+
+"""
+    is_contingency(p::Language)
+
+Returns a boolean on whether the given proposition is a contingency
+(neither a [`tautology`](@ref) or [`contradiction`](@ref)).
+
+While this function is equivalent to ```p != ⊤ && p != ⊥```, ```is_contingency(p)``` is preferred
+because the former expression will give an incorrect result if ```p``` is not a subtype of ```Language```.
+
+See also [`Language`](@ref).
+
+# Examples
+```jldoctest
+julia> is_contingency(⊤)
+false
+
+julia> is_contingency(p ∧ ¬p)
+false
+
+julia> is_contingency(p)
+true
+
+julia> is_contingency(p ∧ q)
+true
+```
+"""
+is_contingency(p::Language) = !is_tautology(p) && !is_contradiction(p)
+
+"""
+    is_satisfiable(p::Language)
+
+Returns a boolean on whether the given proposition is satisfiable (not a [`contradiction`](@ref)).
+
+While this function is equivalent to ```p != ⊥```, ```is_satisfiable(p)``` is preferred
+because the former expression will give an incorrect result if ```p``` is not a subtype of ```Language```.
+
+See also [`Language`](@ref).
+
+# Examples
+```jldoctest
+julia> is_satisfiable(⊤)
+true
+
+julia> is_satisfiable(p ∧ ¬p)
+false
+
+julia> is_satisfiable(p)
+true
+
+julia> is_satisfiable(p ∧ q)
+true
+```
+"""
+is_satisfiable(p::Language) = !is_contradiction(p)
+
+"""
+    is_falsifiable(p::Language)
+
+Returns a boolean on whether the given proposition is falsifiable (not a [`is_tautology`](@ref)).
+
+While this function is equivalent to ```p != ⊤```, ```is_falsifiable(p)``` is preferred
+because the former expression will give an incorrect result if ```p``` is not a subtype of ```Language```.
+
+See also [`Language`](@ref).
+
+# Examples
+```jldoctest
+julia> is_falsifiable(⊥)
+true
+
+julia> is_falsifiable(¬(p ∧ ¬p))
+false
+
+julia> is_falsifiable(p)
+true
+
+julia> is_falsifiable(p ∧ q)
+true
+```
+"""
+is_falsifiable(p::Language) = !is_tautology(p)
+
+"""
     p == q
     ==(p::Language, q::Language)
     isequal(p::Language, q::Language)
@@ -223,6 +351,6 @@ julia> isequal((p → q) ∧ (p ← q), ¬(p ⊻ q))
 true
 ```
 """
-Base.:(==)(p::Language, q::Language) = first(union(map(last, (p ↔ q)()))) == ⊤
+Base.:(==)(p::Language, q::Language) = is_tautology(p ↔ q)
 Base.:(==)(p::Primitive, q::Primitive) = p === q
 Base.:(==)(p::Truth, q::Truth) = p === q

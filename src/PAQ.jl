@@ -11,7 +11,9 @@ include("pretty.jl")
 
 export
     # utility.jl
-    @primitive, @truth_table, get_primitives, depth, length, interpret, ==,
+    @primitive, @truth_table, # macros
+    get_primitives, interpret, ==,
+    is_tautology, is_contradiction, is_satisfiable, is_falsifiable, is_contingency,
 
     # set.jl
     ⨉, cartesian_product,
