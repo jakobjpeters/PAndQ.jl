@@ -5,6 +5,8 @@
 |:-----------------------|:-------|:-----------------|
 | [`not`](@ref)          | ¬      | \\neg            |
 | [`and`](@ref)          | ∧      | \\wedge          |
+| [`nand`](@ref)         | ∧      | \\nand           |
+| [`nor`](@ref)          | ∨      | \\nor            |
 | [`or`](@ref)           | ∨      | \\vee            |
 | [`xor`](@ref)          | ⊻      | \\xor            |
 | [`xnor`](@ref)         | ↔      | \\leftrightarrow |

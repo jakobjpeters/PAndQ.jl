@@ -85,7 +85,8 @@ julia> @truth_table p ⊼ q
 └───────────┴───────────┴───────────────┘
 ```
 """
-Base.nand(p::Language, q::Language) = ¬(p ∧ q)
+Base.nand
+p::Language ⊼ q::Language = ¬(p ∧ q)
 
 """
     p ⊽ q
@@ -112,7 +113,8 @@ julia> @truth_table p ⊽ q
 └───────────┴───────────┴───────────────┘
 ```
 """
-Base.nor(p::Language, q::Language) = ¬p ∧ ¬q
+Base.nor
+p::Language ⊽ q::Language = ¬p ∧ ¬q
 
 """
     p ∨ q
@@ -168,7 +170,8 @@ julia> @truth_table p ⊻ q
 └───────────┴───────────┴───────────────┘
 ```
 """
-Base.xor(p::Language, q::Language) = (p ∨ q) ∧ (p ⊼ q)
+Base.xor
+p ⊻ q = (p ∨ q) ∧ (p ⊼ q)
 
 """
     p ↔ q
