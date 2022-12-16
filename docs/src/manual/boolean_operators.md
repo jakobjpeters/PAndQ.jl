@@ -18,8 +18,8 @@
 ```@docs
 not
 and
-nand(::Language, ::Language)
-nor(::Language, ::Language)
+nand
+nor
 or
 xor
 xnor
