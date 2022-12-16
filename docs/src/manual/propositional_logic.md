@@ -1,5 +1,5 @@
 
-# Types
+# Propositional Logic
 
 ```@docs
 Primitive

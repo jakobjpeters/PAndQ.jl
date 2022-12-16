@@ -1,5 +1,5 @@
 
-# Utility
+# Semantics
 
 ```@docs
 is_tautology

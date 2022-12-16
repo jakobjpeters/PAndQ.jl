@@ -178,7 +178,7 @@ p ⊻ q = (p ∨ q) ∧ (p ⊼ q)
     ↔(p, q)
     xnor(p, q)
 
-Logical "exclusive non-disjunction" or "bi-directional implication" operator.
+Logical "exclusive non-disjunction" and "bi-directional implication" operator.
 
 ```↔``` can be typed by ```\\leftrightarrow<tab>```.
 
