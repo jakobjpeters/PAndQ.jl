@@ -24,15 +24,16 @@ export
     @primitive, get_primitives,
 
     # boolean_operators.jl
-    not, and, nand, nor, or, xor, xnor, if_then, not_if_then, then_if, not_then_if,
-    ¬, ∧, ⊼, ⊽, ∨, ⊻, ↔, →, ↛, ←, ↚,
+    not, and, or, xnor, if_then, not_if_then, then_if, not_then_if,
+    ¬, ∧, ∨, ↔, →, ↛, ←, ↚,
+    # nand, ⊼, nor, ⊽, xor, ⊻ - exported by Base
 
     # semantics.jl
     is_tautology, is_contradiction, is_contingency, is_satisfiable, is_falsifiable,
     ==, @truth_table
 
     # pretty_printing.jl
-    print, show
+    # print, show - exported by Base
 
 return nothing
 
