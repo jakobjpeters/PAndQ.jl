@@ -150,12 +150,14 @@ function truth_table(trees::Vector{<:Language}, trees_str, leaves, leaves_str)
     _header = map(primitive -> reduce(merge_string, __header[primitive]), primitives)
     push!(_header, labels...)
 
-    sub_header = [primitives; map(nameof ∘ typeof, _sub_header)]
-    header = (_header, sub_header)
+    sub_header = map(nameof ∘ typeof, vcat(primitives, _sub_header))
+    sub_sub_header = vcat(map(primitive -> "\"" * primitive.statement * "\"", primitives), map(_ -> "", _sub_header))
+    header = (_header, sub_header, sub_sub_header)
 
     pretty_table(
         interpretations,
         header = header,
+        alignment = :l,
         body_hlines = collect(0:2:2^n),
         crop = :none
     )
@@ -166,21 +168,37 @@ end
 
 Print a truth table for the given propositions.
 
+The first row of the header is the expression representing that column's proposition,
+the second row indicates that expression's type,
+and the third row identifies the statements for [`Primitive`](@ref) propositions.
+
+!!! info
+    If a variable contains a primitive, there is no expression to label that primitive.
+    As such, the first row in the header will be blank.
+    However, the identifying statement is still known and will be displayed in the third row.
+    Use [`get_primitives`](@ref) to resolve this uncertainty.
+
+Logically equivalent propositions will be placed in the same column
+with their expressions in the header seperated by a comma.
+
+In this context, [`⊤`](@ref) and [`⊥`](@ref) can be interpreted as *true* and *false*, respectively.
+
 See also [`Language`](@ref).
 
 # Examples
 ```jldoctest
 julia> @truth_table p∧q p→q
-┌────────────────┬────────────────┬───────────────┬───────────────┐
-│              p │              q │         p ∧ q │         p → q │
-│ Primitive("p") │ Primitive("q") │ Propositional │ Propositional │
-├────────────────┼────────────────┼───────────────┼───────────────┤
-│              ⊤ │              ⊤ │             ⊤ │             ⊤ │
-│              ⊤ │              ⊥ │             ⊥ │             ⊥ │
-├────────────────┼────────────────┼───────────────┼───────────────┤
-│              ⊥ │              ⊤ │             ⊥ │             ⊤ │
-│              ⊥ │              ⊥ │             ⊥ │             ⊤ │
-└────────────────┴────────────────┴───────────────┴───────────────┘
+┌───────────┬───────────┬───────────────┬───────────────┐
+│ p         │ q         │ p ∧ q         │ p → q         │
+│ Primitive │ Primitive │ Propositional │ Propositional │
+│ "p"       │ "q"       │               │               │
+├───────────┼───────────┼───────────────┼───────────────┤
+│ ⊤         │ ⊤         │ ⊤             │ ⊤             │
+│ ⊤         │ ⊥         │ ⊥             │ ⊥             │
+├───────────┼───────────┼───────────────┼───────────────┤
+│ ⊥         │ ⊤         │ ⊥             │ ⊤             │
+│ ⊥         │ ⊥         │ ⊥             │ ⊤             │
+└───────────┴───────────┴───────────────┴───────────────┘
 ```
 """
 macro truth_table(expressions...)
