@@ -18,8 +18,8 @@
 ```@docs
 not
 and
-PAQ.nand
-PAQ.nor
+Base.nand
+Base.nor
 or
 xor
 xnor
