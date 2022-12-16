@@ -1,5 +1,5 @@
 
-import Base.nand, Base.nor, Base.xor
+# import Base.nand, Base.nor, Base.xor
 
 """
     ¬p
