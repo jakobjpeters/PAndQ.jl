@@ -1,5 +1,5 @@
 
-import Base.⊼, Base.⊽, Base.⊻
+import Base.nand, Base.nor, Base.xor
 
 """
     ¬p
