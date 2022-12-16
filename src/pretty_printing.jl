@@ -1,5 +1,5 @@
 
-import Base.print, Base.show
+import Base: print, show
 
 print(io::IO, p::Primitive, indent::Int) = print(io, repeat("  ", indent), p)
 print(io::IO, operator::Operator, indent::Int) = print(io, repeat("  ", indent), operator, ", ")

@@ -86,6 +86,7 @@ julia> @truth_table p ⊼ q
 ```
 """
 nand(p, q) = ¬(p ∧ q)
+const ⊼ = nand
 
 """
     p ⊽ q
@@ -113,6 +114,7 @@ julia> @truth_table p ⊽ q
 ```
 """
 nor(p, q) = ¬p ∧ ¬q
+const ⊽ = nor
 
 """
     p ∨ q
@@ -169,6 +171,7 @@ julia> @truth_table p ⊻ q
 ```
 """
 xor(p, q) = (p ∨ q) ∧ (p ⊼ q)
+const ⊻ = xor
 
 """
     p ↔ q
