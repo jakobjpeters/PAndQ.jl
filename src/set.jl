@@ -1,6 +1,6 @@
 
-⨉ = Iterators.product # \bigtimes - cartesian product
-cartesian_product = ⨉
+const ⨉ = Iterators.product # \bigtimes - cartesian product
+const cartesian_product = ⨉
 
 
 # import Base.∈, Base.∉, Base.⊆, Base.⊈, Base.⊇, Base.⊉, Base.∪, Base.∩
