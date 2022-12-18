@@ -15,7 +15,7 @@ DocMeta.setdocmeta!(
         using PAQ;
         @primitive p q r
     ),
-    recursive=true
+    recursive = true,
 )
 
 makedocs(
@@ -32,7 +32,8 @@ makedocs(
             "Semantics" => "manual/semantics.md",
             "Internals" => "manual/internals.md"
         ]
-    ]
+    ],
+    strict = true
 )
 
 deploydocs(
