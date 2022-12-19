@@ -13,6 +13,7 @@ Normal
 Truth
 tautology
 contradiction
+Contingency
 @primitive
 get_primitives
 ```
