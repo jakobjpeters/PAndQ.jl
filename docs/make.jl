@@ -13,7 +13,7 @@ DocMeta.setdocmeta!(
     :DocTestSetup,
     :(
         using PAQ;
-        @primitive p q r
+        @primitive p q
     ),
     recursive = true,
 )
@@ -30,7 +30,7 @@ makedocs(
             "Propositional Logic" => "manual/propositional_logic.md",
             "Boolean Operators" => "manual/boolean_operators.md",
             "Semantics" => "manual/semantics.md",
-            "Internals" => "manual/internals.md"
+            "Pretty Printing" => "manual/pretty_printing.md"
         ]
     ],
     strict = true

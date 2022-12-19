@@ -1,6 +1,0 @@
-
-# Internals
-
-```@docs
-PAQ.interpret
-```

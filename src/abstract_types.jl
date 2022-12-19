@@ -17,7 +17,7 @@ Compound <: Language
 Compound proposition.
 
 Subtype of [`Language`](@ref).
-Supertype of [`Propositional`](@ref).
+Supertype of [`Literal`](@ref), [`Propositional`](@ref), and [`Normal`](@ref).
 """
 abstract type Compound <: Language end
 

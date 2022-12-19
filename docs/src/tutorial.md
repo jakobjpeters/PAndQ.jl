@@ -2,7 +2,7 @@
 ```@meta
 DocTestSetup = quote
     using PAQ
-    @primitive p q r
+    @primitive p q
 end
 ```
 
@@ -16,10 +16,12 @@ A primitive proposition is a statement that can be true or false. For example, t
 
 ```jldoctest tutorial
 julia> p = Primitive("Logic is fun")
-Primitive("Logic is fun")
+Primitive:
+  Logic is fun
 
 julia> q = Primitive("Julia is awesome")
-Primitive("Julia is awesome")
+Primitive:
+  Julia is awesome
 ```
 
 
@@ -29,14 +31,14 @@ Since ```p``` can be true or false, we can form other logical statements that de
 
 ```jldoctest tutorial
 julia> @truth_table ¬p
-┌───────────┬───────────────┐
-│ p         │ ¬p            │
-│ Primitive │ Propositional │
-│ "p"       │               │
-├───────────┼───────────────┤
-│ ⊤         │ ⊥             │
-│ ⊥         │ ⊤             │
-└───────────┴───────────────┘
+┌───────────┬─────────┐
+│ p         │ ¬p      │
+│ Primitive │ Literal │
+│ "p"       │         │
+├───────────┼─────────┤
+│ ⊤         │ ⊥       │
+│ ⊥         │ ⊤       │
+└───────────┴─────────┘
 ```
 
 !!! info
@@ -72,13 +74,16 @@ Consider the proposition ```p ∧ ¬p```. Using the earlier example, this states
 
 ```jldoctest
 julia> ¬⊥
-⊤
+Truth:
+  ⊤
 
 julia> p ∧ ⊤ # identity law
-Primitive("p")
+Primitive:
+  p
 
 julia> p ∧ ⊥ # domination law
-⊥
+Truth:
+  ⊥
 ```
 
 
@@ -116,6 +121,8 @@ true
 
 ## Minimization
 
+## Logically Equivalent Representations
+
 ## Order of Operations
 
-<!-- associativity -->
+## Associativity

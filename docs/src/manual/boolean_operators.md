@@ -1,5 +1,32 @@
 
+```@meta
+DocTestSetup = quote
+    using PAQ
+    @primitive p q
+end
+```
+
 # Boolean Operators
+
+Every possible truth table can be constructed with the functionally complete set of operators
+```not``` and ```and```. For convenience, all sixteen of them have been prepared.
+There are ten binary operators, with the remaining six being expressed with
+individual propositions, the unary [`not`](@ref) operator, and [`Truth`](@ref) constants.
+
+```jldoctest
+julia> @truth_table ¬p ¬q ⊤ ⊥
+┌───────────┬───────────┬─────────┬─────────┬───────┬───────┐
+│ p         │ q         │ ¬p      │ ¬q      │ ⊤     │ ⊥     │
+│ Primitive │ Primitive │ Literal │ Literal │ Truth │ Truth │
+│ "p"       │ "q"       │         │         │       │       │
+├───────────┼───────────┼─────────┼─────────┼───────┼───────┤
+│ ⊤         │ ⊤         │ ⊥       │ ⊥       │ ⊤     │ ⊥     │
+│ ⊤         │ ⊥         │ ⊥       │ ⊤       │ ⊤     │ ⊥     │
+├───────────┼───────────┼─────────┼─────────┼───────┼───────┤
+│ ⊥         │ ⊤         │ ⊤       │ ⊥       │ ⊤     │ ⊥     │
+│ ⊥         │ ⊥         │ ⊤       │ ⊤       │ ⊤     │ ⊥     │
+└───────────┴───────────┴─────────┴─────────┴───────┴───────┘
+```
 
 | Name                   | Symbol | Tab completion   |
 |:-----------------------|:-------|:-----------------|

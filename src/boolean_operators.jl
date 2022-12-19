@@ -15,19 +15,19 @@ See also [`Not`](@ref).
 # Examples
 ```jldoctest
 julia> @truth_table ¬p
-┌───────────┬───────────────┐
-│ p         │ ¬p            │
-│ Primitive │ Propositional │
-│ "p"       │               │
-├───────────┼───────────────┤
-│ ⊤         │ ⊥             │
-│ ⊥         │ ⊤             │
-└───────────┴───────────────┘
+┌───────────┬─────────┐
+│ p         │ ¬p      │
+│ Primitive │ Literal │
+│ "p"       │         │
+├───────────┼─────────┤
+│ ⊤         │ ⊥       │
+│ ⊥         │ ⊤       │
+└───────────┴─────────┘
 ```
 """
 function not end
 const ¬ = not
-¬p = _not(p)
+¬p = Not()(p)
 
 """
     p ∧ q
@@ -58,7 +58,7 @@ julia> @truth_table p ∧ q
 """
 function and end
 const ∧ = and
-p ∧ q = _and(p, q)
+p ∧ q = And()(p, q)
 
 """
     p ⊼ q

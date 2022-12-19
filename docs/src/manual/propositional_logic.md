@@ -2,11 +2,14 @@
 # Propositional Logic
 
 ```@docs
-Primitive
 Boolean
 Not
 And
+Or
+Primitive
+Literal
 Propositional
+Normal
 Truth
 tautology
 contradiction

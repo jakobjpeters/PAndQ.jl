@@ -1,39 +1,15 @@
 
+import Base: convert
+
 # Types
-
-"""
-    Primitive <: Language
-    Primitive([statement::String = ""])
-
-Primitive proposition.
-
-Subtype of [`Language`](@ref).
-See also [`Compound`](@ref).
-
-# Examples
-```jldoctest
-julia> p
-Primitive("p")
-
-julia> p()
-2-element Vector{Pair{Vector{Pair{Primitive, Truth}}}}:
- [Primitive("p") => ⊤] => ⊤
- [Primitive("p") => ⊥] => ⊥
-```
-"""
-struct Primitive <: Language
-    statement::String
-
-    Primitive(statement::String = "") = new(statement)
-end
 
 """
     Boolean <: Operator
 
-Set of functionally complete logical connectives.
+Set of logical connectives.
 
 Subtype of [`Operator`](@ref).
-Supertype of [`Not`](@ref) and [`And`](@ref).
+Supertype of [`Not`](@ref), [`And`](@ref), and [`Or`](@ref).
 See also [Boolean Operators](@ref).
 """
 abstract type Boolean <: Operator end
@@ -44,23 +20,10 @@ abstract type Boolean <: Operator end
 Singleton type representing logical negation.
 
 Subtype of [`Boolean`](@ref) and [`Operator`](@ref).
-See also [`And`](@ref) and [`Language`](@ref).
-
-# Examples
-```jldoctest
-julia> @truth_table PAQ.Not()(p)
-┌───────────┬────────────────┐
-│ p         │ (PAQ.Not())(p) │
-│ Primitive │ Propositional  │
-│ "p"       │                │
-├───────────┼────────────────┤
-│ ⊤         │ ⊥              │
-│ ⊥         │ ⊤              │
-└───────────┴────────────────┘
+See also [`not`](@ref).
 ```
 """
 struct Not <: Boolean end
-const _not = Not()
 
 """
     And <: Boolean <: Operator
@@ -68,86 +31,160 @@ const _not = Not()
 Singleton type representing logical conjunction.
 
 Subtype of [`Boolean`](@ref) and [`Operator`](@ref).
-See also [`Not`](@ref) and [`Language`](@ref).
-
-# Examples
-```jldoctest
-julia> @truth_table PAQ.And()(p, q)
-┌───────────┬───────────┬───────────────────┐
-│ p         │ q         │ (PAQ.And())(p, q) │
-│ Primitive │ Primitive │ Propositional     │
-│ "p"       │ "q"       │                   │
-├───────────┼───────────┼───────────────────┤
-│ ⊤         │ ⊤         │ ⊤                 │
-│ ⊤         │ ⊥         │ ⊥                 │
-├───────────┼───────────┼───────────────────┤
-│ ⊥         │ ⊤         │ ⊥                 │
-│ ⊥         │ ⊥         │ ⊥                 │
-└───────────┴───────────┴───────────────────┘
+See also [`and`](@ref).
 ```
 """
 struct And <: Boolean end
-const _and = And()
+
+"""
+    Or <: Boolean <: Operator
+
+Singleton type representing logical disjunction.
+
+Subtype of [`Boolean`](@ref) and [`Operator`](@ref).
+See also [`or`](@ref).
+"""
+struct Or <: Boolean end
+
+"""
+    Primitive <: Language
+    Primitive([statement::String = ""])
+
+Primitive proposition.
+
+Subtype of [`Language`](@ref).
+
+# Examples
+```jldoctest
+julia> p
+Primitive:
+  p
+
+julia> p()
+Contingency:
+  [p => ⊤] => ⊤
+  [p => ⊥] => ⊥
+```
+"""
+struct Primitive <: Language
+    statement::String
+
+    Primitive(statement::String = "") = statement == "" ? new("_") : new(statement)
+end
+
+"""
+    Literal{
+        L <: Union{
+            Primitive,
+            Tuple{Not, Primitive}
+        }
+    } <: Compound <: Language
+    Literal(p::L)
+
+A [`Primitive`](@ref) or its negation.
+
+Subtype of [`Compound`](@ref) and [`Language`](@ref).
+See also [`Not`](@ref).
+
+# Examples
+```jldoctest
+julia> r = ¬p
+Literal:
+  ¬p
+
+julia> r()
+Contingency:
+  [p => ⊤] => ⊥
+  [p => ⊥] => ⊤
+```
+"""
+struct Literal{
+    L <: Union{
+        Primitive,
+        Tuple{Not, Primitive}
+    }
+} <: Compound
+    ϕ::L
+end
 
 """
     Propositional{
         L <: Union{
-            Primitive,
             Tuple{Not, Compound},
             Tuple{And, Compound, Compound}
         }
-    }(ϕ::L) <: Compound <: Language
+    } <: Compound <: Language
+    Propositional(ϕ::L)
 
 Abstract syntax tree representing a compound proposition.
 
 Subtype of [`Compound`](@ref) and [`Language`](@ref).
-See also [`Primitive`](@ref), [`Not`](@ref), and [`And`](@ref).
+See also [`Not`](@ref) and [`And`](@ref).
 
 # Examples
 ```jldoctest
-julia> p ∧ ¬p
-Propositional(
-  And(), Propositional(
-    Primitive("p")
-  ) Propositional(
-    Not(), Propositional(
-      Primitive("p")
-    ) 
-  ) 
-)
+julia> r = p ∧ ¬p
+Propositional:
+  p ∧ ¬p
 
-julia> (p ∧ ¬p)()
-2-element Vector{Pair{Vector{Pair{Primitive, Truth}}, Truth{Val{:⊥}}}}:
- [Primitive("p") => ⊤] => ⊥
- [Primitive("p") => ⊥] => ⊥
+julia> r()
+Truth:
+  ⊥
 
-julia> (p → q) ∧ (p ← q) == ¬(p ⊻ q)
-true
+julia> (p ∧ q)()
+Contingency:
+  [p => ⊤, q => ⊤] => ⊤
+  [p => ⊤, q => ⊥] => ⊥
+  [p => ⊥, q => ⊤] => ⊥
+  [p => ⊥, q => ⊥] => ⊥
 ```
 """
 struct Propositional{
     L <: Union{
-        Primitive,
         Tuple{Not, Compound},
         Tuple{And, Compound, Compound}
     }
 } <: Compound
     ϕ::L
 end
-#=
-Source:
-Van Ditmarsch, Hans, et al. Handbook of epistemic logic. College Publications, 2015.
-=#
-# preserve ordering
-Propositional(::And, p::Primitive, q::Compound) = Propositional(_and, Propositional(p), q)
-Propositional(::And, p::Compound, q::Primitive) = Propositional(_and, p, Propositional(q))
-Propositional(::And, p::Primitive, q::Primitive) = Propositional(_and, Propositional(p), Propositional(q))
-Propositional(::And, p::Compound, q::Compound) = Propositional((_and, p, q))
-Propositional(::Not, p::Compound) = Propositional((_not, p))
-Propositional(::Not, p::Primitive) = Propositional(_not, Propositional(p))
 
 """
-    Truth{V <: Union{Val{:⊥}, Val{:⊤}}}(::V) <: Language
+    Normal{B <: Union{And, Or}} <: Compound <: Language
+    Normal(::B, clauses::Vector{Vector{Literal}})
+
+The conjunctive or disjunctive normal form of a proposition.
+
+Constructing an instance with the parameters ```(And(), p)``` and ```(Or(), p)```
+correspond to conjunctive and disjunctive normal form, respectively.
+
+Subtype of [`Compound`](@ref) and [`Language`](@ref).
+
+# Examples
+```jldoctest
+julia> r = Normal(And(), p ∧ q)
+Normal:
+  (¬p ∨ q) ∧ (p ∨ ¬q) ∧ (p ∨ q)
+
+julia> s = Normal(Or(), ¬p ∨ ¬q)
+Normal:
+  (p ∧ ¬q) ∨ (¬p ∧ q) ∨ (¬p ∧ ¬q)
+
+julia> t = r ∧ s
+Propositional:
+  (¬p ∨ q) ∧ (p ∨ ¬q) ∧ (p ∨ q) ∧ (p ∧ ¬q) ∨ (¬p ∧ q) ∨ (¬p ∧ ¬q)
+
+julia> t()
+Truth:
+  ⊥
+```
+"""
+struct Normal{B <: Union{And, Or} #=, L <: Literal =#} <: Compound
+    clauses::Vector{Vector{Literal}}
+end
+
+"""
+    Truth{V <: Union{Val{:⊥}, Val{:⊤}}} <: Language
+    Truth(::V)
 
 Container for the constants [`tautology`](@ref) and [`contradiction`](@ref).
 Subtype of [`Language`](@ref).
@@ -167,11 +204,12 @@ One of two valid instances of [`Truth`](@ref), the other instance being [`contra
 # Examples
 ```jldoctest
 julia> ¬⊤
-⊥
+Truth:
+  ⊥
 
 julia> tautology()
-1-element Vector{Pair{Vector{Pair{Primitive, Truth}}, Truth{Val{:⊤}}}}:
- [] => ⊤
+Truth:
+  ⊤
 ```
 """
 const tautology = Truth{Val{:⊤}}()
@@ -190,38 +228,39 @@ One of two valid instances of [`Truth`](@ref), the other instance being [`tautol
 # Examples
 ```jldoctest
 julia> ¬⊥
-⊤
+Truth:
+  ⊤
 
 julia> contradiction()
-1-element Vector{Pair{Vector{Pair{Primitive, Truth}}, Truth{Val{:⊥}}}}:
- [] => ⊥
+Truth:
+  ⊥
 ```
 """
 const contradiction = Truth{Val{:⊥}}()
 const ⊥ = contradiction
 
-# Function-like objects
+"""
+    Contingency
 
-function (p::Language)()
-    primitives = get_primitives(p)
-    n = length(primitives)
-    truth_sets = multiset_permutations([⊤, ⊥], [n, n], n)
-    valuations = map(truth_set -> map(Pair{Primitive, Truth}, primitives, truth_set), truth_sets)
-    truths = map(valuation -> interpret(p -> Dict(valuation)[p], p), valuations)
-    return map(Pair, valuations, truths)
+# Examples
+```jldoctest
+julia> p()
+Contingency:
+  [p => ⊤] => ⊤
+  [p => ⊥] => ⊥
+
+julia> (p ∧ q)()
+Contingency:
+  [p => ⊤, q => ⊤] => ⊤
+  [p => ⊤, q => ⊥] => ⊥
+  [p => ⊥, q => ⊤] => ⊥
+  [p => ⊥, q => ⊥] => ⊥
+```
+"""
+struct Contingency <: Language
+    interpretations::Vector{Pair{Vector{Pair{Primitive, Truth}}}}
 end
 
-(::Not)(p::Language) = Propositional(_not, p)
-(::Not)(p::Propositional{Tuple{Not, Propositional{P}}}) where P <: Primitive = last(p.ϕ).ϕ # double negation elimination
-(::Not)(p::Propositional{Tuple{Not, C}}) where C <: Compound = last(p.ϕ) # double negation elimination
-(::Not)(p::Truth{Val{:⊤}}) = ⊥
-(::Not)(p::Truth{Val{:⊥}}) = ⊤
-
-(::And)(p::Language, q::Language) = Propositional(_and, p, q)
-(::And)(::Truth{Val{:⊤}}, ::Truth{Val{:⊤}}) = ⊤
-(::And)(::Truth{Val{:⊤}}, q::Language) = q # identity law
-(::And)(::Truth{Val{:⊥}}, q::Language) = ⊥ # domination law
-(::And)(p::Union{Primitive, Compound}, q::Truth) = q ∧ p # commutative law
 
 # Utility
 
@@ -235,20 +274,19 @@ Examples
 julia> @primitive p q
 
 julia> p
-Primitive("p")
+Primitive:
+  p
 
 julia> q
-Primitive("q")
+Primitive:
+  q
 ```
 """
 macro primitive(expressions...)
     primitive = expression -> :($(esc(expression)) = Primitive($(string(expression))))
     primitives = map(primitive, expressions)
 
-    return quote
-        $(primitives...)
-        nothing
-    end
+    return :($(primitives...); nothing)
 end
 #=
 Source:
@@ -258,7 +296,7 @@ https://github.com/ctrekker/Deductive.jl
 """
     get_primitives(ps::Language...)
 
-Returns a vector of [`Primitive`](@ref) propositions contained in ```p```.
+Returns a vector of [`Primitive`](@ref) propositions contained in ```ps```.
 
 Note that some primitives may optimized out of an expression, such as in ```p ∧ ⊥```.
 
@@ -266,19 +304,71 @@ See also [`Language`](@ref).
 
 # Examples
 ```jldoctest
-julia> get_primitives(p)
-1-element Vector{Primitive}:
- Primitive("p")
+julia> r = p ∧ q
+Propositional:
+  p ∧ q
 
-julia> get_primitives(p ∧ q, r)
-3-element Vector{Primitive}:
+julia> get_primitives(r)
+2-element Vector{Primitive}:
  Primitive("p")
  Primitive("q")
- Primitive("r")
 ```
 """
-get_primitives(ps::Language...) = union(mapreduce(get_primitives, vcat, ps))
-get_primitives(p::Compound) = union(get_primitives(p.ϕ))
-get_primitives(ϕ::Tuple{Operator, Vararg}) = mapreduce(p -> get_primitives(p.ϕ), vcat, Base.tail(ϕ))
+get_primitives(::Truth) = []
+get_primitives(p::Contingency) = union(mapreduce(
+    interpretation -> map(
+        literal -> first(literal), first(interpretation)),
+    vcat, p.interpretations
+))
 get_primitives(p::Primitive) = [p]
-get_primitives(::Truth) = Primitive[]
+get_primitives(p::Literal) = get_primitives(p.ϕ)
+get_primitives(p::Propositional) = union(get_primitives(p.ϕ))
+get_primitives(ϕ::Tuple{Operator, Vararg}) = mapreduce(p -> get_primitives(p), vcat, Base.tail(ϕ))
+get_primitives(p::Normal) = get_primitives(Propositional(p))
+get_primitives(ps::Language...) = union(mapreduce(get_primitives, vcat, ps))
+
+
+# Helpers 
+
+Base.convert(::Type{L}, p::L) where L <: Language = p
+Base.convert(::Type{L}, p::Language) where L <: Language = L(p)
+Base.convert(::Type{Literal}, literal::Pair{Primitive, <:Truth}) = last(literal) == ⊤ ? Literal(first(literal)) : ¬first(literal)
+Base.convert(::Type{Propositional}, p::typeof(⊥)) = Primitive() ∧ ¬Primitive()
+Base.convert(::Type{Propositional}, p::typeof(⊤)) = ¬Propositional(⊥)
+Base.convert(::Type{Propositional}, p::Contingency) = mapreduce(interpretation -> mapreduce(Literal, ∧, first(interpretation)), ∨, filter(interpretation -> last(interpretation) == ⊤, p.interpretations))
+Base.convert(n::Type{Normal}, p::Contingency) = n(Propositional(p))
+Base.convert(::Type{Propositional}, p::Normal{And}) = _convert(p, ∨, ∧)
+Base.convert(::Type{Propositional}, p::Normal{Or}) = _convert(p, ∧, ∨)
+_convert(p, inner, outer) = mapreduce(clause -> reduce(inner, clause), outer, p.clauses)
+
+
+# Consructors
+
+# TODO: use Base.promote?
+Propositional(::Not, p::Primitive) = Literal((Not(), p))
+Propositional(::Not, p::Compound) = Propositional((Not(), p))
+
+Propositional(::And, p::Primitive, q::Primitive) = Propositional(And(), Literal(p), Literal(q))
+Propositional(::And, p::Primitive, q::Compound) = Propositional(And(), Literal(p), q)
+Propositional(::And, p::Compound, q::Primitive) = Propositional(And(), p, Literal(q))
+Propositional(::And, p::Compound, q::Compound) = Propositional((And(), p, q))
+
+Literal(p::Pair{Primitive, Truth}) = convert(Literal, p)
+Propositional(p::Language) = convert(Propositional, p)
+Normal(::B, p::Contingency) where B <: Union{And, Or} = convert(Contingency{B}, p)
+
+Normal(::And, p::Language) = ¬Normal(Or(), ¬p)
+function Normal(::Or, p::Language)
+    q = p()
+    interpretations = () ->
+        if q === ⊤
+            [[Primitive() => ⊤], [Primitive() => ⊥]]
+        elseif q === ⊥
+            [[Primitive() => ⊤, Primitive() => ⊥]]
+        else
+            map(first, filter(literal -> last(literal) == ⊤, q.interpretations))
+        end
+
+    clauses = map(interpretation -> map(Literal, interpretation), interpretations())
+    return Normal{Or}(clauses)
+end
