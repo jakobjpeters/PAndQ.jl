@@ -1,13 +1,11 @@
 
 name: Documentation
-
 on:
   push:
     branches:
       - main
     tags: '*'
   pull_request:
-
 jobs:
   build:
     permissions:
