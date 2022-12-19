@@ -12,7 +12,12 @@ When interacting with other people, please [*mind your ```Ps ∧ Qs```*](https:/
 
 ## Style Guide
 
-Use [snake case](https://en.wikipedia.org/wiki/Snake_case) when naming variables and functions. Otherwise, follow Julia's official [style guide](https://docs.julialang.org/en/v1/manual/style-guide/#Use-naming-conventions-consistent-with-Julia-base/).
+- Use [snake case](https://en.wikipedia.org/wiki/Snake_case) when naming variables and functions.
+- Files begin and end with an empty line
+- Use a functional programming style as much as possible
+    - Except when needed for performance optimizations
+
+Otherwise, follow Julia's official [style guide](https://docs.julialang.org/en/v1/manual/style-guide/#Use-naming-conventions-consistent-with-Julia-base/).
 
 
 ## To-do

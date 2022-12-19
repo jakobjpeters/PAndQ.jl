@@ -5,14 +5,15 @@ DocTestSetup = quote
 end
 ```
 
-# P∧Q.jl
-
-Do you like logic? If so, then you've come to the right package! Check out the [source code](https://github.com/jakobjpeters/PAQ.jl/).
-
+# Home
 
 ## Introduction
 
-P∧Q.jl implements propositional logic ([with more to come](https://github.com/jakobjpeters/PAQ.jl/blob/main/CONTRIBUTING.md)). It is designed to have an intuitive interface by enabling you to write and evaluate logical statements symbolically. This is thanks to Julia's support for [Unicode](https://docs.julialang.org/en/v1/manual/unicode-input/) and infix operators. Alternatively, every symbol has a written alias.
+If you lke logic, then you've come to the right place!
+
+P∧Q has an intuitive interface that enables you to manipulate logical statements symbolically. This is thanks to Julia's support for [Unicode](https://docs.julialang.org/en/v1/manual/unicode-input/), infix operators, and inductive data structures.
+
+The implementation concise, only ~200 source lines of code (according to Codecov as of December, 2022).
 
 
 ## Installation
@@ -35,28 +36,35 @@ Truth:
 
 julia> @primitive p q
 
-julia> r = ¬p
-Literal:
-  ¬p
+julia> r = p ∧ q
+Propositional:
+  p ∧ q
 
-julia> ¬r
-Primitive:
-  p
+julia> r()
+Contingency:
+  [p => ⊤, q => ⊤] => ⊤
+  [p => ⊤, q => ⊥] => ⊥
+  [p => ⊥, q => ⊤] => ⊥
+  [p => ⊥, q => ⊥] => ⊥
 
-julia> p ∨ ⊤
-Truth:
-  ⊤
+julia> s = Normal(And(), r)
+Normal:
+  (¬p ∨ q) ∧ (p ∨ ¬q) ∧ (p ∨ q)
 
-julia> @truth_table ¬p r p → q
-┌───────────┬───────────┬─────────┬───────────────┐
-│ p         │ q         │ ¬p, r   │ p → q         │
-│ Primitive │ Primitive │ Literal │ Propositional │
-│ "p"       │ "q"       │         │               │
-├───────────┼───────────┼─────────┼───────────────┤
-│ ⊤         │ ⊤         │ ⊥       │ ⊤             │
-│ ⊤         │ ⊥         │ ⊥       │ ⊥             │
-├───────────┼───────────┼─────────┼───────────────┤
-│ ⊥         │ ⊤         │ ⊤       │ ⊤             │
-│ ⊥         │ ⊥         │ ⊤       │ ⊤             │
-└───────────┴───────────┴─────────┴───────────────┘
+julia> t = @Show p ⊻ q
+Show{Propositional}:
+  p ⊻ q
+
+julia> @truth_table p ⊻ q s ⊥
+┌───────────┬───────────┬───────────────┬────────┬───────┐
+│ p         │ q         │ p ⊻ q         │ s      │ ⊥     │
+│ Primitive │ Primitive │ Propositional │ Normal │ Truth │
+│ "p"       │ "q"       │               │        │       │
+├───────────┼───────────┼───────────────┼────────┼───────┤
+│ ⊤         │ ⊤         │ ⊥             │ ⊤      │ ⊥     │
+│ ⊤         │ ⊥         │ ⊤             │ ⊥      │ ⊥     │
+├───────────┼───────────┼───────────────┼────────┼───────┤
+│ ⊥         │ ⊤         │ ⊤             │ ⊥      │ ⊥     │
+│ ⊥         │ ⊥         │ ⊥             │ ⊥      │ ⊥     │
+└───────────┴───────────┴───────────────┴────────┴───────┘
 ```
