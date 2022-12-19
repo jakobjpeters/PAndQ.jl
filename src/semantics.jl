@@ -1,4 +1,5 @@
 
+using Combinatorics
 using PrettyTables
 
 (::Not)(::typeof(⊥)) = ⊤

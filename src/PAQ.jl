@@ -1,8 +1,6 @@
 
 module PAQ
 
-using Combinatorics
-
 include("set.jl")
 include("abstract_types.jl")
 include("propositional_logic.jl")
