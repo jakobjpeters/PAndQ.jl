@@ -293,16 +293,9 @@ end
 # ToDo: simplify logic
 # ToDo: fix subheader combining types
 # ToDo: fix `@truth_table p ∧ ¬(p ∧ ¬p)`
-# ToDo: write docstring
-function truth_table(trees, trees_str, leaves, leaves_str)
-    #=
-    Set interface?
-        Base.length(p::Language) = 1
-        Base.iterate(p::Language) = p
-    =#
-
-    eltype(trees) <: Language || throw(ErrorException("Every expression must be a subtype of `Language`"))
-
+# ToDo: write docstring - define behavior
+# ToDo: write tests
+function truth_table(trees::Vector{<:Language}, trees_str, leaves, leaves_str)
     primitives = get_primitives(trees...)
     n = length(primitives)
     truth_sets = multiset_permutations([⊤, ⊥], [n, n], n)
@@ -310,10 +303,10 @@ function truth_table(trees, trees_str, leaves, leaves_str)
 
     merge_string = (x, y) -> x == y || y == "" ? x : x * ", " * y
 
-    _sub_header = Language[]
+    _sub_header = []
     labels = String[]
     assignments = Vector{Truth}[]
-    for (tree, tree_str) in filter(is_contingency ∘ first, map(Pair, trees, trees_str))
+    for (tree, tree_str) in filter(pair -> !isa(first(pair), Truth), map(Pair, trees, trees_str))
         if tree isa Primitive
             continue
         end
@@ -330,7 +323,7 @@ function truth_table(trees, trees_str, leaves, leaves_str)
         end
     end
 
-    _truths = filter(is_truth, trees)
+    _truths = filter(tree -> tree isa Truth, trees)
     temp = hcat(map(p -> repeat([p], 2^n), _truths)...)
     valuation_matrix = mapreduce(permutedims, vcat, truth_sets)
     assignment_matrix = reduce(hcat, assignments, init = Matrix(undef, 2^n, 0))
