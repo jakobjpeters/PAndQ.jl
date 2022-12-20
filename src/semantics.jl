@@ -51,7 +51,6 @@ See also [`Language`](@ref).
 """
 interpret(valuation, p::Language) = p(Dict(map(p -> p => valuation(p), get_primitives(p))))
 
-(p::Truth)(interpretations) = p
 (p::Primitive)(interpretations) = interpretations[p]
 (p::Literal{Primitive})(interpretations) = p.ϕ(interpretations)
 (p::Literal{Tuple{Not, Primitive}})(interpretations) = first(p.ϕ)(last(p.ϕ)(interpretations))
