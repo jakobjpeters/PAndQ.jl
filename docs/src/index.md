@@ -51,8 +51,8 @@ julia> s = Normal(And(), r)
 Normal:
   (¬p ∨ q) ∧ (p ∨ ¬q) ∧ (p ∨ q)
 
-julia> t = @Show p ⊻ q
-Show{Propositional}:
+julia> t = @Pretty p ⊻ q
+Pretty{Propositional}:
   p ⊻ q
 
 julia> @truth_table p ⊻ q s ⊥

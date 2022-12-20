@@ -32,7 +32,7 @@ export
     @truth_table,
 
     # pretty_printing.jl
-    Show, @Show #=, Base.show =#
+    Pretty, @Pretty #=, Base.show =#
 
 return nothing
 

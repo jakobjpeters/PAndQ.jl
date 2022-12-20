@@ -2,22 +2,16 @@
 import Base: show
 
 """
-    Show{A <: Any}
-    Show(x::A, callback::Function)
-    Show(x::A, text::String)
+    Pretty{L <: Language}
+    Pretty(p::L, text::String)
 
-A wrapper to automatically enable the pretty-printing of ```x``` with the contents of ```text```.
+A wrapper to automatically enable the pretty-printing of ```p``` with the contents of ```text```.
 
-By default, ```show(io::IO, ::MIME"text/plain", x::Show)```
+By default, ```show(io::IO, ::MIME"text/plain", x::Pretty)```
 is overloaded to enable both regular and pretty-printing, depending on the context.
-This method calls the ```callback``` function with ```x``` as its argument.
-The callback function returns a string to be shown.
-Given ```text``` instead will automatically create the callback function ```_ -> text```.
+This method pretty-prints ```p``` with the contents of ```text```.
 
-To implement custom behavior and for more information, see Julia's documentation on [pretty-printing]
-(https://docs.julialang.org/en/v1/manual/types/#man-custom-pretty-printing).
-
-See also [`@Show`](@ref)
+See also [`@Pretty`](@ref)
 
 # Examples
 ```jldoctest
@@ -25,8 +19,8 @@ julia> r = p → (q → p)
 Propositional:
   ¬(p ∧ q ∧ ¬p)
 
-julia> s = Show(r, "p → (q → p)")
-Show{Propositional}:
+julia> s = Pretty(r, "p → (q → p)")
+Pretty{Propositional}:
   p → (q → p)
 
 julia> s()
@@ -34,25 +28,24 @@ Truth:
   ⊤
 ```
 """
-struct Show{A <: Any} # or `Pretty`?
-    x::A
-    callback::Function
+struct Pretty{L <: Language}
+    p::L
+    text::String
 end
 
-Show(x, text::String) = Show(x, _ -> text)
-
-(x::Show)() = x.x()
+(p::Pretty)() = p.p()
+(::Not)(p::Pretty) = ¬p.p
 
 """
-    @Show(expression)
+    @Pretty(expression)
 
-Return an instance of [`Show`](@ref), whose ```text``` field is
+Return an instance of [`Pretty`](@ref), whose ```text``` field is
 set to ```string(expression)```.
 
 # Examples
 ```jldocttest
-julia> r = @Show p → (q → p)
-Show{Propositional}:
+julia> r = @Pretty p → (q → p)
+Pretty{Propositional}:
   p → (q → p)
 
 julia> r()
@@ -60,11 +53,9 @@ TruthValue:
   ⊤
 ```
 """
-macro Show(expression)
-    return :(Show($(esc(expression)), $(string(expression))))
+macro Pretty(expression)
+    return :(Pretty($(esc(expression)), $(string(expression))))
 end
-
-show(io::IO, ::MIME"text/plain", x::Show) = print(io, typeof(x), ":\n  ", x.callback(x.x))
 
 # ToDo: clean-up
 i(interpretation, interpretations) = interpretation == last(interpretations) ? "" : "\n"
@@ -111,7 +102,7 @@ end
 
 show(io::IO, ::MIME"text/plain", p::Contingency) = print(io, nameof(typeof(p)), ":\n", _print(p))
 show(io::IO, ::MIME"text/plain", p::Language) = print(io, nameof(typeof(p)), ":\n  ", _print(p))
-show(io::IO, ::MIME"text/plain", p::Show{<:Language}) = print(io,
-    nameof(typeof(p)), "{", nameof(typeof((p.x))), "}:\n  ",
-    p.callback(p.x)
+show(io::IO, ::MIME"text/plain", p::Pretty) = print(io,
+    nameof(typeof(p)), "{", nameof(typeof((p.p))), "}:\n  ",
+    p.text
 )
