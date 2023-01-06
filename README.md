@@ -16,7 +16,7 @@ If you lke logic, then you've come to the right place!
 
 P∧Q has an intuitive interface that enables you to manipulate logical statements symbolically. This is thanks to Julia's support for [Unicode](https://docs.julialang.org/en/v1/manual/unicode-input/), infix operators, and inductive data structures.
 
-The implementation concise, only ~200 source lines of code (according to Codecov as of December, 2022).
+The implementation is concise, only ~200 source lines of code (according to Codecov as of December, 2022).
 
 
 ## Getting Started

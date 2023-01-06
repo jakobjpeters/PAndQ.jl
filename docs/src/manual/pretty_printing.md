@@ -2,6 +2,6 @@
 # Pretty Printing
 
 ```@docs
-Show
-@Show
+Pretty
+@Pretty
 ```
