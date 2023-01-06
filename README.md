@@ -21,7 +21,7 @@ The implementation concise, only ~200 source lines of code (according to Codecov
 
 ## Getting Started
 
-```julia
+```jldoctest
 julia> import Pkg
 
 julia> Pkg.add(url = "https://github.com/jakobjpeters/PAQ.jl")
