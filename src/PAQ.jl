@@ -13,11 +13,8 @@ export
     # set.jl
     ⨉, cartesian_product,
 
-    # abstract_types.jl
-    Language, Compound, Operator,
-
     # propositional_logic.jl
-    Boolean, Not, And, Or,
+    And, Or,
     Primitive, Literal, Propositional, Normal,
     Truth, tautology, ⊤, contradiction, ⊥, Contingency,
     @primitive, get_primitives, #= Base.convert, =#
