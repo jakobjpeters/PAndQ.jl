@@ -14,7 +14,6 @@ export
     ⨉, cartesian_product,
 
     # propositional_logic.jl
-    And, Or,
     Primitive, Literal, Propositional, Normal,
     Truth, tautology, ⊤, contradiction, ⊥, Contingency,
     @primitive, get_primitives, #= Base.convert, =#

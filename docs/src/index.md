@@ -45,7 +45,7 @@ Contingency:
   [p => ⊥, q => ⊤] => ⊥
   [p => ⊥, q => ⊥] => ⊥
 
-julia> s = Normal(And(), r)
+julia> s = Normal(∧, r)
 Normal:
   (¬p ∨ q) ∧ (p ∨ ¬q) ∧ (p ∨ q)
 

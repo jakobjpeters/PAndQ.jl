@@ -4,8 +4,8 @@
 ```@docs
 PAQ.Boolean
 PAQ.Not
-And
-Or
+PAQ.And
+PAQ.Or
 Primitive
 Literal
 Propositional

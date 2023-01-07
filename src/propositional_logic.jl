@@ -161,11 +161,11 @@ Subtype of [`Compound`](@ref) and [`Language`](@ref).
 
 # Examples
 ```jldoctest
-julia> r = Normal(And(), p ∧ q)
+julia> r = Normal(∧, p ∧ q)
 Normal:
   (¬p ∨ q) ∧ (p ∨ ¬q) ∧ (p ∨ q)
 
-julia> s = Normal(Or(), ¬p ∨ ¬q)
+julia> s = Normal(∨, ¬p ∨ ¬q)
 Normal:
   (p ∧ ¬q) ∨ (¬p ∧ q) ∨ (¬p ∧ ¬q)
 
