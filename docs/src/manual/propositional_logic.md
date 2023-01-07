@@ -2,8 +2,8 @@
 # Propositional Logic
 
 ```@docs
-Boolean
-Not
+PAQ.Boolean
+PAQ.Not
 And
 Or
 Primitive

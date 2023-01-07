@@ -2,7 +2,7 @@
 # Abstract Types
 
 ```@docs
-Language
-Compound
-Operator
+PAQ.Language
+PAQ.Compound
+PAQ.Operator
 ```

@@ -27,7 +27,7 @@ Primitive:
 
 ### Compound Propositions
 
-Since ```p``` can be true or false, we can form other logical statements that depends on ```p```'s truth value. These statements use logical connectives and are called [`Compound`](@ref) propositions. To express the proposition that "Logic is not fun", use the logical [`not`](@ref) connective: ```not(p)``` or ```¬p```.  If ```p```'s truth value is true, then ```¬p```'s truth value is false, and vice versa. A helpful tool to check a statement's truth values is [`@truth_table`](@ref).
+Since ```p``` can be true or false, we can form other logical statements that depends on ```p```'s truth value. These statements use logical connectives and are called [`Compound`](@ref PAQ.Compound) propositions. To express the proposition that "Logic is not fun", use the logical [`not`](@ref) connective: ```not(p)``` or ```¬p```.  If ```p```'s truth value is true, then ```¬p```'s truth value is false, and vice versa. A helpful tool to check a statement's truth values is [`@truth_table`](@ref).
 
 ```jldoctest tutorial
 julia> @truth_table ¬p
@@ -92,7 +92,7 @@ Truth:
 ### Types
 
 ```@example
-using PAQ # hide
+import PAQ: Language # hide
 using InteractiveUtils # hide
 using AbstractTrees # hide
 
@@ -107,7 +107,7 @@ In Backus-Naur Form (BNF), [`Propositional`](@ref) is defined inductively as:
 ϕ ::= p | ¬ψ | ψ ∧ ψ
 ```
 
-Since we may want to refer to compound statements defined differently, ψ has the abstract type [`Compound`](@ref) rather than being a ```Propositional```.
+Since we may want to refer to compound statements defined differently, ψ has the abstract type [`Compound`](@ref PAQ.Compound) rather than being a ```Propositional```.
 
 
 
