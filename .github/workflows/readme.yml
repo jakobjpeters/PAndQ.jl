@@ -10,7 +10,7 @@ on:
     tags: '*'
   pull_request:
       paths:
-      - `HEADER.md'
+      - 'HEADER.md'
       - 'docs/src/index.md'
 jobs:
   build:
