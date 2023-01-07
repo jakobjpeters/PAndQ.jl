@@ -26,11 +26,11 @@ makedocs(
         "Home" => "index.md",
         "Tutorial" => "tutorial.md",
         "Manual" => [
-            "Abstract Types" => "manual/abstract_types.md",
             "Propositional Logic" => "manual/propositional_logic.md",
             "Boolean Operators" => "manual/boolean_operators.md",
             "Semantics" => "manual/semantics.md",
-            "Pretty Printing" => "manual/pretty_printing.md"
+            "Pretty Printing" => "manual/pretty_printing.md",
+            "Internals" => "manual/internals.md",
         ]
     ],
     strict = true

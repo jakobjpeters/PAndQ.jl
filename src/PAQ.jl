@@ -2,7 +2,6 @@
 module PAQ
 
 include("set.jl")
-include("abstract_types.jl")
 include("propositional_logic.jl")
 include("pretty_printing.jl")
 include("semantics.jl")
