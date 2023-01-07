@@ -315,11 +315,13 @@ julia> get_primitives(r)
 ```
 """
 get_primitives(::Truth) = []
-get_primitives(p::Contingency) = union(mapreduce(
-    interpretation -> map(
-        literal -> first(literal), first(interpretation)),
-    vcat, p.interpretations
-))
+get_primitives(p::Contingency) = union(
+    mapreduce(
+        interpretation -> map(
+            literal -> first(literal), first(interpretation)),
+        vcat, p.interpretations
+    )
+)
 get_primitives(p::Primitive) = [p]
 get_primitives(p::Literal) = get_primitives(p.ϕ)
 get_primitives(p::Propositional) = union(get_primitives(p.ϕ))

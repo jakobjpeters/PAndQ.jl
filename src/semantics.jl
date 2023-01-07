@@ -307,9 +307,7 @@ function truth_table(trees::Vector{<:Language}, trees_str, leaves, leaves_str)
     labels = String[]
     assignments = Vector{Truth}[]
     for (tree, tree_str) in filter(pair -> !isa(first(pair), Truth), map(Pair, trees, trees_str))
-        if tree isa Primitive
-            continue
-        end
+        tree isa Primitive && continue
 
         truths = map(valuation -> interpret(p -> Dict(valuation)[p], tree), valuations)
 
