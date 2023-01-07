@@ -3,7 +3,7 @@ name: README
 on:
   push:
     paths:
-      - `HEADER.md'
+      - 'HEADER.md'
       - 'docs/src/index.md'
     branches:
       - main
