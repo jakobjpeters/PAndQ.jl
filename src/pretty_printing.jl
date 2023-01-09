@@ -72,8 +72,8 @@ _print(p::Primitive) = p.statement
 _print(p::Contingency) = mapreduce(interpretation -> f(interpretation) * i(interpretation, p.interpretations), *, p.interpretations)
 _print(p::Literal) = _print(p.ϕ)
 _print(p::Propositional) = _print(p.ϕ)
-_print(p::Tuple{Not, Language}) = _print(p[1]) * "(" * _print(p[2]) * ")"
 _print(p::Tuple{Not, Primitive}) = _print(p[1]) * _print(p[2])
+_print(p::Tuple{Not, Language}) = _print(p[1]) * "(" * _print(p[2]) * ")"
 _print(p::Tuple{And, Compound, Compound}) = _print(p[2]) * _print(p[1]) * _print(p[3])
 function _print(p::Normal{B}) where B <: Union{And, Or}
     b = first(setdiff!(Set([And, Or]), [B]))
@@ -100,8 +100,9 @@ function _print(p::Normal{B}) where B <: Union{And, Or}
     return s
 end
 
-show(io::IO, ::MIME"text/plain", p::Contingency) = print(io, nameof(typeof(p)), ":\n", _print(p))
-show(io::IO, ::MIME"text/plain", p::Language) = print(io, nameof(typeof(p)), ":\n  ", _print(p))
+show(io::IO, p::Language) = print(io, _print(p))
+show(io::IO, ::MIME"text/plain", p::Language) = print(io, nameof(typeof(p)), ":\n  ", p)
+show(io::IO, ::MIME"text/plain", p::Contingency) = print(io, nameof(typeof(p)), ":\n", p)
 show(io::IO, ::MIME"text/plain", p::Pretty) = print(io,
     nameof(typeof(p)), "{", nameof(typeof((p.p))), "}:\n  ",
     p.text

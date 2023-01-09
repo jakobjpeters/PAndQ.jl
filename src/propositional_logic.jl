@@ -341,8 +341,8 @@ Propositional:
 
 julia> get_primitives(r)
 2-element Vector{Primitive}:
- Primitive("p")
- Primitive("q")
+ p
+ q
 ```
 """
 get_primitives(::Truth) = []
