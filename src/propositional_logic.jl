@@ -279,7 +279,7 @@ const contradiction = Truth{Val{:⊥}}()
 const ⊥ = contradiction
 
 """
-    Contingency
+    Contingency <: Compound
 
 # Examples
 ```jldoctest
@@ -296,7 +296,7 @@ Contingency:
   ["p" => ⊥, "q" => ⊥] => ⊥
 ```
 """
-struct Contingency <: Language
+struct Contingency <: Compound
     interpretations::Vector{Pair{Vector{Pair{Primitive, Truth}}}}
 end
 

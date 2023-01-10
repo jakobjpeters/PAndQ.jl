@@ -52,7 +52,7 @@ end
 
 # TODO: make composable
 """
-    Pretty{L <: Language} <: Language
+    Pretty{L <: Language} <: Compound
     Pretty(p::L[, text::String])
 
 A wrapper to automatically enable the pretty-printing of ```p``` with the contents of ```text```.
@@ -60,7 +60,7 @@ A wrapper to automatically enable the pretty-printing of ```p``` with the conten
 The default value of ```text``` will pretty-print ```p``` the same as its regular pretty-printing,
 except without quotation marks.
 
-See also [`Language`](@ref) and [`@Pretty`](@ref).
+See also [`Compound`](@ref) and [`@Pretty`](@ref).
 
 # Examples
 ```jldoctest
@@ -77,7 +77,7 @@ Pretty{Propositional}:
   p → (q → p)
 ```
 """
-struct Pretty{L <: Language} <: Language
+struct Pretty{L <: Language} <: Compound
     p::L
     text::String
 
