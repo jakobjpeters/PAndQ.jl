@@ -92,7 +92,6 @@ Truth:
 ### Types
 
 ```@example
-import PAQ: Language # hide
 using InteractiveUtils # hide
 using AbstractTrees # hide
 
@@ -107,7 +106,7 @@ In Backus-Naur Form (BNF), [`Propositional`](@ref) is defined inductively as:
 ϕ ::= p | ¬ψ | ψ ∧ ψ
 ```
 
-Since we may want to refer to compound statements defined differently, ψ has the abstract type [`Compound`](@ref PAQ.Compound) rather than being a ```Propositional```.
+Since we may want to refer to compound statements defined differently, ψ has the abstract type [`Compound`](@ref Compound) rather than being a ```Propositional```.
 
 
 

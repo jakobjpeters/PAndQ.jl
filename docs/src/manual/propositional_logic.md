@@ -2,10 +2,8 @@
 # Propositional Logic
 
 ```@docs
-PAQ.Boolean
-PAQ.Not
-PAQ.And
-PAQ.Or
+Language
+Compound
 Primitive
 Literal
 Propositional
