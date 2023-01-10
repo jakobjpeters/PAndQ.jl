@@ -79,22 +79,30 @@ struct Or <: Boolean end
 
 """
     Primitive <: Language
-    Primitive([statement::String = ""])
+    Primitive([statement::String])
 
 Primitive proposition.
+
+!!! info
+  Constructing a ```Primitive``` with no argument, an empty string, or an underscore character
+  will set ```statement = "_"```. This serves two purposes.
+  Firstly, it is useful as a default proposition when converting [`Truth`](@ref)s to other forms;
+  for example: ```Propositional(⊥)``` is printed as ```"_" ∧ ¬"_"```.
+  Secondly, this ensures that pretty-printing does not produce output such as: ``` ∧ ¬`.
+  It is not idiomatic to use this as a generic proposition; use [`@Primitives`](@ref) instead.
 
 Subtype of [`Language`](@ref).
 
 # Examples
 ```jldoctest
-julia> p
+julia> p = Primitive("p")
 Primitive:
-  p
+  "p"
 
 julia> p()
 Contingency:
-  [p => ⊤] => ⊤
-  [p => ⊥] => ⊥
+  ["p" => ⊤] => ⊤
+  ["p" => ⊥] => ⊥
 ```
 """
 struct Primitive <: Language
@@ -121,12 +129,12 @@ See also [`Not`](@ref).
 ```jldoctest
 julia> r = ¬p
 Literal:
-  ¬p
+  ¬"p"
 
 julia> r()
 Contingency:
-  [p => ⊤] => ⊥
-  [p => ⊥] => ⊤
+  ["p" => ⊤] => ⊥
+  ["p" => ⊥] => ⊤
 ```
 """
 struct Literal{
@@ -156,7 +164,7 @@ See also [`Not`](@ref) and [`And`](@ref).
 ```jldoctest
 julia> r = p ∧ ¬p
 Propositional:
-  p ∧ ¬p
+  "p" ∧ ¬"p"
 
 julia> r()
 Truth:
@@ -164,10 +172,10 @@ Truth:
 
 julia> (p ∧ q)()
 Contingency:
-  [p => ⊤, q => ⊤] => ⊤
-  [p => ⊤, q => ⊥] => ⊥
-  [p => ⊥, q => ⊤] => ⊥
-  [p => ⊥, q => ⊥] => ⊥
+  ["p" => ⊤, "q" => ⊤] => ⊤
+  ["p" => ⊤, "q" => ⊥] => ⊥
+  ["p" => ⊥, "q" => ⊤] => ⊥
+  ["p" => ⊥, "q" => ⊥] => ⊥
 ```
 """
 struct Propositional{
@@ -181,11 +189,11 @@ end
 
 """
     Normal{B <: Union{And, Or}} <: Compound <: Language
-    Normal(::B, clauses::Vector{Vector{Literal}})
+    Normal(::Union{typeof(∧), typeof(∨)}, p::Language)
 
 The conjunctive or disjunctive normal form of a proposition.
 
-Constructing an instance with the parameters ```(And(), p)``` and ```(Or(), p)```
+Constructing an instance with the parameters ```([`and`](@ref), p)``` and ```([`or`](@ref), p)```
 correspond to conjunctive and disjunctive normal form, respectively.
 
 Subtype of [`Compound`](@ref) and [`Language`](@ref).
@@ -194,15 +202,15 @@ Subtype of [`Compound`](@ref) and [`Language`](@ref).
 ```jldoctest
 julia> r = Normal(∧, p ∧ q)
 Normal:
-  (¬p ∨ q) ∧ (p ∨ ¬q) ∧ (p ∨ q)
+  (¬"p" ∨ "q") ∧ ("p" ∨ ¬"q") ∧ ("p" ∨ "q")
 
 julia> s = Normal(∨, ¬p ∨ ¬q)
 Normal:
-  (p ∧ ¬q) ∨ (¬p ∧ q) ∨ (¬p ∧ ¬q)
+  ("p" ∧ ¬"q") ∨ (¬"p" ∧ "q") ∨ (¬"p" ∧ ¬"q")
 
 julia> t = r ∧ s
 Propositional:
-  (¬p ∨ q) ∧ (p ∨ ¬q) ∧ (p ∨ q) ∧ (p ∧ ¬q) ∨ (¬p ∧ q) ∨ (¬p ∧ ¬q)
+  (¬"p" ∨ "q") ∧ ("p" ∨ ¬"q") ∧ ("p" ∨ "q") ∧ ("p" ∧ ¬"q") ∨ (¬"p" ∧ "q") ∨ (¬"p" ∧ ¬"q")
 
 julia> t()
 Truth:
@@ -277,15 +285,15 @@ const ⊥ = contradiction
 ```jldoctest
 julia> p()
 Contingency:
-  [p => ⊤] => ⊤
-  [p => ⊥] => ⊥
+  ["p" => ⊤] => ⊤
+  ["p" => ⊥] => ⊥
 
 julia> (p ∧ q)()
 Contingency:
-  [p => ⊤, q => ⊤] => ⊤
-  [p => ⊤, q => ⊥] => ⊥
-  [p => ⊥, q => ⊤] => ⊥
-  [p => ⊥, q => ⊥] => ⊥
+  ["p" => ⊤, "q" => ⊤] => ⊤
+  ["p" => ⊤, "q" => ⊥] => ⊥
+  ["p" => ⊥, "q" => ⊤] => ⊥
+  ["p" => ⊥, "q" => ⊥] => ⊥
 ```
 """
 struct Contingency <: Language
@@ -296,7 +304,7 @@ end
 # Utility
 
 """
-    @primitive(ps...)
+    @Primitives(ps...)
 
 Instantiates [`Primitive`](@ref) propositions.
 
@@ -306,14 +314,14 @@ julia> @Primitives p q
 
 julia> p
 Primitive:
-  p
+  "p"
 
 julia> q
 Primitive:
-  q
+  "q"
 ```
 """
-macro primitive(expressions...)
+macro Primitives(expressions...)
     primitive = expression -> :($(esc(expression)) = Primitive($(string(expression))))
     primitives = map(primitive, expressions)
 
@@ -337,15 +345,15 @@ See also [`Language`](@ref).
 ```jldoctest
 julia> r = p ∧ q
 Propositional:
-  p ∧ q
+  "p" ∧ "q"
 
 julia> get_primitives(r)
 2-element Vector{Primitive}:
- p
- q
+ "p"
+ "q"
 ```
 """
-get_primitives(::Truth) = []
+get_primitives(::Truth) = Primitive[]
 get_primitives(p::Contingency) = union(
     mapreduce(
         interpretation -> map(

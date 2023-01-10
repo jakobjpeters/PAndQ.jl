@@ -296,7 +296,9 @@ end
 # ToDo: fix `@truth_table p ∧ ¬(p ∧ ¬p)`
 # ToDo: write docstring - define behavior
 # ToDo: write tests
-function truth_table(trees::Vector{<:Language}, trees_str, leaves, leaves_str)
+function truth_table(_trees::Vector{<:Language}, trees_str, leaves, leaves_str)
+    trees = map(tree -> tree isa Pretty ? tree.p : tree,_trees)
+
     primitives = get_primitives(trees...)
     n = length(primitives)
     truth_sets = multiset_permutations([⊤, ⊥], [n, n], n)
@@ -332,7 +334,7 @@ function truth_table(trees::Vector{<:Language}, trees_str, leaves, leaves_str)
         interpretations = reduce(hcat, [valuation_matrix, assignment_matrix, temp])
     end
 
-    pretty_interpretations = map(_print, interpretations)
+    pretty_interpretations = map(repr, interpretations)
 
     make_header = (ps, ps_str) -> begin
         ___header = Dict{Primitive, Vector{String}}()
@@ -359,11 +361,11 @@ function truth_table(trees::Vector{<:Language}, trees_str, leaves, leaves_str)
     __header = mergewith!(union ∘ vcat, headers...)
     _header = map(primitive -> reduce(merge_string, __header[primitive]), primitives)
     push!(_header, labels...)
-    append!(_header, map(_print, _truths))
+    append!(_header, map(repr, _truths))
 
     sub_header = map(nameof ∘ typeof, vcat(primitives, _sub_header, _truths))
     sub_sub_header = vcat(
-        map(primitive -> "\"" * primitive.statement * "\"", primitives),
+        map(repr, primitives),
         map(_ -> "", vcat(_sub_header, _truths)),
     )
     header = (_header, sub_header, sub_sub_header)

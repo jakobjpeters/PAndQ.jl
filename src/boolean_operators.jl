@@ -233,7 +233,7 @@ p → q = ¬(p ∧ ¬q)
     ↛(p, q)
     not_if_then(p, q)
 
-Logical ```non-implication``` operator.
+Logical "non-implication" operator.
 
 ```↛``` can be typed by ```\\nrightarrow<tab>```.
 

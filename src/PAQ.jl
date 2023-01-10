@@ -27,7 +27,7 @@ export
     @truth_table,
 
     # pretty_printing.jl
-    Pretty, @Pretty #=, Base.show =#
+    Pretty, @Pretty #=, Base.repr, Base.show =#
 
 return nothing
 

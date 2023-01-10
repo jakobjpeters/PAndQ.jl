@@ -17,11 +17,11 @@ A primitive proposition is a statement that can be true or false. For example, t
 ```jldoctest tutorial
 julia> p = Primitive("Logic is fun")
 Primitive:
-  Logic is fun
+  "Logic is fun"
 
 julia> q = Primitive("Julia is awesome")
 Primitive:
-  Julia is awesome
+  "Julia is awesome"
 ```
 
 
@@ -79,7 +79,7 @@ Truth:
 
 julia> p ∧ ⊤ # identity law
 Primitive:
-  p
+  "p"
 
 julia> p ∧ ⊥ # domination law
 Truth:
@@ -92,21 +92,23 @@ Truth:
 ### Types
 
 ```@example
-using InteractiveUtils # hide
-using AbstractTrees # hide
+import AbstractTrees: children # hide
+using AbstractTrees: print_tree # hide
+using InteractiveUtils: subtypes # hide
+using PAQ: Language # hide
 
-AbstractTrees.children(x::Type) = InteractiveUtils.subtypes(x) # hide
+children(x::Type) = subtypes(x) # hide
 print_tree(Language) # hide
 ```
 
 
-In Backus-Naur Form (BNF), [`Propositional`](@ref) is defined inductively as:
+In Backus-Naur Form (BNF), [`Propositional`](@ref) is defined "inductively" as:
 
 ```
-ϕ ::= p | ¬ψ | ψ ∧ ψ
+p ::= q | ¬ϕ | ϕ ∧ ϕ
 ```
 
-Since we may want to refer to compound statements defined differently, ψ has the abstract type [`Compound`](@ref Compound) rather than being a ```Propositional```.
+Since we may want to refer to compound statements defined differently, ϕ has the abstract type [`Compound`](@ref Compound) rather than being a ```Propositional```.
 
 
 
