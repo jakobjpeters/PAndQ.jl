@@ -83,7 +83,7 @@ julia> isequal((p → q) ∧ (p ← q), ¬(p ⊻ q))
 true
 ```
 """
-Base.:(==)(p::Truth, q::Truth) = p === q
+Base.:(==)(p::TP, q::TP) where TP <: Union{Truth, Primitive} = p === q
 Base.:(==)(p::Language, q::Language) = is_tautology(p ↔ q)
 
 """
