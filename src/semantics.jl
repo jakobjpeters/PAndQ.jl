@@ -41,11 +41,11 @@ function (p::Language)()
 end
 
 """
-    interpret(valuation, ϕ::Language)
+    interpret(valuation, p::Language)
 
 Given a valuation function that maps from the [`Primitive`](@ref)
-propositions in ```ϕ``` to their respective [`Truth`](@ref) values,
-assign a truth value to ```ϕ```.
+propositions in ```p``` to their respective [`Truth`](@ref) values,
+assign a truth value to ```p```.
 
 See also [`Language`](@ref).
 """
@@ -70,17 +70,18 @@ See also [`Language`](@ref).
     The ```≡``` symbol is sometimes used to represent logical equivalence.
     However, Julia uses ```≡``` as an alias for the builtin function ```===```
     which cannot have methods added to it.
+    Use this function to compare identity rather than equivalence.
 
 # Examples
 ```
 julia> p == ¬p
 false
 
-julia> p ∨ q == ¬(¬q ∧ ¬p)
+julia> (p → q) ∧ (p ← q) == ¬(p ⊻ q)
 true
 
-julia> isequal((p → q) ∧ (p ← q), ¬(p ⊻ q))
-true
+julia> (p → q) ∧ (p ← q) === ¬(p ⊻ q)
+false
 ```
 """
 Base.:(==)(p::TP, q::TP) where TP <: Union{Truth, Primitive} = p === q
