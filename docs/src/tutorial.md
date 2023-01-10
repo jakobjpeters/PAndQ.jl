@@ -2,7 +2,7 @@
 ```@meta
 DocTestSetup = quote
     using PAQ
-    @primitive p q
+    @Primitives p q
 end
 ```
 

@@ -15,7 +15,7 @@ export
     # propositional_logic.jl
     Primitive, Literal, Propositional, Normal,
     Truth, tautology, ⊤, contradiction, ⊥, Contingency,
-    @primitive, get_primitives, #= Base.convert, =#
+    @Primitives, get_primitives, #= Base.convert, =#
 
     # boolean_operators.jl
     not, ¬, and, ∧, #= Base.nand, Base.:⊼, Base.nor, Base.:⊽, =# or, ∨,

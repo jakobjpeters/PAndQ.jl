@@ -302,7 +302,7 @@ Instantiates [`Primitive`](@ref) propositions.
 
 Examples
 ```jldoctest
-julia> @primitive p q
+julia> @Primitives p q
 
 julia> p
 Primitive:
