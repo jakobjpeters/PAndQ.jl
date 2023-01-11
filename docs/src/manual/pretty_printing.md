@@ -4,5 +4,5 @@
 ```@docs
 repr
 Pretty
-@Pretty
+@pretty
 ```

@@ -32,7 +32,7 @@ julia> ¬⊥
 Truth:
   ⊤
 
-julia> @Primitives p q
+julia> @primitive p q
 
 julia> r = p ∧ q
 Propositional:
@@ -49,7 +49,7 @@ julia> s = Pretty(Normal(∧, r))
 Pretty{Normal}:
   (¬p ∨ q) ∧ (p ∨ ¬q) ∧ (p ∨ q)
 
-julia> t = @Pretty p ⊻ q
+julia> t = @pretty p ⊻ q
 Pretty{Propositional}:
   p ⊻ q
 

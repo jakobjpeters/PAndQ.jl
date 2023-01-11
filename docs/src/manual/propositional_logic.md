@@ -12,6 +12,6 @@ Truth
 tautology
 contradiction
 Contingency
-@Primitives
+@primitive
 get_primitives
 ```

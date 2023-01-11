@@ -89,7 +89,7 @@ Primitive proposition.
   Firstly, it is useful as a default proposition when converting [`Truth`](@ref)s to other forms;
   for example: ```Propositional(⊥)``` is printed as ```"_" ∧ ¬"_"```.
   Secondly, this ensures that pretty-printing does not produce output such as: ``` ∧ ¬`.
-  It is not idiomatic to use this as a generic proposition; use [`@Primitives`](@ref) instead.
+  It is not idiomatic to use this as a generic proposition; use [`@primitive`](@ref) instead.
 
 Subtype of [`Language`](@ref).
 
@@ -304,13 +304,13 @@ end
 # Utility
 
 """
-    @Primitives(ps...)
+    @primitive(ps...)
 
 Instantiates [`Primitive`](@ref) propositions.
 
 Examples
 ```jldoctest
-julia> @Primitives p q
+julia> @primitive p q
 
 julia> p
 Primitive:
@@ -321,7 +321,7 @@ Primitive:
   "q"
 ```
 """
-macro Primitives(expressions...)
+macro primitive(expressions...)
     primitive = expression -> :($(esc(expression)) = Primitive($(string(expression))))
     primitives = map(primitive, expressions)
 

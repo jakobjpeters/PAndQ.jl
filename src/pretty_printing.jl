@@ -7,7 +7,7 @@ import Base: repr, show
 Return a string corresponding to the pretty-printed representation of the given proposition.
 
 !!! tip
-    This works best when using the [`Pretty`](@ref) wrapper or [`@Pretty`](@ref) macro.
+    This works best when using the [`Pretty`](@ref) wrapper or [`@pretty`](@ref) macro.
 
 ```jldoctest
 julia> p ↔ q
@@ -20,7 +20,7 @@ julia> repr(p ↔ q)
 julia> repr(Pretty(p ↔ q))
 "¬(p ∧ ¬q) ∧ ¬(¬p ∧ q)"
 
-julia> repr(@Pretty p ↔ q)
+julia> repr(@pretty p ↔ q)
 "p ↔ q"
 ```
 """
@@ -83,7 +83,7 @@ A wrapper to automatically enable the pretty-printing of ```p``` with the conten
 The default value of ```text``` will pretty-print ```p``` the same as its regular pretty-printing,
 except without quotation marks.
 
-See also [`Compound`](@ref) and [`@Pretty`](@ref).
+See also [`Compound`](@ref) and [`@pretty`](@ref).
 
 # Examples
 ```jldoctest
@@ -127,11 +127,11 @@ julia> p → (q → p)
 Propositional:
   ¬("p" ∧ "q" ∧ ¬"p")
 
-julia> @Pretty p → (q → p)
+julia> @pretty p → (q → p)
 Pretty{Propositional}:
   p → (q → p)
 ```
 """
-macro Pretty(expression)
+macro pretty(expression)
     return :(Pretty($(esc(expression)), $(string(expression))))
 end

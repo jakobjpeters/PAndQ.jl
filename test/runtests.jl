@@ -8,7 +8,7 @@ DocMeta.setdocmeta!(
     :DocTestSetup,
     :(
         using PAQ;
-        @Primitives p q r
+        @primitive p q
     ),
     recursive=true
 )
