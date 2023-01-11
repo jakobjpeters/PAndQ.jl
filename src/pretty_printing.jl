@@ -3,11 +3,13 @@ import Base: repr, show
 
 """
     repr(p::Language)
+    repr(::MIME"text/plain", p::Language)
 
-Return a string corresponding to the pretty-printed representation of the given proposition.
+Return a string representation of the given proposition.
 
 !!! tip
-    This works best when using the [`Pretty`](@ref) wrapper or [`@pretty`](@ref) macro.
+    Use the [`Pretty`](@ref) wrapper or [`@pretty`](@ref) macro to get a formatted string.
+    Use `MIME("text/plain")` to get the pretty-printed representation.
 
 ```jldoctest
 julia> p ↔ q
@@ -15,18 +17,18 @@ Propositional:
   ¬("p" ∧ ¬"q") ∧ ¬(¬"p" ∧ "q")
 
 julia> repr(p ↔ q)
-"¬(\"p\" ∧ ¬\"q\") ∧ ¬(¬\"p\" ∧ \"q\")"
+"¬(\\"p\\" ∧ ¬\\"q\\") ∧ ¬(¬\\"p\\" ∧ \\"q\\")"
 
 julia> repr(Pretty(p ↔ q))
 "¬(p ∧ ¬q) ∧ ¬(¬p ∧ q)"
 
 julia> repr(@pretty p ↔ q)
 "p ↔ q"
+
+julia> repr(MIME("text/plain"), @pretty p ↔ q)
+"Pretty{Propositional}:\\n  p ↔ q"
 ```
 """
-repr(::Not) = "¬"
-repr(::And) = " ∧ "
-repr(::Or) = " ∨ "
 repr(::typeof(⊤)) = "⊤"
 repr(::typeof(⊥)) = "⊥"
 repr(p::Primitive) = "\"" * p.statement * "\""
@@ -35,7 +37,7 @@ repr(p::Literal) = repr(p.ϕ)
 repr(p::Propositional) = repr(p.ϕ)
 repr(p::Tuple{Not, Primitive}) = repr(p[1]) * repr(p[2])
 repr(p::Tuple{Not, Language}) = repr(p[1]) * "(" * repr(p[2]) * ")"
-repr(p::Tuple{And, Compound, Compound}) = repr(p[2]) * repr(p[1]) * repr(p[3])
+repr(p::Tuple{And, Compound, Compound}) = repr(p[2]) * " " * repr(p[1]) * " " * repr(p[3])
 function repr(p::Normal{B}) where B <: Union{And, Or}
     b = first(setdiff!(Set([And, Or]), [B]))
     s = ""
@@ -47,19 +49,23 @@ function repr(p::Normal{B}) where B <: Union{And, Or}
             s *= repr(literal)
 
             if literal !== last(clause)
-                s *= repr(b())
+                s *= " " * repr(b()) * " "
             end
         end
 
         s *= ")"
 
         if clause !== last(p.clauses)
-            s *= repr(B())
+            s *= " " * repr(B()) * " "
         end
     end
 
     return s
 end
+
+repr(::Not) = "¬"
+repr(::And) = "∧"
+repr(::Or) = "∨"
 
 # ToDo: clean-up
 i(interpretation, interpretations) = interpretation == last(interpretations) ? "" : "\n"
