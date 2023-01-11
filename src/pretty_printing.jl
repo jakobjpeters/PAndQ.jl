@@ -1,12 +1,29 @@
 
 import Base: repr, show
 
-# ToDo: clean-up
-i(interpretation, interpretations) = interpretation == last(interpretations) ? "" : "\n"
-h(literal, interpretation) = literal == last(interpretation) ? "" : ", "
-g(literal) = repr(first(literal)) * " => " * repr(last(literal))
-f(interpretation) = "  [" * mapreduce(literal -> g(literal) * h(literal, first(interpretation)), *, first(interpretation)) * "] => " * repr(last(interpretation))
+"""
+    repr(p::Language)
 
+Return a string corresponding to the pretty-printed representation of the given proposition.
+
+!!! tip
+    This works best when using the [`Pretty`](@ref) wrapper or [`@Pretty`](@ref) macro.
+
+```jldoctest
+julia> p ↔ q
+Propositional:
+  ¬("p" ∧ ¬"q") ∧ ¬(¬"p" ∧ "q")
+
+julia> repr(p ↔ q)
+"¬(\"p\" ∧ ¬\"q\") ∧ ¬(¬\"p\" ∧ \"q\")"
+
+julia> repr(Pretty(p ↔ q))
+"¬(p ∧ ¬q) ∧ ¬(¬p ∧ q)"
+
+julia> repr(@Pretty p ↔ q)
+"p ↔ q"
+```
+"""
 repr(::Not) = "¬"
 repr(::And) = " ∧ "
 repr(::Or) = " ∨ "
@@ -43,6 +60,12 @@ function repr(p::Normal{B}) where B <: Union{And, Or}
 
     return s
 end
+
+# ToDo: clean-up
+i(interpretation, interpretations) = interpretation == last(interpretations) ? "" : "\n"
+h(literal, interpretation) = literal == last(interpretation) ? "" : ", "
+g(literal) = repr(first(literal)) * " => " * repr(last(literal))
+f(interpretation) = "  [" * mapreduce(literal -> g(literal) * h(literal, first(interpretation)), *, first(interpretation)) * "] => " * repr(last(interpretation))
 
 show(io::IO, p::Language) = print(io, repr(p))
 function show(io::IO, ::MIME"text/plain", p::Language)
