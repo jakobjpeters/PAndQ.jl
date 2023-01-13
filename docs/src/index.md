@@ -45,7 +45,7 @@ Contingency:
   ["p" => ⊥, "q" => ⊤] => ⊥
   ["p" => ⊥, "q" => ⊥] => ⊥
 
-julia> s = Pretty(Normal(∧, r))
+julia> s = Pretty(Normal(and, r))
 Pretty{Normal}:
   (¬p ∨ q) ∧ (p ∨ ¬q) ∧ (p ∨ q)
 

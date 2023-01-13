@@ -114,7 +114,7 @@ struct Pretty{L <: Language} <: Compound
 end
 
 (p::Pretty)() = p.p()
-(::Not)(p::Pretty) = ¬p.p
+(::Not)(p::Pretty) = not(p.p)
 
 show(io::IO, p::Pretty) = print(io, p.text)
 function show(io::IO, ::MIME"text/plain", p::Pretty)

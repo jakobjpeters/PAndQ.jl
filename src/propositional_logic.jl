@@ -189,7 +189,7 @@ end
 
 """
     Normal{B <: Union{And, Or}} <: Compound <: Language
-    Normal(::Union{typeof(∧), typeof(∨)}, p::Language)
+    Normal(::Union{typeof(and), typeof(or)}, p::Language)
 
 The conjunctive or disjunctive normal form of a proposition.
 
@@ -200,11 +200,11 @@ Subtype of [`Compound`](@ref) and [`Language`](@ref).
 
 # Examples
 ```jldoctest
-julia> r = Normal(∧, p ∧ q)
+julia> r = Normal(and, p ∧ q)
 Normal:
   (¬"p" ∨ "q") ∧ ("p" ∨ ¬"q") ∧ ("p" ∨ "q")
 
-julia> s = Normal(∨, ¬p ∨ ¬q)
+julia> s = Normal(or, ¬p ∨ ¬q)
 Normal:
   ("p" ∧ ¬"q") ∨ (¬"p" ∧ "q") ∨ (¬"p" ∧ ¬"q")
 
@@ -222,13 +222,13 @@ struct Normal{B <: Union{And, Or} #=, L <: Literal =#} <: Compound
 end
 
 """
-    Truth{V <: Union{Val{:⊥}, Val{:⊤}}} <: Language
+    Truth{V <: Union{Val{:contradiction}, Val{:tautology}}} <: Language
     Truth(::V)
 
 Container for the constants [`tautology`](@ref) and [`contradiction`](@ref).
 Subtype of [`Language`](@ref).
 """
-struct Truth{V <: Union{Val{:⊥}, Val{:⊤}}} <: Language end
+struct Truth{V <: Union{Val{:contradiction}, Val{:tautology}}} <: Language end
 
 """
     ⊤
@@ -251,7 +251,7 @@ Truth:
   ⊤
 ```
 """
-const tautology = Truth{Val{:⊤}}()
+const tautology = Truth{Val{:tautology}}()
 const ⊤ = tautology
 
 """
@@ -275,7 +275,7 @@ Truth:
   ⊥
 ```
 """
-const contradiction = Truth{Val{:⊥}}()
+const contradiction = Truth{Val{:contradiction}}()
 const ⊥ = contradiction
 
 """
@@ -371,15 +371,17 @@ get_primitives(ps::Language...) = union(mapreduce(get_primitives, vcat, ps))
 
 # Helpers 
 
-Base.convert(::Type{L}, p::L) where L <: Language = p
-Base.convert(::Type{L}, p::Language) where L <: Language = L(p)
-Base.convert(::Type{Literal}, literal::Pair{Primitive, <:Truth}) = last(literal) == ⊤ ? Literal(first(literal)) : ¬first(literal)
-Base.convert(::Type{Propositional}, p::typeof(⊥)) = Primitive() ∧ ¬Primitive()
-Base.convert(::Type{Propositional}, p::typeof(⊤)) = ¬Propositional(⊥)
-Base.convert(::Type{Propositional}, p::Contingency) = mapreduce(interpretation -> mapreduce(Literal, ∧, first(interpretation)), ∨, filter(interpretation -> last(interpretation) == ⊤, p.interpretations))
-Base.convert(n::Type{Normal}, p::Contingency) = n(Propositional(p))
-Base.convert(::Type{Propositional}, p::Normal{And}) = _convert(p, ∨, ∧)
-Base.convert(::Type{Propositional}, p::Normal{Or}) = _convert(p, ∧, ∨)
+convert(::Type{Literal}, literal::Pair{Primitive, <:Truth}) = last(literal) == tautology ? Literal(first(literal)) : not(first(literal))
+convert(::Type{Propositional}, p::typeof(⊥)) = and(Primitive(), not(Primitive()))
+convert(::Type{Propositional}, p::typeof(⊤)) = not(Propositional(contradiction))
+convert(::Type{Propositional}, p::Contingency) = mapreduce(interpretation -> mapreduce(Literal, and, first(interpretation)), or, filter(interpretation -> last(interpretation) == ⊤, p.interpretations))
+convert(n::Type{<:Normal}, p::Contingency) = n(Propositional(p))
+convert(::Type{Propositional}, p::Normal{And}) = _convert(p, or, and)
+convert(::Type{Propositional}, p::Normal{Or}) = _convert(p, and, or)
+convert(::Type{Contingency}, p::Language) = p()
+convert(::Type{L}, p::L) where L <: Language = p
+convert(::Type{L}, p::Language) where L <: Language = L(p)
+
 _convert(p, inner, outer) = mapreduce(clause -> reduce(inner, clause), outer, p.clauses)
 
 
@@ -398,7 +400,7 @@ Literal(p::Pair{Primitive, Truth}) = convert(Literal, p)
 Propositional(p::Language) = convert(Propositional, p)
 Normal(::B, p::Contingency) where B <: Union{And, Or} = convert(Contingency{B}, p)
 
-Normal(::And, p::Language) = ¬Normal(Or(), ¬p)
+Normal(::And, p::Language) = not(Normal(Or(), ¬p))
 function Normal(::Or, p::Language)
     q = p()
     interpretations = () ->

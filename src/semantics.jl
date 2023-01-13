@@ -5,12 +5,12 @@ using PrettyTables
 (::Not)(::typeof(⊥)) = ⊤
 (::Not)(::typeof(⊤)) = ⊥
 (::Not)(p::Primitive) = Literal((Not(), p))
-(::Not)(p::Literal{Primitive}) = ¬p.ϕ
+(::Not)(p::Literal{Primitive}) = not(p.ϕ)
 (::Not)(p::Literal{Tuple{Not, Primitive}}) = last(p.ϕ)
 (::Not)(p::Compound) = Propositional(Not(), p)
 (::Not)(p::Propositional{<:Tuple{Not, Compound}}) = last(p.ϕ) # double negation elimination
 function (::Not)(p::Normal{B}) where B <: Union{And, Or}
-    clauses = map(clause -> map(¬, clause), p.clauses)
+    clauses = map(clause -> map(not, clause), p.clauses)
     b = B == And ? Or : And
 
     return Normal{b}(clauses)
