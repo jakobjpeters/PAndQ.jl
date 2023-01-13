@@ -34,7 +34,7 @@ function (p::Language)()
     truth_sets = multiset_permutations([⊤, ⊥], [n, n], n)
     valuations = map(truth_set -> map(Pair{Primitive, Truth}, primitives, truth_set), truth_sets)
     truths = map(valuation -> interpret(p -> Dict(valuation)[p], p), valuations)
-    
+
     union(truths) == [⊤] && return ⊤
     union(truths) == [⊥] && return ⊥
     return Contingency(map(Pair, valuations, truths))
@@ -110,8 +110,8 @@ true
 """
 is_tautology(p::Language) = _is_tautology(p())
 
-_is_tautology(p::typeof(⊤)) = true
-_is_tautology(p) = false
+_is_tautology(::typeof(⊤)) = true
+_is_tautology(::Any) = false
 
 """
     is_contradiction(p::Language)

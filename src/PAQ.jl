@@ -24,10 +24,9 @@ export
     # semantics.jl
     interpret, #= Base.:==, =#
     is_tautology, is_contradiction, is_truth, is_contingency, is_satisfiable, is_falsifiable,
-    @truth_table,
 
     # pretty_printing.jl
-    Pretty, @pretty #=, Base.repr, Base.show =#
+    #=Base.repr, Base.show, =# print_tree, Pretty, @pretty, @truth_table
 
 return nothing
 

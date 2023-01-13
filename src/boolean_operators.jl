@@ -32,7 +32,7 @@ const ¬ = not
 """
     p ∧ q
     ∧(p, q)
-    and(p::Language, q::Language)
+    and(p, q)
 
 Logical "conjunction" operator.
 

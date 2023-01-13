@@ -63,7 +63,6 @@ Singleton type representing logical conjunction.
 
 Subtype of [`Boolean`](@ref) and [`Operator`](@ref).
 See also [`and`](@ref).
-```
 """
 struct And <: Boolean end
 
@@ -157,8 +156,9 @@ end
 
 Abstract syntax tree representing a compound proposition.
 
+Note that [`Not`](@ref) and [`And`](@ref) are functionally complete operators.
+
 Subtype of [`Compound`](@ref) and [`Language`](@ref).
-See also [`Not`](@ref) and [`And`](@ref).
 
 # Examples
 ```jldoctest
@@ -296,7 +296,7 @@ Contingency:
   ["p" => ⊥, "q" => ⊥] => ⊥
 ```
 """
-struct Contingency <: Compound
+struct Contingency <: Compound # TODO: parameterize
     interpretations::Vector{Pair{Vector{Pair{Primitive, Truth}}}}
 end
 
@@ -337,7 +337,8 @@ https://github.com/ctrekker/Deductive.jl
 
 Returns a vector of [`Primitive`](@ref) propositions contained in ```ps```.
 
-Note that some primitives may optimized out of an expression, such as in ```p ∧ ⊥```.
+!!! warning
+    Some primitives may optimized out of an expression, such as in ```p ∧ ⊥```.
 
 See also [`Language`](@ref).
 
@@ -403,7 +404,8 @@ Normal(::B, p::Contingency) where B <: Union{And, Or} = convert(Normal{B}, p)
 Normal(::And, p::Language) = not(Normal(Or(), ¬p))
 function Normal(::Or, p::Language)
     q = p()
-    interpretations = () ->
+    # TODO: change `===` to `==` - fixes `Normal(and, ⊥)`
+    interpretations =
         if q === ⊤
             [[Primitive() => ⊤], [Primitive() => ⊥]]
         elseif q === ⊥
@@ -412,6 +414,6 @@ function Normal(::Or, p::Language)
             map(first, filter(literal -> last(literal) == ⊤, q.interpretations))
         end
 
-    clauses = map(interpretation -> map(Literal, interpretation), interpretations())
+    clauses = map(interpretation -> map(Literal, interpretation), interpretations)
     return Normal{Or}(clauses)
 end
