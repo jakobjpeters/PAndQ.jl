@@ -10,5 +10,4 @@ is_truth
 is_contingency
 is_satisfiable
 is_falsifiable
-@truth_table
 ```

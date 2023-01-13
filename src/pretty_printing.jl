@@ -141,3 +141,145 @@ Pretty{Propositional}:
 macro pretty(expression)
     return :(Pretty($(esc(expression)), $(string(expression))))
 end
+
+"""
+    @truth_table p
+    @truth_table(ps...)
+
+Print a truth table for the given propositions.
+
+The first row of the header is the expression representing that column's proposition,
+the second row indicates that expression's type,
+and the third row identifies the statements for [`Primitive`](@ref) propositions.
+
+!!! info
+    If a variable is a [`Compound`](@ref), there is no expression to label that primitive.
+    As such, the first row in the header will be blank.
+    However, the identifying statement is still known and will be displayed in the third row.
+    Use [`get_primitives`](@ref) to resolve this uncertainty.
+
+Logically equivalent propositions will be placed in the same column
+with their expressions in the header seperated by a comma.
+
+In this context, [`⊤`](@ref tautology) and [`⊥`](@ref contradiction) can be interpreted as *true* and *false*, respectively.
+
+See also [`Language`](@ref).
+
+# Examples
+```jldoctest
+julia> @truth_table p ∧ q p → q
+┌───────────┬───────────┬───────────────┬───────────────┐
+│ p         │ q         │ p ∧ q         │ p → q         │
+│ Primitive │ Primitive │ Propositional │ Propositional │
+│ "p"       │ "q"       │               │               │
+├───────────┼───────────┼───────────────┼───────────────┤
+│ ⊤         │ ⊤         │ ⊤             │ ⊤             │
+│ ⊤         │ ⊥         │ ⊥             │ ⊥             │
+├───────────┼───────────┼───────────────┼───────────────┤
+│ ⊥         │ ⊤         │ ⊥             │ ⊤             │
+│ ⊥         │ ⊥         │ ⊥             │ ⊤             │
+└───────────┴───────────┴───────────────┴───────────────┘
+```
+"""
+macro truth_table(expressions...)
+    f = expression -> typeof(expression) <: Union{Symbol, String} ? [expression] : mapreduce(f, vcat, expression.args[2:end])
+    propositions = reduce(union, map(f, expressions))
+
+    return :(
+        truth_table(
+            [$(map(esc, expressions)...)],
+            map(string, $expressions),
+            [$(map(esc, propositions)...)],
+            map(string, $propositions)
+        )
+    )
+end
+
+# ToDo: holy guacamole this function is a mess
+# ToDo: simplify logic
+# ToDo: fix subheader combining types
+# ToDo: fix `@truth_table p ∧ ¬(p ∧ ¬p)`
+# ToDo: write docstring - define behavior
+# ToDo: write tests
+function truth_table(_trees::Vector{<:Language}, trees_str, leaves, leaves_str)
+    trees = map(tree -> tree isa Pretty ? tree.p : tree,_trees)
+
+    primitives = get_primitives(trees...)
+    n = length(primitives)
+    truth_sets = multiset_permutations([⊤, ⊥], [n, n], n)
+    valuations = map(truth_set -> zip(primitives, truth_set), truth_sets)
+
+    merge_string = (x, y) -> x == y || y == "" ? x : x * ", " * y
+
+    _sub_header = []
+    labels = String[]
+    assignments = Vector{Truth}[]
+    for (tree, tree_str) in filter(pair -> !isa(first(pair), Truth), map(Pair, trees, trees_str))
+        tree isa Primitive && continue
+
+        truths = map(valuation -> interpret(p -> Dict(valuation)[p], tree), valuations)
+
+        if truths in assignments
+            i = findfirst(assignment -> assignment == truths, assignments)
+            labels[i] = merge_string(labels[i], tree_str)
+        else
+            push!(_sub_header, tree)
+            push!(labels, tree_str)
+            push!(assignments, truths)
+        end
+    end
+
+    _truths = filter(tree -> tree isa Truth, trees)
+    temp = hcat(map(p -> repeat([p], 2^n), _truths)...)
+    valuation_matrix = mapreduce(permutedims, vcat, truth_sets)
+    assignment_matrix = reduce(hcat, assignments, init = Matrix(undef, 2^n, 0))
+    interpretations = reduce(hcat, [valuation_matrix, assignment_matrix])
+
+    if !isempty(temp)
+        interpretations = reduce(hcat, [valuation_matrix, assignment_matrix, temp])
+    end
+
+    pretty_interpretations = map(repr, interpretations)
+
+    make_header = (ps, ps_str) -> begin
+        ___header = Dict{Primitive, Vector{String}}()
+
+        for (p, p_str) in zip(ps, ps_str)
+            if p isa Primitive
+                if p in keys(___header)
+                    push!(___header[p], p_str)
+                else
+                    ___header[p] = [p_str]
+                end
+            end
+        end
+
+        return ___header
+    end
+
+    header_domains = [
+        (leaves, leaves_str),
+        (trees, trees_str),
+        (primitives, map(primitive -> "", primitives))
+    ]
+    headers = map(header_domain -> make_header(header_domain...), header_domains)
+    __header = mergewith!(union ∘ vcat, headers...)
+    _header = map(primitive -> reduce(merge_string, __header[primitive]), primitives)
+    push!(_header, labels...)
+    append!(_header, map(repr, _truths))
+
+    sub_header = map(nameof ∘ typeof, vcat(primitives, _sub_header, _truths))
+    sub_sub_header = vcat(
+        map(repr, primitives),
+        map(_ -> "", vcat(_sub_header, _truths)),
+    )
+    header = (_header, sub_header, sub_sub_header)
+
+    pretty_table(
+        pretty_interpretations,
+        header = header,
+        alignment = :l,
+        body_hlines = collect(0:2:2^n),
+        crop = :none
+    )
+end

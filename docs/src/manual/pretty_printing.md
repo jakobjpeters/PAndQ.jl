@@ -5,4 +5,5 @@
 repr
 Pretty
 @pretty
+@truth_table
 ```
