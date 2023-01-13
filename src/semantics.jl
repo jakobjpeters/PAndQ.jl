@@ -7,8 +7,8 @@ using PrettyTables
 (::Not)(p::Primitive) = Literal((Not(), p))
 (::Not)(p::Literal{Primitive}) = not(p.ϕ)
 (::Not)(p::Literal{Tuple{Not, Primitive}}) = last(p.ϕ)
-(::Not)(p::Compound) = Propositional(Not(), p)
-(::Not)(p::Propositional{<:Tuple{Not, Compound}}) = last(p.ϕ) # double negation elimination
+(::Not)(p::Compound) = Tree(Not(), p)
+(::Not)(p::Tree{<:Tuple{Not, Compound}}) = last(p.ϕ) # double negation elimination
 function (::Not)(p::Normal{B}) where B <: Union{And, Or}
     clauses = map(clause -> map(not, clause), p.clauses)
     b = B == And ? Or : And
@@ -22,10 +22,10 @@ end
 (::And)(::typeof(⊤), q::Truth) = q # identity law
 (::And)(::typeof(⊤), q::Language) = q
 (::And)(p::Language, q::Truth) = q ∧ p # commutative law
-(::And)(p::Language, q::Language) = Propositional(And(), p, q)
+(::And)(p::Language, q::Language) = Tree(And(), p, q)
 
 (p::Union{Truth, Contingency})() = p
-(p::Normal)() = Propositional(p)()
+(p::Normal)() = Tree(p)()
 
 # ToDo: make type stable
 function (p::Language)()
@@ -54,8 +54,8 @@ interpret(valuation, p::Language) = p(Dict(map(p -> p => valuation(p), get_primi
 (p::Primitive)(interpretations) = interpretations[p]
 (p::Literal{Primitive})(interpretations) = p.ϕ(interpretations)
 (p::Literal{Tuple{Not, Primitive}})(interpretations) = first(p.ϕ)(last(p.ϕ)(interpretations))
-(p::Propositional)(interpretations) = first(p.ϕ)(map(ϕ -> ϕ(interpretations), Base.tail(p.ϕ))...)
-(p::Normal)(interpretations) = Propositional(p)(interpretations)
+(p::Tree)(interpretations) = first(p.ϕ)(map(ϕ -> ϕ(interpretations), Base.tail(p.ϕ))...)
+(p::Normal)(interpretations) = Tree(p)(interpretations)
 
 """
     p == q

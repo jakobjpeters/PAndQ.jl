@@ -13,7 +13,7 @@ Return a string representation of the given proposition.
 
 ```jldoctest
 julia> p ↔ q
-Propositional:
+Tree:
   ¬("p" ∧ ¬"q") ∧ ¬(¬"p" ∧ "q")
 
 julia> repr(p ↔ q)
@@ -26,7 +26,7 @@ julia> repr(@pretty p ↔ q)
 "p ↔ q"
 
 julia> repr(MIME("text/plain"), @pretty p ↔ q)
-"Pretty{Propositional}:\\n  p ↔ q"
+"Pretty{Tree}:\\n  p ↔ q"
 ```
 """
 repr(::typeof(⊤)) = "⊤"
@@ -34,7 +34,7 @@ repr(::typeof(⊥)) = "⊥"
 repr(p::Primitive) = "\"" * p.statement * "\""
 repr(p::Contingency) = mapreduce(interpretation -> f(interpretation) * i(interpretation, p.interpretations), *, p.interpretations)
 repr(p::Literal) = repr(p.ϕ)
-repr(p::Propositional) = repr(p.ϕ)
+repr(p::Tree) = repr(p.ϕ)
 repr(p::Tuple{Not, Primitive}) = repr(p[1]) * repr(p[2])
 repr(p::Tuple{Not, Language}) = repr(p[1]) * "(" * repr(p[2]) * ")"
 repr(p::Tuple{And, Compound, Compound}) = repr(p[2]) * " " * repr(p[1]) * " " * repr(p[3])
@@ -94,15 +94,15 @@ See also [`Compound`](@ref) and [`@pretty`](@ref).
 # Examples
 ```jldoctest
 julia> r = p → (q → p)
-Propositional:
+Tree:
   ¬("p" ∧ "q" ∧ ¬"p")
 
 julia> Pretty(r)
-Pretty{Propositional}:
+Pretty{Tree}:
   ¬(p ∧ q ∧ ¬p)
 
 julia> Pretty(r, "p → (q → p)")
-Pretty{Propositional}:
+Pretty{Tree}:
   p → (q → p)
 ```
 """
@@ -122,20 +122,20 @@ function show(io::IO, ::MIME"text/plain", p::Pretty)
     print(io, nameof(typeof(p)), "{", nameof(typeof((p.p))), "}:\n", indent, p.text)
 end
 """
-    @Pretty(expression)
+    @pretty(expression)
 
 Return an instance of [`Pretty`](@ref), whose ```text``` field is
 set to ```string(expression)```.
 
 # Examples
 ```jldocttest
-julia> p → (q → p)
-Propositional:
-  ¬("p" ∧ "q" ∧ ¬"p")
+julia> p ↔ q
+Tree:
+  ¬("p" ∧ ¬"q") ∧ ¬(¬"p" ∧ "q")
 
-julia> @pretty p → (q → p)
-Pretty{Propositional}:
-  p → (q → p)
+julia> @pretty p ↔ q
+Pretty{Tree}:
+  p ↔ q
 ```
 """
 macro pretty(expression)
@@ -168,17 +168,17 @@ See also [`Language`](@ref).
 # Examples
 ```jldoctest
 julia> @truth_table p ∧ q p → q
-┌───────────┬───────────┬───────────────┬───────────────┐
-│ p         │ q         │ p ∧ q         │ p → q         │
-│ Primitive │ Primitive │ Propositional │ Propositional │
-│ "p"       │ "q"       │               │               │
-├───────────┼───────────┼───────────────┼───────────────┤
-│ ⊤         │ ⊤         │ ⊤             │ ⊤             │
-│ ⊤         │ ⊥         │ ⊥             │ ⊥             │
-├───────────┼───────────┼───────────────┼───────────────┤
-│ ⊥         │ ⊤         │ ⊥             │ ⊤             │
-│ ⊥         │ ⊥         │ ⊥             │ ⊤             │
-└───────────┴───────────┴───────────────┴───────────────┘
+┌───────────┬───────────┬───────┬───────┐
+│ p         │ q         │ p ∧ q │ p → q │
+│ Primitive │ Primitive │ Tree  │ Tree  │
+│ "p"       │ "q"       │       │       │
+├───────────┼───────────┼───────┼───────┤
+│ ⊤         │ ⊤         │ ⊤     │ ⊤     │
+│ ⊤         │ ⊥         │ ⊥     │ ⊥     │
+├───────────┼───────────┼───────┼───────┤
+│ ⊥         │ ⊤         │ ⊥     │ ⊤     │
+│ ⊥         │ ⊥         │ ⊥     │ ⊤     │
+└───────────┴───────────┴───────┴───────┘
 ```
 """
 macro truth_table(expressions...)

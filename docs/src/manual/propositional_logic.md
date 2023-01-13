@@ -6,7 +6,7 @@ Language
 Compound
 Primitive
 Literal
-Propositional
+Tree
 Normal
 Truth
 tautology

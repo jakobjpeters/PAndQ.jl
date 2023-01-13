@@ -50,7 +50,7 @@ Statements can also depend on multiple primitive propositions. The logical [`and
 julia> @truth_table or(p, q) ¬(¬p ∧ ¬q)
 ┌───────────┬───────────┬──────────────────────┐
 │ p         │ q         │ or(p, q), ¬(¬p ∧ ¬q) │
-│ Primitive │ Primitive │ Propositional        │
+│ Primitive │ Primitive │ Tree                 │
 │ "p"       │ "q"       │                      │
 ├───────────┼───────────┼──────────────────────┤
 │ ⊤         │ ⊤         │ ⊤                    │
@@ -102,13 +102,13 @@ print_tree(Language) # hide
 ```
 
 
-In Backus-Naur Form (BNF), [`Propositional`](@ref) is defined "inductively" as:
+In Backus-Naur Form (BNF), [`Tree`](@ref) is defined "inductively" as:
 
 ```
 p ::= q | ¬ϕ | ϕ ∧ ϕ
 ```
 
-Since we may want to refer to compound statements defined differently, ϕ has the abstract type [`Compound`](@ref) rather than being a ```Propositional```.
+Since we may want to refer to compound statements defined differently, ϕ has the abstract type [`Compound`](@ref) rather than being a ```Tree```.
 
 
 

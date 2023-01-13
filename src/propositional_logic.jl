@@ -21,7 +21,7 @@ Compound <: Language
 Compound proposition.
 
 Subtype of [`Language`](@ref).
-Supertype of [`Literal`](@ref), [`Propositional`](@ref), and [`Normal`](@ref).
+Supertype of [`Literal`](@ref), [`Tree`](@ref), and [`Normal`](@ref).
 """
 abstract type Compound <: Language end
 
@@ -87,7 +87,7 @@ Primitive proposition.
   Constructing a ```Primitive``` with no argument, an empty string, or an underscore character
   will set ```statement = "_"```. This serves two purposes.
   Firstly, it is useful as a default proposition when converting [`Truth`](@ref)s to other forms;
-  for example: ```Propositional(⊥)``` is printed as ```"_" ∧ ¬"_"```.
+  for example: ```Tree(⊥)``` is printed as ```"_" ∧ ¬"_"```.
   Secondly, this ensures that pretty-printing does not produce output such as: ``` ∧ ¬`.
   It is not idiomatic to use this as a generic proposition; use [`@primitive`](@ref) instead.
 
@@ -147,13 +147,13 @@ struct Literal{
 end
 
 """
-    Propositional{
+    Tree{
         L <: Union{
             Tuple{Not, Compound},
             Tuple{And, Compound, Compound}
         }
     } <: Compound <: Language
-    Propositional(ϕ::L)
+    Tree(ϕ::L)
 
 Abstract syntax tree representing a compound proposition.
 
@@ -163,7 +163,7 @@ See also [`Not`](@ref) and [`And`](@ref).
 # Examples
 ```jldoctest
 julia> r = p ∧ ¬p
-Propositional:
+Tree:
   "p" ∧ ¬"p"
 
 julia> r()
@@ -178,7 +178,7 @@ Contingency:
   ["p" => ⊥, "q" => ⊥] => ⊥
 ```
 """
-struct Propositional{
+struct Tree{
     L <: Union{
         Tuple{Not, Compound},
         Tuple{And, Compound, Compound}
@@ -209,7 +209,7 @@ Normal:
   ("p" ∧ ¬"q") ∨ (¬"p" ∧ "q") ∨ (¬"p" ∧ ¬"q")
 
 julia> t = r ∧ s
-Propositional:
+Tree:
   (¬"p" ∨ "q") ∧ ("p" ∨ ¬"q") ∧ ("p" ∨ "q") ∧ ("p" ∧ ¬"q") ∨ (¬"p" ∧ "q") ∨ (¬"p" ∧ ¬"q")
 
 julia> t()
@@ -344,7 +344,7 @@ See also [`Language`](@ref).
 # Examples
 ```jldoctest
 julia> r = p ∧ q
-Propositional:
+Tree:
   "p" ∧ "q"
 
 julia> get_primitives(r)
@@ -363,21 +363,21 @@ get_primitives(p::Contingency) = union(
 )
 get_primitives(p::Primitive) = [p]
 get_primitives(p::Literal) = get_primitives(p.ϕ)
-get_primitives(p::Propositional) = union(get_primitives(p.ϕ))
+get_primitives(p::Tree) = union(get_primitives(p.ϕ))
 get_primitives(ϕ::Tuple{Operator, Vararg}) = mapreduce(p -> get_primitives(p), vcat, Base.tail(ϕ))
-get_primitives(p::Normal) = get_primitives(Propositional(p))
+get_primitives(p::Normal) = get_primitives(Tree(p))
 get_primitives(ps::Language...) = union(mapreduce(get_primitives, vcat, ps))
 
 
 # Helpers 
 
 convert(::Type{Literal}, literal::Pair{Primitive, <:Truth}) = last(literal) == tautology ? Literal(first(literal)) : not(first(literal))
-convert(::Type{Propositional}, p::typeof(⊥)) = and(Primitive(), not(Primitive()))
-convert(::Type{Propositional}, p::typeof(⊤)) = not(Propositional(contradiction))
-convert(::Type{Propositional}, p::Contingency) = mapreduce(interpretation -> mapreduce(Literal, and, first(interpretation)), or, filter(interpretation -> last(interpretation) == ⊤, p.interpretations))
-convert(n::Type{<:Normal}, p::Contingency) = n(Propositional(p))
-convert(::Type{Propositional}, p::Normal{And}) = _convert(p, or, and)
-convert(::Type{Propositional}, p::Normal{Or}) = _convert(p, and, or)
+convert(::Type{Tree}, p::typeof(⊥)) = and(Primitive(), not(Primitive()))
+convert(::Type{Tree}, p::typeof(⊤)) = not(Tree(contradiction))
+convert(::Type{Tree}, p::Contingency) = mapreduce(interpretation -> mapreduce(Literal, and, first(interpretation)), or, filter(interpretation -> last(interpretation) == ⊤, p.interpretations))
+convert(n::Type{<:Normal}, p::Contingency) = n(Tree(p))
+convert(::Type{Tree}, p::Normal{And}) = _convert(p, or, and)
+convert(::Type{Tree}, p::Normal{Or}) = _convert(p, and, or)
 convert(::Type{Contingency}, p::Language) = p()
 convert(::Type{L}, p::L) where L <: Language = p
 convert(::Type{L}, p::Language) where L <: Language = L(p)
@@ -388,17 +388,17 @@ _convert(p, inner, outer) = mapreduce(clause -> reduce(inner, clause), outer, p.
 # Consructors
 
 # TODO: use Base.promote?
-Propositional(::Not, p::Primitive) = Literal((Not(), p))
-Propositional(::Not, p::Compound) = Propositional((Not(), p))
+Tree(::Not, p::Primitive) = Literal((Not(), p))
+Tree(::Not, p::Compound) = Tree((Not(), p))
 
-Propositional(::And, p::Primitive, q::Primitive) = Propositional(And(), Literal(p), Literal(q))
-Propositional(::And, p::Primitive, q::Compound) = Propositional(And(), Literal(p), q)
-Propositional(::And, p::Compound, q::Primitive) = Propositional(And(), p, Literal(q))
-Propositional(::And, p::Compound, q::Compound) = Propositional((And(), p, q))
+Tree(::And, p::Primitive, q::Primitive) = Tree(And(), Literal(p), Literal(q))
+Tree(::And, p::Primitive, q::Compound) = Tree(And(), Literal(p), q)
+Tree(::And, p::Compound, q::Primitive) = Tree(And(), p, Literal(q))
+Tree(::And, p::Compound, q::Compound) = Tree((And(), p, q))
 
 Literal(p::Pair{Primitive, Truth}) = convert(Literal, p)
-Propositional(p::Language) = convert(Propositional, p)
-Normal(::B, p::Contingency) where B <: Union{And, Or} = convert(Contingency{B}, p)
+Tree(p::Language) = convert(Tree, p)
+Normal(::B, p::Contingency) where B <: Union{And, Or} = convert(Normal{B}, p)
 
 Normal(::And, p::Language) = not(Normal(Or(), ¬p))
 function Normal(::Or, p::Language)
