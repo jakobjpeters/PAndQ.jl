@@ -315,5 +315,5 @@ function not_then_if end
 const ↚ = not_then_if
 p ↚ q = ¬p ∧ q
 
-Normal(::typeof(∧), p::Language) = Normal(And(), p)
-Normal(::typeof(∨), p::Language) = Normal(Or(), p)
+Normal(::typeof(∧), p::Proposition) = Normal(And(), p)
+Normal(::typeof(∨), p::Proposition) = Normal(Or(), p)

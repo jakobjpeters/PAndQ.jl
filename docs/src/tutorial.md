@@ -95,10 +95,10 @@ Truth:
 import AbstractTrees: children # hide
 using AbstractTrees: print_tree # hide
 using InteractiveUtils: subtypes # hide
-using PAQ: Language # hide
+using PAQ: Proposition # hide
 
 children(x::Type) = subtypes(x) # hide
-print_tree(Language) # hide
+print_tree(Proposition) # hide
 ```
 
 

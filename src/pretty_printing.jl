@@ -2,8 +2,8 @@
 import Base: repr, show
 
 """
-    repr(p::Language)
-    repr(::MIME"text/plain", p::Language)
+    repr(p::Proposition)
+    repr(::MIME"text/plain", p::Proposition)
 
 Return a string representation of the given proposition.
 
@@ -36,7 +36,7 @@ repr(p::Contingency) = mapreduce(interpretation -> f(interpretation) * i(interpr
 repr(p::Literal) = repr(p.ϕ)
 repr(p::Tree) = repr(p.ϕ)
 repr(p::Tuple{Not, Atom}) = repr(p[1]) * repr(p[2])
-repr(p::Tuple{Not, Language}) = repr(p[1]) * "(" * repr(p[2]) * ")"
+repr(p::Tuple{Not, Proposition}) = repr(p[1]) * "(" * repr(p[2]) * ")"
 repr(p::Tuple{And, Compound, Compound}) = repr(p[2]) * " " * repr(p[1]) * " " * repr(p[3])
 function repr(p::Normal{B}) where B <: Union{And, Or}
     b = first(setdiff!(Set([And, Or]), [B]))
@@ -73,8 +73,8 @@ h(literal, interpretation) = literal == last(interpretation) ? "" : ", "
 g(literal) = repr(first(literal)) * " => " * repr(last(literal))
 f(interpretation) = "  [" * mapreduce(literal -> g(literal) * h(literal, first(interpretation)), *, first(interpretation)) * "] => " * repr(last(interpretation))
 
-show(io::IO, p::Language) = print(io, repr(p))
-function show(io::IO, ::MIME"text/plain", p::Language)
+show(io::IO, p::Proposition) = print(io, repr(p))
+function show(io::IO, ::MIME"text/plain", p::Proposition)
     indent = p isa Contingency ? "" : "  "
     print(io, nameof(typeof(p)), ":\n", indent, p)
 end
@@ -120,7 +120,7 @@ print_tree(p::Language) = print_tree(Pretty(p))
 
 # TODO: make composable
 """
-    Pretty{L <: Language} <: Compound
+    Pretty{L <: Proposition} <: Compound
     Pretty(p::L[, text::String])
 
 A wrapper to automatically enable the pretty-printing of ```p``` with the contents of ```text```.
@@ -145,11 +145,11 @@ Pretty{Tree}:
   p → (q → p)
 ```
 """
-struct Pretty{L <: Language} <: Compound
+struct Pretty{L <: Proposition} <: Compound
     p::L
     text::String
 
-    Pretty(p::L, text::String = replace(repr(p), "\"" => "")) where L <: Language = new{L}(p, text)
+    Pretty(p::L, text::String = replace(repr(p), "\"" => "")) where L <: Proposition = new{L}(p, text)
 end
 
 # TODO: finish integrating `Pretty`
@@ -157,13 +157,13 @@ end
 
 (::Not)(p::Pretty) = not(p.p)
 (::And)(p::Pretty, q::Pretty) = And()(p.p, q.p)
-(::And)(p::Pretty, q::Language) = And()(p.p, q)
-(::And)(p::Language, q::Pretty) = And()(q, p)
+(::And)(p::Pretty, q::Proposition) = And()(p.p, q)
+(::And)(p::Proposition, q::Pretty) = And()(q, p)
 
 Tree(p::Pretty) = convert(Tree, p)
 Normal(::B, p::Pretty) where B <: Union{And, Or} = convert(Normal{B}, p)
 
-convert(type::Type{<:Language}, p::Pretty) = convert(type, p.p)
+convert(type::Type{<:Proposition}, p::Pretty) = convert(type, p.p)
 
 show(io::IO, p::Pretty) = print(io, p.text)
 function show(io::IO, ::MIME"text/plain", p::Pretty)
@@ -212,7 +212,7 @@ with their expressions in the header seperated by a comma.
 
 In this context, [`⊤`](@ref tautology) and [`⊥`](@ref contradiction) can be interpreted as *true* and *false*, respectively.
 
-See also [`Language`](@ref).
+See also [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -250,7 +250,7 @@ end
 # ToDo: fix `@truth_table p ∧ ¬(p ∧ ¬p)`
 # ToDo: write docstring - define behavior
 # ToDo: write tests
-function truth_table(_trees::Vector{<:Language}, trees_str, leaves, leaves_str)
+function truth_table(_trees::Vector{<:Proposition}, trees_str, leaves, leaves_str)
     trees = map(tree -> tree isa Pretty ? tree.p : tree,_trees)
 
     atoms = get_atoms(trees...)

@@ -4,31 +4,31 @@ import Base: convert
 # Types
 
 """
-Language
+    Proposition
 
 Set of well-formed logical formulae.
 
-Calling an instance of ```Language``` will return a vector of valid interpretations.
+Calling an instance of ```Proposition``` will return a vector of valid interpretations.
 
 Supertype of [`Atom`](@ref), [`Compound`](@ref), and [`Truth`](@ref).
 ```
 """
-abstract type Language end
+abstract type Proposition end
 
 """
-Compound <: Language
+Compound <: Proposition
 
 Compound proposition.
 
-Subtype of [`Language`](@ref).
+Subtype of [`Proposition`](@ref).
 Supertype of [`Literal`](@ref), [`Tree`](@ref), and [`Normal`](@ref).
 """
-abstract type Compound <: Language end
+abstract type Compound <: Proposition end
 
 """
     Operator
 
-Set of functions that operate on a logical [`Language`](@ref).
+Set of functions that operate on a logical [`Proposition`](@ref).
 
 Supertype of [`Boolean`](@ref).
 """
@@ -77,7 +77,7 @@ See also [`or`](@ref).
 struct Or <: Boolean end
 
 """
-    Atom <: Language
+    Atom <: Proposition
     Atom([statement::String])
 
 Atomic proposition.
@@ -90,7 +90,7 @@ Atomic proposition.
   Secondly, this ensures that pretty-printing does not produce output such as: ``` ∧ ¬`.
   It is not idiomatic to use this as a generic proposition; use [`@atom`](@ref) instead.
 
-Subtype of [`Language`](@ref).
+Subtype of [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -104,7 +104,7 @@ Contingency:
   ["p" => ⊥] => ⊥
 ```
 """
-struct Atom <: Language
+struct Atom <: Proposition
     statement::String
 
     Atom(statement::String = "") = statement == "" ? new("_") : new(statement)
@@ -116,12 +116,12 @@ end
             Atom,
             Tuple{Not, Atom}
         }
-    } <: Compound <: Language
+    } <: Compound <: Proposition
     Literal(p::L)
 
 An [`Atom`](@ref) or its negation.
 
-Subtype of [`Compound`](@ref) and [`Language`](@ref).
+Subtype of [`Compound`](@ref) and [`Proposition`](@ref).
 See also [`Not`](@ref).
 
 # Examples
@@ -151,14 +151,14 @@ end
             Tuple{Not, Compound},
             Tuple{And, Compound, Compound}
         }
-    } <: Compound <: Language
+    } <: Compound <: Proposition
     Tree(ϕ::L)
 
 Abstract syntax tree representing a compound proposition.
 
 Note that [`Not`](@ref) and [`And`](@ref) are functionally complete operators.
 
-Subtype of [`Compound`](@ref) and [`Language`](@ref).
+Subtype of [`Compound`](@ref) and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -188,15 +188,15 @@ struct Tree{
 end
 
 """
-    Normal{B <: Union{And, Or}} <: Compound <: Language
-    Normal(::Union{typeof(and), typeof(or)}, p::Language)
+    Normal{B <: Union{And, Or}} <: Compound <: Proposition
+    Normal(::Union{typeof(and), typeof(or)}, p::Proposition)
 
 The conjunctive or disjunctive normal form of a proposition.
 
 Constructing an instance with the parameters ```([`and`](@ref), p)``` and ```([`or`](@ref), p)```
 correspond to conjunctive and disjunctive normal form, respectively.
 
-Subtype of [`Compound`](@ref) and [`Language`](@ref).
+Subtype of [`Compound`](@ref) and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -222,13 +222,13 @@ struct Normal{B <: Union{And, Or} #=, L <: Literal =#} <: Compound
 end
 
 """
-    Truth{V <: Union{Val{:contradiction}, Val{:tautology}}} <: Language
+    Truth{V <: Union{Val{:contradiction}, Val{:tautology}}} <: Proposition
     Truth(::V)
 
 Container for the constants [`tautology`](@ref) and [`contradiction`](@ref).
-Subtype of [`Language`](@ref).
+Subtype of [`Proposition`](@ref).
 """
-struct Truth{V <: Union{Val{:contradiction}, Val{:tautology}}} <: Language end
+struct Truth{V <: Union{Val{:contradiction}, Val{:tautology}}} <: Proposition end
 
 """
     ⊤
@@ -333,14 +333,14 @@ https://github.com/ctrekker/Deductive.jl
 =#
 
 """
-    get_atoms(ps::Language...)
+    get_atoms(ps::Proposition...)
 
 Returns a vector of [`atomic propositions`](@ref Atom) contained in ```ps```.
 
 !!! warning
     Some atoms may optimized out of an expression, such as in ```p ∧ ⊥```.
 
-See also [`Language`](@ref).
+See also [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -367,7 +367,7 @@ get_atoms(p::Literal) = get_atoms(p.ϕ)
 get_atoms(p::Tree) = union(get_atoms(p.ϕ))
 get_atoms(ϕ::Tuple{Operator, Vararg}) = mapreduce(p -> get_atoms(p), vcat, Base.tail(ϕ))
 get_atoms(p::Normal) = get_atoms(Tree(p))
-get_atoms(ps::Language...) = union(mapreduce(get_atoms, vcat, ps))
+get_atoms(ps::Proposition...) = union(mapreduce(get_atoms, vcat, ps))
 
 
 # Helpers 
@@ -379,9 +379,9 @@ convert(::Type{Tree}, p::Contingency) = mapreduce(interpretation -> mapreduce(Li
 convert(n::Type{<:Normal}, p::Contingency) = n(Tree(p))
 convert(::Type{Tree}, p::Normal{And}) = _convert(p, or, and)
 convert(::Type{Tree}, p::Normal{Or}) = _convert(p, and, or)
-convert(::Type{Contingency}, p::Language) = p()
-convert(::Type{L}, p::L) where L <: Language = p
-convert(::Type{L}, p::Language) where L <: Language = L(p)
+convert(::Type{Contingency}, p::Proposition) = p()
+convert(::Type{L}, p::L) where L <: Proposition = p
+convert(::Type{L}, p::Proposition) where L <: Proposition = L(p)
 
 _convert(p, inner, outer) = mapreduce(clause -> reduce(inner, clause), outer, p.clauses)
 
@@ -399,11 +399,11 @@ Tree(::And, p::Compound, q::Compound) = Tree((And(), p, q))
 
 # TODO: write more conversions
 Literal(p::Pair{Atom, Truth}) = convert(Literal, p)
-Tree(p::Language) = convert(Tree, p)
+Tree(p::Proposition) = convert(Tree, p)
 Normal(::B, p::Contingency) where B <: Union{And, Or} = convert(Normal{B}, p)
 
-Normal(::And, p::Language) = not(Normal(Or(), ¬p))
-function Normal(::Or, p::Language)
+Normal(::And, p::Proposition) = not(Normal(Or(), ¬p))
+function Normal(::Or, p::Proposition)
     q = p()
     # TODO: change `===` to `==` - fixes `Normal(and, ⊥)`
     interpretations =

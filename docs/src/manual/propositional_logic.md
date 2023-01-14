@@ -2,7 +2,7 @@
 # Propositional Logic
 
 ```@docs
-Language
+Proposition
 Compound
 Atom
 Literal

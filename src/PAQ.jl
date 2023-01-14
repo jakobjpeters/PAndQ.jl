@@ -13,7 +13,7 @@ export
     ⨉, cartesian_product,
 
     # propositional_logic.jl
-    Language, Compound, Atom, Literal, Tree, Normal,
+    Proposition, Compound, Atom, Literal, Tree, Normal,
     Truth, tautology, ⊤, contradiction, ⊥, Contingency,
     @atom, get_atoms, #= Base.convert, =#
 

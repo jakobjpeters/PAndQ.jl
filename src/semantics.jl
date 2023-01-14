@@ -18,17 +18,17 @@ end
 
 (::And)(::typeof(⊤), ::typeof(⊤)) = ⊤
 (::And)(::typeof(⊥), ::Truth) = ⊥ # domination law
-(::And)(::typeof(⊥), ::Language) = ⊥
+(::And)(::typeof(⊥), ::Proposition) = ⊥
 (::And)(::typeof(⊤), q::Truth) = q # identity law
-(::And)(::typeof(⊤), q::Language) = q
-(::And)(p::Language, q::Truth) = q ∧ p # commutative law
-(::And)(p::Language, q::Language) = Tree(And(), p, q)
+(::And)(::typeof(⊤), q::Proposition) = q
+(::And)(p::Proposition, q::Truth) = q ∧ p # commutative law
+(::And)(p::Proposition, q::Proposition) = Tree(And(), p, q)
 
 (p::Union{Truth, Contingency})() = p
 (p::Normal)() = Tree(p)()
 
 # ToDo: make type stable
-function (p::Language)()
+function (p::Proposition)()
     atoms = get_atoms(p)
     n = length(atoms)
     truth_sets = multiset_permutations([⊤, ⊥], [n, n], n)
@@ -41,15 +41,15 @@ function (p::Language)()
 end
 
 """
-    interpret(valuation, p::Language)
+    interpret(valuation, p::Proposition)
 
 Given a valuation function that maps from the [`atomic propositions`](@ref Atom)
 in ```p``` to their respective [`Truth`](@ref) values,
 assign a truth value to ```p```.
 
-See also [`Language`](@ref).
+See also [`Proposition`](@ref).
 """
-interpret(valuation, p::Language) = p(Dict(map(p -> p => valuation(p), get_atoms(p))))
+interpret(valuation, p::Proposition) = p(Dict(map(p -> p => valuation(p), get_atoms(p))))
 
 (p::Atom)(interpretations) = interpretations[p]
 (p::Literal{Atom})(interpretations) = p.ϕ(interpretations)
@@ -59,12 +59,12 @@ interpret(valuation, p::Language) = p(Dict(map(p -> p => valuation(p), get_atoms
 
 """
     p == q
-    ==(p::Language, q::Language)
-    isequal(p::Language, q::Language)
+    ==(p::Proposition, q::Proposition)
+    isequal(p::Proposition, q::Proposition)
 
 Returns a boolean indicating whether ```p``` and ```q``` are logically equivalent.
 
-See also [`Language`](@ref).
+See also [`Proposition`](@ref).
 
 !!! info
     The ```≡``` symbol is sometimes used to represent logical equivalence.
@@ -85,16 +85,16 @@ false
 ```
 """
 Base.:(==)(p::TP, q::TP) where TP <: Union{Truth, Atom} = p === q
-Base.:(==)(p::Language, q::Language) = is_tautology(p ↔ q)
+Base.:(==)(p::Proposition, q::Proposition) = is_tautology(p ↔ q)
 
 """
-    is_tautology(p::Language)
+    is_tautology(p::Proposition)
 
 Returns a boolean on whether the given proposition is a [`tautology`](@ref).
 
 This function is equivalent to ```p == ⊤```.
 
-See also [`Language`](@ref) and [`==`](@ref).
+See also [`Proposition`](@ref) and [`==`](@ref).
 
 # Examples
 ```jldoctest
@@ -108,19 +108,19 @@ julia> is_tautology(¬(p ∧ ¬p))
 true
 ```
 """
-is_tautology(p::Language) = _is_tautology(p())
+is_tautology(p::Proposition) = _is_tautology(p())
 
 _is_tautology(::typeof(⊤)) = true
 _is_tautology(::Any) = false
 
 """
-    is_contradiction(p::Language)
+    is_contradiction(p::Proposition)
 
 Returns a boolean on whether the given proposition is a [`contradiction`](@ref).
 
 This function is equivalent to ```p == ⊥```.
 
-See also [`Language`](@ref) and [`==`](@ref).
+See also [`Proposition`](@ref) and [`==`](@ref).
 
 # Examples
 ```jldoctest
@@ -134,15 +134,15 @@ julia> is_contradiction(p ∧ ¬p)
 true
 ```
 """
-is_contradiction(p::Language) = p == ⊥
+is_contradiction(p::Proposition) = p == ⊥
 
 """
-    is_truth(p::Language)
+    is_truth(p::Proposition)
 
 Returns a boolean on whether the given proposition is a [`Truth`](@ref)
 (either a [`tautology`](@ref) or [`contradiction`](@ref)).
 
-See also [`Language`](@ref).
+See also [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -159,18 +159,18 @@ julia> is_truth(p ∧ q)
 false
 ```
 """
-is_truth(p::Language) = _is_truth(p())
+is_truth(p::Proposition) = _is_truth(p())
 
 _is_truth(p::Truth) = true
 _is_truth(p) = false
 
 """
-    is_contingency(p::Language)
+    is_contingency(p::Proposition)
 
 Returns a boolean on whether the given proposition is a contingency
 (neither a [`tautology`](@ref) or [`contradiction`](@ref)).
 
-See also [`Language`](@ref).
+See also [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -187,14 +187,14 @@ julia> is_contingency(p ∧ q)
 true
 ```
 """
-is_contingency(p::Language) = !is_truth(p)
+is_contingency(p::Proposition) = !is_truth(p)
 
 """
-    is_satisfiable(p::Language)
+    is_satisfiable(p::Proposition)
 
 Returns a boolean on whether the given proposition is satisfiable (not a [`contradiction`](@ref)).
 
-See also [`Language`](@ref).
+See also [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -211,14 +211,14 @@ julia> is_satisfiable(p ∧ q)
 true
 ```
 """
-is_satisfiable(p::Language) = !is_contradiction(p)
+is_satisfiable(p::Proposition) = !is_contradiction(p)
 
 """
-    is_falsifiable(p::Language)
+    is_falsifiable(p::Proposition)
 
 Returns a boolean on whether the given proposition is falsifiable (not a [`is_tautology`](@ref)).
 
-See also [`Language`](@ref).
+See also [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -235,4 +235,4 @@ julia> is_falsifiable(p ∧ q)
 true
 ```
 """
-is_falsifiable(p::Language) = !is_tautology(p)
+is_falsifiable(p::Proposition) = !is_tautology(p)
