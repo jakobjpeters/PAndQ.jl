@@ -3,8 +3,8 @@
 
 ```@docs
 repr
-print_tree
 Pretty
 @pretty
 @truth_table
+print_tree
 ```

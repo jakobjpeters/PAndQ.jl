@@ -4,7 +4,7 @@
 ```@docs
 Language
 Compound
-Primitive
+Atom
 Literal
 Tree
 Normal
@@ -12,6 +12,6 @@ Truth
 tautology
 contradiction
 Contingency
-@primitive
-get_primitives
+@atom
+get_atoms
 ```

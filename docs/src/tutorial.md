@@ -2,7 +2,7 @@
 ```@meta
 DocTestSetup = quote
     using PAQ
-    @primitive p q
+    @atom p q
 end
 ```
 
@@ -10,17 +10,17 @@ end
 
 ## Propositional Logic
 
-### Primitive Propositions
+### Atomic Propositions
 
-A primitive proposition is a statement that can be true or false. For example, the statement "Logic is fun" may be true for you but false for someone else. [`Primitive`](@ref) propositions can be expressed as:
+An [`atomic proposition`](@ref Atom) is a statement that can be true or false. For example, the statement "Logic is fun" may be true for you but false for someone else. Atomic propositions can be expressed as:
 
 ```jldoctest tutorial
-julia> p = Primitive("Logic is fun")
-Primitive:
+julia> p = Atom("Logic is fun")
+Atom:
   "Logic is fun"
 
-julia> q = Primitive("Julia is awesome")
-Primitive:
+julia> q = Atom("Julia is awesome")
+Atom:
   "Julia is awesome"
 ```
 
@@ -31,34 +31,34 @@ Since ```p``` can be true or false, we can form other logical statements that de
 
 ```jldoctest tutorial
 julia> @truth_table ¬p
-┌───────────┬─────────┐
-│ p         │ ¬p      │
-│ Primitive │ Literal │
-│ "p"       │         │
-├───────────┼─────────┤
-│ ⊤         │ ⊥       │
-│ ⊥         │ ⊤       │
-└───────────┴─────────┘
+┌──────┬─────────┐
+│ p    │ ¬p      │
+│ Atom │ Literal │
+│ "p"  │         │
+├──────┼─────────┤
+│ ⊤    │ ⊥       │
+│ ⊥    │ ⊤       │
+└──────┴─────────┘
 ```
 
 !!! info
     For now, think of the symbols ```⊤``` and ```⊥``` as *true* and *false*, respectively. An exact definition of them will be given in a couple of paragraphs.
 
-Statements can also depend on multiple primitive propositions. The logical [`and`](@ref) connective is true when both ```p``` and ```q``` are true and is false otherwise. This is expressed as ```and(p, q)```, ```∧(p, q)```, or ```p ∧ q```. Repeatedly combining the connectives ```not``` and ```and``` can produce any possible truth table. As such, they are referred to as [functionally complete](https://en.wikipedia.org/wiki/Functional_completeness). For example, the connective [`or`](@ref) is equivalent to ```¬(¬p ∧ ¬q)```.
+Statements can also depend on multiple atomic propositions. The logical [`and`](@ref) connective is true when both ```p``` and ```q``` are true and is false otherwise. This is expressed as ```and(p, q)```, ```∧(p, q)```, or ```p ∧ q```. Repeatedly combining the connectives ```not``` and ```and``` can produce any possible truth table. As such, they are referred to as [functionally complete](https://en.wikipedia.org/wiki/Functional_completeness). For example, the connective [`or`](@ref) is equivalent to ```¬(¬p ∧ ¬q)```.
 
 ```jldoctest tutorial
 julia> @truth_table or(p, q) ¬(¬p ∧ ¬q)
-┌───────────┬───────────┬──────────────────────┐
-│ p         │ q         │ or(p, q), ¬(¬p ∧ ¬q) │
-│ Primitive │ Primitive │ Tree                 │
-│ "p"       │ "q"       │                      │
-├───────────┼───────────┼──────────────────────┤
-│ ⊤         │ ⊤         │ ⊤                    │
-│ ⊤         │ ⊥         │ ⊤                    │
-├───────────┼───────────┼──────────────────────┤
-│ ⊥         │ ⊤         │ ⊤                    │
-│ ⊥         │ ⊥         │ ⊥                    │
-└───────────┴───────────┴──────────────────────┘
+┌──────┬──────┬──────────────────────┐
+│ p    │ q    │ or(p, q), ¬(¬p ∧ ¬q) │
+│ Atom │ Atom │ Tree                 │
+│ "p"  │ "q"  │                      │
+├──────┼──────┼──────────────────────┤
+│ ⊤    │ ⊤    │ ⊤                    │
+│ ⊤    │ ⊥    │ ⊤                    │
+├──────┼──────┼──────────────────────┤
+│ ⊥    │ ⊤    │ ⊤                    │
+│ ⊥    │ ⊥    │ ⊥                    │
+└──────┴──────┴──────────────────────┘
 ```
 
 !!! info
@@ -78,7 +78,7 @@ Truth:
   ⊤
 
 julia> p ∧ ⊤ # identity law
-Primitive:
+Atom:
   "p"
 
 julia> p ∧ ⊥ # domination law

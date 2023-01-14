@@ -10,7 +10,7 @@ Set of well-formed logical formulae.
 
 Calling an instance of ```Language``` will return a vector of valid interpretations.
 
-Supertype of [`Primitive`](@ref), [`Compound`](@ref), and [`Truth`](@ref).
+Supertype of [`Atom`](@ref), [`Compound`](@ref), and [`Truth`](@ref).
 ```
 """
 abstract type Language end
@@ -77,25 +77,25 @@ See also [`or`](@ref).
 struct Or <: Boolean end
 
 """
-    Primitive <: Language
-    Primitive([statement::String])
+    Atom <: Language
+    Atom([statement::String])
 
-Primitive proposition.
+Atomic proposition.
 
 !!! info
-  Constructing a ```Primitive``` with no argument, an empty string, or an underscore character
+  Constructing an ```Atom``` with no argument, an empty string, or an underscore character
   will set ```statement = "_"```. This serves two purposes.
   Firstly, it is useful as a default proposition when converting [`Truth`](@ref)s to other forms;
   for example: ```Tree(⊥)``` is printed as ```"_" ∧ ¬"_"```.
   Secondly, this ensures that pretty-printing does not produce output such as: ``` ∧ ¬`.
-  It is not idiomatic to use this as a generic proposition; use [`@primitive`](@ref) instead.
+  It is not idiomatic to use this as a generic proposition; use [`@atom`](@ref) instead.
 
 Subtype of [`Language`](@ref).
 
 # Examples
 ```jldoctest
-julia> p = Primitive("p")
-Primitive:
+julia> p = Atom("p")
+Atom:
   "p"
 
 julia> p()
@@ -104,22 +104,22 @@ Contingency:
   ["p" => ⊥] => ⊥
 ```
 """
-struct Primitive <: Language
+struct Atom <: Language
     statement::String
 
-    Primitive(statement::String = "") = statement == "" ? new("_") : new(statement)
+    Atom(statement::String = "") = statement == "" ? new("_") : new(statement)
 end
 
 """
     Literal{
         L <: Union{
-            Primitive,
-            Tuple{Not, Primitive}
+            Atom,
+            Tuple{Not, Atom}
         }
     } <: Compound <: Language
     Literal(p::L)
 
-A [`Primitive`](@ref) or its negation.
+An [`Atom`](@ref) or its negation.
 
 Subtype of [`Compound`](@ref) and [`Language`](@ref).
 See also [`Not`](@ref).
@@ -138,8 +138,8 @@ Contingency:
 """
 struct Literal{
     L <: Union{
-        Primitive,
-        Tuple{Not, Primitive}
+        Atom,
+        Tuple{Not, Atom}
     }
 } <: Compound
     ϕ::L
@@ -297,35 +297,35 @@ Contingency:
 ```
 """
 struct Contingency <: Compound # TODO: parameterize
-    interpretations::Vector{Pair{Vector{Pair{Primitive, Truth}}}}
+    interpretations::Vector{Pair{Vector{Pair{Atom, Truth}}}}
 end
 
 
 # Utility
 
 """
-    @primitive(ps...)
+    @atom(ps...)
 
-Instantiates [`Primitive`](@ref) propositions.
+Instantiates [`atomic propositions`](@ref Atom).
 
 Examples
 ```jldoctest
-julia> @primitive p q
+julia> @atom p q
 
 julia> p
-Primitive:
+Atom:
   "p"
 
 julia> q
-Primitive:
+Atom:
   "q"
 ```
 """
-macro primitive(expressions...)
-    primitive = expression -> :($(esc(expression)) = Primitive($(string(expression))))
-    primitives = map(primitive, expressions)
+macro atom(expressions...)
+    atom = expression -> :($(esc(expression)) = Atom($(string(expression))))
+    atoms = map(atom, expressions)
 
-    return :($(primitives...); nothing)
+    return :($(atoms...); nothing)
 end
 #=
 Source:
@@ -333,12 +333,12 @@ https://github.com/ctrekker/Deductive.jl
 =#
 
 """
-    get_primitives(ps::Language...)
+    get_atoms(ps::Language...)
 
-Returns a vector of [`Primitive`](@ref) propositions contained in ```ps```.
+Returns a vector of [`atomic propositions`](@ref Atom) contained in ```ps```.
 
 !!! warning
-    Some primitives may optimized out of an expression, such as in ```p ∧ ⊥```.
+    Some atoms may optimized out of an expression, such as in ```p ∧ ⊥```.
 
 See also [`Language`](@ref).
 
@@ -348,32 +348,32 @@ julia> r = p ∧ q
 Tree:
   "p" ∧ "q"
 
-julia> get_primitives(r)
-2-element Vector{Primitive}:
+julia> get_atoms(r)
+2-element Vector{Atom}:
  "p"
  "q"
 ```
 """
-get_primitives(::Truth) = Primitive[]
-get_primitives(p::Contingency) = union(
+get_atoms(::Truth) = Atom[]
+get_atoms(p::Contingency) = union(
     mapreduce(
         interpretation -> map(
             literal -> first(literal), first(interpretation)),
         vcat, p.interpretations
     )
 )
-get_primitives(p::Primitive) = [p]
-get_primitives(p::Literal) = get_primitives(p.ϕ)
-get_primitives(p::Tree) = union(get_primitives(p.ϕ))
-get_primitives(ϕ::Tuple{Operator, Vararg}) = mapreduce(p -> get_primitives(p), vcat, Base.tail(ϕ))
-get_primitives(p::Normal) = get_primitives(Tree(p))
-get_primitives(ps::Language...) = union(mapreduce(get_primitives, vcat, ps))
+get_atoms(p::Atom) = [p]
+get_atoms(p::Literal) = get_atoms(p.ϕ)
+get_atoms(p::Tree) = union(get_atoms(p.ϕ))
+get_atoms(ϕ::Tuple{Operator, Vararg}) = mapreduce(p -> get_atoms(p), vcat, Base.tail(ϕ))
+get_atoms(p::Normal) = get_atoms(Tree(p))
+get_atoms(ps::Language...) = union(mapreduce(get_atoms, vcat, ps))
 
 
 # Helpers 
 
-convert(::Type{Literal}, literal::Pair{Primitive, <:Truth}) = last(literal) == tautology ? Literal(first(literal)) : not(first(literal))
-convert(::Type{Tree}, p::typeof(⊥)) = and(Primitive(), not(Primitive()))
+convert(::Type{Literal}, literal::Pair{Atom, <:Truth}) = last(literal) == tautology ? Literal(first(literal)) : not(first(literal))
+convert(::Type{Tree}, p::typeof(⊥)) = and(Atom(), not(Atom()))
 convert(::Type{Tree}, p::typeof(⊤)) = not(Tree(contradiction))
 convert(::Type{Tree}, p::Contingency) = mapreduce(interpretation -> mapreduce(Literal, and, first(interpretation)), or, filter(interpretation -> last(interpretation) == ⊤, p.interpretations))
 convert(n::Type{<:Normal}, p::Contingency) = n(Tree(p))
@@ -389,16 +389,16 @@ _convert(p, inner, outer) = mapreduce(clause -> reduce(inner, clause), outer, p.
 # Consructors
 
 # TODO: use Base.promote?
-Tree(::Not, p::Primitive) = Literal((Not(), p))
+Tree(::Not, p::Atom) = Literal((Not(), p))
 Tree(::Not, p::Compound) = Tree((Not(), p))
 
-Tree(::And, p::Primitive, q::Primitive) = Tree(And(), Literal(p), Literal(q))
-Tree(::And, p::Primitive, q::Compound) = Tree(And(), Literal(p), q)
-Tree(::And, p::Compound, q::Primitive) = Tree(And(), p, Literal(q))
+Tree(::And, p::Atom, q::Atom) = Tree(And(), Literal(p), Literal(q))
+Tree(::And, p::Atom, q::Compound) = Tree(And(), Literal(p), q)
+Tree(::And, p::Compound, q::Atom) = Tree(And(), p, Literal(q))
 Tree(::And, p::Compound, q::Compound) = Tree((And(), p, q))
 
 # TODO: write more conversions
-Literal(p::Pair{Primitive, Truth}) = convert(Literal, p)
+Literal(p::Pair{Atom, Truth}) = convert(Literal, p)
 Tree(p::Language) = convert(Tree, p)
 Normal(::B, p::Contingency) where B <: Union{And, Or} = convert(Normal{B}, p)
 
@@ -408,9 +408,9 @@ function Normal(::Or, p::Language)
     # TODO: change `===` to `==` - fixes `Normal(and, ⊥)`
     interpretations =
         if q === ⊤
-            [[Primitive() => ⊤], [Primitive() => ⊥]]
+            [[Atom() => ⊤], [Atom() => ⊥]]
         elseif q === ⊥
-            [[Primitive() => ⊤, Primitive() => ⊥]]
+            [[Atom() => ⊤, Atom() => ⊥]]
         else
             map(first, filter(literal -> last(literal) == ⊤, q.interpretations))
         end

@@ -31,11 +31,11 @@ julia> repr(MIME("text/plain"), @pretty p ↔ q)
 """
 repr(::typeof(⊤)) = "⊤"
 repr(::typeof(⊥)) = "⊥"
-repr(p::Primitive) = "\"" * p.statement * "\""
+repr(p::Atom) = "\"" * p.statement * "\""
 repr(p::Contingency) = mapreduce(interpretation -> f(interpretation) * i(interpretation, p.interpretations), *, p.interpretations)
 repr(p::Literal) = repr(p.ϕ)
 repr(p::Tree) = repr(p.ϕ)
-repr(p::Tuple{Not, Primitive}) = repr(p[1]) * repr(p[2])
+repr(p::Tuple{Not, Atom}) = repr(p[1]) * repr(p[2])
 repr(p::Tuple{Not, Language}) = repr(p[1]) * "(" * repr(p[2]) * ")"
 repr(p::Tuple{And, Compound, Compound}) = repr(p[2]) * " " * repr(p[1]) * " " * repr(p[3])
 function repr(p::Normal{B}) where B <: Union{And, Or}
@@ -199,13 +199,13 @@ Print a truth table for the given propositions.
 
 The first row of the header is the expression representing that column's proposition,
 the second row indicates that expression's type,
-and the third row identifies the statements for [`Primitive`](@ref) propositions.
+and the third row identifies the statements for [`atomic propositions`](@ref Atom).
 
 !!! info
-    If a variable is a [`Compound`](@ref), there is no expression to label that primitive.
+    If a variable is a [`Compound`](@ref), there is no expression to label that atom.
     As such, the first row in the header will be blank.
     However, the identifying statement is still known and will be displayed in the third row.
-    Use [`get_primitives`](@ref) to resolve this uncertainty.
+    Use [`get_atoms`](@ref) to resolve this uncertainty.
 
 Logically equivalent propositions will be placed in the same column
 with their expressions in the header seperated by a comma.
@@ -217,17 +217,17 @@ See also [`Language`](@ref).
 # Examples
 ```jldoctest
 julia> @truth_table p ∧ q p → q
-┌───────────┬───────────┬───────┬───────┐
-│ p         │ q         │ p ∧ q │ p → q │
-│ Primitive │ Primitive │ Tree  │ Tree  │
-│ "p"       │ "q"       │       │       │
-├───────────┼───────────┼───────┼───────┤
-│ ⊤         │ ⊤         │ ⊤     │ ⊤     │
-│ ⊤         │ ⊥         │ ⊥     │ ⊥     │
-├───────────┼───────────┼───────┼───────┤
-│ ⊥         │ ⊤         │ ⊥     │ ⊤     │
-│ ⊥         │ ⊥         │ ⊥     │ ⊤     │
-└───────────┴───────────┴───────┴───────┘
+┌──────┬──────┬───────┬───────┐
+│ p    │ q    │ p ∧ q │ p → q │
+│ Atom │ Atom │ Tree  │ Tree  │
+│ "p"  │ "q"  │       │       │
+├──────┼──────┼───────┼───────┤
+│ ⊤    │ ⊤    │ ⊤     │ ⊤     │
+│ ⊤    │ ⊥    │ ⊥     │ ⊥     │
+├──────┼──────┼───────┼───────┤
+│ ⊥    │ ⊤    │ ⊥     │ ⊤     │
+│ ⊥    │ ⊥    │ ⊥     │ ⊤     │
+└──────┴──────┴───────┴───────┘
 ```
 """
 macro truth_table(expressions...)
@@ -253,10 +253,10 @@ end
 function truth_table(_trees::Vector{<:Language}, trees_str, leaves, leaves_str)
     trees = map(tree -> tree isa Pretty ? tree.p : tree,_trees)
 
-    primitives = get_primitives(trees...)
-    n = length(primitives)
+    atoms = get_atoms(trees...)
+    n = length(atoms)
     truth_sets = multiset_permutations([⊤, ⊥], [n, n], n)
-    valuations = map(truth_set -> zip(primitives, truth_set), truth_sets)
+    valuations = map(truth_set -> zip(atoms, truth_set), truth_sets)
 
     merge_string = (x, y) -> x == y || y == "" ? x : x * ", " * y
 
@@ -264,7 +264,7 @@ function truth_table(_trees::Vector{<:Language}, trees_str, leaves, leaves_str)
     labels = String[]
     assignments = Vector{Truth}[]
     for (tree, tree_str) in filter(pair -> !isa(first(pair), Truth), map(Pair, trees, trees_str))
-        tree isa Primitive && continue
+        tree isa Atom && continue
 
         truths = map(valuation -> interpret(p -> Dict(valuation)[p], tree), valuations)
 
@@ -291,10 +291,10 @@ function truth_table(_trees::Vector{<:Language}, trees_str, leaves, leaves_str)
     pretty_interpretations = map(repr, interpretations)
 
     make_header = (ps, ps_str) -> begin
-        ___header = Dict{Primitive, Vector{String}}()
+        ___header = Dict{Atom, Vector{String}}()
 
         for (p, p_str) in zip(ps, ps_str)
-            if p isa Primitive
+            if p isa Atom
                 if p in keys(___header)
                     push!(___header[p], p_str)
                 else
@@ -309,17 +309,17 @@ function truth_table(_trees::Vector{<:Language}, trees_str, leaves, leaves_str)
     header_domains = [
         (leaves, leaves_str),
         (trees, trees_str),
-        (primitives, map(primitive -> "", primitives))
+        (atoms, map(atom -> "", atoms))
     ]
     headers = map(header_domain -> make_header(header_domain...), header_domains)
     __header = mergewith!(union ∘ vcat, headers...)
-    _header = map(primitive -> reduce(merge_string, __header[primitive]), primitives)
+    _header = map(atom -> reduce(merge_string, __header[atom]), atoms)
     push!(_header, labels...)
     append!(_header, map(repr, _truths))
 
-    sub_header = map(nameof ∘ typeof, vcat(primitives, _sub_header, _truths))
+    sub_header = map(nameof ∘ typeof, vcat(atoms, _sub_header, _truths))
     sub_sub_header = vcat(
-        map(repr, primitives),
+        map(repr, atoms),
         map(_ -> "", vcat(_sub_header, _truths)),
     )
     header = (_header, sub_header, sub_sub_header)

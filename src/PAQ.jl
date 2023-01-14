@@ -13,9 +13,9 @@ export
     ⨉, cartesian_product,
 
     # propositional_logic.jl
-    Language, Compound, Primitive, Literal, Tree, Normal,
+    Language, Compound, Atom, Literal, Tree, Normal,
     Truth, tautology, ⊤, contradiction, ⊥, Contingency,
-    @primitive, get_primitives, #= Base.convert, =#
+    @atom, get_atoms, #= Base.convert, =#
 
     # boolean_operators.jl
     not, ¬, and, ∧, #= Base.nand, Base.:⊼, Base.nor, Base.:⊽, =# or, ∨,

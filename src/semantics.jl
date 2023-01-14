@@ -4,9 +4,9 @@ using PrettyTables
 
 (::Not)(::typeof(⊥)) = ⊤
 (::Not)(::typeof(⊤)) = ⊥
-(::Not)(p::Primitive) = Literal((Not(), p))
-(::Not)(p::Literal{Primitive}) = not(p.ϕ)
-(::Not)(p::Literal{Tuple{Not, Primitive}}) = last(p.ϕ)
+(::Not)(p::Atom) = Literal((Not(), p))
+(::Not)(p::Literal{Atom}) = not(p.ϕ)
+(::Not)(p::Literal{Tuple{Not, Atom}}) = last(p.ϕ)
 (::Not)(p::Compound) = Tree(Not(), p)
 (::Not)(p::Tree{<:Tuple{Not, Compound}}) = last(p.ϕ) # double negation elimination
 function (::Not)(p::Normal{B}) where B <: Union{And, Or}
@@ -29,10 +29,10 @@ end
 
 # ToDo: make type stable
 function (p::Language)()
-    primitives = get_primitives(p)
-    n = length(primitives)
+    atoms = get_atoms(p)
+    n = length(atoms)
     truth_sets = multiset_permutations([⊤, ⊥], [n, n], n)
-    valuations = map(truth_set -> map(Pair{Primitive, Truth}, primitives, truth_set), truth_sets)
+    valuations = map(truth_set -> map(Pair{Atom, Truth}, atoms, truth_set), truth_sets)
     truths = map(valuation -> interpret(p -> Dict(valuation)[p], p), valuations)
 
     union(truths) == [⊤] && return ⊤
@@ -43,17 +43,17 @@ end
 """
     interpret(valuation, p::Language)
 
-Given a valuation function that maps from the [`Primitive`](@ref)
-propositions in ```p``` to their respective [`Truth`](@ref) values,
+Given a valuation function that maps from the [`atomic propositions`](@ref Atom)
+in ```p``` to their respective [`Truth`](@ref) values,
 assign a truth value to ```p```.
 
 See also [`Language`](@ref).
 """
-interpret(valuation, p::Language) = p(Dict(map(p -> p => valuation(p), get_primitives(p))))
+interpret(valuation, p::Language) = p(Dict(map(p -> p => valuation(p), get_atoms(p))))
 
-(p::Primitive)(interpretations) = interpretations[p]
-(p::Literal{Primitive})(interpretations) = p.ϕ(interpretations)
-(p::Literal{Tuple{Not, Primitive}})(interpretations) = first(p.ϕ)(last(p.ϕ)(interpretations))
+(p::Atom)(interpretations) = interpretations[p]
+(p::Literal{Atom})(interpretations) = p.ϕ(interpretations)
+(p::Literal{Tuple{Not, Atom}})(interpretations) = first(p.ϕ)(last(p.ϕ)(interpretations))
 (p::Tree)(interpretations) = first(p.ϕ)(map(ϕ -> ϕ(interpretations), Base.tail(p.ϕ))...)
 (p::Normal)(interpretations) = Tree(p)(interpretations)
 
@@ -84,7 +84,7 @@ julia> (p → q) ∧ (p ← q) === ¬(p ⊻ q)
 false
 ```
 """
-Base.:(==)(p::TP, q::TP) where TP <: Union{Truth, Primitive} = p === q
+Base.:(==)(p::TP, q::TP) where TP <: Union{Truth, Atom} = p === q
 Base.:(==)(p::Language, q::Language) = is_tautology(p ↔ q)
 
 """
