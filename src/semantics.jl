@@ -5,10 +5,10 @@ using PrettyTables
 (::Not)(::typeof(⊥)) = ⊤
 (::Not)(::typeof(⊤)) = ⊥
 (::Not)(p::Atom) = Literal((Not(), p))
-(::Not)(p::Literal{Atom}) = not(p.ϕ)
-(::Not)(p::Literal{Tuple{Not, Atom}}) = last(p.ϕ)
+(::Not)(p::Literal{Atom}) = not(p.p)
+(::Not)(p::Literal{Tuple{Not, Atom}}) = last(p.p)
 (::Not)(p::Compound) = Tree(Not(), p)
-(::Not)(p::Tree{<:Tuple{Not, Compound}}) = last(p.ϕ) # double negation elimination
+(::Not)(p::Tree{<:Tuple{Not, Compound}}) = last(p.node) # double negation elimination
 function (::Not)(p::Normal{B}) where B <: Union{And, Or}
     clauses = map(clause -> map(not, clause), p.clauses)
     b = B == And ? Or : And
@@ -52,9 +52,9 @@ See also [`Proposition`](@ref).
 interpret(valuation, p::Proposition) = p(Dict(map(p -> p => valuation(p), get_atoms(p))))
 
 (p::Atom)(interpretations) = interpretations[p]
-(p::Literal{Atom})(interpretations) = p.ϕ(interpretations)
-(p::Literal{Tuple{Not, Atom}})(interpretations) = first(p.ϕ)(last(p.ϕ)(interpretations))
-(p::Tree)(interpretations) = first(p.ϕ)(map(ϕ -> ϕ(interpretations), Base.tail(p.ϕ))...)
+(p::Literal{Atom})(interpretations) = p.p(interpretations)
+(p::Literal{Tuple{Not, Atom}})(interpretations) = first(p.p)(last(p.p)(interpretations))
+(p::Tree)(interpretations) = first(p.node)(map(p -> p(interpretations), Base.tail(p.node))...)
 (p::Normal)(interpretations) = Tree(p)(interpretations)
 
 """

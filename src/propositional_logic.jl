@@ -142,7 +142,7 @@ struct Literal{
         Tuple{Not, Atom}
     }
 } <: Compound
-    ϕ::L
+    p::L
 end
 
 """
@@ -152,7 +152,7 @@ end
             Tuple{And, Compound, Compound}
         }
     } <: Compound <: Proposition
-    Tree(ϕ::L)
+    Tree(node::L)
 
 Abstract syntax tree representing a compound proposition.
 
@@ -184,7 +184,7 @@ struct Tree{
         Tuple{And, Compound, Compound}
     }
 } <: Compound
-    ϕ::L
+    node::L
 end
 
 """
@@ -364,9 +364,9 @@ get_atoms(p::Contingency) = union(
     )
 )
 get_atoms(p::Atom) = [p]
-get_atoms(p::Literal) = get_atoms(p.ϕ)
-get_atoms(p::Tree) = union(get_atoms(p.ϕ))
-get_atoms(ϕ::Tuple{Operator, Vararg}) = mapreduce(p -> get_atoms(p), vcat, Base.tail(ϕ))
+get_atoms(p::Literal) = get_atoms(p.p)
+get_atoms(p::Tree) = union(get_atoms(p.node))
+get_atoms(node::Tuple{Operator, Vararg}) = mapreduce(p -> get_atoms(p), vcat, Base.tail(node))
 get_atoms(p::Normal) = get_atoms(Tree(p))
 get_atoms(ps::Proposition...) = union(mapreduce(get_atoms, vcat, ps))
 
