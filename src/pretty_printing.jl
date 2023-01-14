@@ -152,8 +152,18 @@ struct Pretty{L <: Language} <: Compound
     Pretty(p::L, text::String = replace(repr(p), "\"" => "")) where L <: Language = new{L}(p, text)
 end
 
+# TODO: finish integrating `Pretty`
 (p::Pretty)() = p.p()
+
 (::Not)(p::Pretty) = not(p.p)
+(::And)(p::Pretty, q::Pretty) = And()(p.p, q.p)
+(::And)(p::Pretty, q::Language) = And()(p.p, q)
+(::And)(p::Language, q::Pretty) = And()(q, p)
+
+Tree(p::Pretty) = convert(Tree, p)
+Normal(::B, p::Pretty) where B <: Union{And, Or} = convert(Normal{B}, p)
+
+convert(type::Type{<:Language}, p::Pretty) = convert(type, p.p)
 
 show(io::IO, p::Pretty) = print(io, p.text)
 function show(io::IO, ::MIME"text/plain", p::Pretty)

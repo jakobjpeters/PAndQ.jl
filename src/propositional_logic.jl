@@ -397,6 +397,7 @@ Tree(::And, p::Primitive, q::Compound) = Tree(And(), Literal(p), q)
 Tree(::And, p::Compound, q::Primitive) = Tree(And(), p, Literal(q))
 Tree(::And, p::Compound, q::Compound) = Tree((And(), p, q))
 
+# TODO: write more conversions
 Literal(p::Pair{Primitive, Truth}) = convert(Literal, p)
 Tree(p::Language) = convert(Tree, p)
 Normal(::B, p::Contingency) where B <: Union{And, Or} = convert(Normal{B}, p)
