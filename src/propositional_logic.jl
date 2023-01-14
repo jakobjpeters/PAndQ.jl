@@ -222,37 +222,14 @@ struct Normal{B <: Union{And, Or} #=, L <: Literal =#} <: Compound
 end
 
 """
-    Truth{V <: Union{Val{:contradiction}, Val{:tautology}}} <: Proposition
+    Truth{V <: Union{Val{:⊥}, Val{:⊤}}} <: Proposition
     Truth(::V)
 
 Container for the constants [`tautology`](@ref) and [`contradiction`](@ref).
 Subtype of [`Proposition`](@ref).
 """
-struct Truth{V <: Union{Val{:contradiction}, Val{:tautology}}} <: Proposition end
+struct Truth{V <: Union{Val{:⊥}, Val{:⊤}}} <: Proposition end
 
-"""
-    ⊤
-    tautology
-
-A constant which is true in every possible interpretation.
-
-One of two valid instances of [`Truth`](@ref), the other instance being [`contradiction`](@ref).
-
-```⊤``` can be typed by ```\\top<tab>```.
-
-# Examples
-```jldoctest
-julia> ¬⊤
-Truth:
-  ⊥
-
-julia> tautology()
-Truth:
-  ⊤
-```
-"""
-const tautology = Truth{Val{:tautology}}()
-const ⊤ = tautology
 
 """
     ⊥
@@ -275,8 +252,32 @@ Truth:
   ⊥
 ```
 """
-const contradiction = Truth{Val{:contradiction}}()
+const contradiction = Truth{Val{:⊥}}()
 const ⊥ = contradiction
+
+"""
+    ⊤
+    tautology
+
+A constant which is true in every possible interpretation.
+
+One of two valid instances of [`Truth`](@ref), the other instance being [`contradiction`](@ref).
+
+```⊤``` can be typed by ```\\top<tab>```.
+
+# Examples
+```jldoctest
+julia> ¬⊤
+Truth:
+  ⊥
+
+julia> tautology()
+Truth:
+  ⊤
+```
+"""
+const tautology = Truth{Val{:⊤}}()
+const ⊤ = tautology
 
 """
     Contingency <: Compound
@@ -372,9 +373,9 @@ get_atoms(ps::Proposition...) = union(mapreduce(get_atoms, vcat, ps))
 
 # Helpers 
 
-convert(::Type{Literal}, literal::Pair{Atom, <:Truth}) = last(literal) == tautology ? Literal(first(literal)) : not(first(literal))
+convert(::Type{Literal}, literal::Pair{Atom, <:Truth}) = last(literal) == ⊤ ? Literal(first(literal)) : not(first(literal))
 convert(::Type{Tree}, p::typeof(⊥)) = and(Atom(), not(Atom()))
-convert(::Type{Tree}, p::typeof(⊤)) = not(Tree(contradiction))
+convert(::Type{Tree}, p::typeof(⊤)) = not(Tree(⊥))
 convert(::Type{Tree}, p::Contingency) = mapreduce(interpretation -> mapreduce(Literal, and, first(interpretation)), or, filter(interpretation -> last(interpretation) == ⊤, p.interpretations))
 convert(n::Type{<:Normal}, p::Contingency) = n(Tree(p))
 convert(::Type{Tree}, p::Normal{And}) = _convert(p, or, and)
