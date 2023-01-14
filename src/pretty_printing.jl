@@ -79,6 +79,45 @@ function show(io::IO, ::MIME"text/plain", p::Language)
     print(io, nameof(typeof(p)), ":\n", indent, p)
 end
 
+"""
+    print_tree(p::Language)
+
+Print a tree diagram of ```p```.
+
+```julia
+julia> print_tree(p ⊻ q)
+∧
+├─ ¬
+│  └─ ∧
+│     ├─ ¬
+│     │  └─ p
+│     └─ ¬
+│        └─ q
+└─ ¬
+   └─ ∧
+      ├─ p
+      └─ q
+
+julia> print_tree(@pretty p ⊻ q))
+⊻
+├─ p
+└─ q
+```
+"""
+function print_tree(p::Pretty{Tree})
+    #=
+    TODO: implement
+    ┌─┬─┐
+    │ │ │
+    ├─┼─┤
+    │ │ │
+    └─┴─┘
+    =#
+    println(repr(p))
+end
+print_tree(p::Pretty) = print_tree(p.p)
+print_tree(p::Language) = print_tree(Pretty(p))
+
 # TODO: make composable
 """
     Pretty{L <: Language} <: Compound
