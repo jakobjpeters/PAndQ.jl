@@ -83,12 +83,12 @@ struct Or <: Boolean end
 Atomic proposition.
 
 !!! info
-  Constructing an ```Atom``` with no argument, an empty string, or an underscore character
-  will set ```statement = "_"```. This serves two purposes.
-  Firstly, it is useful as a default proposition when converting [`Truth`](@ref)s to other forms;
-  for example: ```Tree(⊥)``` is printed as ```"_" ∧ ¬"_"```.
-  Secondly, this ensures that pretty-printing does not produce output such as: ``` ∧ ¬`.
-  It is not idiomatic to use this as a generic proposition; use [`@atom`](@ref) instead.
+    Constructing an ```Atom``` with no argument, an empty string, or an underscore character
+    will set ```statement = "_"```. This serves two purposes.
+    Firstly, it is useful as a default proposition when converting [`Truth`](@ref)s to other forms;
+    for example: ```Tree(⊥)``` is printed as ```"_" ∧ ¬"_"```.
+    Secondly, this ensures that pretty-printing does not produce output such as: ``` ∧ ¬`.
+    It is not idiomatic to use this as a generic proposition; use [`@atom`](@ref) instead.
 
 Subtype of [`Proposition`](@ref).
 
