@@ -32,8 +32,8 @@ julia> @truth_table ¬p ¬q ⊤ ⊥
 |:-----------------------|:-------|:-----------------|
 | [`not`](@ref)          | ¬      | \\neg            |
 | [`and`](@ref)          | ∧      | \\wedge          |
-| [`nand`](@ref)         | ∧      | \\nand           |
-| [`nor`](@ref)          | ∨      | \\nor            |
+| [`nand`](@ref)         | ⊼      | \\nand           |
+| [`nor`](@ref)          | ⊽      | \\nor            |
 | [`or`](@ref)           | ∨      | \\vee            |
 | [`xor`](@ref)          | ⊻      | \\xor            |
 | [`xnor`](@ref)         | ↔      | \\leftrightarrow |
