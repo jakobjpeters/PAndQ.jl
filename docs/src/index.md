@@ -11,7 +11,7 @@ end
 
 If you like propositional logic, then you've come to the right place!
 
-P∧Q has an intuitive interface that enables you to manipulate logical statements symbolically. The implementation is concise, only ~200 source lines of code (according to Codecov as of December, 2022).
+P∧Q has an intuitive interface that enables you to manipulate logical statements symbolically. The implementation is concise, with only ~200 source lines of code (according to Codecov as of December, 2022).
 
 
 ## Installation
@@ -70,3 +70,10 @@ julia> @truth_table r s ¬(p ⊻ q) ⊥
 │ ⊥         │ ⊥         │ ⊤    │ ⊤           │ ⊥     │
 └───────────┴───────────┴──────┴─────────────┴───────┘
 ```
+
+## Related Packages
+- [Julog.jl](https://github.com/ztangent/Julog.jl)
+- [LogicCircuits.jl](https://github.com/Juice-jl/LogicCircuits.jl)
+- [Symbolics.jl](https://github.com/JuliaSymbolics/Symbolics.jl)
+- [Rewrite.jl](https://github.com/HarrisonGrodin/Rewrite.jl)
+- [Metatheory.jl](https://github.com/JuliaSymbolics/Metatheory.jl)
