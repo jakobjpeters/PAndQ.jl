@@ -46,21 +46,21 @@ julia> ¬⊥
 Truth:
   ⊤
 
-julia> @primitive p q
+julia> @Primitives p q
 
 julia> r = p ∧ q
 Propositional:
-  p ∧ q
+  "p" ∧ "q"
 
 julia> r()
 Contingency:
-  [p => ⊤, q => ⊤] => ⊤
-  [p => ⊤, q => ⊥] => ⊥
-  [p => ⊥, q => ⊤] => ⊥
-  [p => ⊥, q => ⊥] => ⊥
+  ["p" => ⊤, "q" => ⊤] => ⊤
+  ["p" => ⊤, "q" => ⊥] => ⊥
+  ["p" => ⊥, "q" => ⊤] => ⊥
+  ["p" => ⊥, "q" => ⊥] => ⊥
 
-julia> s = Normal(And(), r)
-Normal:
+julia> s = Pretty(Normal(∧, r))
+Pretty{Normal}:
   (¬p ∨ q) ∧ (p ∨ ¬q) ∧ (p ∨ q)
 
 julia> t = @Pretty p ⊻ q
