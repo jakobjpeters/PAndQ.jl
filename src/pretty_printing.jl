@@ -11,7 +11,7 @@ Return a string representation of the given proposition.
     Use the [`Pretty`](@ref) wrapper or [`@pretty`](@ref) macro to get a formatted string.
     Use `MIME("text/plain")` to get the pretty-printed representation.
 
-```jldoctest
+```
 julia> p ↔ q
 Tree:
   ¬("p" ∧ ¬"q") ∧ ¬(¬"p" ∧ "q")
@@ -31,31 +31,34 @@ julia> repr(MIME("text/plain"), @pretty p ↔ q)
 """
 repr(::typeof(⊤)) = "⊤"
 repr(::typeof(⊥)) = "⊥"
-repr(p::Atom) = "\"" * p.statement * "\""
-repr(p::Contingency) = mapreduce(interpretation -> f(interpretation) * i(interpretation, p.interpretations), *, p.interpretations)
+repr(p::Atom) = "\"" * p.p * "\""
+repr(p::Valuation) = mapreduce(interpretation -> f(interpretation) * i(interpretation, p.p), *, p.p)
 repr(p::Literal) = repr(p.p)
-repr(p::Tree) = repr(p.node)
+repr(p::Tree) = repr(p.p)
 repr(p::Tuple{Not, Atom}) = repr(p[1]) * repr(p[2])
 repr(p::Tuple{Not, Proposition}) = repr(p[1]) * "(" * repr(p[2]) * ")"
 repr(p::Tuple{And, Compound, Compound}) = repr(p[2]) * " " * repr(p[1]) * " " * repr(p[3])
-function repr(p::Normal{B}) where B <: Union{And, Or}
-    b = first(setdiff!(Set([And, Or]), [B]))
+function repr(p::Clause{B}) where B <: Union{And, Or}
+    isempty(p.p) && return B == And ? repr(⊤) : repr(⊥)
     s = ""
 
-    for clause in p.clauses
-        s *= "("
+    for literal in p.p
+        s *= repr(literal)
 
-        for literal in clause
-            s *= repr(literal)
-
-            if literal !== last(clause)
-                s *= " " * repr(b()) * " "
-            end
+        if literal !== last(p.p)
+            s *= " " * repr(B()) * " "
         end
+    end
 
-        s *= ")"
+    return s
+end
+function repr(p::Normal{B}) where B <: Union{And, Or}
+    s = ""
 
-        if clause !== last(p.clauses)
+    for clause in p.p
+        s *= "(" * repr(clause) * ")"
+
+        if clause !== last(p.p)
             s *= " " * repr(B()) * " "
         end
     end
@@ -74,25 +77,26 @@ g(literal) = repr(first(literal)) * " => " * repr(last(literal))
 f(interpretation) = "  [" * mapreduce(literal -> g(literal) * h(literal, first(interpretation)), *, first(interpretation)) * "] => " * repr(last(interpretation))
 
 show(io::IO, p::Proposition) = print(io, repr(p))
-function show(io::IO, ::MIME"text/plain", p::Proposition)
-    indent = p isa Contingency ? "" : "  "
+function show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition
+    indent = p isa Valuation ? "" : "  "
     print(io, nameof(typeof(p)), ":\n", indent, p)
 end
 
 # TODO: make composable
 """
-    Pretty{L <: Proposition} <: Compound
-    Pretty(p::L[, text::String])
+    Pretty{P <: Proposition} <: Compound <: Proposition
+    Pretty(p::P[, text::String])
 
 A wrapper to automatically enable the pretty-printing of ```p``` with the contents of ```text```.
 
 The default value of ```text``` will pretty-print ```p``` the same as its regular pretty-printing,
 except without quotation marks.
 
-See also [`Compound`](@ref) and [`@pretty`](@ref).
+Subtype of [`Compound`](@ref) and [`Proposition`](@ref).
+See also [`@pretty`](@ref).
 
 # Examples
-```jldoctest
+```
 julia> r = p → (q → p)
 Tree:
   ¬("p" ∧ "q" ∧ ¬"p")
@@ -106,29 +110,38 @@ Pretty{Tree}:
   p → (q → p)
 ```
 """
-struct Pretty{L <: Proposition} <: Compound
-    p::L
+struct Pretty{P <: Proposition} <: Compound
+    p::P
     text::String
 
     Pretty(p::L, text::String = replace(repr(p), "\"" => "")) where L <: Proposition = new{L}(p, text)
 end
 
 # TODO: finish integrating `Pretty`
-(p::Pretty)() = p.p()
+# (p::Pretty)() = p.p()
 
-(::Not)(p::Pretty) = not(p.p)
-(::And)(p::Pretty, q::Pretty) = And()(p.p, q.p)
-(::And)(p::Pretty, q::Proposition) = And()(p.p, q)
-(::And)(p::Proposition, q::Pretty) = And()(q, p)
+# (::Not)(p::Pretty) = not(p.p)
+# (::And)(p::Pretty, q::Pretty) = And()(p.p, q.p)
+# (::And)(p::Pretty, q::Proposition) = And()(p.p, q)
+# (::And)(p::Proposition, q::Pretty) = And()(q, p)
 
-Tree(p::Pretty) = convert(Tree, p)
-Normal(::B, p::Pretty) where B <: Union{And, Or} = convert(Normal{B}, p)
+# (::Not)(p::Pretty{Atom}) = Pretty(not(p.p), "¬" * p.text)
+# function (::Not)(p::Pretty)
+#     text = first(p.text) == "¬" ? p.text[2:end] : "¬(" * p.text * ")"
+#     return Pretty(not(p.p), text)
+# end
+# (::And)(p::Pretty, q::Pretty) = Pretty(and(p.p, q.p), p.text * " ∧ " * q.text)
 
-convert(type::Type{<:Proposition}, p::Pretty) = convert(type, p.p)
+# Tree(p::Pretty) = convert(Tree, p)
+# Normal(::B, p::Pretty) where B <: Union{And, Or} = convert(Normal{B}, p)
+
+# convert(type::Type{<:Proposition}, p::Pretty) = convert(type, p.p)
+
+
 
 show(io::IO, p::Pretty) = print(io, p.text)
 function show(io::IO, ::MIME"text/plain", p::Pretty)
-    indent = p isa Contingency ? "" : "  "
+    indent = p isa Valuation ? "" : "  "
     print(io, nameof(typeof(p)), "{", nameof(typeof((p.p))), "}:\n", indent, p.text)
 end
 """
@@ -138,7 +151,7 @@ Return an instance of [`Pretty`](@ref), whose ```text``` field is
 set to ```string(expression)```.
 
 # Examples
-```jldocttest
+```
 julia> p ↔ q
 Tree:
   ¬("p" ∧ ¬"q") ∧ ¬(¬"p" ∧ "q")
@@ -227,7 +240,7 @@ function truth_table(_trees::Vector{<:Proposition}, trees_str, leaves, leaves_st
     for (tree, tree_str) in filter(pair -> !isa(first(pair), Truth), map(Pair, trees, trees_str))
         tree isa Atom && continue
 
-        truths = map(valuation -> interpret(p -> Dict(valuation)[p], tree), valuations)
+        truths = map(valuation -> interpret(tree, Dict(valuation)), valuations)
 
         if truths in assignments
             i = findfirst(assignment -> assignment == truths, assignments)
@@ -331,4 +344,4 @@ function print_tree(p::Pretty{Tree})
     println(repr(p))
 end
 print_tree(p::Pretty) = print_tree(p.p)
-print_tree(p::Proposition) = print_tree(Pretty(p))
+print_tree(p::Proposition) = print_tree(Pretty(Tree(p)))

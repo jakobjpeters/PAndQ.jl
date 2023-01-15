@@ -4,8 +4,8 @@ module PAQ
 include("set.jl")
 include("propositional_logic.jl")
 include("pretty_printing.jl")
-include("semantics.jl")
 include("boolean_operators.jl")
+include("semantics.jl")
 # include("predicate_logic.jl")
 
 export
@@ -13,8 +13,8 @@ export
     ⨉, cartesian_product,
 
     # propositional_logic.jl
-    Proposition, Compound, Atom, Literal, Tree, Normal,
-    Truth, tautology, ⊤, contradiction, ⊥, Contingency,
+    Proposition, Compound, Expressive, Atom, Literal, Tree, Clause, Normal,
+    Truth, tautology, ⊤, contradiction, ⊥, Valuation,
     @atom, get_atoms, #= Base.convert, =#
 
     # boolean_operators.jl

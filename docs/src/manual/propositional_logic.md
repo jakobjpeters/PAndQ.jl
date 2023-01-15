@@ -4,14 +4,16 @@
 ```@docs
 Proposition
 Compound
+Expressive
 Atom
 Literal
 Tree
+Clause
 Normal
 Truth
 tautology
 contradiction
-Contingency
+Valuation
 @atom
 get_atoms
 ```

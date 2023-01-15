@@ -1,6 +1,4 @@
 
-import Base: convert
-
 # Types
 
 """
@@ -8,9 +6,12 @@ import Base: convert
 
 Set of well-formed logical formulae.
 
-Calling an instance of ```Proposition``` will return a vector of valid interpretations.
+!!! tip
+    Calling a ```Proposition```s redirects to [`interpret`](@ref).
 
-Supertype of [`Atom`](@ref), [`Compound`](@ref), and [`Truth`](@ref).
+Supertype of [`Truth`](@ref), [`Atom`](@ref), [`Literal`](@ref),
+[`Compound`](@ref), [`Tree`](@ref), [`Valuation`](@ref),
+[`Clause`](@ref), [`Normal`](@ref), and [`Pretty`](@ref).
 ```
 """
 abstract type Proposition end
@@ -21,9 +22,21 @@ Compound <: Proposition
 Compound proposition.
 
 Subtype of [`Proposition`](@ref).
-Supertype of [`Literal`](@ref), [`Tree`](@ref), and [`Normal`](@ref).
+Supertype of [`Literal`](@ref), [`Tree`](@ref), [`Valuation`](@ref),
+[`Clause`](@ref), [`Normal`](@ref), and [`Pretty`](@ref).
 """
 abstract type Compound <: Proposition end
+
+"""
+    Expressive <: Compound <: Proposition
+
+All subtypes of ```Expressive``` are guaranteed to be
+[expressively complete](https://en.wikipedia.org/wiki/Completeness_(logic)).
+
+Supertype of [`Tree`](@ref), [`Valuation`](@ref), and [`Normal`](@ref).
+Subtype of [`Compound`](@ref) and [`Proposition`](@ref).
+"""
+abstract type Expressive <: Compound end
 
 """
     Operator
@@ -78,13 +91,13 @@ struct Or <: Boolean end
 
 """
     Atom <: Proposition
-    Atom([statement::String])
+    Atom([p::String])
 
 Atomic proposition.
 
 !!! info
     Constructing an ```Atom``` with no argument, an empty string, or an underscore character
-    will set ```statement = "_"```. This serves two purposes.
+    will set ```p = "_"```. This serves two purposes.
     Firstly, it is useful as a default proposition when converting [`Truth`](@ref)s to other forms;
     for example: ```Tree(⊥)``` is printed as ```"_" ∧ ¬"_"```.
     Secondly, this ensures that pretty-printing does not produce output such as: ``` ∧ ¬`.
@@ -98,16 +111,16 @@ julia> p = Atom("p")
 Atom:
   "p"
 
-julia> p()
-Contingency:
+julia> Valuation(p)
+Valuation:
   ["p" => ⊤] => ⊤
   ["p" => ⊥] => ⊥
 ```
 """
 struct Atom <: Proposition
-    statement::String
+    p::String
 
-    Atom(statement::String = "") = statement == "" ? new("_") : new(statement)
+    Atom(p::String = "") = p == "" ? new("_") : new(p)
 end
 
 """
@@ -130,8 +143,8 @@ julia> r = ¬p
 Literal:
   ¬"p"
 
-julia> r()
-Contingency:
+julia> Valuation(r)
+Valuation:
   ["p" => ⊤] => ⊥
   ["p" => ⊥] => ⊤
 ```
@@ -147,18 +160,18 @@ end
 
 """
     Tree{
-        L <: Union{
+        NA <: Union{
             Tuple{Not, Compound},
             Tuple{And, Compound, Compound}
         }
-    } <: Compound <: Proposition
-    Tree(node::L)
+    } <: Expressive <: Compound <: Proposition
+    Tree(p::NA)
 
-Abstract syntax tree representing a compound proposition.
+Abstract syntax tree representing a proposition.
 
 Note that [`Not`](@ref) and [`And`](@ref) are functionally complete operators.
 
-Subtype of [`Compound`](@ref) and [`Proposition`](@ref).
+Subtype of [`Expressive`](@ref), [`Compound`](@ref) and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -166,12 +179,13 @@ julia> r = p ∧ ¬p
 Tree:
   "p" ∧ ¬"p"
 
-julia> r()
-Truth:
-  ⊥
+julia> Valuation(r)
+Valuation:
+  ["p" => ⊤] => ⊥
+  ["p" => ⊥] => ⊥
 
-julia> (p ∧ q)()
-Contingency:
+julia> Valuation(p ∧ q)
+Valuation:
   ["p" => ⊤, "q" => ⊤] => ⊤
   ["p" => ⊤, "q" => ⊥] => ⊥
   ["p" => ⊥, "q" => ⊤] => ⊥
@@ -179,16 +193,41 @@ Contingency:
 ```
 """
 struct Tree{
-    L <: Union{
+    NA <: Union{
         Tuple{Not, Compound},
         Tuple{And, Compound, Compound}
     }
-} <: Compound
-    node::L
+} <: Expressive
+    p::NA
 end
 
 """
-    Normal{B <: Union{And, Or}} <: Compound <: Proposition
+    Clause{
+        B <: Union{And, Or},
+        VL <: Vector{<:Literal}
+    } <: Compound <: Proposition
+    Clause()
+
+Empty clauses are always false.
+```Clause(::B) where B <: Union{And, Or}``` is automatically converted to ```Clause(::B, ⊥)```
+for readability.
+
+```
+julia>
+
+```
+"""
+struct Clause{
+    B <: Union{And, Or}
+    # VL <: Vector{Literal}
+} <: Compound
+    p::Vector{Literal}
+
+    Clause(::B, ps) where B = new{B}(unique(p -> convert(Literal, p), ps))
+end
+
+"""
+    Normal{B <: Union{And, Or}} <: Expressive <: Compound <: Proposition
     Normal(::Union{typeof(and), typeof(or)}, p::Proposition)
 
 The conjunctive or disjunctive normal form of a proposition.
@@ -196,29 +235,28 @@ The conjunctive or disjunctive normal form of a proposition.
 Constructing an instance with the parameters ```([`and`](@ref), p)``` and ```([`or`](@ref), p)```
 correspond to conjunctive and disjunctive normal form, respectively.
 
-Subtype of [`Compound`](@ref) and [`Proposition`](@ref).
+Subtype of [`Expressive`](@ref), [`Compound`](@ref) and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> r = Normal(and, p ∧ q)
+julia> r = Normal(PAQ.And(), p ∧ q)
 Normal:
   (¬"p" ∨ "q") ∧ ("p" ∨ ¬"q") ∧ ("p" ∨ "q")
 
-julia> s = Normal(or, ¬p ∨ ¬q)
+julia> s = Normal(PAQ.Or(), ¬p ∨ ¬q)
 Normal:
   ("p" ∧ ¬"q") ∨ (¬"p" ∧ "q") ∨ (¬"p" ∧ ¬"q")
-
-julia> t = r ∧ s
-Tree:
-  (¬"p" ∨ "q") ∧ ("p" ∨ ¬"q") ∧ ("p" ∨ "q") ∧ ("p" ∧ ¬"q") ∨ (¬"p" ∧ "q") ∨ (¬"p" ∧ ¬"q")
-
-julia> t()
-Truth:
-  ⊥
 ```
 """
-struct Normal{B <: Union{And, Or} #=, L <: Literal =#} <: Compound
-    clauses::Vector{Vector{Literal}}
+struct Normal{B <: Union{And, Or}, VC <: Vector{<:Clause}} <: Expressive
+    p::VC
+
+    function Normal(::AO1, clauses::Vector{Clause{AO2}}) where {AO1 <: Union{And, Or}, AO2 <: Union{And, Or}}
+        new{AO1, Vector{Clause{AO2}}}(clauses)
+    end
+    function Normal(::AO, clauses::Vector{Clause{AO}}) where AO <: Union{And, Or}
+        new{AO, Vector{Clause{AO}}}(mapreduce(clause -> map(p -> Clause(AO(), p), clause.p), vcat, clauses))
+    end
 end
 
 """
@@ -229,7 +267,6 @@ Container for the constants [`tautology`](@ref) and [`contradiction`](@ref).
 Subtype of [`Proposition`](@ref).
 """
 struct Truth{V <: Union{Val{:⊥}, Val{:⊤}}} <: Proposition end
-
 
 """
     ⊥
@@ -280,25 +317,27 @@ const tautology = Truth{Val{:⊤}}()
 const ⊤ = tautology
 
 """
-    Contingency <: Compound
+    Valuation <: Expressive <: Compound <: Proposition
+
+Subtype of [`Expressive`](@ref), [`Compound`](@ref) and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> p()
-Contingency:
+julia> Valuation(p)
+Valuation:
   ["p" => ⊤] => ⊤
   ["p" => ⊥] => ⊥
 
-julia> (p ∧ q)()
-Contingency:
+julia> Valuation(p ∧ q)
+Valuation:
   ["p" => ⊤, "q" => ⊤] => ⊤
   ["p" => ⊤, "q" => ⊥] => ⊥
   ["p" => ⊥, "q" => ⊤] => ⊥
   ["p" => ⊥, "q" => ⊥] => ⊥
 ```
 """
-struct Contingency <: Compound # TODO: parameterize
-    interpretations::Vector{Pair{Vector{Pair{Atom, Truth}}}}
+struct Valuation <: Expressive # TODO: parameterize
+    p::Vector{Pair{Vector{Pair{Atom, Truth}}}}
 end
 
 
@@ -356,66 +395,17 @@ julia> get_atoms(r)
 ```
 """
 get_atoms(::Truth) = Atom[]
-get_atoms(p::Contingency) = union(
+get_atoms(p::Valuation) = union(
     mapreduce(
         interpretation -> map(
             literal -> first(literal), first(interpretation)),
-        vcat, p.interpretations
+        vcat, p.p
     )
 )
 get_atoms(p::Atom) = [p]
 get_atoms(p::Literal) = get_atoms(p.p)
-get_atoms(p::Tree) = union(get_atoms(p.node))
+get_atoms(p::Tree) = union(get_atoms(p.p))
 get_atoms(node::Tuple{Operator, Vararg}) = mapreduce(p -> get_atoms(p), vcat, Base.tail(node))
 get_atoms(p::Normal) = get_atoms(Tree(p))
 get_atoms(ps::Proposition...) = union(mapreduce(get_atoms, vcat, ps))
-
-
-# Helpers 
-
-convert(::Type{Literal}, literal::Pair{Atom, <:Truth}) = last(literal) == ⊤ ? Literal(first(literal)) : not(first(literal))
-convert(::Type{Tree}, p::typeof(⊥)) = and(Atom(), not(Atom()))
-convert(::Type{Tree}, p::typeof(⊤)) = not(Tree(⊥))
-convert(::Type{Tree}, p::Contingency) = mapreduce(interpretation -> mapreduce(Literal, and, first(interpretation)), or, filter(interpretation -> last(interpretation) == ⊤, p.interpretations))
-convert(n::Type{<:Normal}, p::Contingency) = n(Tree(p))
-convert(::Type{Tree}, p::Normal{And}) = _convert(p, or, and)
-convert(::Type{Tree}, p::Normal{Or}) = _convert(p, and, or)
-convert(::Type{Contingency}, p::Proposition) = p()
-convert(::Type{L}, p::L) where L <: Proposition = p
-convert(::Type{L}, p::Proposition) where L <: Proposition = L(p)
-
-_convert(p, inner, outer) = mapreduce(clause -> reduce(inner, clause), outer, p.clauses)
-
-
-# Consructors
-
-# TODO: use Base.promote?
-Tree(::Not, p::Atom) = Literal((Not(), p))
-Tree(::Not, p::Compound) = Tree((Not(), p))
-
-Tree(::And, p::Atom, q::Atom) = Tree(And(), Literal(p), Literal(q))
-Tree(::And, p::Atom, q::Compound) = Tree(And(), Literal(p), q)
-Tree(::And, p::Compound, q::Atom) = Tree(And(), p, Literal(q))
-Tree(::And, p::Compound, q::Compound) = Tree((And(), p, q))
-
-# TODO: write more conversions
-Literal(p::Pair{Atom, Truth}) = convert(Literal, p)
-Tree(p::Proposition) = convert(Tree, p)
-Normal(::B, p::Contingency) where B <: Union{And, Or} = convert(Normal{B}, p)
-
-Normal(::And, p::Proposition) = not(Normal(Or(), ¬p))
-function Normal(::Or, p::Proposition)
-    q = p()
-    # TODO: change `===` to `==` - fixes `Normal(and, ⊥)`
-    interpretations =
-        if q === ⊤
-            [[Atom() => ⊤], [Atom() => ⊥]]
-        elseif q === ⊥
-            [[Atom() => ⊤, Atom() => ⊥]]
-        else
-            map(first, filter(literal -> last(literal) == ⊤, q.interpretations))
-        end
-
-    clauses = map(interpretation -> map(Literal, interpretation), interpretations)
-    return Normal{Or}(clauses)
-end
+# TODO: try `unique`?

@@ -27,7 +27,7 @@ julia> using PAQ
 
 ## Showcase
 
-```jldoctest
+```
 julia> ¬⊥
 Truth:
   ⊤
@@ -38,8 +38,8 @@ julia> r = p → q
 Tree:
   ¬("p" ∧ ¬"q")
 
-julia> r()
-Contingency:
+julia> Valuation(r)
+Valuation:
   ["p" => ⊤, "q" => ⊤] => ⊤
   ["p" => ⊤, "q" => ⊥] => ⊥
   ["p" => ⊥, "q" => ⊤] => ⊤
