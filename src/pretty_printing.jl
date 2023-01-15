@@ -35,40 +35,40 @@ repr(p::Atom) = "\"" * p.p * "\""
 repr(p::Valuation) = mapreduce(interpretation -> f(interpretation) * i(interpretation, p.p), *, p.p)
 repr(p::Literal) = repr(p.p)
 repr(p::Tree) = repr(p.p)
-repr(p::Tuple{Not, Atom}) = repr(p[1]) * repr(p[2])
-repr(p::Tuple{Not, Proposition}) = repr(p[1]) * "(" * repr(p[2]) * ")"
-repr(p::Tuple{And, Compound, Compound}) = repr(p[2]) * " " * repr(p[1]) * " " * repr(p[3])
-function repr(p::Clause{B}) where B <: Union{And, Or}
-    isempty(p.p) && return B == And ? repr(⊤) : repr(⊥)
+repr(p::Tuple{typeof(not), Atom}) = repr(p[1]) * repr(p[2])
+repr(p::Tuple{typeof(not), Proposition}) = repr(p[1]) * "(" * repr(p[2]) * ")"
+repr(p::Tuple{typeof(and), Compound, Compound}) = repr(p[2]) * " " * repr(p[1]) * " " * repr(p[3])
+function repr(p::Clause{AO}) where AO <: Union{typeof(and), typeof(or)}
+    isempty(p.p) && return AO == typeof(and) ? repr(⊤) : repr(⊥)
     s = ""
 
     for literal in p.p
         s *= repr(literal)
 
         if literal !== last(p.p)
-            s *= " " * repr(B()) * " "
+            s *= " " * repr(AO.instance) * " "
         end
     end
 
     return s
 end
-function repr(p::Normal{B}) where B <: Union{And, Or}
+function repr(p::Normal{AO}) where AO <: Union{typeof(and), typeof(or)}
     s = ""
 
     for clause in p.p
         s *= "(" * repr(clause) * ")"
 
         if clause !== last(p.p)
-            s *= " " * repr(B()) * " "
+            s *= " " * repr(AO.instance) * " "
         end
     end
 
     return s
 end
 
-repr(::Not) = "¬"
-repr(::And) = "∧"
-repr(::Or) = "∨"
+repr(::typeof(not)) = "¬"
+repr(::typeof(and)) = "∧"
+repr(::typeof(or)) = "∨"
 
 # ToDo: clean-up
 i(interpretation, interpretations) = interpretation == last(interpretations) ? "" : "\n"
@@ -114,7 +114,7 @@ struct Pretty{P <: Proposition} <: Compound
     p::P
     text::String
 
-    Pretty(p::L, text::String = replace(repr(p), "\"" => "")) where L <: Proposition = new{L}(p, text)
+    Pretty(p::P, text::String = replace(repr(p), "\"" => "")) where P <: Proposition = new{P}(p, text)
 end
 
 # TODO: finish integrating `Pretty`

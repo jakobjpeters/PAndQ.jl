@@ -30,7 +30,6 @@ makedocs(
             "Boolean Operators" => "manual/boolean_operators.md",
             "Semantics" => "manual/semantics.md",
             "Pretty Printing" => "manual/pretty_printing.md",
-            "Internals" => "manual/internals.md",
         ]
     ],
     strict = true

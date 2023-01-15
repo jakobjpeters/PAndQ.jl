@@ -10,8 +10,6 @@ Logical "negation" operator.
 
 ```¬``` can be typed by ```\\neg<tab>```.
 
-See also [`Not`](@ref).
-
 # Examples
 ```jldoctest
 julia> @truth_table ¬p
@@ -27,7 +25,6 @@ julia> @truth_table ¬p
 """
 function not end
 const ¬ = not
-¬p = Not()(p)
 
 """
     p ∧ q
@@ -37,8 +34,6 @@ const ¬ = not
 Logical "conjunction" operator.
 
 ```∧``` can be typed by ```\\wedge<tab>```.
-
-See also [`And`](@ref).
 
 # Examples
 ```jldoctest
@@ -58,7 +53,6 @@ julia> @truth_table p ∧ q
 """
 function and end
 const ∧ = and
-p ∧ q = And()(p, q)
 
 """
     p ⊼ q

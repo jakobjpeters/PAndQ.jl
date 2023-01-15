@@ -39,57 +39,6 @@ Subtype of [`Compound`](@ref) and [`Proposition`](@ref).
 abstract type Expressive <: Compound end
 
 """
-    Operator
-
-Set of functions that operate on a logical [`Proposition`](@ref).
-
-Supertype of [`Boolean`](@ref).
-"""
-abstract type Operator end
-
-"""
-    Boolean <: Operator
-
-Set of logical connectives.
-
-Subtype of [`Operator`](@ref).
-Supertype of [`Not`](@ref), [`And`](@ref), and [`Or`](@ref).
-See also [Boolean Operators](@ref).
-"""
-abstract type Boolean <: Operator end
-
-"""
-    Not <: Boolean <: Operator
-
-Singleton type representing logical negation.
-
-Subtype of [`Boolean`](@ref) and [`Operator`](@ref).
-See also [`not`](@ref).
-```
-"""
-struct Not <: Boolean end
-
-"""
-    And <: Boolean <: Operator
-
-Singleton type representing logical conjunction.
-
-Subtype of [`Boolean`](@ref) and [`Operator`](@ref).
-See also [`and`](@ref).
-"""
-struct And <: Boolean end
-
-"""
-    Or <: Boolean <: Operator
-
-Singleton type representing logical disjunction.
-
-Subtype of [`Boolean`](@ref) and [`Operator`](@ref).
-See also [`or`](@ref).
-"""
-struct Or <: Boolean end
-
-"""
     Atom <: Proposition
     Atom([p::String])
 
@@ -127,15 +76,14 @@ end
     Literal{
         L <: Union{
             Atom,
-            Tuple{Not, Atom}
+            Tuple{typeof(not), Atom}
         }
     } <: Compound <: Proposition
     Literal(p::L)
 
-An [`Atom`](@ref) or its negation.
+An [`Atom`](@ref) or its [`negation`](@ref not).
 
 Subtype of [`Compound`](@ref) and [`Proposition`](@ref).
-See also [`Not`](@ref).
 
 # Examples
 ```jldoctest
@@ -152,7 +100,7 @@ Valuation:
 struct Literal{
     L <: Union{
         Atom,
-        Tuple{Not, Atom}
+        Tuple{typeof(not), Atom}
     }
 } <: Compound
     p::L
@@ -161,15 +109,15 @@ end
 """
     Tree{
         NA <: Union{
-            Tuple{Not, Compound},
-            Tuple{And, Compound, Compound}
+            Tuple{typeof(not), Compound},
+            Tuple{typeof(and), Compound, Compound}
         }
     } <: Expressive <: Compound <: Proposition
     Tree(p::NA)
 
 Abstract syntax tree representing a proposition.
 
-Note that [`Not`](@ref) and [`And`](@ref) are functionally complete operators.
+Note that [`not`](@ref) and [`and`](@ref) are functionally complete operators.
 
 Subtype of [`Expressive`](@ref), [`Compound`](@ref) and [`Proposition`](@ref).
 
@@ -194,8 +142,8 @@ Valuation:
 """
 struct Tree{
     NA <: Union{
-        Tuple{Not, Compound},
-        Tuple{And, Compound, Compound}
+        Tuple{typeof(not), Compound},
+        Tuple{typeof(and), Compound, Compound}
     }
 } <: Expressive
     p::NA
@@ -203,13 +151,13 @@ end
 
 """
     Clause{
-        B <: Union{And, Or},
+        B <: Union{typeof(and), typeof(or)},
         VL <: Vector{<:Literal}
     } <: Compound <: Proposition
     Clause()
 
 Empty clauses are always false.
-```Clause(::B) where B <: Union{And, Or}``` is automatically converted to ```Clause(::B, ⊥)```
+```Clause(::B) where B <: Union{typeof(and), typeof(or)}``` is automatically converted to ```Clause(::B, ⊥)```
 for readability.
 
 ```
@@ -218,7 +166,7 @@ julia>
 ```
 """
 struct Clause{
-    B <: Union{And, Or}
+    B <: Union{typeof(and), typeof(or)}
     # VL <: Vector{Literal}
 } <: Compound
     p::Vector{Literal}
@@ -227,7 +175,7 @@ struct Clause{
 end
 
 """
-    Normal{B <: Union{And, Or}} <: Expressive <: Compound <: Proposition
+    Normal{B <: Union{typeof(and), typeof(or)}} <: Expressive <: Compound <: Proposition
     Normal(::Union{typeof(and), typeof(or)}, p::Proposition)
 
 The conjunctive or disjunctive normal form of a proposition.
@@ -239,22 +187,22 @@ Subtype of [`Expressive`](@ref), [`Compound`](@ref) and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> r = Normal(PAQ.And(), p ∧ q)
+julia> r = Normal(and, p ∧ q)
 Normal:
   (¬"p" ∨ "q") ∧ ("p" ∨ ¬"q") ∧ ("p" ∨ "q")
 
-julia> s = Normal(PAQ.Or(), ¬p ∨ ¬q)
+julia> s = Normal(or, ¬p ∨ ¬q)
 Normal:
   ("p" ∧ ¬"q") ∨ (¬"p" ∧ "q") ∨ (¬"p" ∧ ¬"q")
 ```
 """
-struct Normal{B <: Union{And, Or}, VC <: Vector{<:Clause}} <: Expressive
+struct Normal{B <: Union{typeof(and), typeof(or)}, VC <: Vector{<:Clause}} <: Expressive
     p::VC
 
-    function Normal(::AO1, clauses::Vector{Clause{AO2}}) where {AO1 <: Union{And, Or}, AO2 <: Union{And, Or}}
+    function Normal(::AO1, clauses::Vector{Clause{AO2}}) where {AO1 <: Union{typeof(and), typeof(or)}, AO2 <: Union{typeof(and), typeof(or)}}
         new{AO1, Vector{Clause{AO2}}}(clauses)
     end
-    function Normal(::AO, clauses::Vector{Clause{AO}}) where AO <: Union{And, Or}
+    function Normal(::AO, clauses::Vector{Clause{AO}}) where AO <: Union{typeof(and), typeof(or)}
         new{AO, Vector{Clause{AO}}}(mapreduce(clause -> map(p -> Clause(AO(), p), clause.p), vcat, clauses))
     end
 end
@@ -405,7 +353,7 @@ get_atoms(p::Valuation) = union(
 get_atoms(p::Atom) = [p]
 get_atoms(p::Literal) = get_atoms(p.p)
 get_atoms(p::Tree) = union(get_atoms(p.p))
-get_atoms(node::Tuple{Operator, Vararg}) = mapreduce(p -> get_atoms(p), vcat, Base.tail(node))
+get_atoms(node::Tuple{Union{typeof(not), typeof(and)}, Vararg}) = mapreduce(p -> get_atoms(p), vcat, Base.tail(node))
 get_atoms(p::Normal) = get_atoms(Tree(p))
 get_atoms(ps::Proposition...) = union(mapreduce(get_atoms, vcat, ps))
 # TODO: try `unique`?

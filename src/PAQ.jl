@@ -2,9 +2,9 @@
 module PAQ
 
 include("set.jl")
+include("boolean_operators.jl")
 include("propositional_logic.jl")
 include("pretty_printing.jl")
-include("boolean_operators.jl")
 include("semantics.jl")
 # include("predicate_logic.jl")
 

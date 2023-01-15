@@ -38,7 +38,7 @@ function _interpret(p::Atom, valuation)
     end
 end
 _interpret(p::Literal{Atom}, valuation) = _interpret(p.p, valuation)
-_interpret(p::Literal{Tuple{Not, Atom}}, valuation) = first(p.p)(_interpret(last(p.p), valuation))
+_interpret(p::Literal{Tuple{typeof(not), Atom}}, valuation) = first(p.p)(_interpret(last(p.p), valuation))
 _interpret(p::Tree, valuation) = first(p.p)(map(p -> _interpret(p, valuation), Base.tail(p.p))...)
 _interpret(p::Union{Valuation, Normal}, valuation) = _interpret(Tree(p), valuation) # generic fallback
 
@@ -257,50 +257,50 @@ julia>
 
 (p::Proposition)(valuation...) = interpret(p, valuation...)
 
-(::Not)(::typeof(⊥)) = ⊤
-(::Not)(::typeof(⊤)) = ⊥
-(::Not)(p::Atom) = Literal((Not(), p))
-(::Not)(p::Literal{Atom}) = not(p.p)
-(::Not)(p::Literal{Tuple{Not, Atom}}) = last(p.p) # double negation elimination
-(::Not)(p::Tree{<:Tuple{Not, Compound}}) = last(p.p) # double negation elimination
-(::Not)(p::Tree) = Tree(Not(), p)
-(::Not)(p::Valuation) = Valuation(map(interpretation -> first(interpretation) => not(last(interpretation)), p.p))
-(::Not)(p::Clause{AO}) where AO <: Union{And, Or} = Clause(first(setdiff([And, Or], [AO]))(), map(not, p.p))
-(::Not)(p::Normal{AO}) where AO <: Union{And, Or} = Normal(first(setdiff([And, Or], [AO]))(), map(not, p.p))
-(::Not)(p::P) where P <: Proposition = P(not(Tree(p))) # generic fallback
+not(::typeof(⊥)) = ⊤
+not(::typeof(⊤)) = ⊥
+not(p::Atom) = Literal((not, p))
+not(p::Literal{Atom}) = not(p.p)
+not(p::Literal{Tuple{typeof(not), Atom}}) = last(p.p) # double negation elimination
+not(p::Tree{<:Tuple{typeof(not), Compound}}) = last(p.p) # double negation elimination
+not(p::Tree) = Tree(not, p)
+not(p::Valuation) = Valuation(map(interpretation -> first(interpretation) => not(last(interpretation)), p.p))
+not(p::Clause{AO}) where AO <: Union{typeof(and), typeof(or)} = Clause(first(setdiff([and, or], [AO.instance])), map(not, p.p))
+not(p::Normal{AO}) where AO <: Union{typeof(and), typeof(or)} = Normal(first(setdiff([and, or], [AO.instance])), map(not, p.p))
+not(p::P) where P <: Proposition = P(not(Tree(p))) # generic fallback
 
-(::And)(::typeof(⊤), ::typeof(⊤)) = ⊤
-(::And)(::typeof(⊥), ::Truth) = ⊥ # domination law
-(::And)(::typeof(⊥), ::Proposition) = ⊥
-(::And)(::typeof(⊤), q::Truth) = q # identity law
-(::And)(::typeof(⊤), q::Proposition) = q
-(::And)(p::Proposition, q::Truth) = q ∧ p # commutative law
-(::And)(p::Union{Atom, Literal, Tree}, q::Union{Atom, Literal, Tree}) = Tree(And(), p, q)
-# (::And)(p::Valuation, q::Valuation) = 
-(::And)(p::C, q::C) where C <: Clause{And} = Clause(And(), unique(append!(p.p, q.p)))
-(::And)(p::C, q::C) where C <: Clause{Or} = Normal(And(), p.p, q.p)
-# (::And)(p::CNC, q::CNC) where CNC <: Union{Clause, Normal, Valuation} = CNC(p, q)
-(::And)(p::P, q::P) where P = P(and(Tree(p), Tree(q))) # generic fallback
+and(::typeof(⊤), ::typeof(⊤)) = ⊤
+and(::typeof(⊥), ::Truth) = ⊥ # domination law
+and(::typeof(⊥), ::Proposition) = ⊥
+and(::typeof(⊤), q::Truth) = q # identity law
+and(::typeof(⊤), q::Proposition) = q
+and(p::Proposition, q::Truth) = q ∧ p # commutative law
+and(p::Union{Atom, Literal, Tree}, q::Union{Atom, Literal, Tree}) = Tree(and, p, q)
+# and(p::Valuation, q::Valuation) = 
+and(p::C, q::C) where C <: Clause{typeof(and)} = Clause(and, unique(append!(p.p, q.p)))
+and(p::C, q::C) where C <: Clause{typeof(or)} = Normal(and, p.p, q.p)
+# and(p::CNC, q::CNC) where CNC <: Union{Clause, Normal, Valuation} = CNC(p, q)
+and(p::P, q::P) where P = P(and(Tree(p), Tree(q))) # generic fallback
 
-Tree(::Not, p::Atom) = Tree(Not(), Literal(p))
-Tree(::Not, p::Union{Literal, Tree}) = Tree((Not(), p))
-Tree(::And, p::Atom, q::Atom) = Tree(And(), Literal(p), Literal(q))
-Tree(::And, p::Atom, q::Proposition) = Tree(And(), Literal(p), q)
-Tree(::And, p::Proposition, q::Atom) = Tree(And(), p, Literal(q))
-Tree(::And, p::Union{Literal, Tree}, q::Union{Literal, Tree}) = Tree((And(), p, q))
+Tree(::typeof(not), p::Atom) = Tree(not, Literal(p))
+Tree(::typeof(not), p::Union{Literal, Tree}) = Tree((not, p))
+Tree(::typeof(and), p::Atom, q::Atom) = Tree(and, Literal(p), Literal(q))
+Tree(::typeof(and), p::Atom, q::Proposition) = Tree(and, Literal(p), q)
+Tree(::typeof(and), p::Proposition, q::Atom) = Tree(and, p, Literal(q))
+Tree(::typeof(and), p::Union{Literal, Tree}, q::Union{Literal, Tree}) = Tree((and, p, q))
 
-Clause(ao::Union{And, Or}, ps::Union{Atom, Literal}...) = Clause(ao, collect(ps))
-Normal(::B, p::Clause...) where B = Normal(B(), collect(p))
+Clause(::AO, ps::Union{Atom, Literal}...) where AO <: Union{typeof(and), typeof(or)} = Clause(AO.instance, collect(ps))
+Normal(::AO, p::Clause...) where AO <: Union{typeof(and), typeof(or)} = Normal(AO.instance, collect(p))
 
 Atom(p::Proposition) = convert(Atom, p)
 Literal(p::Proposition) = convert(Literal, p)
 Tree(p::Proposition) = convert(Tree, p)
-Normal(::B, p::Proposition) where B <: Union{And, Or} = convert(Normal{B}, p)
+Normal(::AO, p::Proposition) where AO <: Union{typeof(and), typeof(or)} = convert(Normal{AO}, p)
 Valuation(p::Proposition) = convert(Valuation, p)
 
 convert(::Type{Literal}, p::Atom) = Literal(p)
 convert(::Type{Atom}, p::Literal{Atom}) = p.p
-convert(::Type{Tree}, p::Normal{AO}) where AO <: Union{And, Or} = mapreduce(Tree, AO(), p.p)
+convert(::Type{Tree}, p::Normal{AO}) where AO <: Union{typeof(and), typeof(or)} = mapreduce(Tree, AO.instance, p.p)
 convert(::Type{Tree}, p::typeof(⊤)) = not(Tree(⊥))
 function convert(::Type{Tree}, p::typeof(⊥))
     p = Atom()
@@ -323,8 +323,8 @@ function convert(::Type{Tree}, p::Valuation)
         )
     )
 end
-convert(::Type{Tree}, p::Clause{And}) = Tree(reduce(and, p.p, init = ⊤))
-convert(::Type{Tree}, p::Clause{Or}) = Tree(reduce(or, p.p, init = ⊥))
+convert(::Type{Tree}, p::Clause{typeof(and)}) = Tree(reduce(and, p.p, init = ⊤))
+convert(::Type{Tree}, p::Clause{typeof(or)}) = Tree(reduce(or, p.p, init = ⊥))
 convert(::Type{Valuation}, p::Truth) = Valuation(Tree(p))
 function convert(::Type{Valuation}, p::Proposition)
     atoms = get_atoms(p)
@@ -335,10 +335,10 @@ function convert(::Type{Valuation}, p::Proposition)
 
     return Valuation(map(Pair, valuations, truths))
 end
-convert(::Type{Clause{And}}, p::typeof(⊤)) = Clause(And())
-convert(::Type{Clause{Or}}, p::typeof(⊥)) = Clause(Or())
-convert(::Type{Normal{And}}, p::Proposition) = not(Normal(Or(), ¬p))
-function convert(::Type{Normal{Or}}, p::Proposition)
+convert(::Type{Clause{typeof(and)}}, p::typeof(⊤)) = Clause(and)
+convert(::Type{Clause{typeof(or)}}, p::typeof(⊥)) = Clause(or)
+convert(::Type{Normal{typeof(and)}}, p::Proposition) = not(Normal(or, ¬p))
+function convert(::Type{Normal{typeof(or)}}, p::Proposition)
     q = Valuation(p)
     # TODO: change `===` to `==` - fixes `Normal(and, ⊥)`
     interpretations =
@@ -360,7 +360,7 @@ function convert(::Type{Normal{Or}}, p::Proposition)
 
     clauses = map(
         interpretation -> Clause(
-            And(),
+            and,
             map(
                 pair -> last(pair) == ⊤ ? Literal(first(pair)) : not(first(pair)),
                 interpretation
@@ -369,7 +369,7 @@ function convert(::Type{Normal{Or}}, p::Proposition)
         interpretations
     )
 
-    return Normal(Or(), clauses)
+    return Normal(or, clauses)
 end
 # function convert(::Type{E}, p::Proposition) where E <: Expressive
 #     p isa E && return p
