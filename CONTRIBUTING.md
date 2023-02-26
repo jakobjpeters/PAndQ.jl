@@ -51,12 +51,29 @@ Otherwise, follow Julia's official [style guide](https://docs.julialang.org/en/v
 
 ## To-do
 
-- Implement
-    - Sets
-    - First order logic
-    - Second order logic
-    - Higher order logic
-    - Modal logic
-- Finish documentation
+### Quality
+
+- Improve type stability
+- Implement better solver
+    - Improve `convert(Normal, p::Proposition)` algorithm
+- Improve documentation
     - Tutorial
-- Write unit tests
+- More tests
+- Improve `@truth_table`
+    - Define behavior
+    - Improve implementation
+    - Write tests
+
+### Features
+
+- Compatability with other packages
+    - Generic functions
+    - Minimize assumptions
+    - Identify potential packages
+        - Write tests
+- More representation conversions
+- `@atoms x[1:4]`, such as in Symbolics.jl
+
+### Future Work
+- First order logic
+- Integrate Symbolics.jl

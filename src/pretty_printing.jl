@@ -1,347 +1,289 @@
 
-import Base: repr, show
+import Base: show
+import AbstractTrees: children, nodevalue, print_tree
+
+using PrettyTables
 
 """
-    repr(p::Proposition)
-    repr(::MIME"text/plain", p::Proposition)
-
-Return a string representation of the given proposition.
-
-!!! tip
-    Use the [`Pretty`](@ref) wrapper or [`@pretty`](@ref) macro to get a formatted string.
-    Use `MIME("text/plain")` to get the pretty-printed representation.
-
-```
-julia> p ↔ q
-Tree:
-  ¬("p" ∧ ¬"q") ∧ ¬(¬"p" ∧ "q")
-
-julia> repr(p ↔ q)
-"¬(\\"p\\" ∧ ¬\\"q\\") ∧ ¬(¬\\"p\\" ∧ \\"q\\")"
-
-julia> repr(Pretty(p ↔ q))
-"¬(p ∧ ¬q) ∧ ¬(¬p ∧ q)"
-
-julia> repr(@pretty p ↔ q)
-"p ↔ q"
-
-julia> repr(MIME("text/plain"), @pretty p ↔ q)
-"Pretty{Tree}:\\n  p ↔ q"
-```
+    Pretty
 """
-repr(::typeof(⊤)) = "⊤"
-repr(::typeof(⊥)) = "⊥"
-repr(p::Atom) = "\"" * p.p * "\""
-repr(p::Valuation) = mapreduce(interpretation -> f(interpretation) * i(interpretation, p.p), *, p.p)
-repr(p::Literal) = repr(p.p)
-repr(p::Tree) = repr(p.p)
-repr(p::Tuple{typeof(not), Atom}) = repr(p[1]) * repr(p[2])
-repr(p::Tuple{typeof(not), Proposition}) = repr(p[1]) * "(" * repr(p[2]) * ")"
-repr(p::Tuple{typeof(and), Compound, Compound}) = repr(p[2]) * " " * repr(p[1]) * " " * repr(p[3])
-function repr(p::Clause{AO}) where AO <: Union{typeof(and), typeof(or)}
-    isempty(p.p) && return AO == typeof(and) ? repr(⊤) : repr(⊥)
-    s = ""
-
-    for literal in p.p
-        s *= repr(literal)
-
-        if literal !== last(p.p)
-            s *= " " * repr(AO.instance) * " "
-        end
-    end
-
-    return s
-end
-function repr(p::Normal{AO}) where AO <: Union{typeof(and), typeof(or)}
-    s = ""
-
-    for clause in p.p
-        s *= "(" * repr(clause) * ")"
-
-        if clause !== last(p.p)
-            s *= " " * repr(AO.instance) * " "
-        end
-    end
-
-    return s
-end
-
-repr(::typeof(not)) = "¬"
-repr(::typeof(and)) = "∧"
-repr(::typeof(or)) = "∨"
-
-# ToDo: clean-up
-i(interpretation, interpretations) = interpretation == last(interpretations) ? "" : "\n"
-h(literal, interpretation) = literal == last(interpretation) ? "" : ", "
-g(literal) = repr(first(literal)) * " => " * repr(last(literal))
-f(interpretation) = "  [" * mapreduce(literal -> g(literal) * h(literal, first(interpretation)), *, first(interpretation)) * "] => " * repr(last(interpretation))
-
-show(io::IO, p::Proposition) = print(io, repr(p))
-function show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition
-    indent = p isa Valuation ? "" : "  "
-    print(io, nameof(typeof(p)), ":\n", indent, p)
-end
-
-# TODO: make composable
-"""
-    Pretty{P <: Proposition} <: Compound <: Proposition
-    Pretty(p::P[, text::String])
-
-A wrapper to automatically enable the pretty-printing of ```p``` with the contents of ```text```.
-
-The default value of ```text``` will pretty-print ```p``` the same as its regular pretty-printing,
-except without quotation marks.
-
-Subtype of [`Compound`](@ref) and [`Proposition`](@ref).
-See also [`@pretty`](@ref).
-
-# Examples
-```
-julia> r = p → (q → p)
-Tree:
-  ¬("p" ∧ "q" ∧ ¬"p")
-
-julia> Pretty(r)
-Pretty{Tree}:
-  ¬(p ∧ q ∧ ¬p)
-
-julia> Pretty(r, "p → (q → p)")
-Pretty{Tree}:
-  p → (q → p)
-```
-"""
-struct Pretty{P <: Proposition} <: Compound
+struct Pretty{P <: Proposition}
     p::P
     text::String
 
-    Pretty(p::P, text::String = replace(repr(p), "\"" => "")) where P <: Proposition = new{P}(p, text)
+    Pretty(p::P, text::String = replace(_show(p), "\"" => "")) where P <: Proposition = new{P}(p, text)
 end
 
-# TODO: finish integrating `Pretty`
-# (p::Pretty)() = p.p()
-
-# (::Not)(p::Pretty) = not(p.p)
-# (::And)(p::Pretty, q::Pretty) = And()(p.p, q.p)
-# (::And)(p::Pretty, q::Proposition) = And()(p.p, q)
-# (::And)(p::Proposition, q::Pretty) = And()(q, p)
-
-# (::Not)(p::Pretty{Atom}) = Pretty(not(p.p), "¬" * p.text)
-# function (::Not)(p::Pretty)
-#     text = first(p.text) == "¬" ? p.text[2:end] : "¬(" * p.text * ")"
-#     return Pretty(not(p.p), text)
-# end
-# (::And)(p::Pretty, q::Pretty) = Pretty(and(p.p, q.p), p.text * " ∧ " * q.text)
-
-# Tree(p::Pretty) = convert(Tree, p)
-# Normal(::B, p::Pretty) where B <: Union{And, Or} = convert(Normal{B}, p)
-
-# convert(type::Type{<:Proposition}, p::Pretty) = convert(type, p.p)
-
-
-
-show(io::IO, p::Pretty) = print(io, p.text)
-function show(io::IO, ::MIME"text/plain", p::Pretty)
-    indent = p isa Valuation ? "" : "  "
-    print(io, nameof(typeof(p)), "{", nameof(typeof((p.p))), "}:\n", indent, p.text)
-end
 """
     @pretty(expression)
-
-Return an instance of [`Pretty`](@ref), whose ```text``` field is
-set to ```string(expression)```.
-
-# Examples
-```
-julia> p ↔ q
-Tree:
-  ¬("p" ∧ ¬"q") ∧ ¬(¬"p" ∧ "q")
-
-julia> @pretty p ↔ q
-Pretty{Tree}:
-  p ↔ q
-```
 """
 macro pretty(expression)
     return :(Pretty($(esc(expression)), $(string(expression))))
 end
 
-"""
-    @truth_table p
-    @truth_table(ps...)
 
-Print a truth table for the given propositions.
+children(p::Tree) = Tuple(p.p)
+children(p::Tree{typeof(not)}) = p.p
+children(p::Tree{typeof(identity)}) = ()
 
-The first row of the header is the expression representing that column's proposition,
-the second row indicates that expression's type,
-and the third row identifies the statements for [`atomic propositions`](@ref Atom).
-
-!!! info
-    If a variable is a [`Compound`](@ref), there is no expression to label that atom.
-    As such, the first row in the header will be blank.
-    However, the identifying statement is still known and will be displayed in the third row.
-    Use [`get_atoms`](@ref) to resolve this uncertainty.
-
-Logically equivalent propositions will be placed in the same column
-with their expressions in the header seperated by a comma.
-
-In this context, [`⊤`](@ref tautology) and [`⊥`](@ref contradiction) can be interpreted as *true* and *false*, respectively.
-
-See also [`Proposition`](@ref).
-
-# Examples
-```jldoctest
-julia> @truth_table p ∧ q p → q
-┌──────┬──────┬───────┬───────┐
-│ p    │ q    │ p ∧ q │ p → q │
-│ Atom │ Atom │ Tree  │ Tree  │
-│ "p"  │ "q"  │       │       │
-├──────┼──────┼───────┼───────┤
-│ ⊤    │ ⊤    │ ⊤     │ ⊤     │
-│ ⊤    │ ⊥    │ ⊥     │ ⊥     │
-├──────┼──────┼───────┼───────┤
-│ ⊥    │ ⊤    │ ⊥     │ ⊤     │
-│ ⊥    │ ⊥    │ ⊥     │ ⊤     │
-└──────┴──────┴───────┴───────┘
-```
-"""
-macro truth_table(expressions...)
-    f = expression -> typeof(expression) <: Union{Symbol, String} ? [expression] : mapreduce(f, vcat, expression.args[2:end])
-    propositions = reduce(union, map(f, expressions))
-
-    return :(
-        truth_table(
-            [$(map(esc, expressions)...)],
-            map(string, $expressions),
-            [$(map(esc, propositions)...)],
-            map(string, $propositions)
-        )
-    )
-end
-
-# ToDo: holy guacamole this function is a mess
-# ToDo: simplify logic
-# ToDo: fix subheader combining types
-# ToDo: fix `@truth_table p ∧ ¬(p ∧ ¬p)`
-# ToDo: write docstring - define behavior
-# ToDo: write tests
-function truth_table(_trees::Vector{<:Proposition}, trees_str, leaves, leaves_str)
-    trees = map(tree -> tree isa Pretty ? tree.p : tree,_trees)
-
-    atoms = get_atoms(trees...)
-    n = length(atoms)
-    truth_sets = multiset_permutations([⊤, ⊥], [n, n], n)
-    valuations = map(truth_set -> zip(atoms, truth_set), truth_sets)
-
-    merge_string = (x, y) -> x == y || y == "" ? x : x * ", " * y
-
-    _sub_header = []
-    labels = String[]
-    assignments = Vector{Truth}[]
-    for (tree, tree_str) in filter(pair -> !isa(first(pair), Truth), map(Pair, trees, trees_str))
-        tree isa Atom && continue
-
-        truths = map(valuation -> interpret(tree, Dict(valuation)), valuations)
-
-        if truths in assignments
-            i = findfirst(assignment -> assignment == truths, assignments)
-            labels[i] = merge_string(labels[i], tree_str)
-        else
-            push!(_sub_header, tree)
-            push!(labels, tree_str)
-            push!(assignments, truths)
-        end
-    end
-
-    _truths = filter(tree -> tree isa Truth, trees)
-    temp = hcat(map(p -> repeat([p], 2^n), _truths)...)
-    valuation_matrix = mapreduce(permutedims, vcat, truth_sets)
-    assignment_matrix = reduce(hcat, assignments, init = Matrix(undef, 2^n, 0))
-    interpretations = reduce(hcat, [valuation_matrix, assignment_matrix])
-
-    if !isempty(temp)
-        interpretations = reduce(hcat, [valuation_matrix, assignment_matrix, temp])
-    end
-
-    pretty_interpretations = map(repr, interpretations)
-
-    make_header = (ps, ps_str) -> begin
-        ___header = Dict{Atom, Vector{String}}()
-
-        for (p, p_str) in zip(ps, ps_str)
-            if p isa Atom
-                if p in keys(___header)
-                    push!(___header[p], p_str)
-                else
-                    ___header[p] = [p_str]
-                end
-            end
-        end
-
-        return ___header
-    end
-
-    header_domains = [
-        (leaves, leaves_str),
-        (trees, trees_str),
-        (atoms, map(atom -> "", atoms))
-    ]
-    headers = map(header_domain -> make_header(header_domain...), header_domains)
-    __header = mergewith!(union ∘ vcat, headers...)
-    _header = map(atom -> reduce(merge_string, __header[atom]), atoms)
-    push!(_header, labels...)
-    append!(_header, map(repr, _truths))
-
-    sub_header = map(nameof ∘ typeof, vcat(atoms, _sub_header, _truths))
-    sub_sub_header = vcat(
-        map(repr, atoms),
-        map(_ -> "", vcat(_sub_header, _truths)),
-    )
-    header = (_header, sub_header, sub_sub_header)
-
-    pretty_table(
-        pretty_interpretations,
-        header = header,
-        alignment = :l,
-        body_hlines = collect(0:2:2^n),
-        crop = :none
-    )
-end
+nodevalue(p::Tree{BO}) where BO <: BooleanOperator = BO.instance
+nodevalue(p::Tree{typeof(identity)}) = p
 
 """
-    print_tree(p::Proposition)
+    print_tree(p::Proposition, [max_depth])
 
 Print a tree diagram of ```p```.
 
-```julia
-julia> print_tree(p ⊻ q)
-∧
-├─ ¬
-│  └─ ∧
-│     ├─ ¬
-│     │  └─ p
-│     └─ ¬
-│        └─ q
-└─ ¬
-   └─ ∧
-      ├─ p
-      └─ q
+The optional argument `max_depth` will truncate subtrees at that depth.
 
-julia> print_tree(@pretty p ⊻ q))
+```julia
+julia> @p print_tree(p ⊻ q)
 ⊻
 ├─ p
 └─ q
+
+julia> @p print_tree((p ∧ q) ∧ ¬(¬p ∧ ¬q))
+∧
+├─ ∧
+│  ├─ p
+│  └─ q
+└─ ¬
+   └─ ∧
+      ├─ ¬
+      │  └─ p
+      └─ ¬
+         └─ q
 ```
 """
-function print_tree(p::Pretty{Tree})
-    #=
-    TODO: implement
-    ┌─┬─┐
-    │ │ │
-    ├─┼─┤
-    │ │ │
-    └─┴─┘
-    =#
-    println(repr(p))
+print_tree(p::Tree, max_depth = typemax(Int)) = print_tree(p, maxdepth = max_depth)
+print_tree(p::Proposition, max_depth = typemax(Int)) = print_tree(Tree(p), max_depth)
+
+# print_string(p::Proposition)
+
+#=
+    truth_table specification
+
+each row is an interpretation
+each column maps to proposition
+the first header is the `repr` of that proposition
+the second header is the type of that proposition
+logically equivalent propositions are put in the same column, seperated by a comma
+the order of the columns is determined first by type
+    1) truth, 2) atom, 3) any,
+    and then by the order it was entered/found
+truths only generate a single row, and no propositions
+=#
+
+"""
+    truth_table(xs...)
+    truth_table(xs::AbstractArray)
+
+Print a truth table for the given [`Proposition`](@ref)s and [`BinaryOperator`](@ref)s.
+
+The first row of the header is the expression representing that column's proposition,
+while the second row indicates that expression's type.
+Logically equivalent propositions will be grouped in the same column, seperated by a comma.
+
+In this context, [`⊤`](@ref) and [`⊥`](@ref) can be interpreted as *true* and *false*, respectively.
+
+# Examples
+```jldoctest
+julia> @p truth_table(p ∧ ¬p, p ∧ q)
+┌────────┬──────┬──────┬───────┐
+│ p ∧ ¬p │ p    │ q    │ p ∧ q │
+│ Tree   │ Atom │ Atom │ Tree  │
+├────────┼──────┼──────┼───────┤
+│ ⊥      │ ⊤    │ ⊤    │ ⊤     │
+│ ⊥      │ ⊥    │ ⊤    │ ⊥     │
+├────────┼──────┼──────┼───────┤
+│ ⊥      │ ⊤    │ ⊥    │ ⊥     │
+│ ⊥      │ ⊥    │ ⊥    │ ⊥     │
+└────────┴──────┴──────┴───────┘
+
+julia> truth_table([⊻, imply])
+┌──────┬──────┬────────┬────────┐
+│ _    │ __   │ _ ⊻ __ │ _ → __ │
+│ Atom │ Atom │ Tree   │ Tree   │
+├──────┼──────┼────────┼────────┤
+│ ⊤    │ ⊤    │ ⊥      │ ⊤      │
+│ ⊥    │ ⊤    │ ⊤      │ ⊤      │
+├──────┼──────┼────────┼────────┤
+│ ⊤    │ ⊥    │ ⊤      │ ⊥      │
+│ ⊥    │ ⊥    │ ⊥      │ ⊤      │
+└──────┴──────┴────────┴────────┘
+```
+"""
+function truth_table(xs::AbstractArray)
+    # ToDo: write docstring - define behavior
+    # ToDo: write tests
+
+    _atoms = [Atom(:_), Atom(:__)]
+    operator_to_proposition = x -> begin
+        x isa UnaryOperator && return x(first(_atoms))
+        x isa BinaryOperator && return x(first(_atoms), last(_atoms))
+        return x
+    end
+
+    ps = map(operator_to_proposition, xs)
+    # atoms = get_atoms(map(interpret ∘ Valuation, ps)) # TODO: only atoms that affect the outcome (p ∧ ¬p ∨ q)
+    atoms = mapreduce(get_atoms, union, ps)
+    grouped_ps = Vector{Proposition}[]
+
+    foreach(ps) do p
+        equivalent = false
+        for group in grouped_ps
+            if p == first(group)
+                push!(group, p)
+                equivalent = true
+                break
+            end
+        end
+        !equivalent && push!(grouped_ps, [p])
+    end
+
+    grouped_truths = Vector{Proposition}[]
+    grouped_atoms = Vector{Proposition}[]
+    grouped_compounds = Vector{Proposition}[]
+
+    append!(grouped_atoms, map(p -> [p], atoms))
+    foreach(grouped_ps) do group
+        if is_truth(first(group))
+            push!(grouped_truths, group)
+        else
+            is_atom = false
+            for grouped_atom in grouped_atoms
+                if first(grouped_atom) == first(group)
+                    append!(grouped_atom, group)
+                    is_atom = true
+                    break
+                end
+            end
+
+            !is_atom && push!(grouped_compounds, group)
+        end
+    end
+
+    grouped_ps = map(unique, vcat(grouped_truths, grouped_atoms, grouped_compounds))
+
+    valuations = map(Dict, get_valuations(atoms))
+    interpretations = mapreduce(hcat, grouped_ps) do grouped_p
+        get_interpretation(first(grouped_p), valuations)
+    end
+
+    merge_string = x -> join(x, ", ")
+    header = (
+        map(grouped_ps) do group
+            merge_string(map(repr, group))
+        end,
+        map(grouped_ps) do group
+            merge_string(map(nameof ∘ typeof, group))
+        end
+    )
+
+    pretty_table(
+        interpretations,
+        header = header,
+        alignment = :l,
+        body_hlines = collect(0:2:2^length(atoms)),
+        crop = :none
+    )
+
+    return nothing
 end
-print_tree(p::Pretty) = print_tree(p.p)
-print_tree(p::Proposition) = print_tree(Pretty(Tree(p)))
+truth_table(xs...) = truth_table(collect(xs))
+
+"""
+    @truth_table(xs...)
+
+Equivalent to `[`@p`](@ref) [`truth_table`](@ref)(xs...)`.
+
+# Examples
+```jldoctest
+julia> @truth_table ¬p Clause(and, p, q)
+┌──────┬──────┬─────────┬────────┐
+│ p    │ q    │ ¬p      │ p ∧ q  │
+│ Atom │ Atom │ Literal │ Clause │
+├──────┼──────┼─────────┼────────┤
+│ ⊤    │ ⊤    │ ⊥       │ ⊤      │
+│ ⊥    │ ⊤    │ ⊤       │ ⊥      │
+├──────┼──────┼─────────┼────────┤
+│ ⊤    │ ⊥    │ ⊥       │ ⊥      │
+│ ⊥    │ ⊥    │ ⊤       │ ⊥      │
+└──────┴──────┴─────────┴────────┘
+
+julia> @truth_table (⊻) imply
+┌──────┬──────┬────────┬────────┐
+│ _    │ __   │ _ ⊻ __ │ _ → __ │
+│ Atom │ Atom │ Tree   │ Tree   │
+├──────┼──────┼────────┼────────┤
+│ ⊤    │ ⊤    │ ⊥      │ ⊤      │
+│ ⊥    │ ⊤    │ ⊤      │ ⊤      │
+├──────┼──────┼────────┼────────┤
+│ ⊤    │ ⊥    │ ⊤      │ ⊥      │
+│ ⊥    │ ⊥    │ ⊥      │ ⊤      │
+└──────┴──────┴────────┴────────┘
+```
+"""
+macro truth_table(xs...)
+    return esc(:(truth_table($(map(atomize, xs)...))))
+end
+
+struct Proof
+    xs::Vector{Pair}
+
+    # Proof(p::P) where P <: Proof
+    Proof(p::P) where P <: Proposition = interpret(new([p => "Assumption"]))
+end
+
+Proof(premises, conclusion) = Proof(imply(reduce(and, premises), conclusion))
+
+show(io::IO, ::MIME"text/plain", proof::Proof) = pretty_table(
+    io,
+    reduce(
+        hcat,
+        [1:length(proof.xs), map(first, proof.xs), map(last, proof.xs)]
+    ),
+    header = ["#", "Formula", "Reason"],
+    alignment = :l,
+    crop = :none
+)
+
+parenthesize(p::Union{Literal, Tree{<:UnaryOperator}}) = _show(p)
+parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * _show(p) * ")"
+
+_show(::typeof(identity)) = ""
+_show(::typeof(not)) = "¬"
+_show(::typeof(left)) = "≺"
+_show(::typeof(not_left)) = "⊀"
+_show(::typeof(right)) = "≻"
+_show(::typeof(not_right)) = "⊁"
+_show(::typeof(and)) = "∧"
+_show(::typeof(nand)) = "⊼"
+_show(::typeof(nor)) = "⊽"
+_show(::typeof(or)) = "∨"
+_show(::typeof(xor)) = "⊻"
+_show(::typeof(xnor)) = "↔"
+_show(::typeof(imply)) = "→"
+_show(::typeof(not_imply)) = "↛"
+_show(::typeof(converse_imply)) = "←"
+_show(::typeof(not_converse_imply)) = "↚"
+_show(::typeof(⊥)) = "⊥"
+_show(::typeof(⊤)) = "⊤"
+_show(p::Atom{Symbol}) = string(p.p)
+_show(p::Atom{String}) = "\"" * p.p * "\""
+function _show(p::Valuation)
+    x = repr("text/plain", p.p)
+    i = last(findfirst("\n ", x))
+    return x[i + 1:end]
+end
+_show(p::Tuple{Proposition}) = _show(only(p))
+_show(p::Union{Literal{UO}, Tree{UO}}) where UO <: UnaryOperator = _show(UO.instance) * _show(p.p)
+_show(p::Tree{BO}) where BO <: BinaryOperator = parenthesize(first(p.p)) * " " * _show(BO.instance) * " " * parenthesize(last(p.p))
+function _show(p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr
+    isempty(p.p) && return _show(identity(left, AO.instance))
+    return join(map(parenthesize, p.p), " " * _show(AO.instance) * " ")
+end
+
+show(io::IO, ::BO) where BO <: BooleanOperator = print(io, _show(BO.instance))
+show(io::IO, p::Proposition) = print(io, _show(p))
+show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition = print(io, nameof(P), ":\n ", _show(p))

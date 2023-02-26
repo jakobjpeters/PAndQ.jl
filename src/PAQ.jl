@@ -1,33 +1,35 @@
 
+# TODO: module docstring?
 module PAQ
 
-include("set.jl")
-include("boolean_operators.jl")
-include("propositional_logic.jl")
+include("operators.jl")
+include("types.jl")
 include("pretty_printing.jl")
+include("utility.jl")
 include("semantics.jl")
-# include("predicate_logic.jl")
 
 export
-    # set.jl
-    ⨉, cartesian_product,
+    # operators.jl
+    #= Base.identity, =# not, ¬, left, ≺, not_left, ⊀, right, ≻, not_right, ⊁, and, ∧,
+    #= Base.nand, Base.:⊼, Base.nor, Base.:⊽, =# or, ∨, #= Base.xor, Base.:⊻, =#
+    xnor, ↔, imply, →, not_imply, ↛, converse_imply, ←, not_converse_imply, ↚,
 
-    # propositional_logic.jl
-    Proposition, Compound, Expressive, Atom, Literal, Tree, Clause, Normal,
-    Truth, tautology, ⊤, contradiction, ⊥, Valuation,
-    @atom, get_atoms, #= Base.convert, =#
+    # types.jl
+    Proposition, Primitive, Compound, Expressive,
+    Truth, tautology, ⊤, contradiction, ⊥,
+    AndOr, NullaryOperator, UnaryOperator, BinaryOperator, BooleanOperator,
+    Atom, Literal, Clause, Normal, Interpretation, Valuation, Tree,
 
-    # boolean_operators.jl
-    not, ¬, and, ∧, #= Base.nand, Base.:⊼, Base.nor, Base.:⊽, =# or, ∨,
-    #= Base.xor, Base.:⊻, =# xnor, ↔, if_then, →, not_if_then, ↛, then_if, ←, not_then_if, ↚,
+    # pretty_printing.jl
+    Pretty, @pretty, #= AbstractTrees.children, AbstractTrees.nodevalue, =#
+    print_tree, truth_table, @truth_table, #= Base.show, =#
+
+    # utility.jl
+    @atoms, @p, @p_str, get_atoms,
+    #= Base,foldl, Base.foldr, Base.reduce, =#
 
     # semantics.jl
     interpret, #= Base.:==, =#
     is_tautology, is_contradiction, is_truth, is_contingency, is_satisfiable, is_falsifiable,
-
-    # pretty_printing.jl
-    #=Base.repr, Base.show, =# print_tree, Pretty, @pretty, @truth_table
-
-return nothing
-
+    is_commutative, is_associative, converse, dual, solve #= Base.identity, =#
 end # module

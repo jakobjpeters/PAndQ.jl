@@ -11,10 +11,7 @@ end
 DocMeta.setdocmeta!(
     PAQ,
     :DocTestSetup,
-    :(
-        using PAQ;
-        @atom p q
-    ),
+    :(using PAQ;),
     recursive = true,
 )
 
@@ -24,12 +21,13 @@ makedocs(
     modules = [PAQ],
     pages = [
         "Home" => "index.md",
-        "Tutorial" => "tutorial.md",
+        # "Tutorial" => "tutorial.md",
         "Manual" => [
-            "Propositional Logic" => "manual/propositional_logic.md",
-            "Boolean Operators" => "manual/boolean_operators.md",
-            "Semantics" => "manual/semantics.md",
+            "Operators" => "manual/operators.md",
+            "Types" => "manual/types.md",
             "Pretty Printing" => "manual/pretty_printing.md",
+            "Utility" => "manual/utility.md",
+            "Semantics" => "manual/semantics.md",
         ]
     ],
     strict = true
