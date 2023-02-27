@@ -3,26 +3,27 @@
 module PAQ
 
 include("operators.jl")
-include("types.jl")
-include("pretty_printing.jl")
+include("propositions.jl")
+include("printing.jl")
 include("utility.jl")
 include("semantics.jl")
 
 export
     # operators.jl
-    #= Base.identity, =# not, ¬, left, ≺, not_left, ⊀, right, ≻, not_right, ⊁, and, ∧,
-    #= Base.nand, Base.:⊼, Base.nor, Base.:⊽, =# or, ∨, #= Base.xor, Base.:⊻, =#
-    xnor, ↔, imply, →, not_imply, ↛, converse_imply, ←, not_converse_imply, ↚,
+    tautology, ⊤, contradiction, ⊥,
+    #= Base.identity, =# not, ¬,
+    left, ≺, not_left, ⊀, right, ≻, not_right, ⊁, and, ∧, #= Base.nand, Base.:⊼,
+    Base.nor, Base.:⊽, =# or, ∨, #= Base.xor, Base.:⊻, =# xnor, ↔, imply, →,
+    not_imply, ↛, converse_imply, ←, not_converse_imply, ↚,
+    AndOr, NullaryOperator, UnaryOperator, BinaryOperator, BooleanOperator,
 
     # types.jl
-    Proposition, Primitive, Compound, Expressive,
-    Truth, tautology, ⊤, contradiction, ⊥,
-    AndOr, NullaryOperator, UnaryOperator, BinaryOperator, BooleanOperator,
-    Atom, Literal, Clause, Normal, Interpretation, Valuation, Tree,
+    Proposition, Compound, Expressive,
+    Atom, Literal, Clause, Normal, Valuation, Tree,
 
     # pretty_printing.jl
     Pretty, @pretty, #= AbstractTrees.children, AbstractTrees.nodevalue, =#
-    print_tree, truth_table, @truth_table, #= Base.show, =#
+    print_tree, truth_table, @truth_table, #= Base.show, Base.print, =#
 
     # utility.jl
     @atoms, @p, @p_str, get_atoms,

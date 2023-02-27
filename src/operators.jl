@@ -1,21 +1,55 @@
 
-import Base: identity, nand, nor, xor
+import Base: identity, nand, ⊼, nor, ⊽, xor, ⊻
 
 """
-    ⊤
-    tautology
+    ⊤()
+    tautology()
+
+A constant which is [true in every possible interpretation](https://en.wikipedia.org/wiki/Tautology_(logic)).
+
+```⊤``` can be typed by ```\\top<tab>```.
+
+# Examples
+```jldoctest
+julia> ⊤()
+tautology (generic function with 1 method)
+
+julia> @truth_table ⊤
+┌────────┐
+│ ⊤      │
+│ Clause │
+├────────┤
+│ ⊤      │
+└────────┘
+```
 """
-# function ⊤ end
-# const tautology = ⊤
-# ⊤() = ⊤
+function tautology end
+const ⊤ = tautology
 
 """
-    ⊥
-    contradiction
+    ⊥()
+    contradiction()
+
+A constant which is [false in every possible interpretation](https://en.wikipedia.org/wiki/Contradiction).
+
+```⊥``` can be typed by ```\\bot<tab>```.
+
+# Examples
+```jldoctest
+julia> ⊥()
+contradiction (generic function with 1 method)
+
+julia> @truth_table ⊥
+┌────────┐
+│ ⊥      │
+│ Clause │
+├────────┤
+│ ⊥      │
+└────────┘
+```
 """
-# function ⊥ end
-# const contradiction end
-# ⊥() = ⊥
+function contradiction end
+const ⊥ = contradiction
 
 """
     identity(::Proposition)
@@ -413,3 +447,46 @@ julia> @truth_table p ← q
 """
 function converse_imply end
 const ← = converse_imply
+
+"""
+    AndOr
+"""
+const AndOr = Union{typeof(and), typeof(or)}
+
+"""
+    NullaryOperator
+"""
+const NullaryOperator = Union{typeof(tautology), typeof(contradiction)}
+
+"""
+    UnaryOperator
+"""
+const UnaryOperator = Union{typeof(identity), typeof(not)}
+
+"""
+    BinaryOperator
+"""
+const BinaryOperator = Union{
+    typeof(left),
+    typeof(not_left),
+    typeof(right),
+    typeof(not_right),
+    typeof(and),
+    typeof(nand),
+    typeof(nor),
+    typeof(or),
+    typeof(xor),
+    typeof(xnor),
+    typeof(imply),
+    typeof(not_imply),
+    typeof(converse_imply),
+    typeof(not_converse_imply),
+}
+# TODO: make traits?
+
+"""
+    BooleanOperator
+
+A union of [`NullaryOperator`](@ref), [`UnaryOperator`](@ref), and [`BinaryOperator`](@ref).
+"""
+const BooleanOperator = Union{NullaryOperator, UnaryOperator, BinaryOperator}

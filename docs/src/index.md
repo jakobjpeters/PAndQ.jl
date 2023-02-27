@@ -34,7 +34,7 @@ Tree:
  q ∧ ¬p
 
 julia> interpret(s, p => ⊥)
-Tree:
+Atom:
  q
 
 julia> Valuation(s)

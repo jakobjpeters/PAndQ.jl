@@ -16,22 +16,12 @@ print_tree(Proposition) # hide
 
 ```@docs
 Proposition
-Primitive
 Compound
 Expressive
-Truth
-⊤
-⊥
-AndOr
-NullaryOperator
-UnaryOperator
-BinaryOperator
-BooleanOperator
 Atom
 Literal
 Clause
 Normal
-Interpretation
 Valuation
 Tree
 ```

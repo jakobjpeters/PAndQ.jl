@@ -6,25 +6,15 @@ using InteractiveUtils
 
 The set of [well-formed logical formulae](https://en.wikipedia.org/wiki/Well-formed_formula).
 
-Supertype of [`Primitive`](@ref) and [`Compound`](@ref).
+Supertype of [`Atom`](@ref) and [`Compound`](@ref).
 ```
 """
 abstract type Proposition end
 
 """
-    Primitive <: Proposition
-
-A proposition that is not composed of any others.
-
-Subtype of [`Proposition`](@ref).
-Supertype of [`Truth`](@ref) and [`Atom`](@ref).
-"""
-abstract type Primitive <: Proposition end
-
-"""
     Compound <: Proposition
 
-A proposition composed from one or more [`Primitive`](@ref) propositions.
+A proposition composed from one or more [`Atom`](@ref)ic propositions.
 
 Subtype of [`Proposition`](@ref).
 Supertype of [`Literal`](@ref), [`Clause`](@ref), and [`Expressive`](@ref).
@@ -42,117 +32,7 @@ Supertype of [`Valuation`](@ref), [`Tree`](@ref), [`Normal`](@ref), and [`Pretty
 abstract type Expressive <: Compound end
 
 """
-    Truth{V <: Union{Val{:⊥}, Val{:⊤}}} <: Primitive
-
-A proposition representing a [`truth value`](https://en.wikipedia.org/wiki/Truth_value).
-
-Subtype of [`Primitive`](@ref).
-See also [`⊥`](@ref) and [`⊤`](@ref).
-"""
-struct Truth{V <: Union{Val{:⊥}, Val{:⊤}}} <: Primitive end
-
-"""
-    ⊤
-
-A constant which is [true in every possible interpretation](https://en.wikipedia.org/wiki/Tautology_(logic)).
-
-One of two valid instances of [`Truth`](@ref), the other instance being [`⊥`](@ref).
-
-```⊤``` can be typed by ```\\top<tab>```.
-
-# Examples
-```jldoctest
-julia> @p ⊤(p, q)
-Truth:
- ⊤
-
-julia> @truth_table ⊤
-┌───────┐
-│ ⊤     │
-│ Truth │
-├───────┤
-│ ⊤     │
-└───────┘
-```
-"""
-const ⊤ = Truth{Val{:⊤}}()
-const tautology = ⊤
-
-"""
-    ⊥
-
-A constant which is [false in every possible interpretation](https://en.wikipedia.org/wiki/Contradiction).
-
-One of two valid instances of [`Truth`](@ref), the other instance being [`⊤`](@ref).
-
-```⊥``` can be typed by ```\\bot<tab>```.
-
-# Examples
-```jldoctest
-julia> @p ⊥(p, q)
-Truth:
- ⊥
-
-julia> @truth_table ⊥
-┌───────┐
-│ ⊥     │
-│ Truth │
-├───────┤
-│ ⊥     │
-└───────┘
-```
-"""
-const ⊥ = Truth{Val{:⊥}}()
-const contradiction = ⊥
-
-"""
-    AndOr
-"""
-const AndOr = Union{typeof(and), typeof(or)}
-
-"""
-    NullaryOperator
-"""
-const NullaryOperator = Union{typeof(tautology), typeof(contradiction)}
-
-"""
-    UnaryOperator
-"""
-const UnaryOperator = Union{typeof(identity), typeof(not)}
-
-"""
-    BinaryOperator
-"""
-const BinaryOperator = Union{
-    typeof(left),
-    typeof(not_left),
-    typeof(right),
-    typeof(not_right),
-    typeof(and),
-    typeof(nand),
-    typeof(nor),
-    typeof(or),
-    typeof(xor),
-    typeof(xnor),
-    typeof(imply),
-    typeof(not_imply),
-    typeof(converse_imply),
-    typeof(not_converse_imply),
-    typeof(tautology),
-    typeof(contradiction)
-}
-# TODO: make traits?
-
-"""
-    BooleanOperator
-
-A union of [`NullaryOperator`](@ref), [`UnaryOperator`](@ref), and [`BinaryOperator`](@ref).
-"""
-const BooleanOperator = Union{UnaryOperator, BinaryOperator}
-# const BooleanOperator = Union{NullaryOperator, UnaryOperator, BinaryOperator}
-
-"""
-    Atom{SS <: Union{String, Symbol}} <: Primitive
+    Atom{SS <: Union{String, Symbol}} <: Proposition
     Atom([::Union{Symbol, String])
     Atom(::Proposition)
 
@@ -170,11 +50,11 @@ only show the symbol's characters.
 
 !!! info
     ```Atom()``` defaults to ```Atom(:_)```. This underscore symbol is useful as a
-    default, such as when converting [`Truth`](@ref)s to other forms. For example,
+    default, such as when representing a truth value. For example,
     ```Tree(⊥)``` is pretty-printed as ```_ ∧ ¬_```. This is a special case; it is not
     idiomatic to use for most purposes.
 
-Subtype of [`Primitive`](@ref).
+Subtype of [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -187,7 +67,7 @@ Atom:
  "Logic is fun"
 ```
 """
-struct Atom{SS <: Union{String, Symbol}} <: Primitive
+struct Atom{SS <: Union{String, Symbol}} <: Proposition
     p::SS
 
     Atom(p::SS = :_) where SS <: Union{Symbol, String} = new{SS}(p)
@@ -296,10 +176,10 @@ end
 
 # Examples
 """
-struct Interpretation{C <: Clause{typeof(and)}, T <: Truth} <: Proposition
-    p::C
-    q::T
-end
+# struct Interpretation{C <: Clause{typeof(and)}, T <: Truth} <: Proposition
+#     p::C
+#     q::T
+# end
 # not(p::Interpretation) = Interpretation(p.p, not(p.q))
 # is_tautology(p::Interpretation{typeof(⊤)}) = true
 # is_tautology(p::Interpretation{typeof(⊥)}) = false
@@ -309,7 +189,7 @@ end
 # end
 
 """
-    Valuation{P <: Pair{<:Vector{<:Pair{<:Atom, <:Truth}}, <:Truth}} <: Expressive
+    Valuation{P <: Pair} <: Expressive
     Valuation(::Vector{P})
     Valuation(::Proposition)
 
@@ -389,6 +269,5 @@ const literal_propositions = [
     Literal{typeof(not)},
     Tree{typeof(not), <:Tuple{Tree{typeof(identity), <:Tuple{Atom}}}}
 ]
-const NonTruth = Union{setdiff(concrete_propositions, [Truth])...}
 const NonExpressive = Union{setdiff(abstract_propositions, [Proposition, Expressive])...}
 # TODO: make traits?

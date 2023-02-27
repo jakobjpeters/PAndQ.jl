@@ -24,8 +24,8 @@ makedocs(
         # "Tutorial" => "tutorial.md",
         "Manual" => [
             "Operators" => "manual/operators.md",
-            "Types" => "manual/types.md",
-            "Pretty Printing" => "manual/pretty_printing.md",
+            "Propositions" => "manual/propositions.md",
+            "Printing" => "manual/printing.md",
             "Utility" => "manual/utility.md",
             "Semantics" => "manual/semantics.md",
         ]

@@ -1,5 +1,5 @@
 
-import Base: show
+import Base: show, print
 import AbstractTrees: children, nodevalue, print_tree
 
 using PrettyTables
@@ -84,7 +84,7 @@ The first row of the header is the expression representing that column's proposi
 while the second row indicates that expression's type.
 Logically equivalent propositions will be grouped in the same column, seperated by a comma.
 
-In this context, [`⊤`](@ref) and [`⊥`](@ref) can be interpreted as *true* and *false*, respectively.
+In this context, [`⊤`](@ref tautology) and [`⊥`](@ref contradiction) can be interpreted as *true* and *false*, respectively.
 
 # Examples
 ```jldoctest
@@ -116,11 +116,13 @@ julia> truth_table([⊻, imply])
 function truth_table(xs::AbstractArray)
     # ToDo: write docstring - define behavior
     # ToDo: write tests
+    # TODO: fix `truth_table(Valuation(⊤))`
+    # TODO: make header support operators (`⊤; NullaryOperator`, `⊻; BinaryOperator`)
 
-    _atoms = [Atom(:_), Atom(:__)]
     operator_to_proposition = x -> begin
-        x isa UnaryOperator && return x(first(_atoms))
-        x isa BinaryOperator && return x(first(_atoms), last(_atoms))
+        x isa NullaryOperator && return Clause(x)
+        x isa UnaryOperator && return x(Atom(:_))
+        x isa BinaryOperator && return x(Atom(:_), Atom(:__))
         return x
     end
 
@@ -251,6 +253,8 @@ show(io::IO, ::MIME"text/plain", proof::Proof) = pretty_table(
 parenthesize(p::Union{Literal, Tree{<:UnaryOperator}}) = _show(p)
 parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * _show(p) * ")"
 
+_show(::typeof(tautology)) = "⊤"
+_show(::typeof(contradiction)) = "⊥"
 _show(::typeof(identity)) = ""
 _show(::typeof(not)) = "¬"
 _show(::typeof(left)) = "≺"
@@ -267,11 +271,21 @@ _show(::typeof(imply)) = "→"
 _show(::typeof(not_imply)) = "↛"
 _show(::typeof(converse_imply)) = "←"
 _show(::typeof(not_converse_imply)) = "↚"
-_show(::typeof(⊥)) = "⊥"
-_show(::typeof(⊤)) = "⊤"
 _show(p::Atom{Symbol}) = string(p.p)
 _show(p::Atom{String}) = "\"" * p.p * "\""
-function _show(p::Valuation)
+function _show(p::Valuation) # TODO: improve, support `[Valuation(and, p), etc]`
+    s = ""
+
+    for interpretation in p.p
+        s *= "["
+        s *= join(map(x -> _show(first(x)) * " => " * _show(last(x)), first(interpretation)), ", ")
+        s *= "] => " * _show(last(interpretation))
+        if interpretation != last(p.p)
+            s *= "\n "
+        end
+    end
+    return s
+
     x = repr("text/plain", p.p)
     i = last(findfirst("\n ", x))
     return x[i + 1:end]
@@ -284,6 +298,7 @@ function _show(p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr
     return join(map(parenthesize, p.p), " " * _show(AO.instance) * " ")
 end
 
-show(io::IO, ::BO) where BO <: BooleanOperator = print(io, _show(BO.instance))
-show(io::IO, p::Proposition) = print(io, _show(p))
+show(io::IO, p::Union{BooleanOperator, Proposition}) = print(io, _show(p))
 show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition = print(io, nameof(P), ":\n ", _show(p))
+
+print(io::IO, ::BO) where BO <: BooleanOperator = show(io, BO.instance)

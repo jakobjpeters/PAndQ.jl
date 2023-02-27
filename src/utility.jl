@@ -87,7 +87,7 @@ end
 
 __get_atoms(p::Union{Tree, Clause, Normal}) = mapreduce(get_atoms, vcat, p.p)
 
-_get_atoms(::Truth) = Atom[]
+# _get_atoms(::NullaryOperator) = Atom[]
 _get_atoms(p::Atom) = [p]
 _get_atoms(p::Literal) = get_atoms(p.p)
 _get_atoms(p::Union{Clause, Normal}) = isempty(p.p) ? Atom[] : __get_atoms(p)
@@ -125,8 +125,7 @@ See also [`identity`](@ref).
 # Examples
 ```jldoctest
 julia> foldl(and, [])
-Truth:
- ⊤
+tautology (generic function with 1 method)
 
 julia> @p foldl(and, [p, q, r, s])
 Tree:
@@ -137,7 +136,6 @@ Tree:
  ((p → q) → r) → s
 ```
 """
-foldl(binary_operator::Truth, ps::AbstractArray) = binary_operator
 foldl(
     bo::Union{
         typeof(and),
@@ -160,8 +158,7 @@ See also [`identity`](@ref).
 # Examples
 ```jldoctest
 julia> foldr(and, [])
-Truth:
- ⊤
+tautology (generic function with 1 method)
 
 julia> @p foldr(and, [p, q, r, s])
 Tree:
@@ -172,7 +169,6 @@ Tree:
  p ← (q ← (r ← s))
 ```
 """
-foldr(binary_operator::Truth, ps::AbstractArray) = binary_operator
 foldr(
     bo::Union{
         typeof(and),
@@ -197,8 +193,7 @@ See also [`identity`](@ref).
 # Examples
 ```jldoctest
 julia> reduce(and, [])
-Truth:
- ⊤
+tautology (generic function with 1 method)
 
 julia> @p reduce(imply, [p, q, r, s])
 Tree:
@@ -209,7 +204,6 @@ Tree:
  p ← (q ← (r ← s))
 ```
 """
-reduce(binary_operator::Truth, ps::AbstractArray) = binary_operator
 reduce(
     bo::Union{
         typeof(and),
