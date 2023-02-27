@@ -1,5 +1,5 @@
 
-import Base: foldl, foldr, reduce
+import Base: foldl, mapfoldl, foldr, mapfoldr, reduce, mapreduce
 
 define_atom(x::Symbol) = :(const $(x) = $(Atom(x)))
 
@@ -149,6 +149,22 @@ foldl(
 ) = foldl(bo, ps, init = identity(left, bo))
 
 """
+    mapfoldl
+"""
+mapfoldl(
+    f,
+    bo::Union{
+        typeof(and),
+        typeof(or),
+        typeof(xor),
+        typeof(xnor),
+        typeof(imply),
+        typeof(not_converse_imply)
+    },
+    ps::AbstractArray
+) = mapfoldl(f, bo, ps, init = identity(left, bo))
+
+"""
     foldr(binary_operator, ps)
 
 Equivalent to `foldr(binary_operator, ps, init = identity(right, binary_operator))`.
@@ -180,6 +196,22 @@ foldr(
     },
     ps::AbstractArray
 ) = foldr(bo, ps, init = identity(right, bo))
+
+"""
+    mapfoldr
+"""
+mapfoldr(
+    f,
+    bo::Union{
+        typeof(and),
+        typeof(or),
+        typeof(xor),
+        typeof(xnor),
+        typeof(not_imply),
+        typeof(converse_imply)
+    },
+    ps::AbstractArray
+) = mapfoldr(f, bo, ps, init = identity(right, bo))
 
 """
     reduce(binary_operator, ps)
@@ -217,9 +249,22 @@ reduce(
 ) = foldl(bo, ps)
 reduce(bo::Union{typeof(not_imply), typeof(converse_imply)}, ps::AbstractArray) = foldr(bo, ps)
 
-# mapreduce()
-# mapfoldl()
-# mapfoldr()
+"""
+    mapreduce
+"""
+mapreduce(
+    f,
+    bo::Union{
+        typeof(and),
+        typeof(or),
+        typeof(xor),
+        typeof(xnor),
+        typeof(imply),
+        typeof(not_converse_imply)
+    },
+    ps::AbstractArray
+) = mapfoldl(f, bo, ps)
+mapreduce(f, bo::Union{typeof(not_imply), typeof(converse_imply)}, ps::AbstractArray) = mapfoldr(f, bo, ps)
 
 # import Base: rand
 # rand(::Type{Proposition})

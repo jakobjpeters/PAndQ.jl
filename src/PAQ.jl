@@ -27,7 +27,7 @@ export
 
     # utility.jl
     @atoms, @p, @p_str, get_atoms,
-    #= Base,foldl, Base.foldr, Base.reduce, =#
+    #= Base.foldl, Base.mapfoldl, Base.foldr, Base.mapfoldr, Base.reduce, Base.mapreduce =#
 
     # semantics.jl
     interpret, #= Base.:==, =#
