@@ -36,23 +36,22 @@ Print a tree diagram of ```p```.
 
 The optional argument `max_depth` will truncate subtrees at that depth.
 
-```julia
+```jldoctest
 julia> @p print_tree(p ⊻ q)
 ⊻
 ├─ p
 └─ q
 
-julia> @p print_tree((p ∧ q) ∧ ¬(¬p ∧ ¬q))
-∧
+julia> @p print_tree((p ∧ ¬q) ∨ (¬p ∧ q))
+∨
 ├─ ∧
 │  ├─ p
-│  └─ q
-└─ ¬
-   └─ ∧
-      ├─ ¬
-      │  └─ p
-      └─ ¬
-         └─ q
+│  └─ ¬
+│     └─ q
+└─ ∧
+   ├─ ¬
+   │  └─ p
+   └─ q
 ```
 """
 print_tree(p::Tree, max_depth = typemax(Int)) = print_tree(p, maxdepth = max_depth)
