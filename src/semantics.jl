@@ -311,8 +311,6 @@ julia> @p imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
 ```
 """
-dual(::typeof(tautology)) = contradiction
-dual(::typeof(contradiction)) = tautology
 dual(::typeof(and)) = or
 dual(::typeof(nand)) = nor
 dual(::typeof(nor)) = nand
