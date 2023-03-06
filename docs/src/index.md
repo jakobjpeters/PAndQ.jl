@@ -7,8 +7,8 @@ If you like propositional logic, then you've come to the right place!
 
 P∧Q has an intuitive interface that enables you to manipulate logical expressions symbolically. Propositions have multiple representations which can be easily converted and extended. Several utilities have been provided for convenience, visualization, and solving propositions.
 
-
 ## Showcase
+
 ```julia
 julia> import Pkg
 
