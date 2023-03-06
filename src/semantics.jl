@@ -32,7 +32,7 @@ false
 """
 ==(p::NullaryOperator, q::NullaryOperator) = p === q
 ==(p::Union{literal_propositions...}, q::Union{literal_propositions...}) = Literal(p) === Literal(q)
-==(p::Proposition, q::Proposition) = is_tautology(p ↔ q)
+==(p::Union{NullaryOperator, Proposition}, q::Union{NullaryOperator, Proposition}) = is_tautology(p ↔ q)
 
 """
     is_tautology(::Proposition)
