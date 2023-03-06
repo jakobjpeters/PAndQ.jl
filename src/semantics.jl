@@ -195,7 +195,7 @@ Returns a boolean on whether the given [`BooleanOperator`](@ref) has the
 [commutative property](https://en.wikipedia.org/wiki/Commutative_property)
 
 # Examples
-```
+```jldoctest
 julia> is_commutative(and)
 true
 
@@ -205,7 +205,7 @@ true
 julia> is_commutative(imply)
 false
 
-julia> p → q == q → p
+julia> @p (p → q) == (q → p)
 false
 ```
 """
@@ -226,7 +226,7 @@ Returns a boolean on whether the given [`BooleanOperator`] has the
 [associative property](https://en.wikipedia.org/wiki/Associative_property).
 
 # Examples
-```
+```jldoctest
 julia> is_associative(and)
 true
 
@@ -256,17 +256,17 @@ Returns the [`BooleanOperator`](@ref) that is the
 of the given boolean operator.
 
 # Examples
-```
+```jldoctest
 julia> converse(and)
-and
+and (generic function with 23 methods)
 
 julia> @p and(p, q) == converse(and)(q, p)
 true
 
-julia> converse(left)
-right
+julia> converse(imply)
+converse_imply (generic function with 12 methods)
 
-julia> @p left(p, q) == converse(left)(q, p)
+julia> @p imply(p, q) == converse(imply)(q, p)
 true
 ```
 """
@@ -291,15 +291,15 @@ Returns the [`BooleanOperator`](@ref) that is the
 of the given boolean operator.
 
 # Examples
-```
+```jldocttest
 julia> dual(and)
-or
+or (generic function with 20 methods)
 
 julia> @p and(p, q) == not(dual(and)(not(p), not(q)))
 true
 
 julia> dual(imply)
-not_converse_imply
+not_converse_imply (generic function with 12 methods)
 
 julia> @p imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
