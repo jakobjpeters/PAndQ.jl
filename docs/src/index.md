@@ -5,7 +5,7 @@
 
 If you like propositional logic, then you've come to the right place!
 
-P∧Q has an intuitive interface that enables you to manipulate logical statements symbolically. The implementation is concise, with only ~200 source lines of code (according to Codecov as of December, 2022).
+P∧Q has an intuitive interface that enables you to manipulate logical expressions symbolically. Propositions have multiple representations which can be easily converted and extended. Several utilities have been provided for convenience, visualization, and solving propositions.
 
 
 ## Showcase
@@ -17,8 +17,7 @@ julia> Pkg.add(url = "https://github.com/jakobjpeters/PAQ.jl")
 julia> using PAQ
 
 julia> ¬⊥
-Truth:
-  ⊤
+tautology (generic function with 1 method)
 
 julia> @atoms p q
 2-element Vector{Atom{Symbol}}:
@@ -44,7 +43,7 @@ Valuation:
  [q => ⊤, p => ⊥] => ⊤
  [q => ⊥, p => ⊥] => ⊥
 
-julia> @p v = Clause(and, r, t, ¬u)
+julia> @p Clause(and, r, t, ¬u)
 Clause:
  ¬p ∧ t ∧ ¬u
 
