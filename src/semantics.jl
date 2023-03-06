@@ -4,15 +4,15 @@ import Base: reduce
 
 """
     p == q
-    ==(::Proposition, ::Proposition)
-    isequal(::Proposition, ::Proposition)
+    ==(p, q)
+    isequal(p, q)
 
-Returns a boolean indicating whether ```p``` and ```q``` are
+Returns a boolean indicating whether `p` and `q` are
 [logically equivalent](https://en.wikipedia.org/wiki/Logical_equivalence).
 
 !!! info
-    The ```≡``` symbol is sometimes used to represent logical equivalence.
-    However, Julia uses ```≡``` as an alias for the builtin function ```===```
+    The `≡` symbol is sometimes used to represent logical equivalence.
+    However, Julia uses `≡` as an alias for the builtin function `===`
     which cannot have methods added to it.
     Use this function to test for identity rather than equivalence.
 
@@ -35,13 +35,9 @@ false
 ==(p::Union{NullaryOperator, Proposition}, q::Union{NullaryOperator, Proposition}) = is_tautology(p ↔ q)
 
 """
-    is_tautology(::Proposition)
+    is_tautology(p)
 
-Returns a boolean on whether the given proposition is a [`tautology`](@ref).
-
-This function is equivalent to ```==(⊤)```.
-
-See also [`Proposition`](@ref) and [`==`](@ref).
+Returns a boolean on whether `p` is a [`tautology`](@ref).
 
 # Examples
 ```jldoctest
@@ -62,13 +58,9 @@ is_tautology(p::Valuation) = all(isequal(tautology) ∘ last, p.p)
 is_tautology(p::Proposition) = is_tautology(Valuation(p))
 
 """
-    is_contradiction(::Proposition)
+    is_contradiction(p)
 
-Returns a boolean on whether the given proposition is a [`contradiction`](@ref).
-
-This function is equivalent to ```==(⊥)```.
-
-See also [`Proposition`](@ref) and [`==`](@ref).
+Returns a boolean on whether `p` is a [`contradiction`](@ref).
 
 # Examples
 ```jldoctest
@@ -85,9 +77,9 @@ true
 is_contradiction(p) = is_tautology(¬p)
 
 """
-    is_truth(::Proposition)
+    is_truth(p)
 
-Returns a boolean on whether the given proposition is a truth value
+Returns a boolean on whether `p` is a truth value
 (either a [`tautology`](@ref) or [`contradiction`](@ref)).
 
 See also [`Proposition`](@ref).
@@ -114,9 +106,9 @@ is_truth(p::Valuation) = length(unique(map(last, p.p))) == 1
 is_truth(p::Proposition) = is_truth(Valuation(p))
 
 """
-    is_contingency(::Proposition)
+    is_contingency(p)
 
-Returns a boolean on whether the given proposition is a contingency
+Returns a boolean on whether `p` is a contingency
 (neither a [`tautology`](@ref) or [`contradiction`](@ref)).
 
 See also [`Proposition`](@ref).
@@ -139,9 +131,9 @@ true
 is_contingency(p) = !is_truth(p)
 
 """
-    is_satisfiable(::Proposition)
+    is_satisfiable(p)
 
-Returns a boolean on whether the given proposition is satisfiable
+Returns a boolean on whether `p` is satisfiable
 (not a [`contradiction`](@ref)).
 
 See also [`Proposition`](@ref).
@@ -164,9 +156,9 @@ true
 is_satisfiable(p) = !is_contradiction(p)
 
 """
-    is_falsifiable(::Proposition)
+    is_falsifiable(p)
 
-Returns a boolean on whether the given proposition is falsifiable
+Returns a boolean on whether `p` is falsifiable
 (not a [`tautology`](@ref)).
 
 See also [`Proposition`](@ref).
@@ -349,20 +341,20 @@ identity(::Val{:left}, ::typeof(not_converse_imply)) = ⊥
 identity(x, bo::BinaryOperator) = identity(Val(x), bo)
 
 """
-    interpret(p::Proposition, valuation...)
+    interpret(p, valuation...)
 
-Assign a truth value value to ```p```.
+Assign a truth value value to `p`.
 
-Let ```p``` be a [`Proposition`](@ref).
-Let ```valuation``` be a function, callable object, dictionary, or any number of ```Pair```s
-that map from [`atomic propositions`](@ref Atom) in ```p``` to their respective truth values.
+Let `p` be a [`Proposition`](@ref).
+Let `valuation` be a function, callable object, dictionary, or any number of `Pair`s
+that map from [`atomic propositions`](@ref Atom) in `p` to their respective truth values.
 
-Calling ```p``` with an incomplete mapping will partially interpret ```p```.
-This returns a ```Proposition``` of the ?*?same type as ```p```?*?
-that is independent from every ```Atom```s in ```valuation```.
+Calling `p` with an incomplete mapping will partially interpret `p`.
+This returns a `Proposition` of the same type as `p`?*?
+that is independent from every `Atom`s in `valuation`.
 
 !!! warning
-    If ```valuation``` does not return a ```Truth``` or errors, 
+    If `valuation` does not return a `Truth` or errors, 
 
 # Examples
 ```
@@ -447,7 +439,7 @@ interpret(p::Proposition, valuation...) = interpret(p, Dict(valuation))
 # interpret(p::Proposition, valuation::Vector{Pair}) = interpret(p, Dict(valuation))
 
 """
-    solve(p::Proposition)
+    solve(p)
 
 Return a vector of every valid interpretation of `p`.
 

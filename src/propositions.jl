@@ -7,7 +7,6 @@ using InteractiveUtils
 The set of [well-formed logical formulae](https://en.wikipedia.org/wiki/Well-formed_formula).
 
 Supertype of [`Atom`](@ref) and [`Compound`](@ref).
-```
 """
 abstract type Proposition end
 
@@ -44,14 +43,10 @@ between these are how they pretty-print. An atom with a string argument will
 be encompassed by quotation marks, while an atom with a symbol argument will
 only show the symbol's characters.
 
-!!! tip
-    Using single character symbols (with corresponding variable names, if applicable)
-    reproduces the syntax commonly found in logical literature.
-
 !!! info
-    ```Atom()``` defaults to ```Atom(:_)```. This underscore symbol is useful as a
+    `Atom()` defaults to `Atom(:_)`. This underscore symbol is useful as a
     default, such as when representing a truth value. For example,
-    ```Tree(⊥)``` is pretty-printed as ```_ ∧ ¬_```. This is a special case; it is not
+    `Tree(⊥)` is pretty-printed as `_ ∧ ¬_`. This is a special case; it is not
     idiomatic to use for most purposes.
 
 Subtype of [`Proposition`](@ref).
@@ -106,8 +101,8 @@ end
         AO <: AndOr,
         L <: Literal
     } <: Compound
-    Clause(::AO, [::Vector{Proposition}])
-    Clause(::AO, ::Proposition...)
+    Clause(::AO, [ps::Vector])
+    Clause(::AO, ps...)
 
 A proposition represented as either a
 [conjunction or disjunction of literals](https://en.wikipedia.org/wiki/Clause_(logic).
@@ -143,7 +138,7 @@ end
     Normal{AO <: AndOr, C <: Clause} <: Expressive
     Normal(::typef(and), ::Vector{Clause{typeof(or)}})
     Normal(::typef(or), ::Vector{Clause{typeof(and)}})
-    Normal(::Proposition)
+    Normal(p)
 
 A proposition represented in [conjunctive](https://en.wikipedia.org/wiki/Conjunctive_normal_form)
 or [disjunctive](https://en.wikipedia.org/wiki/Disjunctive_normal_form) normal form.
@@ -191,7 +186,7 @@ end
 """
     Valuation{P <: Pair} <: Expressive
     Valuation(::Vector{P})
-    Valuation(::Proposition)
+    Valuation(p)
 
 Proposition represented by a vector of
 [interpretations](https://en.wikipedia.org/wiki/Interpretation_(logic)).
@@ -228,7 +223,7 @@ end
     } <: Expressive
     Tree(::UnaryOperator, ::Atom)
     Tree(::BinaryOperator, ::Tree, ::Tree)
-    Tree(::Proposition)
+    Tree(p)
 
 Proposition represented by an [abstract syntax tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 

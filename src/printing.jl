@@ -30,11 +30,11 @@ nodevalue(p::Tree{BO}) where BO <: BooleanOperator = BO.instance
 nodevalue(p::Tree{typeof(identity)}) = p
 
 """
-    print_tree(p::Proposition, [max_depth])
+    print_tree(p, [max_depth])
 
-Print a tree diagram of ```p```.
+Convert `p` to [`Tree`](@ref) and print its tree diagram.
 
-The optional argument `max_depth` will truncate subtrees at that depth.
+The optional argument `max_depth` will truncate sub-trees at that depth.
 
 ```jldoctest
 julia> @p print_tree(p ⊻ q)
@@ -115,7 +115,7 @@ julia> truth_table([⊻, imply])
 function truth_table(xs::AbstractArray)
     # ToDo: write docstring - define behavior
     # ToDo: write tests
-    # TODO: fix `truth_table(Valuation(⊤))`
+    # TODO: fix `truth_table(Valuation(⊤))`?
     # TODO: make header support operators (`⊤; NullaryOperator`, `⊻; BinaryOperator`)
 
     operator_to_proposition = x -> begin
@@ -196,7 +196,9 @@ truth_table(xs...) = truth_table(collect(xs))
 """
     @truth_table(xs...)
 
-Equivalent to `[`@p`](@ref) [`truth_table`](@ref)(xs...)`.
+Equivalent to `@p truth_table(xs...)`.
+
+See also [`@p`](@ref) and [`truth_table`](@ref).
 
 # Examples
 ```jldoctest

@@ -4,12 +4,13 @@ import Base: identity, nand, ⊼, nor, ⊽, xor, ⊻
 # Nullary Operators
 
 """
+    ⊤
     ⊤()
     tautology()
 
 A constant which is [true in every possible interpretation](https://en.wikipedia.org/wiki/Tautology_(logic)).
 
-```⊤``` can be typed by ```\\top<tab>```.
+`⊤` can be typed by `\\top<tab>`.
 
 # Examples
 ```jldoctest
@@ -29,12 +30,13 @@ function tautology end
 const ⊤ = tautology
 
 """
+    ⊥
     ⊥()
     contradiction()
 
 A constant which is [false in every possible interpretation](https://en.wikipedia.org/wiki/Contradiction).
 
-```⊥``` can be typed by ```\\bot<tab>```.
+`⊥` can be typed by `\\bot<tab>`.
 
 # Examples
 ```jldoctest
@@ -79,7 +81,7 @@ function identity end
 
 Logical [negation](https://en.wikipedia.org/wiki/Negation) operator.
 
-```¬``` can be typed by ```\\neg<tab>```.
+`¬` can be typed by `\\neg<tab>`.
 
 # Examples
 ```jldoctest
@@ -105,7 +107,7 @@ const ¬ = not
 
 Logical [conjunction](https://en.wikipedia.org/wiki/Logical_conjunction) operator.
 
-```∧``` can be typed by ```\\wedge<tab>```.
+`∧` can be typed by `\\wedge<tab>`.
 
 # Examples
 ```jldoctest
@@ -132,7 +134,7 @@ const ∧ = and
 
 Logical [non-conjunction](https://en.wikipedia.org/wiki/Sheffer_stroke) operator.
 
-```⊼``` can be typed by ```\\nand<tab>```.
+`⊼` can be typed by `\\nand<tab>`.
 
 # Examples
 ```jldoctest
@@ -158,7 +160,7 @@ function nand end
 
 Logical [non-disjunction](https://en.wikipedia.org/wiki/Logical_NOR) operator.
 
-```⊽``` can be typed by ```\\nor<tab>```.
+`⊽` can be typed by `\\nor<tab>`.
 
 # Examples
 ```jldoctest
@@ -184,7 +186,7 @@ function nor end
 
 Logical [disjunction](https://en.wikipedia.org/wiki/Logical_disjunction) operator.
 
-```∨``` can be typed by ```\\vee<tab>```.
+`∨` can be typed by `\\vee<tab>`.
 
 # Examples
 ```jldoctest
@@ -211,7 +213,7 @@ const ∨ = or
 
 Logical [exclusive disjunction](https://en.wikipedia.org/wiki/Exclusive_or) operator.
 
-```⊻``` can be typed by ```\\xor<tab>```.
+`⊻` can be typed by `\\xor<tab>`.
 
 # Examples
 ```jldoctest
@@ -238,7 +240,7 @@ function xor end
 Logical [exclusive non-disjunction](https://en.wikipedia.org/wiki/XNOR_gate) and
 [biconditional](https://en.wikipedia.org/wiki/Logical_biconditional) operator.
 
-```↔``` can be typed by ```\\leftrightarrow<tab>```.
+`↔` can be typed by `\\leftrightarrow<tab>`.
 
 # Examples
 ```jldoctest
@@ -265,7 +267,7 @@ const ↔ = xnor
 
 Logical [non-implication](https://en.wikipedia.org/wiki/Material_nonimplication) operator.
 
-```↛``` can be typed by ```\\nrightarrow<tab>```.
+`↛` can be typed by `\\nrightarrow<tab>`.
 
 # Examples
 ```jldoctest
@@ -292,7 +294,7 @@ const ↛ = not_imply
 
 Logical [implication](https://en.wikipedia.org/wiki/Material_conditional) operator.
 
-```→``` can be typed by ```\\rightarrow<tab>```.
+`→` can be typed by `\\rightarrow<tab>`.
 
 # Examples
 ```jldoctest
@@ -319,7 +321,7 @@ const → = imply
 
 Logical [converse non-implication](https://en.wikipedia.org/wiki/Converse_nonimplication) operator.
 
-```↚``` can be typed by ```\\nleftarrow<tab>```.
+`↚` can be typed by `\\nleftarrow<tab>`.
 
 # Examples
 ```jldoctest
@@ -346,7 +348,7 @@ const ↚ = not_converse_imply
 
 Logical [converse implication](https://en.wikipedia.org/wiki/Converse_(logic)#Implicational_converse) operator.
 
-```←``` can be typed by ```\\leftarrow<tab>```.
+`←` can be typed by `\\leftarrow<tab>`.
 
 # Examples
 ```jldoctest

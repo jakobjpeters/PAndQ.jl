@@ -48,7 +48,7 @@ end
 atomize(x) = x
 
 """
-    @p(p)
+    @p(x)
 
 Returns a propositions by instantiating all strings and undefined
 variables as [`Atom`](@ref)s, and then evaluating the expression.
@@ -103,7 +103,7 @@ _get_atoms(p::Tree) = __get_atoms(p)
 Returns a vector of unique [`Atom`](@ref)s contained in the given [`Proposition`](@ref)(s).
 
 !!! warning
-    Some atoms may optimized out of an expression, such as in ```p ∧ ⊥ == ⊥```.
+    Some atoms may optimized out of an expression, such as in `p ∧ ⊥ == ⊥`.
 
 # Examples
 ```jldoctest
