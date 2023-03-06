@@ -28,10 +28,6 @@ Typing symbols with tab completion is performed by typing ```\```, followed by t
 | [`tautology`](@ref)          | ⊤      | \\top            | none?         | 0          |
 | [`contradiction`](@ref)      | ⊥      | \\bot            | none?         | 0          |
 | [`not`](@ref)                | ¬      | \\neg            | right         | 4          |
-| [`left`](@ref)               | ≺      | \\prec           | none?         | 7          |
-| [`not_left`](@ref)           | ⊀      | \\nprec          | none?         | 7          |
-| [`right`](@ref)              | ≻      | \\succ           | none?         | 7          |
-| [`not_right`](@ref)          | ⊁      | \\nsucc          | none?         | 7          |
 | [`and`](@ref)                | ∧      | \\wedge          | left          | 3          |
 | [`nand`](@ref)               | ⊼      | \\nand           | left          | 3          |
 | [`nor`](@ref)                | ⊽      | \\nor            | left          | 2          |
@@ -48,10 +44,6 @@ tautology
 contradiction
 identity
 not
-left
-not_left
-right
-not_right
 and
 nand
 nor

@@ -12,9 +12,8 @@ export
     # operators.jl
     tautology, ⊤, contradiction, ⊥,
     #= Base.identity, =# not, ¬,
-    left, ≺, not_left, ⊀, right, ≻, not_right, ⊁, and, ∧, #= Base.nand, Base.:⊼,
-    Base.nor, Base.:⊽, =# or, ∨, #= Base.xor, Base.:⊻, =# xnor, ↔, imply, →,
-    not_imply, ↛, converse_imply, ←, not_converse_imply, ↚,
+    and, ∧, #= Base.nand, Base.:⊼, Base.nor, Base.:⊽, =# or, ∨, #= Base.xor, Base.:⊻, =#
+    xnor, ↔, imply, →, not_imply, ↛, converse_imply, ←, not_converse_imply, ↚,
     AndOr, NullaryOperator, UnaryOperator, BinaryOperator, BooleanOperator,
 
     # types.jl

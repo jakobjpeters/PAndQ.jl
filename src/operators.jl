@@ -1,6 +1,8 @@
 
 import Base: identity, nand, ⊼, nor, ⊽, xor, ⊻
 
+# Nullary Operators
+
 """
     ⊤()
     tautology()
@@ -51,6 +53,8 @@ julia> @truth_table ⊥
 function contradiction end
 const ⊥ = contradiction
 
+# Unary Operators
+
 """
     identity(::Proposition)
 
@@ -92,93 +96,7 @@ julia> @truth_table ¬p
 function not end
 const ¬ = not
 
-"""
-    p ≺ q
-    ≺(p, q)
-    left(p, q)
-
-```≺``` can be typed by ```\\prec<tab>```.
-
-# Examples
-```jldoctest
-julia> @truth_table p ≺ q
-┌──────┐
-│ p    │
-│ Atom │
-├──────┤
-│ ⊤    │
-│ ⊥    │
-└──────┘
-```
-"""
-function left end
-const ≺ = left
-
-"""
-    p ⊀ q
-    ⊀(p, q)
-    not_left(p, q)
-
-```⊀``` can be typed by ```\\nprec<tab>```.
-
-# Examples
-```jldoctest
-julia> @truth_table p ⊀ q
-┌──────┬─────────┐
-│ p    │ ¬p      │
-│ Atom │ Literal │
-├──────┼─────────┤
-│ ⊤    │ ⊥       │
-│ ⊥    │ ⊤       │
-└──────┴─────────┘
-```
-"""
-function not_left end
-const ⊀ = not_left
-
-"""
-    p ≻ q
-    ≻(p, q)
-    right(p, q)
-
-```≻``` can be typed by ```\\succ<tab>```.
-
-# Examples
-```jldoctest
-julia> @truth_table p ≻ q
-┌──────┐
-│ q    │
-│ Atom │
-├──────┤
-│ ⊤    │
-│ ⊥    │
-└──────┘
-```
-"""
-function right end
-const ≻ = right
-
-"""
-    p ⊁ q
-    ⊁(p, q)
-    left(p, q)
-
-```⊁``` can be typed by ```\\nsucc<tab>```.
-
-# Examples
-```jldoctest
-julia> @truth_table p ⊁ q
-┌──────┬─────────┐
-│ q    │ ¬q      │
-│ Atom │ Literal │
-├──────┼─────────┤
-│ ⊤    │ ⊥       │
-│ ⊥    │ ⊤       │
-└──────┴─────────┘
-```
-"""
-function not_right end
-const ⊁ = not_right
+# Binary Operators
 
 """
     p ∧ q
@@ -448,6 +366,8 @@ julia> @truth_table p ← q
 function converse_imply end
 const ← = converse_imply
 
+# Unions of Operators
+
 """
     AndOr
 """
@@ -467,10 +387,6 @@ const UnaryOperator = Union{typeof(identity), typeof(not)}
     BinaryOperator
 """
 const BinaryOperator = Union{
-    typeof(left),
-    typeof(not_left),
-    typeof(right),
-    typeof(not_right),
     typeof(and),
     typeof(nand),
     typeof(nor),

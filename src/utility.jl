@@ -146,7 +146,7 @@ foldl(
         typeof(not_converse_imply)
     },
     ps::AbstractArray
-) = foldl(bo, ps, init = identity(left, bo))
+) = foldl(bo, ps, init = identity(:left, bo))
 
 """
     mapfoldl
@@ -162,7 +162,7 @@ mapfoldl(
         typeof(not_converse_imply)
     },
     ps::AbstractArray
-) = mapfoldl(f, bo, ps, init = identity(left, bo))
+) = mapfoldl(f, bo, ps, init = identity(:left, bo))
 
 """
     foldr(binary_operator, ps)
@@ -195,7 +195,7 @@ foldr(
         typeof(converse_imply)
     },
     ps::AbstractArray
-) = foldr(bo, ps, init = identity(right, bo))
+) = foldr(bo, ps, init = identity(:right, bo))
 
 """
     mapfoldr
@@ -211,7 +211,7 @@ mapfoldr(
         typeof(converse_imply)
     },
     ps::AbstractArray
-) = mapfoldr(f, bo, ps, init = identity(right, bo))
+) = mapfoldr(f, bo, ps, init = identity(:right, bo))
 
 """
     reduce(binary_operator, ps)

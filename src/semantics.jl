@@ -241,8 +241,6 @@ false
 ```
 """
 is_associative(::Union{
-    typeof(left),
-    typeof(right),
     typeof(and),
     typeof(or),
     typeof(xor),
@@ -272,10 +270,6 @@ julia> @p left(p, q) == converse(left)(q, p)
 true
 ```
 """
-converse(::typeof(left)) = right
-converse(::typeof(not_left)) = not_right
-converse(::typeof(right)) = left
-converse(::typeof(not_right)) = not_left
 converse(::typeof(imply)) = converse_imply
 converse(::typeof(not_imply)) = not_converse_imply
 converse(::typeof(converse_imply)) = imply
@@ -327,45 +321,32 @@ dual(::BO) where BO <: Union{
     typeof(xor),
     typeof(xnor)
 } = not(BO.instance)
-dual(::BO) where BO <: Union{
-    typeof(left),
-    typeof(not_left),
-    typeof(right),
-    typeof(not_right)
-} = BO.instance
 
 """
-    identity(::Union{typeof(left), typeof(right)}, ::BooleanOperator)
+    identity(::Symbol, ::BooleanOperator)
 
-Return the [`left`](@ref) or [`right`](@ref) identity element
-of the given [`BooleanOperator`](@ref), if it exists.
+Given either `:left` or `:right` and a [`BooleanOperator`](@ref),
+return the corresponding identity element, if it exists.
 
 The identity element is either [`tautology`](@ref) or [`contradiction`](@ref).
 If the identity element does not exist, throw an exception.
 
-!!! tip
-    This is useful to find the `init` parameter for [`reduce`](@ref),
-    [`foldl`](@ref), and [`foldr`](@ref). Use `foldl` or `foldr`
-    depending on whether the left or right identity exists, or
-    `reduce` if both the left and right identity are the same.
-
 # Examples
-```
-julia> identity(right, or)
-Truth:
- ⊥
+```jldoctest
+julia> identity(:right, or)
+contradiction (generic function with 1 method)
 
-julia> @p foldl(imply, [p, q, r], init = identity(left, imply))
-Tree:
- (p → q) → r
+julia> identity(:left, imply)
+tautology (generic function with 1 method)
 ```
 """
-identity(::Union{typeof(left), typeof(right)}, ::Union{typeof(and), typeof(xnor)}) = ⊤
-identity(::Union{typeof(left), typeof(right)}, ::Union{typeof(or), typeof(xor)}) = ⊥
-identity(::typeof(left), ::typeof(imply)) = ⊤
-identity(::typeof(right), ::typeof(not_imply)) = ⊥
-identity(::typeof(right), ::typeof(converse_imply)) = ⊤
-identity(::typeof(left), ::typeof(not_converse_imply)) = ⊥
+identity(::Union{Val{:left}, Val{:right}}, ::Union{typeof(and), typeof(xnor)}) = ⊤
+identity(::Union{Val{:left}, Val{:right}}, ::Union{typeof(or), typeof(xor)}) = ⊥
+identity(::Val{:left}, ::typeof(imply)) = ⊤
+identity(::Val{:right}, ::typeof(not_imply)) = ⊥
+identity(::Val{:right}, ::typeof(converse_imply)) = ⊤
+identity(::Val{:left}, ::typeof(not_converse_imply)) = ⊥
+identity(x, bo::BinaryOperator) = identity(Val(x), bo)
 
 """
     interpret(p::Proposition, valuation...)
@@ -396,7 +377,7 @@ interpret(p::Literal{UO}, valuation::Dict) where UO <: UnaryOperator = UO.instan
 #     end...
 # )
 function interpret(p::Clause{B}, valuation::Dict) where B <: Union{typeof(and), typeof(or)}
-    neutral_element = identity(left, B.instance)
+    neutral_element = identity(:left, B.instance)
     isempty(p.p) && return neutral_element
 
     interpretation = map(p.p) do atom
@@ -640,7 +621,7 @@ promote_rule(::Type{<:Proposition}, ::Type{<:Proposition}) = Tree # generic fall
 # Constructors
 
 function Clause(::AO, ps::AbstractArray) where AO <: AndOr
-    neutral_element = identity(left, AO.instance)
+    neutral_element = identity(:left, AO.instance)
     qs = Literal[]
     for p in ps
         if p isa NullaryOperator

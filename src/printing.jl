@@ -256,10 +256,6 @@ _show(::typeof(tautology)) = "⊤"
 _show(::typeof(contradiction)) = "⊥"
 _show(::typeof(identity)) = ""
 _show(::typeof(not)) = "¬"
-_show(::typeof(left)) = "≺"
-_show(::typeof(not_left)) = "⊀"
-_show(::typeof(right)) = "≻"
-_show(::typeof(not_right)) = "⊁"
 _show(::typeof(and)) = "∧"
 _show(::typeof(nand)) = "⊼"
 _show(::typeof(nor)) = "⊽"
@@ -293,7 +289,7 @@ _show(p::Tuple{Proposition}) = _show(only(p))
 _show(p::Union{Literal{UO}, Tree{UO}}) where UO <: UnaryOperator = _show(UO.instance) * _show(p.p)
 _show(p::Tree{BO}) where BO <: BinaryOperator = parenthesize(first(p.p)) * " " * _show(BO.instance) * " " * parenthesize(last(p.p))
 function _show(p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr
-    isempty(p.p) && return _show(identity(left, AO.instance))
+    isempty(p.p) && return _show(identity(:left, AO.instance))
     return join(map(parenthesize, p.p), " " * _show(AO.instance) * " ")
 end
 
