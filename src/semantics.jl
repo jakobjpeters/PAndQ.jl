@@ -258,13 +258,13 @@ of the given boolean operator.
 # Examples
 ```jldoctest
 julia> converse(and)
-and (generic function with 23 methods)
+and (generic function with 20 methods)
 
 julia> @p and(p, q) == converse(and)(q, p)
 true
 
 julia> converse(imply)
-converse_imply (generic function with 12 methods)
+converse_imply (generic function with 9 methods)
 
 julia> @p imply(p, q) == converse(imply)(q, p)
 true
