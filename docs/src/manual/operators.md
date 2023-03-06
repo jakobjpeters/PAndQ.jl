@@ -28,8 +28,8 @@ Typing symbols with tab completion is performed by typing ```\```, followed by t
 
 | Name                         | Symbol | Tab completion   | Associativity | Precedence |
 |:-----------------------------|:-------|:-----------------|:--------------|:-----------|
-| [`tautology`](@ref)          | ⊤      | \\top            | none?         | 0          |
-| [`contradiction`](@ref)      | ⊥      | \\bot            | none?         | 0          |
+| [`tautology`](@ref)          | ⊤      | \\top            | none          | 0          |
+| [`contradiction`](@ref)      | ⊥      | \\bot            | none          | 0          |
 | [`not`](@ref)                | ¬      | \\neg            | right         | 0          |
 | [`and`](@ref)                | ∧      | \\wedge          | left          | 12         |
 | [`nand`](@ref)               | ⊼      | \\nand           | left          | 12         |
