@@ -85,13 +85,13 @@ macro p_str(p) # TODO: `$` interpolation
     return esc(:(@p $(Meta.parse(p))))
 end
 
-__get_atoms(p::Union{Tree, Clause, Normal}) = mapreduce(get_atoms, vcat, p.p)
+__get_atoms(p::Union{Tree, Clause, Normal}) = mapreduce(get_atoms, vcat, getfield(p, 1))
 
 # _get_atoms(::NullaryOperator) = Atom[]
 _get_atoms(p::Atom) = [p]
-_get_atoms(p::Literal) = get_atoms(p.p)
-_get_atoms(p::Union{Clause, Normal}) = isempty(p.p) ? Atom[] : __get_atoms(p)
-_get_atoms(p::Valuation) = mapreduce(vcat, p.p) do interpretation # Pair{Vector{Pair{Atom, Truth}}, Truth}
+_get_atoms(p::Literal) = get_atoms(p.atom)
+_get_atoms(p::Union{Clause, Normal}) = isempty(getfield(p, 1)) ? Atom[] : __get_atoms(p)
+_get_atoms(p::Valuation) = mapreduce(vcat, p.interpretations) do interpretation # Pair{Vector{Pair{Atom, Truth}}, Truth}
     map(first, first(interpretation))
 end
 _get_atoms(p::Tree) = __get_atoms(p)

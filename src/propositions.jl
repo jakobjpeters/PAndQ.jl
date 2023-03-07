@@ -63,7 +63,7 @@ Atom:
 ```
 """
 struct Atom{SS <: Union{String, Symbol}} <: Proposition
-    p::SS
+    statement::SS
 
     Atom(p::SS = :_) where SS <: Union{Symbol, String} = new{SS}(p)
 end
@@ -91,7 +91,7 @@ Atom:
 ```
 """
 struct Literal{UO <: UnaryOperator} <: Compound
-    p::Atom
+    atom::Atom
 
     Literal(::UO, p::Atom) where UO <: UnaryOperator = new{UO}(p)
 end
@@ -129,7 +129,7 @@ Clause:
 ```
 """
 struct Clause{AO <: AndOr, L <: Literal} <: Compound
-    p::Vector{L}
+    literals::Vector{L}
 
     Clause(::AO, ps::Vector{L} = Literal[]) where {AO <: AndOr, L <: Literal} = new{AO, L}(union(ps))
 end
@@ -160,7 +160,7 @@ Normal:
 ```
 """
 struct Normal{AO <: AndOr, C <: Clause} <: Expressive
-    p::Vector{C}
+    clauses::Vector{C}
 
     Normal(::A, ps::Vector{<:Clause{typeof(or)}} = Clause{typeof(or)}[]) where A <: typeof(and) = new{A, eltype(ps)}(union(ps))
     Normal(::O, ps::Vector{<:Clause{typeof(and)}} = Clause{typeof(and)}[]) where O <: typeof(or) = new{O, eltype(ps)}(union(ps))
@@ -208,7 +208,7 @@ Valuation:
 ```
 """
 struct Valuation{P <: Pair} <: Expressive # {<:Vector{<:Pair{<:Atom, <:Truth}}, <:Truth}} <: Expressive
-    p::Vector{P}
+    interpretations::Vector{P}
 
     function Valuation(p::Vector{P}) where P <: Pair # {Vector{Pair{<:Atom, <:Truth}}, <:Truth}}
         isempty(p) && error("TODO: write this exception")
@@ -244,7 +244,7 @@ struct Tree{
     BO <: BooleanOperator,
     TP <: Union{Tuple{Proposition}, Tuple{Proposition, Proposition}}
 } <: Expressive
-    p::TP
+    node::TP
 
     Tree(::UO, p::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, Tuple{A}}((p,))
     Tree(::BO, p::T1, q::T2) where {BO <: BinaryOperator, T1 <: Tree, T2 <: Tree} = new{BO, Tuple{T1, T2}}((p, q))

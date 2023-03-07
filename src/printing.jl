@@ -22,8 +22,8 @@ macro pretty(expression)
 end
 
 
-children(p::Tree) = Tuple(p.p)
-children(p::Tree{typeof(not)}) = p.p
+children(p::Tree) = Tuple(p.node)
+children(p::Tree{typeof(not)}) = p.node
 children(p::Tree{typeof(identity)}) = ()
 
 nodevalue(p::Tree{BO}) where BO <: BooleanOperator = BO.instance
@@ -258,31 +258,31 @@ _show(::typeof(identity)) = ""
 foreach([:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚]) do x
     @eval _show(::typeof($x)) = $(string(x))
 end
-_show(p::Atom{Symbol}) = string(p.p)
-_show(p::Atom{String}) = "\"" * p.p * "\""
+_show(p::Atom{Symbol}) = string(p.statement)
+_show(p::Atom{String}) = "\"" * p.statement * "\""
 function _show(p::Valuation) # TODO: improve, support `[Valuation(and, p), etc]`
     s = ""
 
-    for interpretation in p.p
+    for interpretation in p.interpretations
         s *= "["
         s *= join(map(x -> _show(first(x)) * " => " * _show(last(x)), first(interpretation)), ", ")
         s *= "] => " * _show(last(interpretation))
-        if interpretation != last(p.p)
+        if interpretation != last(p.interpretations)
             s *= "\n "
         end
     end
     return s
 
-    x = repr("text/plain", p.p)
+    x = repr("text/plain", p.interpretations)
     i = last(findfirst("\n ", x))
     return x[i + 1:end]
 end
 _show(p::Tuple{Proposition}) = _show(only(p))
-_show(p::Union{Literal{UO}, Tree{UO}}) where UO <: UnaryOperator = _show(UO.instance) * _show(p.p)
-_show(p::Tree{BO}) where BO <: BinaryOperator = parenthesize(first(p.p)) * " " * _show(BO.instance) * " " * parenthesize(last(p.p))
+_show(p::Union{Literal{UO}, Tree{UO}}) where UO <: UnaryOperator = _show(UO.instance) * _show(getfield(p, 1))
+_show(p::Tree{BO}) where BO <: BinaryOperator = parenthesize(first(p.node)) * " " * _show(BO.instance) * " " * parenthesize(last(p.node))
 function _show(p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr
-    isempty(p.p) && return _show(identity(:left, AO.instance))
-    return join(map(parenthesize, p.p), " " * _show(AO.instance) * " ")
+    isempty(getfield(p, 1)) && return _show(identity(:left, AO.instance))
+    return join(map(parenthesize, getfield(p, 1)), " " * _show(AO.instance) * " ")
 end
 
 show(io::IO, p::Union{BooleanOperator, Proposition}) = print(io, _show(p))

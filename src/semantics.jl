@@ -53,8 +53,8 @@ true
 """
 is_tautology(p::typeof(tautology)) = true
 is_tautology(p::Union{typeof(⊥), Atom, Literal}) = false
-is_tautology(p::CN) where CN <: Union{Clause{A}, Normal{A}} where A <: typeof(and) = isempty(p.p)
-is_tautology(p::Valuation) = all(isequal(tautology) ∘ last, p.p)
+is_tautology(p::CN) where CN <: Union{Clause{A}, Normal{A}} where A <: typeof(and) = isempty(getfield(p, 1))
+is_tautology(p::Valuation) = all(isequal(tautology) ∘ last, p.interpretations)
 is_tautology(p::Proposition) = is_tautology(Valuation(p))
 
 """
@@ -101,8 +101,8 @@ false
 """
 is_truth(p::NullaryOperator) = true
 is_truth(p::Union{Atom, Literal}) = false
-is_truth(p::Clause) = isempty(p.p) ? (return true) : return is_truth(Valuation(p))
-is_truth(p::Valuation) = length(unique(map(last, p.p))) == 1
+is_truth(p::Clause) = isempty(p.literals) ? (return true) : return is_truth(Valuation(p))
+is_truth(p::Valuation) = length(unique(map(last, p.interpretations))) == 1
 is_truth(p::Proposition) = is_truth(Valuation(p))
 
 """
@@ -362,7 +362,7 @@ that is independent from every `Atom`s in `valuation`.
 ```
 """
 interpret(p::Atom, valuation::Dict) = get(valuation, p, p)
-interpret(p::Literal{UO}, valuation::Dict) where UO <: UnaryOperator = UO.instance(interpret(p.p, valuation))
+interpret(p::Literal{UO}, valuation::Dict) where UO <: UnaryOperator = UO.instance(interpret(p.atom, valuation))
 # interpret(p::Tree{BO}, valuation::Dict) where BO <: BooleanOperator = BO.instance(
 #     map(p.p) do p
 #         interpret(p, valuation)
@@ -370,10 +370,10 @@ interpret(p::Literal{UO}, valuation::Dict) where UO <: UnaryOperator = UO.instan
 # )
 function interpret(p::Clause{B}, valuation::Dict) where B <: Union{typeof(and), typeof(or)}
     neutral_element = identity(:left, B.instance)
-    isempty(p.p) && return neutral_element
+    isempty(p.literals) && return neutral_element
 
-    interpretation = map(p.p) do atom
-        assignment = interpret(atom, valuation)
+    interpretation = map(p.literals) do literal
+        assignment = interpret(literal, valuation)
         assignment == not(neutral_element) && return not(neutral_element)
         assignment
     end
@@ -428,8 +428,8 @@ end
     # return new
 # end
 interpret(p::Tree{BO}, valuation::Dict) where BO <: BooleanOperator = BO.instance(
-    map(p.p) do q
-        interpret(q, valuation)
+    map(p.node) do branch
+        interpret(branch, valuation)
     end...
 )
 # interpret(p::Proposition, valuation::Dict) = interpret(Normal(p), valuation)
@@ -453,7 +453,7 @@ julia> @p solve(p ⊻ q)
 """
 solve(p::Valuation) = map(
     first,
-    filter(p.p) do interpretation
+    filter(p.interpretations) do interpretation
         last(interpretation) == ⊤
     end
 )
@@ -522,16 +522,16 @@ not(::typeof(not_converse_imply)) = converse_imply
 
 # propositions
 not(p::Atom) = Literal(not, p)
-not(p::Literal{UO}) where UO <: UnaryOperator = not(UO.instance)(p.p)
+not(p::Literal{UO}) where UO <: UnaryOperator = not(UO.instance)(p.atom)
 not(p::CN) where CN <: Union{Clause{AO}, Normal{AO}} where AO <: AndOr = getfield(Main, nameof(CN))(
-    dual(AO.instance), map(not, p.p)
+    dual(AO.instance), map(not, getfield(p, 1))
 )
 not(p::Valuation) = Valuation(
-    map(p.p) do interpretation # Pair{Vector{Pair{Atom, Truth}}, Truth}
+    map(p.interpretations) do interpretation # Pair{Vector{Pair{Atom, Truth}}, Truth}
         first(interpretation) => not(last(interpretation))
     end
 )
-not(p::Tree{BO}) where BO <: BooleanOperator = not(BO.instance)(p.p...)
+not(p::Tree{BO}) where BO <: BooleanOperator = not(BO.instance)(p.node...)
 
 and(::typeof(tautology), ::typeof(tautology)) = ⊤
 and(::typeof(contradiction), ::Union{NullaryOperator, Proposition}) = ⊥ # domination law
@@ -545,13 +545,13 @@ foreach(Base.uniontypes(AndOr)) do AO
     DAO = typeof(dual(AO.instance))
 
     foreach([Clause, Normal]) do CN
-        @eval $ao(p::$CN{$AO}, q::$CN{$AO}) = $CN($ao, vcat(p.p, q.p))
+        @eval $ao(p::$CN{$AO}, q::$CN{$AO}) = $CN($ao, vcat(getfield(p, 1), getfield(q, 1)))
     end
     @eval $ao(p::Clause{$DAO}, q::Clause{$DAO}) = Normal($ao, p, q)
     @eval $ao(p::Normal, q::Normal)= $ao(Normal($ao, p), Normal($ao, q))
 
-    @eval $ao(p::Union{literal_propositions...}, q::Clause{AO}) where AO <: typeof($ao) = Clause($ao, vcat(p, q.p))
-    @eval $ao(p::Clause{AO}, q::Union{literal_propositions...}) where AO <: typeof($ao) = Clause($ao, vcat(p.p, q))
+    @eval $ao(p::Union{literal_propositions...}, q::Clause{AO}) where AO <: typeof($ao) = Clause($ao, vcat(p, q.literals))
+    @eval $ao(p::Clause{AO}, q::Union{literal_propositions...}) where AO <: typeof($ao) = Clause($ao, vcat(p.literals, q))
 end
 # or(p::Valuation, q::Valuation) = Valuation(vcat(p.p, q.p))
 
@@ -610,7 +610,7 @@ function Clause(::AO, ps::AbstractArray) where AO <: AndOr
             r = Atom()
             return Clause(AO.instance, [r, ¬r])
         elseif p isa Clause{AO}
-            append!(qs, p.p)
+            append!(qs, p.literals)
         else
             push!(qs, p)
         end
@@ -620,8 +620,8 @@ end
 Clause(::AO, ps...) where AO <: AndOr = Clause(AO.instance, collect(ps))
 
 Normal(::AO, p::Tree{BO}) where {AO <: AndOr, BO <: BooleanOperator} = BO.instance(
-    map(p.p) do p
-        Normal(AO.instance, p)
+    map(p.node) do branch
+        Normal(AO.instance, branch)
     end...
 )
 # Normal(::AO, ps::AbstractArray) where AO <: AndOr
@@ -670,8 +670,8 @@ get_interpretation(p, valuations) = map(valuations) do valuation
     interpret(p, valuation)
 end
 
-convert(::Type{Atom}, p::Literal{typeof(identity)}) = p.p
-convert(::Type{Atom}, p::Tree{typeof(identity), <:Tuple{Atom}}) = only(p.p)
+convert(::Type{Atom}, p::Literal{typeof(identity)}) = p.atom
+convert(::Type{Atom}, p::Tree{typeof(identity), <:Tuple{Atom}}) = only(p.node)
 convert(::Type{Literal}, p::Tree{UO, <:Tuple{Atom}}) where UO <: UnaryOperator = ¬(¬p)
 convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
 convert(::Type{Clause}, p::typeof(tautology)) = Clause(and)
@@ -681,18 +681,18 @@ function convert(::Type{Tree}, p::typeof(contradiction))
     return p ∧ ¬p
 end
 convert(::Type{Tree}, p::typeof(tautology)) = not(Tree(contradiction))
-convert(::Type{Tree}, p::Literal{UO}) where UO <: UnaryOperator = Tree(UO.instance, p.p)
+convert(::Type{Tree}, p::Literal{UO}) where UO <: UnaryOperator = Tree(UO.instance, p.atom)
 function convert(::Type{Tree}, p::Valuation)
-    is_truth(p) && return Tree(last(first(p.p)))
+    is_truth(p) && return Tree(last(first(p.interpretations)))
 
-    valid_interpretations = filter(isequal(tautology) ∘ last, p.p)
+    valid_interpretations = filter(isequal(tautology) ∘ last, p.interpretations)
     pair_to_literal = pair -> (last(pair) == tautology ? identity : not)(Literal(first(pair)))
     mapreduce_and = interpretation -> mapreduce(pair_to_literal, and, first(interpretation))
     mapreduce_or = interpretations -> mapreduce(mapreduce_and, or, interpretations)
     return Tree(mapreduce_or(valid_interpretations))
 end
-convert(::Type{Tree}, p::Clause{AO}) where AO <: AndOr = reduce(AO.instance, p.p)
-convert(::Type{Tree}, p::Normal{AO}) where AO <: AndOr = mapreduce(Tree, AO.instance, p.p)
+convert(::Type{Tree}, p::Clause{AO}) where AO <: AndOr = reduce(AO.instance, p.literals)
+convert(::Type{Tree}, p::Normal{AO}) where AO <: AndOr = mapreduce(Tree, AO.instance, p.clauses)
 convert(::Type{Valuation}, ::NO) where NO <: NullaryOperator = Valuation([[] => NO.instance])
 function convert(::Type{Valuation}, p::Union{setdiff(concrete_propositions, [Valuation])...})
     valuations = get_valuations(get_atoms(p))
