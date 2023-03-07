@@ -254,20 +254,10 @@ show(io::IO, ::MIME"text/plain", proof::Proof) = pretty_table(
 parenthesize(p::Union{Literal, Tree{<:UnaryOperator}}) = _show(p)
 parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * _show(p) * ")"
 
-_show(::typeof(tautology)) = "⊤"
-_show(::typeof(contradiction)) = "⊥"
 _show(::typeof(identity)) = ""
-_show(::typeof(not)) = "¬"
-_show(::typeof(and)) = "∧"
-_show(::typeof(nand)) = "⊼"
-_show(::typeof(nor)) = "⊽"
-_show(::typeof(or)) = "∨"
-_show(::typeof(xor)) = "⊻"
-_show(::typeof(xnor)) = "↔"
-_show(::typeof(imply)) = "→"
-_show(::typeof(not_imply)) = "↛"
-_show(::typeof(converse_imply)) = "←"
-_show(::typeof(not_converse_imply)) = "↚"
+foreach([:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚]) do x
+    @eval _show(::typeof($x)) = $(string(x))
+end
 _show(p::Atom{Symbol}) = string(p.p)
 _show(p::Atom{String}) = "\"" * p.p * "\""
 function _show(p::Valuation) # TODO: improve, support `[Valuation(and, p), etc]`
