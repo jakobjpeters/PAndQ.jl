@@ -570,18 +570,7 @@ foreach(Base.uniontypes(BinaryOperator)) do BO
 end
 
 # generic fallbacks and promotion
-foreach([
-    typeof(and),
-    typeof(nand),
-    typeof(nor),
-    typeof(or),
-    typeof(xor),
-    typeof(xnor),
-    typeof(imply),
-    typeof(not_imply),
-    typeof(converse_imply),
-    typeof(not_converse_imply)
-]) do BO
+foreach(Base.uniontypes(BinaryOperator)) do BO
     bo = Symbol(BO.instance)
 
     foreach([Atom, Literal]) do AL
