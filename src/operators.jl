@@ -371,22 +371,23 @@ const ← = converse_imply
 # Unions of Operators
 
 """
-    AndOr
-"""
-const AndOr = Union{typeof(and), typeof(or)}
-
-"""
     NullaryOperator
+
+[`BooleanOperator`](@ref)s that take zero arguments.
 """
 const NullaryOperator = Union{typeof(tautology), typeof(contradiction)}
 
 """
     UnaryOperator
+
+[`BooleanOperator`](@ref)s that take one argument.
 """
 const UnaryOperator = Union{typeof(identity), typeof(not)}
 
 """
     BinaryOperator
+
+[`BooleanOperator`](@ref)s that take two arguments.
 """
 const BinaryOperator = Union{
     typeof(and),
@@ -408,3 +409,38 @@ const BinaryOperator = Union{
 A union of [`NullaryOperator`](@ref), [`UnaryOperator`](@ref), and [`BinaryOperator`](@ref).
 """
 const BooleanOperator = Union{NullaryOperator, UnaryOperator, BinaryOperator}
+
+"""
+    CommutativeOperators
+
+[`BooleanOperator`](@ref)s with the
+[commutative property](https://en.wikipedia.org/wiki/Commutative_property).
+"""
+const CommutativeOperator = Union{map(typeof, [and, nand, nor, or, xor, xnor])...}
+
+"""
+    AssociativeOperator
+
+[`BooleanOperator`](@ref)s with the
+[associative property](https://en.wikipedia.org/wiki/Associative_property).
+"""
+const AssociativeOperator = Union{map(typeof, [and, or, xor, xnor])...}
+
+"""
+    LeftIdentityOperator
+
+[`BooleanOperator`](@ref)s that have a left [`identity`](@ref).
+"""
+const LeftIdentityOperator = Union{AssociativeOperator, map(typeof, [imply, not_converse_imply])...}
+
+"""
+    RightIdentityOperator
+
+[`BooleanOperator`](@ref)s that have a right [`identity`](@ref).
+"""
+const RightIdentityOperator = Union{AssociativeOperator, map(typeof, [not_imply, converse_imply])...}
+
+"""
+    AndOr
+"""
+const AndOr = Union{typeof(and), typeof(or)}

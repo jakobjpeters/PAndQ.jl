@@ -181,66 +181,6 @@ true
 is_falsifiable(p) = !is_tautology(p)
 
 """
-    is_commutative(::BooleanOperator)
-
-Returns a boolean on whether the given [`BooleanOperator`](@ref) has the
-[commutative property](https://en.wikipedia.org/wiki/Commutative_property)
-
-# Examples
-```jldoctest
-julia> is_commutative(and)
-true
-
-julia> @p p ∧ q == q ∧ p
-true
-
-julia> is_commutative(imply)
-false
-
-julia> @p (p → q) == (q → p)
-false
-```
-"""
-is_commutative(::Union{
-    typeof(and),
-    typeof(nand),
-    typeof(nor),
-    typeof(or),
-    typeof(xor),
-    typeof(xnor)
-}) = true
-is_commutative(::BinaryOperator) = false
-
-"""
-    is_associative(::BooleanOperator)
-
-Returns a boolean on whether the given [`BooleanOperator`](@ref) has the 
-[associative property](https://en.wikipedia.org/wiki/Associative_property).
-
-# Examples
-```jldoctest
-julia> is_associative(and)
-true
-
-julia> @p (p ∧ q) ∧ r == p ∧ (q ∧ r)
-true
-
-julia> is_associative(nand)
-false
-
-julia> @p (p ⊼ q) ⊼ r == p ⊼ (q ⊼ r)
-false
-```
-"""
-is_associative(::Union{
-    typeof(and),
-    typeof(or),
-    typeof(xor),
-    typeof(xnor)
-}) = true
-is_associative(::BinaryOperator) = false
-
-"""
     converse(::BooleanOperator)
 
 Returns the [`BooleanOperator`](@ref) that is the
@@ -266,14 +206,7 @@ converse(::typeof(imply)) = converse_imply
 converse(::typeof(not_imply)) = not_converse_imply
 converse(::typeof(converse_imply)) = imply
 converse(::typeof(not_converse_imply)) = not_imply
-converse(::BO) where BO <: Union{
-    typeof(and),
-    typeof(nand),
-    typeof(nor),
-    typeof(or),
-    typeof(xor),
-    typeof(xnor)
-} = BO.instance
+converse(::CO) where CO <: CommutativeOperator = CO.instance
 
 """
     dual(::BooleanOperator)
@@ -307,12 +240,8 @@ dual(::typeof(imply)) = not_converse_imply
 dual(::typeof(not_imply)) = converse_imply
 dual(::typeof(converse_imply)) = not_imply
 dual(::typeof(not_converse_imply)) = imply
-dual(::BO) where BO <: Union{
-    typeof(tautology),
-    typeof(contradiction),
-    typeof(xor),
-    typeof(xnor)
-} = not(BO.instance)
+dual(::BO) where BO <: Union{map(typeof, [tautology, contradiction, xor, xnor])...} = not(BO.instance)
+# TODO: `dual(::typeof(not))` and `dual(::typeof(identity))` ?
 
 """
     identity(::Symbol, ::BooleanOperator)
@@ -368,8 +297,8 @@ interpret(p::Literal{UO}, valuation::Dict) where UO <: UnaryOperator = UO.instan
 #         interpret(p, valuation)
 #     end...
 # )
-function interpret(p::Clause{B}, valuation::Dict) where B <: Union{typeof(and), typeof(or)}
-    neutral_element = identity(:left, B.instance)
+function interpret(p::Clause{AO}, valuation::Dict) where AO <: AndOr
+    neutral_element = identity(:left, AO.instance)
     isempty(p.literals) && return neutral_element
 
     interpretation = map(p.literals) do literal
@@ -377,7 +306,7 @@ function interpret(p::Clause{B}, valuation::Dict) where B <: Union{typeof(and), 
         assignment == not(neutral_element) && return not(neutral_element)
         assignment
     end
-    return reduce(B.instance, interpretation)
+    return reduce(AO.instance, interpretation)
 
     # x = Literal[]
     # for atom in p.p
