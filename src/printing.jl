@@ -74,14 +74,16 @@ truths only generate a single row, and no propositions
 =#
 
 """
-    truth_table(xs...)
-    truth_table(xs::AbstractArray)
+    truth_table(xs::AbstractArray; numbered_rows = false)
+    truth_table(xs...; numbered_rows = false)
 
 Print a truth table for the given [`Proposition`](@ref)s and [`BinaryOperator`](@ref)s.
 
 The first row of the header is the expression representing that column's proposition,
 while the second row indicates that expression's type.
 Logically equivalent propositions will be grouped in the same column, seperated by a comma.
+
+If `numbered_rows = true`, the first column will contain each row's sequential number.
 
 In this context, [`⊤`](@ref tautology) and [`⊥`](@ref contradiction) can be interpreted as *true* and *false*, respectively.
 
@@ -99,20 +101,20 @@ julia> @p truth_table(p ∧ ¬p, p ∧ q)
 │ ⊥      │ ⊥    │ ⊥    │ ⊥     │
 └────────┴──────┴──────┴───────┘
 
-julia> truth_table([⊻, imply])
-┌──────┬──────┬────────┬────────┐
-│ _    │ __   │ _ ⊻ __ │ _ → __ │
-│ Atom │ Atom │ Tree   │ Tree   │
-├──────┼──────┼────────┼────────┤
-│ ⊤    │ ⊤    │ ⊥      │ ⊤      │
-│ ⊥    │ ⊤    │ ⊤      │ ⊤      │
-├──────┼──────┼────────┼────────┤
-│ ⊤    │ ⊥    │ ⊤      │ ⊥      │
-│ ⊥    │ ⊥    │ ⊥      │ ⊤      │
-└──────┴──────┴────────┴────────┘
+julia> truth_table([⊻, imply], numbered_rows = true)
+┌───┬──────┬──────┬────────┬────────┐
+│ # │ _    │ __   │ _ ⊻ __ │ _ → __ │
+│   │ Atom │ Atom │ Tree   │ Tree   │
+├───┼──────┼──────┼────────┼────────┤
+│ 1 │ ⊤    │ ⊤    │ ⊥      │ ⊤      │
+│ 2 │ ⊥    │ ⊤    │ ⊤      │ ⊤      │
+├───┼──────┼──────┼────────┼────────┤
+│ 3 │ ⊤    │ ⊥    │ ⊤      │ ⊥      │
+│ 4 │ ⊥    │ ⊥    │ ⊥      │ ⊤      │
+└───┴──────┴──────┴────────┴────────┘
 ```
 """
-function truth_table(xs::AbstractArray)
+function truth_table(xs::AbstractArray; numbered_rows = false)
     # ToDo: write docstring - define behavior
     # ToDo: write tests
     # TODO: fix `truth_table(Valuation(⊤))`?
@@ -167,31 +169,38 @@ function truth_table(xs::AbstractArray)
     grouped_ps = map(unique, vcat(grouped_truths, grouped_atoms, grouped_compounds))
 
     valuations = map(Dict, get_valuations(atoms))
-    interpretations = mapreduce(hcat, grouped_ps) do grouped_p
+    body = mapreduce(hcat, grouped_ps) do grouped_p
         get_interpretation(first(grouped_p), valuations)
     end
 
     merge_string = x -> join(x, ", ")
-    header = (
-        map(grouped_ps) do group
-            merge_string(map(repr, group))
-        end,
-        map(grouped_ps) do group
-            merge_string(map(nameof ∘ typeof, group))
-        end
-    )
+
+    header = map(grouped_ps) do group
+        merge_string(map(repr, group))
+    end
+    sub_header = map(grouped_ps) do group
+        merge_string(map(nameof ∘ typeof, group))
+    end
+
+    n_rows = 2^length(atoms)
+
+    if numbered_rows
+        pushfirst!(header, "#")
+        pushfirst!(sub_header, "")
+        body = hcat(1:n_rows, body)
+    end
 
     pretty_table(
-        interpretations,
-        header = header,
+        body,
+        header = (header, sub_header),
+        body_hlines = collect(0:2:n_rows),
         alignment = :l,
-        body_hlines = collect(0:2:2^length(atoms)),
         crop = :none
     )
 
     return nothing
 end
-truth_table(xs...) = truth_table(collect(xs))
+truth_table(xs...; numbered_rows = false) = truth_table(collect(xs), numbered_rows = numbered_rows)
 
 """
     @truth_table(xs...)
@@ -214,21 +223,25 @@ julia> @truth_table ¬p Clause(and, p, q)
 │ ⊥    │ ⊥    │ ⊤       │ ⊥      │
 └──────┴──────┴─────────┴────────┘
 
-julia> @truth_table (⊻) imply
-┌──────┬──────┬────────┬────────┐
-│ _    │ __   │ _ ⊻ __ │ _ → __ │
-│ Atom │ Atom │ Tree   │ Tree   │
-├──────┼──────┼────────┼────────┤
-│ ⊤    │ ⊤    │ ⊥      │ ⊤      │
-│ ⊥    │ ⊤    │ ⊤      │ ⊤      │
-├──────┼──────┼────────┼────────┤
-│ ⊤    │ ⊥    │ ⊤      │ ⊥      │
-│ ⊥    │ ⊥    │ ⊥      │ ⊤      │
-└──────┴──────┴────────┴────────┘
+julia> @truth_table (⊻) imply numbered_rows = true
+┌───┬──────┬──────┬────────┬────────┐
+│ # │ _    │ __   │ _ ⊻ __ │ _ → __ │
+│   │ Atom │ Atom │ Tree   │ Tree   │
+├───┼──────┼──────┼────────┼────────┤
+│ 1 │ ⊤    │ ⊤    │ ⊥      │ ⊤      │
+│ 2 │ ⊥    │ ⊤    │ ⊤      │ ⊤      │
+├───┼──────┼──────┼────────┼────────┤
+│ 3 │ ⊤    │ ⊥    │ ⊤      │ ⊥      │
+│ 4 │ ⊥    │ ⊥    │ ⊥      │ ⊤      │
+└───┴──────┴──────┴────────┴────────┘
 ```
 """
 macro truth_table(xs...)
-    return esc(:(truth_table($(map(atomize, xs)...))))
+    numbered_rows = Meta.isexpr(last(xs), :(=))
+    return esc(:(truth_table(
+        $(map(atomize, xs[1:length(xs) - numbered_rows])...);
+        $(numbered_rows ? last(xs) : :(numbered_rows = false))
+    )))
 end
 
 struct Proof
