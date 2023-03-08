@@ -298,7 +298,13 @@ function _show(p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr
     return join(map(parenthesize, getfield(p, 1)), " " * _show(AO.instance) * " ")
 end
 
+"""
+    show
+"""
 show(io::IO, p::Union{BooleanOperator, Proposition}) = print(io, _show(p))
 show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition = print(io, nameof(P), ":\n ", _show(p))
 
+"""
+    print
+"""
 print(io::IO, ::BO) where BO <: BooleanOperator = show(io, BO.instance)

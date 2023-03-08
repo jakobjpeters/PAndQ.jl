@@ -1,0 +1,7 @@
+
+# Printing
+
+```@docs
+show
+print
+```

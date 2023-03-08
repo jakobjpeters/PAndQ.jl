@@ -57,9 +57,4 @@ imply
 not_imply
 converse_imply
 not_converse_imply
-AndOr
-NullaryOperator
-UnaryOperator
-BinaryOperator
-BooleanOperator
 ```

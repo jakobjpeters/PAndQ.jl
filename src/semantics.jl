@@ -1,5 +1,5 @@
 
-import Base: ==, identity, convert, promote_rule
+import Base: ==, convert, promote_rule
 import Base: reduce
 
 """
@@ -504,22 +504,6 @@ end
 and(p::Proposition, q::Proposition) = and(promote(p, q)...)
 or(p::Union{Clause, Normal}, q::Union{Clause, Normal}) = or(promote(p, q)...)
 
-# Promotion
-
-promote_rule(::Type{<:Atom}, ::Type{<:Atom}) = Atom
-promote_rule(::Type{<:Atom}, ::Type{<:Literal}) = Literal
-# promote_rule(::Type{<:Union{Atom, Literal}}, ::Type{<:Clause}) = Clause
-# promote_rule(::Type{<:Clause{AO}}, ::Type{<:Clause{AO}}) where AO <: AndOr = Clause
-# promote_rule(::Type{<:Clause{<:AndOr}}, ::Type{<:Clause{<:AndOr}}) = Normal
-# foreach(get_concrete_types(Expressive)) do type
-#     @eval promote_rule(::Type{<:Proposition}, ::Type{<:$type}) = $type
-# end
-# foreach(setdiff(concrete_propositions, [Clause])) do type
-#     @eval promote_rule(::Type{<:$type}, ::Type{<:$type}) = $type
-# end
-promote_rule(::Type{<:Proposition}, ::Type{<:Proposition}) = Tree # generic fallback
-
-
 # Constructors
 
 function Clause(::AO, ps::AbstractArray) where AO <: AndOr
@@ -574,6 +558,23 @@ foreach([Atom, Literal, Clause, Normal, Valuation, Tree]) do P
     @eval $(nameof(P))(p) = convert($(nameof(P)), p)
 end
 
+# Promotion
+
+"""
+    promote_rule
+"""
+promote_rule(::Type{<:Atom}, ::Type{<:Atom}) = Atom
+promote_rule(::Type{<:Atom}, ::Type{<:Literal}) = Literal
+# promote_rule(::Type{<:Union{Atom, Literal}}, ::Type{<:Clause}) = Clause
+# promote_rule(::Type{<:Clause{AO}}, ::Type{<:Clause{AO}}) where AO <: AndOr = Clause
+# promote_rule(::Type{<:Clause{<:AndOr}}, ::Type{<:Clause{<:AndOr}}) = Normal
+# foreach(get_concrete_types(Expressive)) do type
+#     @eval promote_rule(::Type{<:Proposition}, ::Type{<:$type}) = $type
+# end
+# foreach(setdiff(concrete_propositions, [Clause])) do type
+#     @eval promote_rule(::Type{<:$type}, ::Type{<:$type}) = $type
+# end
+promote_rule(::Type{<:Proposition}, ::Type{<:Proposition}) = Tree # generic fallback
 
 # Conversions
 
@@ -591,6 +592,9 @@ get_interpretation(p, valuations) = map(valuations) do valuation
     interpret(p, valuation)
 end
 
+"""
+    convert
+"""
 convert(::Type{Atom}, p::Literal{typeof(identity)}) = p.atom
 convert(::Type{Atom}, p::Tree{typeof(identity), <:Tuple{Atom}}) = only(p.node)
 convert(::Type{Literal}, p::Tree{UO, <:Tuple{Atom}}) where UO <: UnaryOperator = ¬(¬p)

@@ -14,7 +14,8 @@ export
     #= Base.identity, =# not, ¬,
     and, ∧, #= Base.nand, Base.:⊼, Base.nor, Base.:⊽, =# or, ∨, #= Base.xor, Base.:⊻, =#
     xnor, ↔, imply, →, not_imply, ↛, converse_imply, ←, not_converse_imply, ↚,
-    AndOr, NullaryOperator, UnaryOperator, BinaryOperator, BooleanOperator,
+    #= NullaryOperator, UnaryOperator, BinaryOperator, BooleanOperator,
+    CommutativeOperator, AssociativeOperator, AndOr, =#
 
     # types.jl
     Proposition, Compound, Expressive,
