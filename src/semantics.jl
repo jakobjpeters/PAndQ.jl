@@ -31,7 +31,7 @@ false
 ```
 """
 ==(p::NullaryOperator, q::NullaryOperator) = p === q
-==(p::Union{literal_propositions...}, q::Union{literal_propositions...}) = Literal(p) === Literal(q)
+==(p::LiteralProposition, q::LiteralProposition) = Literal(p) === Literal(q)
 ==(p::Union{NullaryOperator, Proposition}, q::Union{NullaryOperator, Proposition}) = is_tautology(p ↔ q)
 
 """
@@ -550,8 +550,8 @@ foreach(Base.uniontypes(AndOr)) do AO
     @eval $ao(p::Clause{$DAO}, q::Clause{$DAO}) = Normal($ao, p, q)
     @eval $ao(p::Normal, q::Normal)= $ao(Normal($ao, p), Normal($ao, q))
 
-    @eval $ao(p::Union{literal_propositions...}, q::Clause{AO}) where AO <: typeof($ao) = Clause($ao, vcat(p, q.literals))
-    @eval $ao(p::Clause{AO}, q::Union{literal_propositions...}) where AO <: typeof($ao) = Clause($ao, vcat(p.literals, q))
+    @eval $ao(p::LiteralProposition, q::Clause{AO}) where AO <: typeof($ao) = Clause($ao, vcat(p, q.literals))
+    @eval $ao(p::Clause{AO}, q::LiteralProposition) where AO <: typeof($ao) = Clause($ao, vcat(p.literals, q))
 end
 # or(p::Valuation, q::Valuation) = Valuation(vcat(p.p, q.p))
 

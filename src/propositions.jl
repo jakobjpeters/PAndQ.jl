@@ -258,11 +258,12 @@ get_abstract_types(type::DataType) = mapreduce(get_abstract_types, vcat, subtype
 
 const concrete_propositions = get_concrete_types(Proposition)
 const abstract_propositions = get_abstract_types(Proposition)
-const atomic_propositions = [Atom, Literal{typeof(identity)}, Tree{typeof(identity)}]
-const literal_propositions = [
-    atomic_propositions...,
+
+const AtomicProposition = Union{Atom, Literal{typeof(identity)}, Tree{typeof(identity)}}
+const LiteralProposition = Union{
+    Base.uniontypes(AtomicProposition)...,
     Literal{typeof(not)},
     Tree{typeof(not), <:Tuple{Tree{typeof(identity), <:Tuple{Atom}}}}
-]
+}
 const NonExpressive = Union{setdiff(abstract_propositions, [Proposition, Expressive])...}
 # TODO: make traits?
