@@ -162,8 +162,10 @@ Normal:
 struct Normal{AO <: AndOr, C <: Clause} <: Expressive
     clauses::Vector{C}
 
-    Normal(::A, clauses::Vector{<:Clause{typeof(or)}} = Clause{typeof(or)}[]) where A <: typeof(and) = new{A, eltype(ps)}(union(clauses))
-    Normal(::O, clauses::Vector{<:Clause{typeof(and)}} = Clause{typeof(and)}[]) where O <: typeof(or) = new{O, eltype(ps)}(union(clauses))
+    Normal(::A, clauses::Vector{C} = C[]) where {A <: typeof(and), C <: Clause{typeof(or)}} =
+        new{A, C}(union(clauses))
+    Normal(::O, clauses::Vector{C} = C[]) where {O <: typeof(or), C <: Clause{typeof(and)}} =
+        new{O, C}(union(clauses))
 end
 
 """
