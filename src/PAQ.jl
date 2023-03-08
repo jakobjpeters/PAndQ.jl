@@ -26,8 +26,7 @@ export
     print_tree, truth_table, @truth_table, #= Base.show, Base.print, =#
 
     # utility.jl
-    @atoms, @p, @p_str, get_atoms,
-    #= Base.foldl, Base.mapfoldl, Base.foldr, Base.mapfoldr, Base.mapreduce =#
+    @atoms, @p, @p_str, get_atoms, #= Base.mapfoldl, Base.mapfoldr, Base.mapreduce =#
 
     # semantics.jl
     interpret, #= Base.:==, =#

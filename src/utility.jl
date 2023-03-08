@@ -1,5 +1,5 @@
 
-import Base: foldl, mapfoldl, foldr, mapfoldr, mapreduce
+import Base: mapfoldl, mapfoldr, mapreduce
 
 define_atom(x::Symbol) = :(const $(x) = $(Atom(x)))
 
@@ -118,58 +118,10 @@ get_atoms(p::Proposition) = unique!(_get_atoms(p))
 # Reductions
 
 """
-    foldl(binary_operator, ps)
-
-Equivalent to `foldl(binary_operator, ps, init = identity(left, binary_operator))`.
-
-See also [`identity`](@ref).
-
-# Examples
-```jldoctest
-julia> foldl(and, [])
-tautology (generic function with 1 method)
-
-julia> @p foldl(and, [p, q, r, s])
-Tree:
- ((p ∧ q) ∧ r) ∧ s
-
-julia> @p foldl(imply, [p, q, r, s])
-Tree:
- ((p → q) → r) → s
-```
-"""
-foldl(::LIO, xs::AbstractArray) where LIO <: LeftIdentityOperator =
-    foldl(LIO.instance, xs, init = identity(:left, LIO.instance))
-
-"""
     mapfoldl
 """
 mapfoldl(f, ::LIO, xs::AbstractArray) where LIO <: LeftIdentityOperator =
     mapfoldl(f, LIO.instance, xs, init = identity(:left, LIO.instance))
-
-"""
-    foldr(binary_operator, ps)
-
-Equivalent to `foldr(binary_operator, ps, init = identity(right, binary_operator))`.
-
-See also [`identity`](@ref).
-
-# Examples
-```jldoctest
-julia> foldr(and, [])
-tautology (generic function with 1 method)
-
-julia> @p foldr(and, [p, q, r, s])
-Tree:
- p ∧ (q ∧ (r ∧ s))
-
-julia> @p foldr(converse_imply, [p, q, r, s])
-Tree:
- p ← (q ← (r ← s))
-```
-"""
-foldr(::RIO, xs::AbstractArray) where RIO <: RightIdentityOperator =
-    foldr(RIO.instance, xs, init = identity(:right, RIO.instance))
 
 """
     mapfoldr
