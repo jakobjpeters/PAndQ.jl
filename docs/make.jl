@@ -22,13 +22,14 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Tutorial" => "tutorial.md",
-        map(["manual", "internals"]) do chapter
-            uppercasefirst(chapter) => map(
-                ["operators", "propositions", "printing", "utility", "semantics"]
-            ) do page
-                uppercasefirst(page) => chapter * "/" * page * ".md"
-            end
-        end...
+        "Manual" => [
+            "Operators" => "manual/operators.md",
+            "Propositions" => "manual/propositions.md",
+            "Printing" => "manual/printing.md",
+            "Utility" => "manual/utility.md",
+            "Semantics" => "manual/semantics.md",
+        ],
+        "Internals" => "internals.md"
     ],
     strict = true
 )

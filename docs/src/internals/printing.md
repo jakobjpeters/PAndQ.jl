@@ -1,7 +1,0 @@
-
-# Printing
-
-```@docs
-show
-print
-```
