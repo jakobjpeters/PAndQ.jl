@@ -1,5 +1,5 @@
 
-import Base: foldl, mapfoldl, foldr, mapfoldr, reduce, mapreduce
+import Base: foldl, mapfoldl, foldr, mapfoldr, mapreduce
 
 define_atom(x::Symbol) = :(const $(x) = $(Atom(x)))
 
@@ -115,6 +115,8 @@ julia> @p get_atoms(p ∧ q)
 """
 get_atoms(p::Proposition) = unique!(_get_atoms(p))
 
+# Reductions
+
 """
     foldl(binary_operator, ps)
 
@@ -136,33 +138,14 @@ Tree:
  ((p → q) → r) → s
 ```
 """
-foldl(
-    bo::Union{
-        typeof(and),
-        typeof(or),
-        typeof(xor),
-        typeof(xnor),
-        typeof(imply),
-        typeof(not_converse_imply)
-    },
-    ps::AbstractArray
-) = foldl(bo, ps, init = identity(:left, bo))
+foldl(::LIO, xs::AbstractArray) where LIO <: LeftIdentityOperator =
+    foldl(LIO.instance, xs, init = identity(:left, LIO.instance))
 
 """
     mapfoldl
 """
-mapfoldl(
-    f,
-    bo::Union{
-        typeof(and),
-        typeof(or),
-        typeof(xor),
-        typeof(xnor),
-        typeof(imply),
-        typeof(not_converse_imply)
-    },
-    ps::AbstractArray
-) = mapfoldl(f, bo, ps, init = identity(:left, bo))
+mapfoldl(f, ::LIO, xs::AbstractArray) where LIO <: LeftIdentityOperator =
+    mapfoldl(f, LIO.instance, xs, init = identity(:left, LIO.instance))
 
 """
     foldr(binary_operator, ps)
@@ -185,86 +168,22 @@ Tree:
  p ← (q ← (r ← s))
 ```
 """
-foldr(
-    bo::Union{
-        typeof(and),
-        typeof(or),
-        typeof(xor),
-        typeof(xnor),
-        typeof(not_imply),
-        typeof(converse_imply)
-    },
-    ps::AbstractArray
-) = foldr(bo, ps, init = identity(:right, bo))
+foldr(::RIO, xs::AbstractArray) where RIO <: RightIdentityOperator =
+    foldr(RIO.instance, xs, init = identity(:right, RIO.instance))
 
 """
     mapfoldr
 """
-mapfoldr(
-    f,
-    bo::Union{
-        typeof(and),
-        typeof(or),
-        typeof(xor),
-        typeof(xnor),
-        typeof(not_imply),
-        typeof(converse_imply)
-    },
-    ps::AbstractArray
-) = mapfoldr(f, bo, ps, init = identity(:right, bo))
-
-"""
-    reduce(binary_operator, ps)
-
-Equivalent to `reduce(binary_operator, ps, init = identity(direction, binary_operator))`,
-where `direction` is either `left` or `right`,
-depending on which is valid for the given binary operator.
-
-See also [`identity`](@ref).
-
-# Examples
-```jldoctest
-julia> reduce(and, [])
-tautology (generic function with 1 method)
-
-julia> @p reduce(imply, [p, q, r, s])
-Tree:
- ((p → q) → r) → s
-
-julia> @p reduce(converse_imply, [p, q, r, s])
-Tree:
- p ← (q ← (r ← s))
-```
-"""
-reduce(
-    bo::Union{
-        typeof(and),
-        typeof(or),
-        typeof(xor),
-        typeof(xnor),
-        typeof(imply),
-        typeof(not_converse_imply)
-    },
-    ps::AbstractArray
-) = foldl(bo, ps)
-reduce(bo::Union{typeof(not_imply), typeof(converse_imply)}, ps::AbstractArray) = foldr(bo, ps)
+mapfoldr(f,::RIO, xs::AbstractArray) where RIO <: RightIdentityOperator =
+    mapfoldr(f, RIO.instance, xs, init = identity(:right, RIO.instance))
 
 """
     mapreduce
 """
-mapreduce(
-    f,
-    bo::Union{
-        typeof(and),
-        typeof(or),
-        typeof(xor),
-        typeof(xnor),
-        typeof(imply),
-        typeof(not_converse_imply)
-    },
-    ps::AbstractArray
-) = mapfoldl(f, bo, ps)
-mapreduce(f, bo::Union{typeof(not_imply), typeof(converse_imply)}, ps::AbstractArray) = mapfoldr(f, bo, ps)
+mapreduce(f, ::LIO, xs::AbstractArray) where LIO <: LeftIdentityOperator = mapfoldl(f, LIO.instance, xs)
+mapreduce(f, ::BO, xs::AbstractArray) where BO <: Union{
+    setdiff(Base.uniontypes(RightIdentityOperator), Base.uniontypes(LeftIdentityOperator))...
+} = mapfoldr(f, BO.instance, xs)
 
 # import Base: rand
 # rand(::Type{Proposition})
