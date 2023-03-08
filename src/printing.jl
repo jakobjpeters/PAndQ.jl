@@ -4,24 +4,6 @@ import AbstractTrees: children, nodevalue, print_tree
 
 using PrettyTables
 
-"""
-    Pretty
-"""
-struct Pretty{P <: Proposition}
-    p::P
-    text::String
-
-    Pretty(p::P, text::String = replace(_show(p), "\"" => "")) where P <: Proposition = new{P}(p, text)
-end
-
-"""
-    @pretty(expression)
-"""
-macro pretty(expression)
-    return :(Pretty($(esc(expression)), $(string(expression))))
-end
-
-
 children(p::Tree) = Tuple(p.node)
 children(p::Tree{typeof(not)}) = p.node
 children(p::Tree{typeof(identity)}) = ()
@@ -243,26 +225,6 @@ macro truth_table(xs...)
         $(numbered_rows ? last(xs) : :(numbered_rows = false))
     )))
 end
-
-struct Proof
-    xs::Vector{Pair}
-
-    # Proof(p::P) where P <: Proof
-    Proof(p::P) where P <: Proposition = interpret(new([p => "Assumption"]))
-end
-
-Proof(premises, conclusion) = Proof(imply(reduce(and, premises), conclusion))
-
-show(io::IO, ::MIME"text/plain", proof::Proof) = pretty_table(
-    io,
-    reduce(
-        hcat,
-        [1:length(proof.xs), map(first, proof.xs), map(last, proof.xs)]
-    ),
-    header = ["#", "Formula", "Reason"],
-    alignment = :l,
-    crop = :none
-)
 
 parenthesize(p::Union{Literal, Tree{<:UnaryOperator}}) = _show(p)
 parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * _show(p) * ")"

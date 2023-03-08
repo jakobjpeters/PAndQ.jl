@@ -22,7 +22,7 @@ export
     Atom, Literal, Clause, Normal, Valuation, Tree,
 
     # pretty_printing.jl
-    Pretty, @pretty, #= AbstractTrees.children, AbstractTrees.nodevalue, =#
+    #= AbstractTrees.children, AbstractTrees.nodevalue, =#
     print_tree, truth_table, @truth_table, #= Base.show, Base.print, =#
 
     # utility.jl
