@@ -214,7 +214,7 @@ is_commutative(::BinaryOperator) = false
 """
     is_associative(::BooleanOperator)
 
-Returns a boolean on whether the given [`BooleanOperator`] has the 
+Returns a boolean on whether the given [`BooleanOperator`](@ref) has the 
 [associative property](https://en.wikipedia.org/wiki/Associative_property).
 
 # Examples

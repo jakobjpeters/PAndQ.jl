@@ -30,7 +30,7 @@ nodevalue(p::Tree{BO}) where BO <: BooleanOperator = BO.instance
 nodevalue(p::Tree{typeof(identity)}) = p
 
 """
-    print_tree(p, [max_depth])
+    print_tree(p, max_depth = typemax(Int64))
 
 Convert `p` to [`Tree`](@ref) and print its tree diagram.
 
@@ -54,8 +54,8 @@ julia> @p print_tree((p ∧ ¬q) ∨ (¬p ∧ q))
    └─ q
 ```
 """
-print_tree(p::Tree, max_depth = typemax(Int)) = print_tree(p, maxdepth = max_depth)
-print_tree(p::Proposition, max_depth = typemax(Int)) = print_tree(Tree(p), max_depth)
+print_tree(p::Tree, max_depth = typemax(Int64)) = print_tree(p, maxdepth = max_depth)
+print_tree(p::Proposition, max_depth = typemax(Int64)) = print_tree(Tree(p), max_depth)
 
 # print_string(p::Proposition)
 

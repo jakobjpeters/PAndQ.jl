@@ -32,8 +32,8 @@ abstract type Expressive <: Compound end
 
 """
     Atom{SS <: Union{String, Symbol}} <: Proposition
-    Atom([::Union{Symbol, String])
-    Atom(::Proposition)
+    Atom(statement::Union{Symbol, String = :_)
+    Atom(::AtomicProposition)
 
 A proposition with [no deeper propositional structure](https://en.wikipedia.org/wiki/Atomic_formula).
 
@@ -65,13 +65,13 @@ Atom:
 struct Atom{SS <: Union{String, Symbol}} <: Proposition
     statement::SS
 
-    Atom(p::SS = :_) where SS <: Union{Symbol, String} = new{SS}(p)
+    Atom(statement::SS = :_) where SS <: Union{Symbol, String} = new{SS}(statement)
 end
 
 """
     Literal{UO <: UnaryOperator} <: Compound
-    Literal(::UO, ::Atom)
-    Literal(::Proposition)
+    Literal(::UO, atom::Atom)
+    Literal(::LiteralProposition)
 
 A proposition represented by
 [an atomic formula or its negation](https://en.wikipedia.org/wiki/Literal_(mathematical_logic)).
@@ -93,7 +93,7 @@ Atom:
 struct Literal{UO <: UnaryOperator} <: Compound
     atom::Atom
 
-    Literal(::UO, p::Atom) where UO <: UnaryOperator = new{UO}(p)
+    Literal(::UO, atom::Atom) where UO <: UnaryOperator = new{UO}(atom)
 end
 
 """
@@ -101,11 +101,11 @@ end
         AO <: AndOr,
         L <: Literal
     } <: Compound
-    Clause(::AO, [ps::Vector])
-    Clause(::AO, ps...)
+    Clause(::AO, literals::Vector = Literal[])
+    Clause(::AO, xs...)
 
 A proposition represented as either a
-[conjunction or disjunction of literals](https://en.wikipedia.org/wiki/Clause_(logic).
+[conjunction or disjunction of literals](https://en.wikipedia.org/wiki/Clause_(logic)).
 
 !!! info
     An empty clause is logically equivalent to the [`identity`](@ref) element of it's binary operator.
@@ -131,14 +131,14 @@ Clause:
 struct Clause{AO <: AndOr, L <: Literal} <: Compound
     literals::Vector{L}
 
-    Clause(::AO, ps::Vector{L} = Literal[]) where {AO <: AndOr, L <: Literal} = new{AO, L}(union(ps))
+    Clause(::AO, literals::Vector{L} = Literal[]) where {AO <: AndOr, L <: Literal} = new{AO, L}(union(literals))
 end
 
 """
     Normal{AO <: AndOr, C <: Clause} <: Expressive
-    Normal(::typef(and), ::Vector{Clause{typeof(or)}})
-    Normal(::typef(or), ::Vector{Clause{typeof(and)}})
-    Normal(p)
+    Normal(::typeof(and), clauses::Vector{Clause{typeof(or)}} = Clause{typeof(or)}[])
+    Normal(::typeof(or), clauses::Vector{Clause{typeof(and)}} = Clause{typeof(and)}[])
+    Normal(::AO, xs...)
 
 A proposition represented in [conjunctive](https://en.wikipedia.org/wiki/Conjunctive_normal_form)
 or [disjunctive](https://en.wikipedia.org/wiki/Disjunctive_normal_form) normal form.
@@ -162,8 +162,8 @@ Normal:
 struct Normal{AO <: AndOr, C <: Clause} <: Expressive
     clauses::Vector{C}
 
-    Normal(::A, ps::Vector{<:Clause{typeof(or)}} = Clause{typeof(or)}[]) where A <: typeof(and) = new{A, eltype(ps)}(union(ps))
-    Normal(::O, ps::Vector{<:Clause{typeof(and)}} = Clause{typeof(and)}[]) where O <: typeof(or) = new{O, eltype(ps)}(union(ps))
+    Normal(::A, clauses::Vector{<:Clause{typeof(or)}} = Clause{typeof(or)}[]) where A <: typeof(and) = new{A, eltype(ps)}(union(clauses))
+    Normal(::O, clauses::Vector{<:Clause{typeof(and)}} = Clause{typeof(and)}[]) where O <: typeof(or) = new{O, eltype(ps)}(union(clauses))
 end
 
 """
@@ -186,7 +186,7 @@ end
 """
     Valuation{P <: Pair} <: Expressive
     Valuation(::Vector{P})
-    Valuation(p)
+    Valuation(x)
 
 Proposition represented by a vector of
 [interpretations](https://en.wikipedia.org/wiki/Interpretation_(logic)).
@@ -210,9 +210,9 @@ Valuation:
 struct Valuation{P <: Pair} <: Expressive # {<:Vector{<:Pair{<:Atom, <:Truth}}, <:Truth}} <: Expressive
     interpretations::Vector{P}
 
-    function Valuation(p::Vector{P}) where P <: Pair # {Vector{Pair{<:Atom, <:Truth}}, <:Truth}}
-        isempty(p) && error("TODO: write this exception")
-        return new{P}(union(p))
+    function Valuation(interpretations::Vector{P}) where P <: Pair # {Vector{Pair{<:Atom, <:Truth}}, <:Truth}}
+        isempty(interpretations) && error("TODO: write this exception")
+        return new{P}(union(interpretations))
     end
 end
 
@@ -221,9 +221,9 @@ end
         O <: BooleanOperator,
         P <: Union{Proposition, Tuple{Proposition, Proposition}}
     } <: Expressive
-    Tree(::UnaryOperator, ::Atom)
-    Tree(::BinaryOperator, ::Tree, ::Tree)
-    Tree(p)
+    Tree(::UnaryOperator, node::Atom)
+    Tree(::BinaryOperator, node::Tree, node::Tree)
+    Tree(x)
 
 Proposition represented by an [abstract syntax tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 
@@ -246,8 +246,9 @@ struct Tree{
 } <: Expressive
     node::TP
 
-    Tree(::UO, p::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, Tuple{A}}((p,))
-    Tree(::BO, p::T1, q::T2) where {BO <: BinaryOperator, T1 <: Tree, T2 <: Tree} = new{BO, Tuple{T1, T2}}((p, q))
+    Tree(::UO, node::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, Tuple{A}}((node,))
+    Tree(::BO, left_node::T1, right_node::T2) where {BO <: BinaryOperator, T1 <: Tree, T2 <: Tree} =
+        new{BO, Tuple{T1, T2}}((left_node, right_node))
 end
 
 get_concrete_types(type::UnionAll) = type
