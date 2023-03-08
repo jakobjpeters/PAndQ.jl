@@ -2,10 +2,9 @@
 using Documenter
 using PAQ
 
-const DIR = @__DIR__
-if !ispath(DIR * "/src/assets/logo.svg")
-    include("logo.jl")
-    make_logo(DIR)
+if !ispath((@__DIR__) * "/src/assets/logo.svg")
+    include("src/assets/logo.jl")
+    make_logo()
 end
 
 DocMeta.setdocmeta!(
