@@ -481,10 +481,6 @@ Equivalent to [`interpret`](@ref), except guaranteed to return the same type.
 foreach([tautology, contradiction]) do truth
     @eval $(Symbol(truth))() = $truth
 end
-left(p, q) = p
-not_left(p, q) = ¬p
-right(p, q) = q
-not_right(p, q) = ¬q
 nand(p, q) = ¬(p ∧ q)
 nor(p, q) = ¬p ∧ ¬q
 or(p, q) = ¬(p ⊽ q)
@@ -505,10 +501,6 @@ not(::typeof(contradiction)) = tautology
 not(::typeof(tautology)) = contradiction
 not(::typeof(identity)) = not
 not(::typeof(not)) = identity
-not(::typeof(left)) = not_left
-not(::typeof(not_left)) = left
-not(::typeof(right)) = not_right
-not(::typeof(not_right)) = right
 not(::typeof(and)) = nand
 not(::typeof(nand)) = and
 not(::typeof(nor)) = or
