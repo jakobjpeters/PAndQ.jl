@@ -216,15 +216,15 @@ Returns the [`BooleanOperator`](@ref) that is the
 of the given boolean operator.
 
 # Examples
-```jldocttest
+```jldoctest
 julia> dual(and)
-or (generic function with 20 methods)
+or (generic function with 17 methods)
 
 julia> @p and(p, q) == not(dual(and)(not(p), not(q)))
 true
 
 julia> dual(imply)
-not_converse_imply (generic function with 12 methods)
+not_converse_imply (generic function with 9 methods)
 
 julia> @p imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
