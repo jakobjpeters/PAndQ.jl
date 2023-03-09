@@ -6,9 +6,10 @@ import Base: identity, nand, ⊼, nor, ⊽, xor, ⊻
 """
     ⊤
     ⊤()
+    tautology
     tautology()
 
-A constant which is [true in every possible interpretation](https://en.wikipedia.org/wiki/Tautology_(logic)).
+Logical [true](https://en.wikipedia.org/wiki/Tautology_(logic)) operator.
 
 `⊤` can be typed by `\\top<tab>`.
 
@@ -32,9 +33,10 @@ const ⊤ = tautology
 """
     ⊥
     ⊥()
+    contradiction
     contradiction()
 
-A constant which is [false in every possible interpretation](https://en.wikipedia.org/wiki/Contradiction).
+Logical [false](https://en.wikipedia.org/wiki/Contradiction) operator.
 
 `⊥` can be typed by `\\bot<tab>`.
 
@@ -59,6 +61,8 @@ const ⊥ = contradiction
 
 """
     identity(::Proposition)
+
+Logical [identity](https://en.wikipedia.org/wiki/Law_of_identity) operator.
 
 # Examples
 ```jldoctest
@@ -237,8 +241,8 @@ function xor end
     ↔(p, q)
     xnor(p, q)
 
-Logical [exclusive non-disjunction](https://en.wikipedia.org/wiki/XNOR_gate) and
-[biconditional](https://en.wikipedia.org/wiki/Logical_biconditional) operator.
+Logical [exclusive non-disjunction](https://en.wikipedia.org/wiki/XNOR_gate)
+and [biconditional](https://en.wikipedia.org/wiki/Logical_biconditional) operator.
 
 `↔` can be typed by `\\leftrightarrow<tab>`.
 
@@ -373,74 +377,71 @@ const ← = converse_imply
 """
     NullaryOperator
 
-[`BooleanOperator`](@ref)s that take zero arguments.
+The union types of [`BooleanOperator`](@ref)s that take zero arguments.
 """
-const NullaryOperator = Union{typeof(tautology), typeof(contradiction)}
+const NullaryOperator = Union{map(typeof, [tautology, contradiction])...}
 
 """
     UnaryOperator
 
-[`BooleanOperator`](@ref)s that take one argument.
+The union types of [`BooleanOperator`](@ref)s that take one argument.
 """
-const UnaryOperator = Union{typeof(identity), typeof(not)}
+const UnaryOperator = Union{map(typeof, [identity, not])...}
 
 """
     BinaryOperator
 
-[`BooleanOperator`](@ref)s that take two arguments.
+The union types of [`BooleanOperator`](@ref)s that take two arguments.
 """
-const BinaryOperator = Union{
-    typeof(and),
-    typeof(nand),
-    typeof(nor),
-    typeof(or),
-    typeof(xor),
-    typeof(xnor),
-    typeof(imply),
-    typeof(not_imply),
-    typeof(converse_imply),
-    typeof(not_converse_imply),
-}
+const BinaryOperator = Union{map(typeof, [
+    and, nand, nor, or, xor, xnor, imply, not_imply, converse_imply, not_converse_imply
+])...}
 # TODO: make traits?
 
 """
     BooleanOperator
 
-A union of [`NullaryOperator`](@ref), [`UnaryOperator`](@ref), and [`BinaryOperator`](@ref).
+The union types of [Boolean Operators](@ref).
 """
 const BooleanOperator = Union{NullaryOperator, UnaryOperator, BinaryOperator}
 
 """
-    CommutativeOperators
+    CommutativeOperator
 
-[`BooleanOperator`](@ref)s with the
-[commutative property](https://en.wikipedia.org/wiki/Commutative_property).
+The union types of [`BooleanOperator`](@ref)s
+with the [commutative property]
+(https://en.wikipedia.org/wiki/Commutative_property).
 """
 const CommutativeOperator = Union{map(typeof, [and, nand, nor, or, xor, xnor])...}
 
 """
     AssociativeOperator
 
-[`BooleanOperator`](@ref)s with the
-[associative property](https://en.wikipedia.org/wiki/Associative_property).
+The union types of [`BooleanOperator`](@ref)s
+with the [associative property]
+(https://en.wikipedia.org/wiki/Associative_property).
 """
 const AssociativeOperator = Union{map(typeof, [and, or, xor, xnor])...}
 
 """
     LeftIdentityOperator
 
-[`BooleanOperator`](@ref)s that have a left [`identity`](@ref).
+The union types of [`BooleanOperator`](@ref)s
+that have a left [`identity`](@ref).
 """
 const LeftIdentityOperator = Union{AssociativeOperator, map(typeof, [imply, not_converse_imply])...}
 
 """
     RightIdentityOperator
 
-[`BooleanOperator`](@ref)s that have a right [`identity`](@ref).
+The union types of [`BooleanOperator`](@ref)s
+that have a right [`identity`](@ref).
 """
 const RightIdentityOperator = Union{AssociativeOperator, map(typeof, [not_imply, converse_imply])...}
 
 """
     AndOr
+
+The union types of [`and`](@ref) and [`or`](@ref).
 """
 const AndOr = Union{map(typeof, [and, or])...}

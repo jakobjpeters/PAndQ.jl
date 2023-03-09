@@ -1,7 +1,7 @@
 
 import Base: mapfoldl, mapfoldr, mapreduce
 
-define_atom(x::Symbol) = :(const $(x) = $(Atom(x)))
+define_atom(p::Symbol) = :(const $(p) = $(Atom(p)))
 
 """
     @atoms(ps...)
@@ -27,20 +27,16 @@ Atom:
  q
 ```
 """
-macro atoms(p, qs...)
-    rs = [p, qs...]
-    return esc(quote
-        $(map(define_atom, rs)...)
-        [$(rs...)]
-    end)
+macro atoms(ps...)
+    return esc(:($(map(define_atom, ps)...); Atom{Symbol}[$(ps...)]))
 end
 #=
 Source:
     https://github.com/JuliaSymbolics/Symbolics.jl
 =#
 
-atomize(x::String) = Atom(x)
-atomize(x::Symbol) = :((@isdefined $x) ? $x : $(Atom(x)))
+atomize(p::String) = Atom(p)
+atomize(p::Symbol) = :((@isdefined $p) ? $p : $(Atom(p)))
 function atomize(x::Expr)
     Meta.isexpr(x, [:(=), :kw]) && return Expr(x.head, x.args[1], map(atomize, x.args[2:end])...)
     return Expr(x.head, map(atomize, x.args)...)
@@ -55,17 +51,17 @@ variables as [`Atom`](@ref)s, and then evaluating the expression.
 
 # Examples
 ```jldoctest
-julia> p = @p x
+julia> x = @p p
 Atom:
- x
+ p
 
-julia> @p p ∧ q → "r"
+julia> @p x ∧ q → "r"
 Tree:
- (x ∧ q) → "r"
+ (p ∧ q) → "r"
 ```
 """
-macro p(p)
-    return esc(:($(atomize(p))))
+macro p(x)
+    return esc(:($(atomize(x))))
 end
 
 """
@@ -91,16 +87,18 @@ __get_atoms(p::Union{Tree, Clause, Normal}) = mapreduce(get_atoms, vcat, getfiel
 _get_atoms(p::Atom) = [p]
 _get_atoms(p::Literal) = get_atoms(p.atom)
 _get_atoms(p::Union{Clause, Normal}) = isempty(getfield(p, 1)) ? Atom[] : __get_atoms(p)
-_get_atoms(p::Valuation) = mapreduce(vcat, p.interpretations) do interpretation # Pair{Vector{Pair{Atom, Truth}}, Truth}
-    map(first, first(interpretation))
-end
+_get_atoms(p::Valuation) =
+    mapreduce(vcat, p.interpretations) do interpretation # Pair{Vector{Pair{Atom, Truth}}, Truth}
+        map(first, first(interpretation))
+    end
 _get_atoms(p::Tree) = __get_atoms(p)
 # _get_atoms(p::Proposition) = get_atoms(Tree(p)) # generic fallback
 
 """
     get_atoms(::Proposition...)
 
-Returns a vector of unique [`Atom`](@ref)s contained in the given [`Proposition`](@ref)(s).
+Returns a vector of unique [`Atom`](@ref)s
+contained in the given [`Proposition`](@ref)(s).
 
 !!! warning
     Some atoms may optimized out of an expression, such as in `p ∧ ⊥ == ⊥`.
@@ -120,22 +118,24 @@ get_atoms(p::Proposition) = unique!(_get_atoms(p))
 """
     mapfoldl
 """
-mapfoldl(f, ::LIO, xs::AbstractArray) where LIO <: LeftIdentityOperator =
-    mapfoldl(f, LIO.instance, xs, init = identity(:left, LIO.instance))
+mapfoldl(f, ::LIO, ps::AbstractArray) where LIO <: LeftIdentityOperator =
+    mapfoldl(f, LIO.instance, ps, init = identity(:left, LIO.instance))
 
 """
     mapfoldr
 """
-mapfoldr(f,::RIO, xs::AbstractArray) where RIO <: RightIdentityOperator =
-    mapfoldr(f, RIO.instance, xs, init = identity(:right, RIO.instance))
+mapfoldr(f,::RIO, ps::AbstractArray) where RIO <: RightIdentityOperator =
+    mapfoldr(f, RIO.instance, ps, init = identity(:right, RIO.instance))
 
 """
     mapreduce
 """
-mapreduce(f, ::LIO, xs::AbstractArray) where LIO <: LeftIdentityOperator = mapfoldl(f, LIO.instance, xs)
-mapreduce(f, ::BO, xs::AbstractArray) where BO <: Union{
-    setdiff(Base.uniontypes(RightIdentityOperator), Base.uniontypes(LeftIdentityOperator))...
-} = mapfoldr(f, BO.instance, xs)
+mapreduce(f, ::LIO, ps::AbstractArray) where LIO <: LeftIdentityOperator =
+    mapfoldl(f, LIO.instance, ps)
+mapreduce(f, ::BO, ps::AbstractArray) where BO <: Union{setdiff(
+    Base.uniontypes(RightIdentityOperator),
+    Base.uniontypes(LeftIdentityOperator)
+)...} = mapfoldr(f, BO.instance, ps)
 
 # import Base: rand
 # rand(::Type{Proposition})

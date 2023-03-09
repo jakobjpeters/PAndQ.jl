@@ -13,7 +13,7 @@ abstract type Proposition end
 """
     Compound <: Proposition
 
-A proposition composed from one or more [`Atom`](@ref)ic propositions.
+A proposition composed from connecting [`Atom`](@ref)icpropositions with [`BooleanOperator`](@ref)s.
 
 Subtype of [`Proposition`](@ref).
 Supertype of [`Literal`](@ref), [`Clause`](@ref), and [`Expressive`](@ref).
@@ -32,24 +32,28 @@ abstract type Expressive <: Compound end
 
 """
     Atom{SS <: Union{String, Symbol}} <: Proposition
-    Atom(statement::Union{Symbol, String = :_)
+    Atom(::SS = :_)
     Atom(::AtomicProposition)
 
 A proposition with [no deeper propositional structure](https://en.wikipedia.org/wiki/Atomic_formula).
 
-A string argument can be thought of as a specific statement,
-while a symbol can be variable. However, the only builtin difference
-between these are how they pretty-print. An atom with a string argument will
-be encompassed by quotation marks, while an atom with a symbol argument will
-only show the symbol's characters.
+A string argument can be thought of as a specific statement,while a symbol can be variable.
+However, the only builtin difference between these are how they pretty-print.
+An atom with a string argument will be encompassed by quotation marks,
+while an atom with a symbol argument will only show the symbol's characters.
+
+!!! tip
+    Use [`@atoms`](@ref) or [`@p`](@ref) as a shortcut to
+    define atoms or instantiate them inline, respectively.
 
 !!! info
-    `Atom()` defaults to `Atom(:_)`. This underscore symbol is useful as a
-    default, such as when representing a truth value. For example,
-    `Tree(⊥)` is pretty-printed as `_ ∧ ¬_`. This is a special case; it is not
-    idiomatic to use for most purposes.
+    The default parameter `:_` represents an Atom with an unspecified statement.
+    For example, `Tree(⊥)` returns `Tree(and(Atom(:_), not(Atom(:_)))`,
+    which pretty-prints as `_ ∧ ¬_`.
+    The underscore is a special case; it is not idiomatic to use for most purposes.
 
 Subtype of [`Proposition`](@ref).
+See also [`AtomicProposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -70,14 +74,14 @@ end
 
 """
     Literal{UO <: UnaryOperator} <: Compound
-    Literal(::UO, atom::Atom)
+    Literal(::UO, ::Atom)
     Literal(::LiteralProposition)
 
-A proposition represented by
-[an atomic formula or its negation](https://en.wikipedia.org/wiki/Literal_(mathematical_logic)).
+A proposition represented by [an atomic formula or its negation]
+(https://en.wikipedia.org/wiki/Literal_(mathematical_logic)).
 
 Subtype of [`Compound`](@ref).
-See also [`UnaryOperator`](@ref) and [`Atom`](@ref).
+See also [`UnaryOperator`](@ref), [`Atom`](@ref), and [`LiteralProposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -97,15 +101,12 @@ struct Literal{UO <: UnaryOperator} <: Compound
 end
 
 """
-    Clause{
-        AO <: AndOr,
-        L <: Literal
-    } <: Compound
-    Clause(::AO, literals::Vector = Literal[])
-    Clause(::AO, xs...)
+    Clause{AO <: AndOr, L <: Literal} <: Compound
+    Clause(::AO, ::Vector = Literal[])
+    Clause(::AO, ps...)
 
-A proposition represented as either a
-[conjunction or disjunction of literals](https://en.wikipedia.org/wiki/Clause_(logic)).
+A proposition represented as either a [conjunction or disjunction of literals]
+(https://en.wikipedia.org/wiki/Clause_(logic)).
 
 !!! info
     An empty clause is logically equivalent to the [`identity`](@ref) element of it's binary operator.
@@ -131,20 +132,22 @@ Clause:
 struct Clause{AO <: AndOr, L <: Literal} <: Compound
     literals::Vector{L}
 
-    Clause(::AO, literals::Vector{L} = Literal[]) where {AO <: AndOr, L <: Literal} = new{AO, L}(union(literals))
+    Clause(::AO, literals::Vector{L} = Literal[]) where {AO <: AndOr, L <: Literal} =
+        new{AO, L}(union(literals))
 end
 
 """
     Normal{AO <: AndOr, C <: Clause} <: Expressive
-    Normal(::typeof(and), clauses::Vector{Clause{typeof(or)}} = Clause{typeof(or)}[])
-    Normal(::typeof(or), clauses::Vector{Clause{typeof(and)}} = Clause{typeof(and)}[])
-    Normal(::AO, xs...)
+    Normal(::A, ::Vector{C} = C[]) where {A <: typeof(and), C <: Clause{typeof(or)}}
+    Normal(::O, ::Vector{C} = C[]) where {O <: typeof(or), C <: Clause{typeof(and)}}
+    Normal(::AO, ps...)
 
 A proposition represented in [conjunctive](https://en.wikipedia.org/wiki/Conjunctive_normal_form)
 or [disjunctive](https://en.wikipedia.org/wiki/Disjunctive_normal_form) normal form.
 
 !!! info
-    An empty normal form is logically equivalent to the [`identity`](@ref) element of it's binary operator.
+    An empty normal form is logically equivalent to the
+    [`identity`](@ref) element of it's binary operator.
 
 Subtype of [`Expressive`](@ref).
 
@@ -171,10 +174,10 @@ end
 """
     Valuation{P <: Pair} <: Expressive
     Valuation(::Vector{P})
-    Valuation(x)
+    Valuation(p)
 
-Proposition represented by a vector of
-[interpretations](https://en.wikipedia.org/wiki/Interpretation_(logic)).
+Proposition represented by a vector of [interpretations]
+(https://en.wikipedia.org/wiki/Interpretation_(logic)).
 
 Subtype of [`Expressive`](@ref).
 
@@ -204,13 +207,13 @@ end
 """
     Tree{
         O <: BooleanOperator,
-        P <: Union{Proposition, Tuple{Proposition, Proposition}}
+        P <: Union{Tuple{Proposition}, Tuple{Proposition, Proposition}}
     } <: Expressive
-    Tree(::UnaryOperator, node::Atom)
-    Tree(::BinaryOperator, node::Tree, node::Tree)
+    Tree(::UnaryOperator, ::Atom)
+    Tree(::BinaryOperator, ::Tree, ::Tree)
     Tree(x)
 
-Proposition represented by an [abstract syntax tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
+A proposition represented by an [abstract syntax tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 
 Subtype of [`Expressive`](@ref).
 
@@ -231,7 +234,8 @@ struct Tree{
 } <: Expressive
     node::TP
 
-    Tree(::UO, node::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, Tuple{A}}((node,))
+    Tree(::UO, leaf_node::A) where {UO <: UnaryOperator, A <: Atom} =
+        new{UO, Tuple{A}}((leaf_node,))
     Tree(::BO, left_node::T1, right_node::T2) where {BO <: BinaryOperator, T1 <: Tree, T2 <: Tree} =
         new{BO, Tuple{T1, T2}}((left_node, right_node))
 end
@@ -247,11 +251,15 @@ const abstract_propositions = get_abstract_types(Proposition)
 
 """
     AtomicProposition
+
+A [`Proposition`](@ref) that is known by its type to be equivalent to an [`Atom`](@ref).
 """
 const AtomicProposition = Union{Atom, Literal{typeof(identity)}, Tree{typeof(identity)}}
 
 """
     LiteralProposition
+
+A [`Proposition`](@ref) that is known by its type to be equivalent to a [`Literal`](@ref).
 """
 const LiteralProposition = Union{
     Base.uniontypes(AtomicProposition)...,
@@ -261,6 +269,10 @@ const LiteralProposition = Union{
 
 """
     NonExpressive
+
+A [`Proposition`](@ref) that is not an [`Expressive`](@ref).
 """
-const NonExpressive = Union{setdiff(abstract_propositions, [Proposition, Expressive])...}
+const NonExpressive = Union{filter(concrete_propositions) do type
+    !(type <: Expressive)
+end...}
 # TODO: make traits?

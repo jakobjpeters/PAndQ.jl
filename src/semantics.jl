@@ -7,14 +7,14 @@ import Base: reduce
     ==(p, q)
     isequal(p, q)
 
-Returns a boolean indicating whether `p` and `q` are
-[logically equivalent](https://en.wikipedia.org/wiki/Logical_equivalence).
+Returns a boolean indicating whether `p` and `q` are [logically equivalent]
+(https://en.wikipedia.org/wiki/Logical_equivalence).
 
 !!! info
     The `≡` symbol is sometimes used to represent logical equivalence.
     However, Julia uses `≡` as an alias for the builtin function `===`
     which cannot have methods added to it.
-    Use this function to test for identity rather than equivalence.
+    Use `==` and `===` to test for equivalence and identity, respectively.
 
 See also [`Proposition`](@ref).
 
@@ -32,7 +32,8 @@ false
 """
 ==(p::NullaryOperator, q::NullaryOperator) = p === q
 ==(p::LiteralProposition, q::LiteralProposition) = Literal(p) === Literal(q)
-==(p::Union{NullaryOperator, Proposition}, q::Union{NullaryOperator, Proposition}) = is_tautology(p ↔ q)
+==(p::Union{NullaryOperator, Proposition}, q::Union{NullaryOperator, Proposition}) =
+    is_tautology(p ↔ q)
 
 """
     is_tautology(p)
@@ -52,8 +53,9 @@ true
 ```
 """
 is_tautology(p::typeof(tautology)) = true
-is_tautology(p::Union{typeof(⊥), Atom, Literal}) = false
-is_tautology(p::CN) where CN <: Union{Clause{A}, Normal{A}} where A <: typeof(and) = isempty(getfield(p, 1))
+is_tautology(p::Union{typeof(contradiction), Atom, Literal}) = false
+is_tautology(p::CN) where {A <: typeof(and), CN <: Union{Clause{A}, Normal{A}}} =
+    isempty(getfield(p, 1))
 is_tautology(p::Valuation) = all(isequal(tautology) ∘ last, p.interpretations)
 is_tautology(p::Proposition) = is_tautology(Valuation(p))
 
@@ -108,7 +110,8 @@ is_truth(p::Proposition) = is_truth(Valuation(p))
 """
     is_contingency(p)
 
-Returns a boolean on whether `p` is a contingency
+Returns a boolean on whether `p` is a
+[contingency](https://en.wikipedia.org/wiki/Contingency_(philosophy))
 (neither a [`tautology`](@ref) or [`contradiction`](@ref)).
 
 See also [`Proposition`](@ref).
@@ -133,7 +136,8 @@ is_contingency(p) = !is_truth(p)
 """
     is_satisfiable(p)
 
-Returns a boolean on whether `p` is satisfiable
+Returns a boolean on whether `p` is
+[satisfiable](https://en.wikipedia.org/wiki/Satisfiability)
 (not a [`contradiction`](@ref)).
 
 See also [`Proposition`](@ref).
@@ -158,7 +162,8 @@ is_satisfiable(p) = !is_contradiction(p)
 """
     is_falsifiable(p)
 
-Returns a boolean on whether `p` is falsifiable
+Returns a boolean on whether `p` is
+[falsifiable](https://en.wikipedia.org/wiki/Falsifiability)
 (not a [`tautology`](@ref)).
 
 See also [`Proposition`](@ref).
@@ -202,11 +207,11 @@ julia> @p imply(p, q) == converse(imply)(q, p)
 true
 ```
 """
-converse(::typeof(imply)) = converse_imply
-converse(::typeof(not_imply)) = not_converse_imply
-converse(::typeof(converse_imply)) = imply
-converse(::typeof(not_converse_imply)) = not_imply
 converse(::CO) where CO <: CommutativeOperator = CO.instance
+foreach([(imply, converse_imply), (not_imply, not_converse_imply)]) do pair
+    @eval converse(::typeof($(first(pair)))) = $(last(pair))
+    @eval converse(::typeof($(last(pair)))) = $(first(pair))
+end
 
 """
     dual(::BooleanOperator)
@@ -230,17 +235,18 @@ julia> @p imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
 ```
 """
-dual(::typeof(and)) = or
-dual(::typeof(nand)) = nor
-dual(::typeof(nor)) = nand
-dual(::typeof(or)) = and
-dual(::typeof(xor)) = xnor
-dual(::typeof(xnor)) = xor
-dual(::typeof(imply)) = not_converse_imply
-dual(::typeof(not_imply)) = converse_imply
-dual(::typeof(converse_imply)) = not_imply
-dual(::typeof(not_converse_imply)) = imply
-dual(::BO) where BO <: Union{map(typeof, [tautology, contradiction, xor, xnor])...} = not(BO.instance)
+dual(::BO) where BO <: Union{map(typeof, [tautology, contradiction, xor, xnor])...} =
+    not(BO.instance)
+foreach([
+    (and, or),
+    (nand, nor),
+    (xor, xnor),
+    (imply, not_converse_imply),
+    (not_imply, converse_imply)
+]) do pair
+    @eval dual(::typeof($(first(pair)))) = $(last(pair))
+    @eval dual(::typeof($(last(pair)))) = $(first(pair))
+end
 # TODO: `dual(::typeof(not))` and `dual(::typeof(identity))` ?
 
 """
@@ -261,13 +267,13 @@ julia> identity(:left, imply)
 tautology (generic function with 1 method)
 ```
 """
-identity(::Union{Val{:left}, Val{:right}}, ::Union{typeof(and), typeof(xnor)}) = ⊤
-identity(::Union{Val{:left}, Val{:right}}, ::Union{typeof(or), typeof(xor)}) = ⊥
+identity(::Union{Val{:left}, Val{:right}}, ::Union{map(typeof, [and, xnor])...}) = ⊤
+identity(::Union{Val{:left}, Val{:right}}, ::Union{map(typeof, [or, xor])...}) = ⊥
 identity(::Val{:left}, ::typeof(imply)) = ⊤
 identity(::Val{:right}, ::typeof(not_imply)) = ⊥
 identity(::Val{:right}, ::typeof(converse_imply)) = ⊤
 identity(::Val{:left}, ::typeof(not_converse_imply)) = ⊥
-identity(x, bo::BinaryOperator) = identity(Val(x), bo)
+identity(x, binary_operator::BinaryOperator) = identity(Val(x), binary_operator)
 
 """
     interpret(p, valuation...)
@@ -291,7 +297,8 @@ that is independent from every `Atom`s in `valuation`.
 ```
 """
 interpret(p::Atom, valuation::Dict) = get(valuation, p, p)
-interpret(p::Literal{UO}, valuation::Dict) where UO <: UnaryOperator = UO.instance(interpret(p.atom, valuation))
+interpret(p::Literal{UO}, valuation::Dict) where UO <: UnaryOperator =
+    UO.instance(interpret(p.atom, valuation))
 # interpret(p::Tree{BO}, valuation::Dict) where BO <: BooleanOperator = BO.instance(
 #     map(p.p) do p
 #         interpret(p, valuation)
@@ -304,7 +311,7 @@ function interpret(p::Clause{AO}, valuation::Dict) where AO <: AndOr
     interpretation = map(p.literals) do literal
         assignment = interpret(literal, valuation)
         assignment == not(neutral_element) && return not(neutral_element)
-        assignment
+        return assignment
     end
     return reduce(AO.instance, interpretation)
 
@@ -380,12 +387,9 @@ julia> @p solve(p ⊻ q)
  [p => ⊤, q => ⊥]
 ```
 """
-solve(p::Valuation) = map(
-    first,
-    filter(p.interpretations) do interpretation
-        last(interpretation) == ⊤
-    end
-)
+solve(p::Valuation) = map(first, filter(p.interpretations) do interpretation
+    last(interpretation) == ⊤
+end)
 solve(p) = solve(Valuation(p))
 # solve(p, qs) = solve(reduce(and, qs, init = p))
 # solve(p, qs...) = solve(p, collect(qs))
@@ -444,9 +448,8 @@ not(::typeof(not_converse_imply)) = converse_imply
 # propositions
 not(p::Atom) = Literal(not, p)
 not(p::Literal{UO}) where UO <: UnaryOperator = not(UO.instance)(p.atom)
-not(p::CN) where CN <: Union{Clause{AO}, Normal{AO}} where AO <: AndOr = getfield(Main, nameof(CN))(
-    dual(AO.instance), map(not, getfield(p, 1))
-)
+not(p::CN) where CN <: Union{Clause{AO}, Normal{AO}} where AO <: AndOr =
+    getfield(Main, nameof(CN))(dual(AO.instance), map(not, getfield(p, 1)))
 not(p::Valuation) = Valuation(
     map(p.interpretations) do interpretation # Pair{Vector{Pair{Atom, Truth}}, Truth}
         first(interpretation) => not(last(interpretation))
@@ -471,36 +474,32 @@ foreach(Base.uniontypes(AndOr)) do AO
     @eval $ao(p::Clause{$DAO}, q::Clause{$DAO}) = Normal($ao, p, q)
     @eval $ao(p::Normal, q::Normal)= $ao(Normal($ao, p), Normal($ao, q))
 
-    @eval $ao(p::LiteralProposition, q::Clause{AO}) where AO <: typeof($ao) = Clause($ao, vcat(p, q.literals))
-    @eval $ao(p::Clause{AO}, q::LiteralProposition) where AO <: typeof($ao) = Clause($ao, vcat(p.literals, q))
+    @eval $ao(p::LiteralProposition, q::Clause{AO}) where AO <: typeof($ao) =
+        Clause($ao, vcat(p, q.literals))
+    @eval $ao(p::Clause{AO}, q::LiteralProposition) where AO <: typeof($ao) =
+        Clause($ao, vcat(p.literals, q))
 end
 # or(p::Valuation, q::Valuation) = Valuation(vcat(p.p, q.p))
 
 not(p::AbstractArray) = map(not, p)
 
 foreach(Base.uniontypes(BinaryOperator)) do BO
-    bo = Symbol(BO.instance)
+    binary_operator = Symbol(BO.instance)
 
-    @eval $bo(p) = Base.Fix1($bo, p)
+    @eval $binary_operator(p) = Base.Fix1($binary_operator, p)
 
-    @eval $bo(p::Proposition, q::AbstractArray) = map($bo(p), q)
-    @eval $bo(p::AbstractArray, q::Proposition) = map($bo(q), p)
-    # @eval function $bo(p::VecOrMat, q::VecOrMat)
-
-    # end
-end
-
-# generic fallbacks and promotion
-foreach(Base.uniontypes(BinaryOperator)) do BO
-    bo = Symbol(BO.instance)
+    @eval $binary_operator(p::Proposition, q::AbstractArray) = map($binary_operator(p), q)
+    @eval $binary_operator(p::AbstractArray, q::Proposition) = map($binary_operator(q), p)
+    # @eval $bo(p::VecOrMat, q::VecOrMat) = ?
 
     foreach([Atom, Literal]) do AL
-        @eval $bo(p::$AL, q::$AL) = $bo(Tree(p), Tree(q))
+        @eval $binary_operator(p::$AL, q::$AL) = $binary_operator(Tree(p), Tree(q))
     end
-    @eval $bo(p::Tree, q::Tree) = Tree($bo, p, q)
-    @eval $bo(p::Union{Atom, Literal}, q::Tree) = Tree($bo, Tree(p), q)
-    @eval $bo(p::Tree, q::Union{Atom, Literal}) = Tree($bo, p, Tree(q))
+    @eval $binary_operator(p::Tree, q::Tree) = Tree($binary_operator, p, q)
+    @eval $binary_operator(p::Union{Atom, Literal}, q::Tree) = Tree($binary_operator, Tree(p), q)
+    @eval $binary_operator(p::Tree, q::Union{Atom, Literal}) = Tree($binary_operator, p, Tree(q))
 end
+
 and(p::Proposition, q::Proposition) = and(promote(p, q)...)
 or(p::Union{Clause, Normal}, q::Union{Clause, Normal}) = or(promote(p, q)...)
 
@@ -581,11 +580,9 @@ promote_rule(::Type{<:Proposition}, ::Type{<:Proposition}) = Tree # generic fall
 function get_valuations(atoms)
     n = length(atoms)
     truth_sets = Iterators.product(Iterators.repeated([⊤, ⊥], n)...)
-    return vec(
-        map(truth_sets) do truth_set # Vector{Truth}
-            map(Pair, atoms, truth_set)
-        end
-    )
+    return vec(map(truth_sets) do truth_set # Vector{Truth}
+        map(Pair, atoms, truth_set)
+    end)
 end
 
 get_interpretation(p, valuations) = map(valuations) do valuation

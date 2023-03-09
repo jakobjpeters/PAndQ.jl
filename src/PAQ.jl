@@ -32,4 +32,5 @@ export
     interpret, #= Base.:==, =#
     is_tautology, is_contradiction, is_truth, is_contingency, is_satisfiable, is_falsifiable,
     converse, dual, solve #= Base.identity, =#
+
 end # module

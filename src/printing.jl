@@ -14,8 +14,9 @@ nodevalue(p::Tree{typeof(identity)}) = p
 """
     print_tree(p, max_depth = typemax(Int64))
 
-Convert `p` to [`Tree`](@ref) and print its tree diagram.
+Prints a tree diagram of `p`.
 
+If `p` isn't a [`Tree`](@ref), it will be converted to one.
 The optional argument `max_depth` will truncate sub-trees at that depth.
 
 ```jldoctest
@@ -56,18 +57,19 @@ truths only generate a single row, and no propositions
 =#
 
 """
-    truth_table(xs::AbstractArray; numbered_rows = false)
-    truth_table(xs...; numbered_rows = false)
+    truth_table(::AbstractArray; numbered_rows = false)
+    truth_table(ps...; numbered_rows = false)
 
-Print a truth table for the given [`Proposition`](@ref)s and [`BinaryOperator`](@ref)s.
+Print a [truth table](https://en.wikipedia.org/wiki/Truth_table)
+for the given [`Proposition`](@ref)s and [`BinaryOperator`](@ref)s.
+
+If `numbered_rows = true`, the first column will contain each row's sequential number.
 
 The first row of the header is the expression representing that column's proposition,
 while the second row indicates that expression's type.
 Logically equivalent propositions will be grouped in the same column, seperated by a comma.
 
-If `numbered_rows = true`, the first column will contain each row's sequential number.
-
-In this context, [`⊤`](@ref tautology) and [`⊥`](@ref contradiction) can be interpreted as *true* and *false*, respectively.
+See also [`tautology`](@ref) and [`contradiction`](@ref).
 
 # Examples
 ```jldoctest
@@ -96,20 +98,20 @@ julia> truth_table([⊻, imply], numbered_rows = true)
 └───┴──────┴──────┴────────┴────────┘
 ```
 """
-function truth_table(xs::AbstractArray; numbered_rows = false)
+function truth_table(ps::AbstractArray; numbered_rows = false)
     # ToDo: write docstring - define behavior
     # ToDo: write tests
     # TODO: fix `truth_table(Valuation(⊤))`?
     # TODO: make header support operators (`⊤; NullaryOperator`, `⊻; BinaryOperator`)
 
-    operator_to_proposition = x -> begin
-        x isa NullaryOperator && return Clause(x)
-        x isa UnaryOperator && return x(Atom(:_))
-        x isa BinaryOperator && return x(Atom(:_), Atom(:__))
-        return x
+    operator_to_proposition = p -> begin
+        p isa NullaryOperator && return Clause(p)
+        p isa UnaryOperator && return p(Atom(:_))
+        p isa BinaryOperator && return p(Atom(:_), Atom(:__))
+        return p
     end
 
-    ps = map(operator_to_proposition, xs)
+    ps = map(operator_to_proposition, ps)
     # atoms = get_atoms(map(interpret ∘ Valuation, ps)) # TODO: only atoms that affect the outcome (p ∧ ¬p ∨ q)
     atoms = mapreduce(get_atoms, union, ps)
     grouped_ps = Vector{Proposition}[]
@@ -172,22 +174,20 @@ function truth_table(xs::AbstractArray; numbered_rows = false)
         body = hcat(1:n_rows, body)
     end
 
-    pretty_table(
+    return pretty_table(
         body,
         header = (header, sub_header),
         body_hlines = collect(0:2:n_rows),
         alignment = :l,
         crop = :none
     )
-
-    return nothing
 end
-truth_table(xs...; numbered_rows = false) = truth_table(collect(xs), numbered_rows = numbered_rows)
+truth_table(ps...; numbered_rows = false) = truth_table(collect(ps), numbered_rows = numbered_rows)
 
 """
-    @truth_table(xs...)
+    @truth_table(ps...; numbered_rows = false)
 
-Equivalent to `@p truth_table(xs...)`.
+Equivalent to `@p truth_table(ps...; numbered_rows = false)`.
 
 See also [`@p`](@ref) and [`truth_table`](@ref).
 
@@ -218,53 +218,60 @@ julia> @truth_table (⊻) imply numbered_rows = true
 └───┴──────┴──────┴────────┴────────┘
 ```
 """
-macro truth_table(xs...)
-    numbered_rows = Meta.isexpr(last(xs), :(=))
+macro truth_table(ps...)
+    numbered_rows = Meta.isexpr(last(ps), :(=))
     return esc(:(truth_table(
-        $(map(atomize, xs[1:length(xs) - numbered_rows])...);
-        $(numbered_rows ? last(xs) : :(numbered_rows = false))
+        $(map(atomize, ps[1:length(ps) - numbered_rows])...);
+        $(numbered_rows ? last(ps) : :(numbered_rows = false))
     )))
 end
 
 parenthesize(p::Union{Literal, Tree{<:UnaryOperator}}) = _show(p)
-parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * _show(p) * ")"
+parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = reduce(*, ["(", _show(p), ")"])
 
 _show(::typeof(identity)) = ""
-foreach([:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚]) do x
-    @eval _show(::typeof($x)) = $(string(x))
+foreach([:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚]) do boolean_operator
+    @eval _show(::typeof($boolean_operator)) = $(string(boolean_operator))
 end
 _show(p::Atom{Symbol}) = string(p.statement)
 _show(p::Atom{String}) = "\"" * p.statement * "\""
 function _show(p::Valuation) # TODO: improve, support `[Valuation(and, p), etc]`
-    s = ""
-
-    for interpretation in p.interpretations
-        s *= "["
-        s *= join(map(x -> _show(first(x)) * " => " * _show(last(x)), first(interpretation)), ", ")
-        s *= "] => " * _show(last(interpretation))
-        if interpretation != last(p.interpretations)
-            s *= "\n "
-        end
-    end
-    return s
-
-    x = repr("text/plain", p.interpretations)
-    i = last(findfirst("\n ", x))
-    return x[i + 1:end]
+    return join(
+        map(p.interpretations) do interpretation
+            reduce(*, [
+                "[",
+                join(
+                    map(first(interpretation)) do pair
+                        _show(first(pair)) * " => " * _show(last(pair))
+                    end,
+                    ", "
+                ),
+                "] => ",
+                _show(last(interpretation))
+            ])
+        end,
+        "\n "
+    )
 end
 _show(p::Tuple{Proposition}) = _show(only(p))
-_show(p::Union{Literal{UO}, Tree{UO}}) where UO <: UnaryOperator = _show(UO.instance) * _show(getfield(p, 1))
-_show(p::Tree{BO}) where BO <: BinaryOperator = parenthesize(first(p.node)) * " " * _show(BO.instance) * " " * parenthesize(last(p.node))
+_show(p::Union{Literal{UO}, Tree{UO}}) where UO <: UnaryOperator =
+    _show(UO.instance) * _show(getfield(p, 1))
+_show(p::Tree{BO}) where BO <: BinaryOperator = join([
+    parenthesize(first(p.node)),
+    _show(BO.instance),
+    parenthesize(last(p.node))
+], " ")
 function _show(p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr
     isempty(getfield(p, 1)) && return _show(identity(:left, AO.instance))
-    return join(map(parenthesize, getfield(p, 1)), " " * _show(AO.instance) * " ")
+    return join(map(parenthesize, getfield(p, 1)), join(repeat([" "], 2), _show(AO.instance)))
 end
 
 """
     show
 """
 show(io::IO, p::Union{BooleanOperator, Proposition}) = print(io, _show(p))
-show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition = print(io, nameof(P), ":\n ", _show(p))
+show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition =
+    print(io, nameof(P), ":\n ", _show(p))
 
 """
     print
