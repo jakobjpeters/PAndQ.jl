@@ -169,23 +169,6 @@ struct Normal{AO <: AndOr, C <: Clause} <: Expressive
 end
 
 """
-    Interpretation
-
-# Examples
-"""
-# struct Interpretation{C <: Clause{typeof(and)}, T <: Truth} <: Proposition
-#     p::C
-#     q::T
-# end
-# not(p::Interpretation) = Interpretation(p.p, not(p.q))
-# is_tautology(p::Interpretation{typeof(⊤)}) = true
-# is_tautology(p::Interpretation{typeof(⊥)}) = false
-# solve(p::Valuation) = map(x -> x.p, filter(is_tautology, p.p))
-# struct Valuation{I <: Interpretation} <: Expressive
-#     p::Vector{I}
-# end
-
-"""
     Valuation{P <: Pair} <: Expressive
     Valuation(::Vector{P})
     Valuation(x)
