@@ -26,7 +26,7 @@ abstract type Compound <: Proposition end
 A proposition that is [expressively complete](https://en.wikipedia.org/wiki/Completeness_(logic)).
 
 Subtype of [`Compound`](@ref).
-Supertype of [`Valuation`](@ref), [`Tree`](@ref), [`Normal`](@ref), and [`Pretty`](@ref).
+Supertype of [`Valuation`](@ref), [`Tree`](@ref), and[`Normal`](@ref).
 """
 abstract type Expressive <: Compound end
 
