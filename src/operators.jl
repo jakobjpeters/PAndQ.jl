@@ -443,4 +443,4 @@ const RightIdentityOperator = Union{AssociativeOperator, map(typeof, [not_imply,
 """
     AndOr
 """
-const AndOr = Union{typeof(and), typeof(or)}
+const AndOr = Union{map(typeof, [and, or])...}
