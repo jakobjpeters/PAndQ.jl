@@ -597,7 +597,8 @@ end
 """
 convert(::Type{Atom}, p::Literal{typeof(identity)}) = p.atom
 convert(::Type{Atom}, p::Tree{typeof(identity), <:Tuple{Atom}}) = only(p.node)
-convert(::Type{Literal}, p::Tree{UO, <:Tuple{Atom}}) where UO <: UnaryOperator = ¬(¬p)
+convert(::Type{Literal}, p::Tree{UO, <:Tuple{Atom}}) where UO <: UnaryOperator =
+    Literal(UO.instance(only(p.node)))
 convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
 convert(::Type{Clause}, p::typeof(tautology)) = Clause(and)
 convert(::Type{Clause}, p::typeof(contradiction)) = Clause(or)
@@ -616,8 +617,8 @@ function convert(::Type{Tree}, p::Valuation)
     mapreduce_or = interpretations -> mapreduce(mapreduce_and, or, interpretations)
     return Tree(mapreduce_or(valid_interpretations))
 end
-convert(::Type{Tree}, p::Clause{AO}) where AO <: AndOr = reduce(AO.instance, p.literals)
-convert(::Type{Tree}, p::Normal{AO}) where AO <: AndOr = mapreduce(Tree, AO.instance, p.clauses)
+convert(::Type{Tree}, p::Clause{AO}) where AO <: AndOr = Tree(reduce(AO.instance, p.literals))
+convert(::Type{Tree}, p::Normal{AO}) where AO <: AndOr = Tree(mapreduce(Tree, AO.instance, p.clauses))
 convert(::Type{Valuation}, ::NO) where NO <: NullaryOperator = Valuation([[] => NO.instance])
 function convert(::Type{Valuation}, p::Union{setdiff(concrete_propositions, [Valuation])...})
     valuations = get_valuations(get_atoms(p))
