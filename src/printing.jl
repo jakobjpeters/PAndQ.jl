@@ -56,6 +56,11 @@ the order of the columns is determined first by type
 truths only generate a single row, and no propositions
 =#
 
+operator_to_proposition(x::NullaryOperator) = Clause(x)
+operator_to_proposition(x::UnaryOperator) = x(Atom(:_))
+operator_to_proposition(x::BinaryOperator) = x(Atom(:_), Atom(:__))
+operator_to_proposition(p::Proposition) = p
+
 """
     truth_table(::AbstractArray; numbered_rows = false)
     truth_table(ps...; numbered_rows = false)
@@ -103,13 +108,6 @@ function truth_table(ps::AbstractArray; numbered_rows = false)
     # ToDo: write tests
     # TODO: fix `truth_table(Valuation(⊤))`?
     # TODO: make header support operators (`⊤; NullaryOperator`, `⊻; BinaryOperator`)
-
-    operator_to_proposition = p -> begin
-        p isa NullaryOperator && return Clause(p)
-        p isa UnaryOperator && return p(Atom(:_))
-        p isa BinaryOperator && return p(Atom(:_), Atom(:__))
-        return p
-    end
 
     ps = map(operator_to_proposition, ps)
     # atoms = get_atoms(map(interpret ∘ Valuation, ps)) # TODO: only atoms that affect the outcome (p ∧ ¬p ∨ q)
