@@ -528,6 +528,9 @@ Normal(::AO, p::Tree{BO}) where {AO <: AndOr, BO <: BooleanOperator} = BO.instan
         Normal(AO.instance, branch)
     end...
 )
+Normal(::AO, p::Clause{AO}) where AO <: AndOr = Normal(AO.instance, map(p.literals) do literal
+    Clause(dual(AO.instance), literal)
+end)
 # Normal(::AO, ps::AbstractArray) where AO <: AndOr
 # Normal(::AO, p::Normal) where AO <: AndOr = Normal(
 #     AO.instance,
