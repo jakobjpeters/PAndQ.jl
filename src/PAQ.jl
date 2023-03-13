@@ -31,6 +31,6 @@ export
     # semantics.jl
     interpret, #= Base.:==, =#
     is_tautology, is_contradiction, is_truth, is_contingency, is_satisfiable, is_falsifiable,
-    converse, dual, solve #= Base.identity, =#
+    converse, dual, solve #= Base.identity, Base.Bool =#
 
 end # module

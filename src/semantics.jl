@@ -1,6 +1,5 @@
 
-import Base: ==, convert, promote_rule
-import Base: reduce
+import Base: ==, convert, promote_rule, Bool
 
 """
     p == q
@@ -424,11 +423,6 @@ imply(p, q) = ¬(p ↛ q)
 not_converse_imply(p, q) = ¬p ∧ q
 converse_imply(p, q) = ¬(p ↚ q)
 
-# Bool
-not(p::Bool) = !p
-and(p::Bool, q::Bool) = p && q
-or(p::Bool, q::Bool) = p || q
-
 # boolean operators
 not(::typeof(contradiction)) = tautology
 not(::typeof(tautology)) = contradiction
@@ -628,7 +622,12 @@ function convert(::Type{Valuation}, p::Union{setdiff(concrete_propositions, [Val
     return Valuation(vec(map(Pair, valuations, interpretation)))
 end
 
-
+# Bool
+not(p::Bool) = !p
+and(p::Bool, q::Bool) = p && q
+or(p::Bool, q::Bool) = p || q
+Bool(::typeof(tautology)) = true
+Bool(::typeof(contradiction)) = false
 
 
 # dynamically generate? refactor?
