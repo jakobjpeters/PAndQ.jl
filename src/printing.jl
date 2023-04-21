@@ -225,7 +225,7 @@ macro truth_table(ps...)
 end
 
 parenthesize(p::Union{Literal, Tree{<:UnaryOperator}}) = _show(p)
-parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = reduce(*, ["(", _show(p), ")"])
+parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = join(["(", _show(p), ")"])
 
 _show(::typeof(identity)) = ""
 foreach([:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚]) do boolean_operator
@@ -236,11 +236,11 @@ _show(p::Atom{String}) = "\"" * p.statement * "\""
 function _show(p::Valuation) # TODO: improve, support `[Valuation(and, p), etc]`
     return join(
         map(p.interpretations) do interpretation
-            reduce(*, [
+            join([
                 "[",
                 join(
                     map(first(interpretation)) do pair
-                        _show(first(pair)) * " => " * _show(last(pair))
+                        join([_show(first(pair)), " => ", _show(last(pair))])
                     end,
                     ", "
                 ),
