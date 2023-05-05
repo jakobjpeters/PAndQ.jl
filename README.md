@@ -48,24 +48,17 @@ julia> r = ¬p
 Literal:
  ¬p
 
-julia> s = @p q ∧ r
+julia> t = @p (q ∧ r) → s
 Tree:
- q ∧ ¬p
+ (q ∧ ¬p) → s
 
-julia> interpret(s, p => ⊥)
-Atom:
- q
+julia> interpret(t, p => ⊥)
+Tree:
+ q → s
 
-julia> Valuation(s)
-Valuation:
- [q => ⊤, p => ⊤] => ⊥
- [q => ⊥, p => ⊤] => ⊥
- [q => ⊤, p => ⊥] => ⊤
- [q => ⊥, p => ⊥] => ⊥
-
-julia> @p Clause(and, r, t, ¬u)
+julia> @p Clause(and, r, u, ¬v)
 Clause:
- ¬p ∧ t ∧ ¬u
+ ¬p ∧ u ∧ ¬v
 
 julia> @truth_table p ∧ ¬p r p ⊻ q (p ∨ q) ∧ (p ⊼ q)
 ┌────────┬──────┬──────┬─────────┬──────────────────────────┐
