@@ -21,7 +21,7 @@ julia&gt; @truth_table ⊤
 │ Clause │
 ├────────┤
 │ ⊤      │
-└────────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/0698e78bbf203e989dc406db693d77b7ed024fdf/src/operators.jl#L6-L29">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.contradiction" href="#PAQ.contradiction"><code>PAQ.contradiction</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">⊥
+└────────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/6f54ec9dc4d7229726242051d99859241cc6e5e6/src/operators.jl#L6-L29">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.contradiction" href="#PAQ.contradiction"><code>PAQ.contradiction</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">⊥
 ⊥()
 contradiction
 contradiction()</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Contradiction">false</a> operator.</p><p><code>⊥</code> can be typed by <code>\bot&lt;tab&gt;</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; ⊥()
@@ -33,14 +33,14 @@ julia&gt; @truth_table ⊥
 │ Clause │
 ├────────┤
 │ ⊥      │
-└────────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/0698e78bbf203e989dc406db693d77b7ed024fdf/src/operators.jl#L33-L56">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Base.identity" href="#Base.identity"><code>Base.identity</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">identity(::Proposition)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Law_of_identity">identity</a> operator.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @truth_table p
+└────────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/6f54ec9dc4d7229726242051d99859241cc6e5e6/src/operators.jl#L33-L56">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Base.identity" href="#Base.identity"><code>Base.identity</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">identity(::Proposition)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Law_of_identity">identity</a> operator.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @truth_table p
 ┌──────┐
 │ p    │
 │ Atom │
 ├──────┤
 │ ⊤    │
 │ ⊥    │
-└──────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/0698e78bbf203e989dc406db693d77b7ed024fdf/src/operators.jl#L62-L78">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.not" href="#PAQ.not"><code>PAQ.not</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">¬p
+└──────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/6f54ec9dc4d7229726242051d99859241cc6e5e6/src/operators.jl#L62-L78">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.not" href="#PAQ.not"><code>PAQ.not</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">¬p
 ¬(p)
 not(p)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Negation">negation</a> operator.</p><p><code>¬</code> can be typed by <code>\neg&lt;tab&gt;</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @truth_table ¬p
 ┌──────┬─────────┐
@@ -49,7 +49,7 @@ not(p)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Negation">n
 ├──────┼─────────┤
 │ ⊤    │ ⊥       │
 │ ⊥    │ ⊤       │
-└──────┴─────────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/0698e78bbf203e989dc406db693d77b7ed024fdf/src/operators.jl#L81-L101">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.and" href="#PAQ.and"><code>PAQ.and</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ∧ q
+└──────┴─────────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/6f54ec9dc4d7229726242051d99859241cc6e5e6/src/operators.jl#L81-L101">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.and" href="#PAQ.and"><code>PAQ.and</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ∧ q
 ∧(p, q)
 and(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Logical_conjunction">conjunction</a> operator.</p><p><code>∧</code> can be typed by <code>\wedge&lt;tab&gt;</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @truth_table p ∧ q
 ┌──────┬──────┬───────┐
@@ -61,7 +61,7 @@ and(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Logical_
 ├──────┼──────┼───────┤
 │ ⊤    │ ⊥    │ ⊥     │
 │ ⊥    │ ⊥    │ ⊥     │
-└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/0698e78bbf203e989dc406db693d77b7ed024fdf/src/operators.jl#L107-L130">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Base.nand" href="#Base.nand"><code>Base.nand</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ⊼ q
+└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/6f54ec9dc4d7229726242051d99859241cc6e5e6/src/operators.jl#L107-L130">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Base.nand" href="#Base.nand"><code>Base.nand</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ⊼ q
 ⊼(p, q)
 nand(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Sheffer_stroke">non-conjunction</a> operator.</p><p><code>⊼</code> can be typed by <code>\nand&lt;tab&gt;</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @truth_table p ⊼ q
 ┌──────┬──────┬───────┐
@@ -73,7 +73,7 @@ nand(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Sheffer
 ├──────┼──────┼───────┤
 │ ⊤    │ ⊥    │ ⊤     │
 │ ⊥    │ ⊥    │ ⊤     │
-└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/0698e78bbf203e989dc406db693d77b7ed024fdf/src/operators.jl#L134-L157">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Base.nor" href="#Base.nor"><code>Base.nor</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ⊽ q
+└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/6f54ec9dc4d7229726242051d99859241cc6e5e6/src/operators.jl#L134-L157">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Base.nor" href="#Base.nor"><code>Base.nor</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ⊽ q
 ⊽(p, q)
 nor(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Logical_NOR">non-disjunction</a> operator.</p><p><code>⊽</code> can be typed by <code>\nor&lt;tab&gt;</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @truth_table p ⊽ q
 ┌──────┬──────┬───────┐
@@ -85,7 +85,7 @@ nor(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Logical_
 ├──────┼──────┼───────┤
 │ ⊤    │ ⊥    │ ⊥     │
 │ ⊥    │ ⊥    │ ⊤     │
-└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/0698e78bbf203e989dc406db693d77b7ed024fdf/src/operators.jl#L160-L183">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.or" href="#PAQ.or"><code>PAQ.or</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ∨ q
+└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/6f54ec9dc4d7229726242051d99859241cc6e5e6/src/operators.jl#L160-L183">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.or" href="#PAQ.or"><code>PAQ.or</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ∨ q
 ∨(p, q)
 or(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Logical_disjunction">disjunction</a> operator.</p><p><code>∨</code> can be typed by <code>\vee&lt;tab&gt;</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @truth_table p ∨ q
 ┌──────┬──────┬───────┐
@@ -97,7 +97,7 @@ or(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Logical_d
 ├──────┼──────┼───────┤
 │ ⊤    │ ⊥    │ ⊤     │
 │ ⊥    │ ⊥    │ ⊥     │
-└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/0698e78bbf203e989dc406db693d77b7ed024fdf/src/operators.jl#L186-L209">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Base.xor" href="#Base.xor"><code>Base.xor</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ⊻ q
+└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/6f54ec9dc4d7229726242051d99859241cc6e5e6/src/operators.jl#L186-L209">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Base.xor" href="#Base.xor"><code>Base.xor</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ⊻ q
 ⊻(p, q)
 xor(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Exclusive_or">exclusive disjunction</a> operator.</p><p><code>⊻</code> can be typed by <code>\xor&lt;tab&gt;</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @truth_table p ⊻ q
 ┌──────┬──────┬───────┐
@@ -109,7 +109,7 @@ xor(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Exclusiv
 ├──────┼──────┼───────┤
 │ ⊤    │ ⊥    │ ⊤     │
 │ ⊥    │ ⊥    │ ⊥     │
-└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/0698e78bbf203e989dc406db693d77b7ed024fdf/src/operators.jl#L213-L236">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.xnor" href="#PAQ.xnor"><code>PAQ.xnor</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ↔ q
+└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/6f54ec9dc4d7229726242051d99859241cc6e5e6/src/operators.jl#L213-L236">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.xnor" href="#PAQ.xnor"><code>PAQ.xnor</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ↔ q
 ↔(p, q)
 xnor(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/XNOR_gate">exclusive non-disjunction</a> and <a href="https://en.wikipedia.org/wiki/Logical_biconditional">biconditional</a> operator.</p><p><code>↔</code> can be typed by <code>\leftrightarrow&lt;tab&gt;</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @truth_table p ↔ q
 ┌──────┬──────┬───────┐
@@ -121,7 +121,7 @@ xnor(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/XNOR_ga
 ├──────┼──────┼───────┤
 │ ⊤    │ ⊥    │ ⊥     │
 │ ⊥    │ ⊥    │ ⊤     │
-└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/0698e78bbf203e989dc406db693d77b7ed024fdf/src/operators.jl#L239-L263">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.imply" href="#PAQ.imply"><code>PAQ.imply</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p → q
+└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/6f54ec9dc4d7229726242051d99859241cc6e5e6/src/operators.jl#L239-L263">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.imply" href="#PAQ.imply"><code>PAQ.imply</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p → q
 →(p, q)
 imply(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Material_conditional">implication</a> operator.</p><p><code>→</code> can be typed by <code>\rightarrow&lt;tab&gt;</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @truth_table p → q
 ┌──────┬──────┬───────┐
@@ -133,7 +133,7 @@ imply(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Materi
 ├──────┼──────┼───────┤
 │ ⊤    │ ⊥    │ ⊥     │
 │ ⊥    │ ⊥    │ ⊤     │
-└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/0698e78bbf203e989dc406db693d77b7ed024fdf/src/operators.jl#L294-L317">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.not_imply" href="#PAQ.not_imply"><code>PAQ.not_imply</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ↛ q
+└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/6f54ec9dc4d7229726242051d99859241cc6e5e6/src/operators.jl#L294-L317">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.not_imply" href="#PAQ.not_imply"><code>PAQ.not_imply</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ↛ q
 ↛(p, q)
 not_imply(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Material_nonimplication">non-implication</a> operator.</p><p><code>↛</code> can be typed by <code>\nrightarrow&lt;tab&gt;</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @truth_table p ↛ q
 ┌──────┬──────┬───────┐
@@ -145,7 +145,7 @@ not_imply(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Ma
 ├──────┼──────┼───────┤
 │ ⊤    │ ⊥    │ ⊤     │
 │ ⊥    │ ⊥    │ ⊥     │
-└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/0698e78bbf203e989dc406db693d77b7ed024fdf/src/operators.jl#L267-L290">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.converse_imply" href="#PAQ.converse_imply"><code>PAQ.converse_imply</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ← q
+└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/6f54ec9dc4d7229726242051d99859241cc6e5e6/src/operators.jl#L267-L290">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.converse_imply" href="#PAQ.converse_imply"><code>PAQ.converse_imply</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ← q
 ←(p, q)
 converse_imply(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Converse_(logic)#Implicational_converse">converse implication</a> operator.</p><p><code>←</code> can be typed by <code>\leftarrow&lt;tab&gt;</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @truth_table p ← q
 ┌──────┬──────┬───────┐
@@ -157,7 +157,7 @@ converse_imply(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wi
 ├──────┼──────┼───────┤
 │ ⊤    │ ⊥    │ ⊤     │
 │ ⊥    │ ⊥    │ ⊤     │
-└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/0698e78bbf203e989dc406db693d77b7ed024fdf/src/operators.jl#L348-L371">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.not_converse_imply" href="#PAQ.not_converse_imply"><code>PAQ.not_converse_imply</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ↚ q
+└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/6f54ec9dc4d7229726242051d99859241cc6e5e6/src/operators.jl#L348-L371">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="PAQ.not_converse_imply" href="#PAQ.not_converse_imply"><code>PAQ.not_converse_imply</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p ↚ q
 ↚(p, q)
 not_converse_imply(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.org/wiki/Converse_nonimplication">converse non-implication</a> operator.</p><p><code>↚</code> can be typed by <code>\nleftarrow&lt;tab&gt;</code>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @truth_table p ↚ q
 ┌──────┬──────┬───────┐
@@ -169,4 +169,4 @@ not_converse_imply(p, q)</code></pre><p>Logical <a href="https://en.wikipedia.or
 ├──────┼──────┼───────┤
 │ ⊤    │ ⊥    │ ⊥     │
 │ ⊥    │ ⊥    │ ⊥     │
-└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/0698e78bbf203e989dc406db693d77b7ed024fdf/src/operators.jl#L321-L344">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../tutorial/">« Tutorial</a><a class="docs-footer-nextpage" href="../propositions/">Propositions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Friday 10 March 2023 00:50">Friday 10 March 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+└──────┴──────┴───────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAQ.jl/blob/6f54ec9dc4d7229726242051d99859241cc6e5e6/src/operators.jl#L321-L344">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../tutorial/">« Tutorial</a><a class="docs-footer-nextpage" href="../propositions/">Propositions »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Friday 5 May 2023 07:54">Friday 5 May 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
