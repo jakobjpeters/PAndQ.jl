@@ -239,8 +239,8 @@ function _show(p::Valuation) # TODO: improve, support `[Valuation(and, p), etc]`
             join([
                 "[",
                 join(
-                    map(first(interpretation)) do pair
-                        join([_show(first(pair)), " => ", _show(last(pair))])
+                    map(first(interpretation)) do (left, right)
+                        join([_show(left), " => ", _show(right)])
                     end,
                     ", "
                 ),

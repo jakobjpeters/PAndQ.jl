@@ -207,9 +207,9 @@ true
 ```
 """
 converse(::CO) where CO <: CommutativeOperator = CO.instance
-foreach([(imply, converse_imply), (not_imply, not_converse_imply)]) do pair
-    @eval converse(::typeof($(first(pair)))) = $(last(pair))
-    @eval converse(::typeof($(last(pair)))) = $(first(pair))
+foreach([(imply, converse_imply), (not_imply, not_converse_imply)]) do (left, right)
+    @eval converse(::typeof($left)) = $right
+    @eval converse(::typeof($right)) = $left
 end
 
 """
@@ -237,14 +237,14 @@ true
 dual(::BO) where BO <: Union{map(typeof, [tautology, contradiction, xor, xnor])...} =
     not(BO.instance)
 foreach([
-    (and, or),
-    (nand, nor),
-    (xor, xnor),
-    (imply, not_converse_imply),
-    (not_imply, converse_imply)
-]) do pair
-    @eval dual(::typeof($(first(pair)))) = $(last(pair))
-    @eval dual(::typeof($(last(pair)))) = $(first(pair))
+    and => or,
+    nand => nor,
+    xor => xnor,
+    imply => not_converse_imply,
+    not_imply => converse_imply
+]) do (left, right)
+    @eval dual(::typeof($left)) = $right
+    @eval dual(::typeof($right)) = $left
 end
 # TODO: `dual(::typeof(not))` and `dual(::typeof(identity))` ?
 
@@ -606,7 +606,7 @@ function convert(::Type{Tree}, p::Valuation)
     is_truth(p) && return Tree(last(first(p.interpretations)))
 
     valid_interpretations = filter(isequal(tautology) ∘ last, p.interpretations)
-    pair_to_literal = pair -> (last(pair) == tautology ? identity : not)(Literal(first(pair)))
+    pair_to_literal = (left, right) -> (right == tautology ? identity : not)(Literal(left))
     mapreduce_and = interpretation -> mapreduce(pair_to_literal, and, first(interpretation))
     mapreduce_or = interpretations -> mapreduce(mapreduce_and, or, interpretations)
     return Tree(mapreduce_or(valid_interpretations))
