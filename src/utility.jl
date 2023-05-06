@@ -77,7 +77,7 @@ julia> p"\\"p\\" ∧ p, Clause(and)"
 ("p" ∧ x, ⊤)
 ```
 """
-macro p_str(p) # TODO: `$` interpolation
+macro p_str(p)
     return esc(:(@p $(Meta.parse(p))))
 end
 

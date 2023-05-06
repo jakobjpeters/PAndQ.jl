@@ -102,7 +102,7 @@ false
 """
 is_truth(p::NullaryOperator) = true
 is_truth(p::Union{Atom, Literal}) = false
-is_truth(p::Clause) = isempty(p.literals) ? (return true) : return is_truth(Valuation(p))
+is_truth(p::Clause) = isempty(p.literals) ? true : is_truth(Valuation(p))
 is_truth(p::Valuation) = length(unique(map(last, p.interpretations))) == 1
 is_truth(p::Proposition) = is_truth(Valuation(p))
 
@@ -424,20 +424,18 @@ not_converse_imply(p, q) = ¬p ∧ q
 converse_imply(p, q) = ¬(p ↚ q)
 
 # boolean operators
-not(::typeof(contradiction)) = tautology
-not(::typeof(tautology)) = contradiction
-not(::typeof(identity)) = not
-not(::typeof(not)) = identity
-not(::typeof(and)) = nand
-not(::typeof(nand)) = and
-not(::typeof(nor)) = or
-not(::typeof(or)) = nor
-not(::typeof(xor)) = xnor
-not(::typeof(xnor)) = xor
-not(::typeof(imply)) = not_imply
-not(::typeof(not_imply)) = imply
-not(::typeof(converse_imply)) = not_converse_imply
-not(::typeof(not_converse_imply)) = converse_imply
+foreach([
+    tautology => contradiction,
+    identity => not,
+    and => nand,
+    or => nor,
+    xor => xnor,
+    imply => not_imply,
+    converse_imply => not_converse_imply
+]) do (left, right)
+    @eval not(::typeof($left)) = $right
+    @eval not(::typeof($right)) = $left
+end
 
 # propositions
 not(p::Atom) = Literal(not, p)
@@ -519,7 +517,7 @@ Clause(::AO, ps...) where AO <: AndOr = Clause(AO.instance, collect(ps))
 
 Normal(::AO, p::Tree{BO}) where {AO <: AndOr, BO <: BooleanOperator} = BO.instance(
     map(p.node) do branch
-        Normal(AO.instance, branch)
+        return Normal(AO.instance, branch)
     end...
 )
 Normal(::AO, p::Clause{AO}) where AO <: AndOr = Normal(AO.instance, map(p.literals) do literal
@@ -623,11 +621,12 @@ function convert(::Type{Valuation}, p::Union{setdiff(concrete_propositions, [Val
 end
 
 # Bool
+Bool(::typeof(tautology)) = true
+Bool(::typeof(contradiction)) = false
 not(p::Bool) = !p
 and(p::Bool, q::Bool) = p && q
 or(p::Bool, q::Bool) = p || q
-Bool(::typeof(tautology)) = true
-Bool(::typeof(contradiction)) = false
+converse_imply(p::Bool, q::Bool) = p ^ q
 
 
 # dynamically generate? refactor?

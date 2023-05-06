@@ -3,8 +3,9 @@ using Test
 using Documenter
 using PAQ
 
-@test isempty(detect_ambiguities(PAQ, recursive = true))
-@test isempty(detect_unbound_args(PAQ, recursive = true))
+foreach([:detect_ambiguities, :detect_unbound_args]) do f
+    @eval @test isempty($f(PAQ, recursive = true))
+end
 
 DocMeta.setdocmeta!(
     PAQ,
