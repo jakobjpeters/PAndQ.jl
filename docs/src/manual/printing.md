@@ -1,5 +1,5 @@
 
-# Pretty Printing
+# Printing
 
 ```@docs
 print_tree

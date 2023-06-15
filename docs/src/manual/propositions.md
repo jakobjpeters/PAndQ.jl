@@ -1,5 +1,5 @@
 
-# Propositional Logic
+# Propositions
 
 !!! tip
     Propositions can be converted into different, but logically equivalent forms (see also [`==`](@ref)). For example, `⊥ == Valuation(⊥) == Tree(⊥) == Clause(⊥)`. However, not all forms are [`Expressive`](@ref)ly complete. Otherwise, the conversion may throw an exception. For example, there is no way to represent `Literal(⊥)`.
