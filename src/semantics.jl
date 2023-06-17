@@ -200,7 +200,7 @@ julia> @p and(p, q) == converse(and)(q, p)
 true
 
 julia> converse(imply)
-converse_imply (generic function with 9 methods)
+converse_imply (generic function with 10 methods)
 
 julia> @p imply(p, q) == converse(imply)(q, p)
 true
