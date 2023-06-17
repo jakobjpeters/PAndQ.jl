@@ -497,22 +497,8 @@ or(p::Union{Clause, Normal}, q::Union{Clause, Normal}) = or(promote(p, q)...)
 
 # Constructors
 
-function Clause(::AO, ps::AbstractArray) where AO <: AndOr
-    neutral_element = identity(:left, AO.instance)
-    qs = Literal[]
-    for p in ps
-        if p isa NullaryOperator
-            p == neutral_element && continue
-            r = Atom()
-            return Clause(AO.instance, [r, ¬r])
-        elseif p isa Clause{AO}
-            append!(qs, p.literals)
-        else
-            push!(qs, p)
-        end
-    end
-    return Clause(AO.instance, qs)
-end
+Clause(::AO, ps::AbstractArray) where AO <: AndOr =
+    isempty(ps) ? Clause(AO.instance) : Clause(AO.instance, map(Literal, ps))
 Clause(::AO, ps...) where AO <: AndOr = Clause(AO.instance, collect(ps))
 
 Normal(::AO, p::Tree{BO}) where {AO <: AndOr, BO <: BooleanOperator} = BO.instance(
@@ -523,7 +509,10 @@ Normal(::AO, p::Tree{BO}) where {AO <: AndOr, BO <: BooleanOperator} = BO.instan
 Normal(::AO, p::Clause{AO}) where AO <: AndOr = Normal(AO.instance, map(p.literals) do literal
     Clause(dual(AO.instance), literal)
 end)
-Normal(::AO, ps::AbstractArray) where AO <: AndOr = error("TODO: implement this method")
+Normal(::AO, ps::AbstractArray) where AO <: AndOr =
+    isempty(ps) ? Normal(AO.instance) : Normal(AO.instance, map(ps) do p
+        Clause(dual(AO.instance), p)
+    end)
 Normal(::AO, p::Normal) where AO <: AndOr = error("TODO: implement this method")
 Normal(::AO, p::Normal{AO}) where AO <: AndOr = p
 Normal(::AO, ps...) where AO <: AndOr = Normal(AO.instance, collect(ps))
