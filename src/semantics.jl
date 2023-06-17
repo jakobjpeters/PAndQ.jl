@@ -523,31 +523,11 @@ Normal(::AO, p::Tree{BO}) where {AO <: AndOr, BO <: BooleanOperator} = BO.instan
 Normal(::AO, p::Clause{AO}) where AO <: AndOr = Normal(AO.instance, map(p.literals) do literal
     Clause(dual(AO.instance), literal)
 end)
-# Normal(::AO, ps::AbstractArray) where AO <: AndOr
-# Normal(::AO, p::Normal) where AO <: AndOr = Normal(
-#     AO.instance,
-#     foldl(distribute, p.p, init = Clause{typeof(dual(AO.instance))}[])
-# )
+Normal(::AO, ps::AbstractArray) where AO <: AndOr = error("TODO: implement this method")
+Normal(::AO, p::Normal) where AO <: AndOr = error("TODO: implement this method")
 Normal(::AO, p::Normal{AO}) where AO <: AndOr = p
 Normal(::AO, ps...) where AO <: AndOr = Normal(AO.instance, collect(ps))
 
-# function distribute(ps::Vector{<:Clause}, q::Clause{AO}) where AO <: AndOr
-#     return map(q.p) do qp
-#         Clause(
-#             dual(AO.instance),
-#             vcat(
-#                 qp, map(ps)
-#             )
-#         )
-#     end
-
-#     isempty(ps) && return [q]
-#     xs = Clause{typeof(dual(AO.instance))}[]
-#     for p in ps
-#         push!(xs, Clause(dual(AO.instance), vcat(p.p, q.p)))
-#     end
-#     return xs
-# end
 foreach([Atom, Literal, Clause, Normal, Valuation, Tree]) do P
     @eval $(nameof(P))(p) = convert($(nameof(P)), p)
 end
