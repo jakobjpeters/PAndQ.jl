@@ -194,7 +194,7 @@ of the given boolean operator.
 # Examples
 ```jldoctest
 julia> converse(and)
-and (generic function with 20 methods)
+and (generic function with 22 methods)
 
 julia> @p and(p, q) == converse(and)(q, p)
 true
@@ -222,7 +222,7 @@ of the given boolean operator.
 # Examples
 ```jldoctest
 julia> dual(and)
-or (generic function with 17 methods)
+or (generic function with 19 methods)
 
 julia> @p and(p, q) == not(dual(and)(not(p), not(q)))
 true
@@ -470,6 +470,9 @@ foreach(Base.uniontypes(AndOr)) do AO
         Clause($ao, vcat(p, q.literals))
     @eval $ao(p::Clause{AO}, q::LiteralProposition) where AO <: typeof($ao) =
         Clause($ao, vcat(p.literals, q))
+
+    @eval $ao(p::Clause{$DAO}, q::Normal{AO}) where AO <: typeof($ao) = Normal($ao, vcat(p, q.clauses))
+    @eval $ao(p::Normal{AO}, q::Clause{$DAO}) where AO <: typeof($ao) = Normal($ao, vcat(p.clauses, q))
 end
 # or(p::Valuation, q::Valuation) = Valuation(vcat(p.p, q.p))
 
@@ -513,7 +516,13 @@ Normal(::AO, ps::AbstractArray) where AO <: AndOr =
     isempty(ps) ? Normal(AO.instance) : Normal(AO.instance, map(ps) do p
         Clause(dual(AO.instance), p)
     end)
-Normal(::AO, p::Normal) where AO <: AndOr = error("TODO: implement this method")
+Normal(::AO, p::Normal) where AO <: AndOr = reduce(AO.instance,
+    map(Iterators.product(map(p.clauses) do clause
+        clause.literals
+    end...)) do literals
+        Clause(dual(AO.instance), collect(literals))
+    end
+)
 Normal(::AO, p::Normal{AO}) where AO <: AndOr = p
 Normal(::AO, ps...) where AO <: AndOr = Normal(AO.instance, collect(ps))
 
