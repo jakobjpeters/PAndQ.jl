@@ -18,7 +18,7 @@ Logical [true](https://en.wikipedia.org/wiki/Tautology_(logic)) operator.
 julia> ⊤()
 tautology (generic function with 1 method)
 
-julia> @truth_table ⊤
+julia> @p TruthTable(⊤)
 ┌────────┐
 │ ⊤      │
 │ Clause │
@@ -45,7 +45,7 @@ Logical [false](https://en.wikipedia.org/wiki/Contradiction) operator.
 julia> ⊥()
 contradiction (generic function with 1 method)
 
-julia> @truth_table ⊥
+julia> @p TruthTable(⊥)
 ┌────────┐
 │ ⊥      │
 │ Clause │
@@ -66,7 +66,7 @@ Logical [identity](https://en.wikipedia.org/wiki/Law_of_identity) operator.
 
 # Examples
 ```jldoctest
-julia> @truth_table p
+julia> @p TruthTable(p)
 ┌──────┐
 │ p    │
 │ Atom │
@@ -89,7 +89,7 @@ Logical [negation](https://en.wikipedia.org/wiki/Negation) operator.
 
 # Examples
 ```jldoctest
-julia> @truth_table ¬p
+julia> @p TruthTable(¬p)
 ┌──────┬─────────┐
 │ p    │ ¬p      │
 │ Atom │ Literal │
@@ -115,7 +115,7 @@ Logical [conjunction](https://en.wikipedia.org/wiki/Logical_conjunction) operato
 
 # Examples
 ```jldoctest
-julia> @truth_table p ∧ q
+julia> @p TruthTable(p ∧ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ∧ q │
 │ Atom │ Atom │ Tree  │
@@ -142,7 +142,7 @@ Logical [non-conjunction](https://en.wikipedia.org/wiki/Sheffer_stroke) operator
 
 # Examples
 ```jldoctest
-julia> @truth_table p ⊼ q
+julia> @p TruthTable(p ⊼ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ⊼ q │
 │ Atom │ Atom │ Tree  │
@@ -168,7 +168,7 @@ Logical [non-disjunction](https://en.wikipedia.org/wiki/Logical_NOR) operator.
 
 # Examples
 ```jldoctest
-julia> @truth_table p ⊽ q
+julia> @p TruthTable(p ⊽ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ⊽ q │
 │ Atom │ Atom │ Tree  │
@@ -194,7 +194,7 @@ Logical [disjunction](https://en.wikipedia.org/wiki/Logical_disjunction) operato
 
 # Examples
 ```jldoctest
-julia> @truth_table p ∨ q
+julia> @p TruthTable(p ∨ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ∨ q │
 │ Atom │ Atom │ Tree  │
@@ -221,7 +221,7 @@ Logical [exclusive disjunction](https://en.wikipedia.org/wiki/Exclusive_or) oper
 
 # Examples
 ```jldoctest
-julia> @truth_table p ⊻ q
+julia> @p TruthTable(p ⊻ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ⊻ q │
 │ Atom │ Atom │ Tree  │
@@ -248,7 +248,7 @@ and [biconditional](https://en.wikipedia.org/wiki/Logical_biconditional) operato
 
 # Examples
 ```jldoctest
-julia> @truth_table p ↔ q
+julia> @p TruthTable(p ↔ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ↔ q │
 │ Atom │ Atom │ Tree  │
@@ -275,7 +275,7 @@ Logical [non-implication](https://en.wikipedia.org/wiki/Material_nonimplication)
 
 # Examples
 ```jldoctest
-julia> @truth_table p ↛ q
+julia> @p TruthTable(p ↛ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ↛ q │
 │ Atom │ Atom │ Tree  │
@@ -302,7 +302,7 @@ Logical [implication](https://en.wikipedia.org/wiki/Material_conditional) operat
 
 # Examples
 ```jldoctest
-julia> @truth_table p → q
+julia> @p TruthTable(p → q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p → q │
 │ Atom │ Atom │ Tree  │
@@ -329,7 +329,7 @@ Logical [converse non-implication](https://en.wikipedia.org/wiki/Converse_nonimp
 
 # Examples
 ```jldoctest
-julia> @truth_table p ↚ q
+julia> @p TruthTable(p ↚ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ↚ q │
 │ Atom │ Atom │ Tree  │
@@ -356,7 +356,7 @@ Logical [converse implication](https://en.wikipedia.org/wiki/Converse_(logic)#Im
 
 # Examples
 ```jldoctest
-julia> @truth_table p ← q
+julia> @p TruthTable(p ← q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ← q │
 │ Atom │ Atom │ Tree  │
@@ -401,7 +401,7 @@ const BinaryOperator = Union{map(typeof, [
 """
     BooleanOperator
 
-The union types of [Boolean Operators](@ref).
+The union types of [boolean operators](@ref operators_operators).
 """
 const BooleanOperator = Union{NullaryOperator, UnaryOperator, BinaryOperator}
 

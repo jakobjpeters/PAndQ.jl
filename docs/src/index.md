@@ -28,7 +28,7 @@ julia> r = ¬p
 Literal:
  ¬p
 
-julia> t = @p (q ∧ r) → s
+julia> @p t = (q ∧ r) → s
 Tree:
  (q ∧ ¬p) → s
 
@@ -40,7 +40,7 @@ julia> @p Clause(and, r, u, ¬v)
 Clause:
  ¬p ∧ u ∧ ¬v
 
-julia> @truth_table p ∧ ¬p r p ⊻ q (p ∨ q) ∧ (p ⊼ q)
+julia> TruthTable(p ∧ ¬p, r, p ⊻ q, (p ∨ q) ∧ (p ⊼ q))
 ┌────────┬──────┬──────┬─────────┬──────────────────────────┐
 │ p ∧ ¬p │ p    │ q    │ ¬p      │ p ⊻ q, (p ∨ q) ∧ (p ⊼ q) │
 │ Tree   │ Atom │ Atom │ Literal │ Tree, Tree               │

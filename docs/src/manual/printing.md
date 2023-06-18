@@ -2,7 +2,13 @@
 # Printing
 
 ```@docs
+TruthTable
+print_truth_table
+println_truth_table
 print_tree
-truth_table
-@truth_table
+println_tree
+print_latex
+println_latex
+print_markdown
+println_markdown
 ```

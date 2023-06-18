@@ -12,21 +12,23 @@ export
     # operators.jl
     tautology, ⊤, contradiction, ⊥,
     #= Base.identity, =# not, ¬,
-    and, ∧, #= Base.nand, Base.:⊼, Base.nor, Base.:⊽, =# or, ∨, #= Base.xor, Base.:⊻, =#
-    xnor, ↔, imply, →, not_imply, ↛, converse_imply, ←, not_converse_imply, ↚,
-    #= NullaryOperator, UnaryOperator, BinaryOperator, BooleanOperator,
-    CommutativeOperator, AssociativeOperator, AndOr, =#
+    and, ∧, #= Base.nand, Base.:⊼, Base.nor, Base.:⊽, =#
+    or, ∨, #= Base.xor, Base.:⊻, =# xnor, ↔, imply, →,
+    not_imply, ↛, converse_imply, ←, not_converse_imply, ↚,
 
     # types.jl
     Proposition, Compound, Expressive,
     Atom, Literal, Clause, Normal, Valuation, Tree,
 
-    # pretty_printing.jl
-    #= AbstractTrees.children, AbstractTrees.nodevalue, =#
-    print_tree, truth_table, @truth_table, #= Base.show, Base.print, =#
+    # printing.jl
+    TruthTable, print_truth_table, println_truth_table,
+    print_tree, println_tree, print_latex, println_latex,
+    #= Markdown. =# MD, print_markdown, println_markdown,
+    #= Base.show, Base.print, =#
 
     # utility.jl
-    @atoms, @p, @p_str, get_atoms, #= Base.mapfoldl, Base.mapfoldr, Base.mapreduce =#
+    @atoms, @p, @p_str, get_atoms,
+    #= Base.mapfoldl, Base.mapfoldr, Base.mapreduce =#
 
     # semantics.jl
     interpret, #= Base.:==, =#

@@ -1,7 +1,7 @@
 
 # Internals
 
-## Operators
+## [Operators](@id internals_operators)
 
 ```@docs
 PAQ.NullaryOperator

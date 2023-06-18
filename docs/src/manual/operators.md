@@ -3,12 +3,12 @@
 DocTestSetup = :(using PAQ)
 ```
 
-# Operators
+# [Operators](@id operators_operators)
 
 Every possible truth table can be constructed with the functionally complete set of operators `not` and `and`. For convenience, all sixteen of them have been prepared. There are ten binary operators, with the remaining six being expressed with truth values, individual propositions, and the unary [`not`](@ref) operator.
 
 ```jldoctest
-julia> @truth_table ⊤ ⊥ ¬p ¬q
+julia> @p TruthTable(⊤, ⊥, ¬p, ¬q)
 ┌────────┬────────┬──────┬──────┬─────────┬─────────┐
 │ ⊤      │ ⊥      │ p    │ q    │ ¬p      │ ¬q      │
 │ Clause │ Clause │ Atom │ Atom │ Literal │ Literal │
