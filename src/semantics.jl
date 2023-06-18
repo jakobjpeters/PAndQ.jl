@@ -207,9 +207,10 @@ true
 ```
 """
 converse(::CO) where CO <: CommutativeOperator = CO.instance
-foreach([(imply, converse_imply), (not_imply, not_converse_imply)]) do (left, right)
-    @eval converse(::typeof($left)) = $right
-    @eval converse(::typeof($right)) = $left
+foreach([(imply, converse_imply), (not_imply, not_converse_imply)]) do double
+    foreach([double, reverse(double)]) do (left, right)
+        @eval converse(::typeof($left)) = $right
+    end
 end
 
 """
@@ -234,17 +235,19 @@ julia> @p imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
 ```
 """
-dual(::BO) where BO <: Union{map(typeof, [tautology, contradiction, xor, xnor])...} =
-    not(BO.instance)
+dual(::BO) where BO <: Union{
+    map(typeof, [tautology, contradiction, xor, xnor])...
+} = not(BO.instance)
 foreach([
-    and => or,
-    nand => nor,
-    xor => xnor,
-    imply => not_converse_imply,
-    not_imply => converse_imply
-]) do (left, right)
-    @eval dual(::typeof($left)) = $right
-    @eval dual(::typeof($right)) = $left
+    (and, or),
+    (nand, nor),
+    (xor, xnor),
+    (imply, not_converse_imply),
+    (not_imply, converse_imply)
+]) do double
+    foreach([double, reverse(double)]) do (left, right)
+        @eval dual(::typeof($left)) = $right
+    end
 end
 # TODO: `dual(::typeof(not))` and `dual(::typeof(identity))` ?
 
@@ -266,13 +269,18 @@ julia> identity(:left, imply)
 tautology (generic function with 1 method)
 ```
 """
-identity(::Union{Val{:left}, Val{:right}}, ::Union{map(typeof, [and, xnor])...}) = ⊤
-identity(::Union{Val{:left}, Val{:right}}, ::Union{map(typeof, [or, xor])...}) = ⊥
-identity(::Val{:left}, ::typeof(imply)) = ⊤
-identity(::Val{:right}, ::typeof(not_imply)) = ⊥
-identity(::Val{:right}, ::typeof(converse_imply)) = ⊤
-identity(::Val{:left}, ::typeof(not_converse_imply)) = ⊥
 identity(x, binary_operator::BinaryOperator) = identity(Val(x), binary_operator)
+foreach([(:and, :xnor, :⊤), (:or, :xor, :⊥)]) do (left, middle, right)
+    @eval identity(::Union{Val{:left}, Val{:right}}, ::Union{map(typeof, [$left, $middle])...}) = $right
+end
+foreach([
+    (:left, :imply, :⊤),
+    (:right, :not_imply, :⊥),
+    (:right, :converse_imply, :⊤),
+    (:left, :not_converse_imply, :⊥)
+]) do (left, middle, right)
+    @eval identity(::$(typeof(Val(left))), ::typeof($middle)) = $right
+end
 
 """
     interpret(p, valuation...)
@@ -306,11 +314,11 @@ interpret(p::Literal{UO}, valuation::Dict) where UO <: UnaryOperator =
 function interpret(p::Clause{AO}, valuation::Dict) where AO <: AndOr
     neutral_element = identity(:left, AO.instance)
     isempty(p.literals) && return neutral_element
+    not_neutral_element = not(neutral_element)
 
     interpretation = map(p.literals) do literal
         assignment = interpret(literal, valuation)
-        assignment == not(neutral_element) && return not(neutral_element)
-        return assignment
+        assignment == not_neutral_element ? not_neutral_element : assignment
     end
     return reduce(AO.instance, interpretation)
 
@@ -425,16 +433,17 @@ converse_imply(p, q) = ¬(p ↚ q)
 
 # boolean operators
 foreach([
-    tautology => contradiction,
-    identity => not,
-    and => nand,
-    or => nor,
-    xor => xnor,
-    imply => not_imply,
-    converse_imply => not_converse_imply
-]) do (left, right)
-    @eval not(::typeof($left)) = $right
-    @eval not(::typeof($right)) = $left
+    (tautology, contradiction),
+    (identity, not),
+    (and, nand),
+    (or, nor),
+    (xor, xnor),
+    (imply, not_imply),
+    (converse_imply, not_converse_imply)
+]) do double
+    foreach([double, reverse(double)]) do (left, right)
+        @eval not(::typeof($left)) = $right
+    end
 end
 
 # propositions

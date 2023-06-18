@@ -94,10 +94,10 @@ _get_atoms(p::Tree) = __get_atoms(p)
 # _get_atoms(p::Proposition) = get_atoms(Tree(p)) # generic fallback
 
 """
-    get_atoms(::Proposition...)
+    get_atoms(::Proposition)
 
 Returns a vector of unique [`Atom`](@ref)s
-contained in the given [`Proposition`](@ref)(s).
+contained in the given [`Proposition`](@ref).
 
 !!! warning
     Some atoms may optimized out of an expression, such as in `p ∧ ⊥ == ⊥`.
