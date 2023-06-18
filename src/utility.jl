@@ -35,12 +35,11 @@ Source:
     https://github.com/JuliaSymbolics/Symbolics.jl
 =#
 
-atomize(p::String) = Atom(p)
+atomize(p::String) = p |> Atom
 atomize(p::Symbol) = :((@isdefined $p) ? $p : $(Atom(p)))
-function atomize(x::Expr)
-    Meta.isexpr(x, [:(=), :kw]) && return Expr(x.head, x.args[1], map(atomize, x.args[2:end])...)
-    return Expr(x.head, map(atomize, x.args)...)
-end
+atomize(x::Expr) = Meta.isexpr(x, [:(=), :kw]) ?
+    Expr(x.head, x.args[1], map(atomize, x.args[2:end])...) :
+    Expr(x.head, map(atomize, x.args)...)
 atomize(x) = x
 
 """

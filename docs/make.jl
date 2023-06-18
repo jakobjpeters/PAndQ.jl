@@ -34,6 +34,4 @@ makedocs(
     strict = true
 )
 
-deploydocs(
-    repo = "github.com/jakobjpeters/PAQ.jl.git",
-)
+deploydocs(repo = "github.com/jakobjpeters/PAQ.jl.git")
