@@ -430,6 +430,9 @@ not_imply(p, q) = p ∧ ¬q
 imply(p, q) = ¬(p ↛ q)
 not_converse_imply(p, q) = ¬p ∧ q
 converse_imply(p, q) = ¬(p ↚ q)
+foreach([:and, :or]) do and_or
+    @eval $(Symbol(:reduce_, and_or))(xs) = reduce($and_or, xs)
+end
 
 # boolean operators
 foreach([

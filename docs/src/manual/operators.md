@@ -59,4 +59,6 @@ imply
 not_imply
 converse_imply
 not_converse_imply
+reduce_and
+reduce_or
 ```

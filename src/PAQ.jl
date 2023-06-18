@@ -15,6 +15,7 @@ export
     and, ∧, #= Base.nand, Base.:⊼, Base.nor, Base.:⊽, =#
     or, ∨, #= Base.xor, Base.:⊻, =# xnor, ↔, imply, →,
     not_imply, ↛, converse_imply, ←, not_converse_imply, ↚,
+    reduce_and, ⋀, reduce_or, ⋁,
 
     # types.jl
     Proposition, Compound, Expressive,

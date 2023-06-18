@@ -372,7 +372,34 @@ julia> @p TruthTable(p ← q)
 function converse_imply end
 const ← = converse_imply
 
+"""
+    ⋀(ps)
+    reduce_and(ps)
+
+Equivalent to `reduce(and, ps)`.
+
+`⋀` can be typed by `\\bigwedge<tab>`.
+
+# Examples
+"""
+function reduce_and end
+const ⋀ = reduce_and
+
+"""
+    ⋁(ps)
+    reduce_or(ps)
+
+Equivalent to `reduce(and, ps)`.
+
+`⋁` can be typed by `\\bigvee<tab>`.
+
+# Examples
+"""
+function reduce_or end
+const ⋁ = reduce_or
+
 # Unions of Operators
+# TODO: make traits?
 
 """
     NullaryOperator
@@ -396,14 +423,20 @@ The union types of [`BooleanOperator`](@ref)s that take two arguments.
 const BinaryOperator = Union{map(typeof, [
     and, nand, nor, or, xor, xnor, imply, not_imply, converse_imply, not_converse_imply
 ])...}
-# TODO: make traits?
+
+"""
+    NaryOperator
+"""
+const NaryOperator = Union{map(typeof, [reduce_and, reduce_or])...}
 
 """
     BooleanOperator
 
 The union types of [boolean operators](@ref operators_operators).
 """
-const BooleanOperator = Union{NullaryOperator, UnaryOperator, BinaryOperator}
+const BooleanOperator = Union{
+    NullaryOperator, UnaryOperator, BinaryOperator, NaryOperator
+}
 
 """
     CommutativeOperator
