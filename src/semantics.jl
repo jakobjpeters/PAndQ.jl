@@ -465,50 +465,43 @@ and(::typeof(tautology), ::typeof(tautology)) = ⊤
 and(::typeof(contradiction), ::Union{NullaryOperator, Proposition}) = ⊥ # domination law
 and(::typeof(tautology), q::Union{NullaryOperator, Proposition}) = q # identity law
 and(p::Proposition, q::NullaryOperator) = q ∧ p # commutative property
-# and(p::Valuation, q::Valuation)
+and(p::Proposition, q::Proposition) = and(Normal(and, p), Normal(and, q))
 
-foreach(Base.uniontypes(AndOr)) do AO
-    ao = Symbol(AO.instance)
-    dao = Symbol(dual(AO.instance))
-    DAO = typeof(dual(AO.instance))
+foreach(Base.uniontypes(AndOr)) do AndOr
+    and_or = Symbol(AndOr.instance)
+    dual_and_or = Symbol(dual(AndOr.instance))
+    DualAndOr = typeof(dual(AndOr.instance))
 
-    foreach([Clause, Normal]) do CN
-        @eval $ao(p::$CN{$AO}, q::$CN{$AO}) = $CN($ao, vcat(getfield(p, 1), getfield(q, 1)))
+    @eval $and_or(p::Clause{$DualAndOr}, q::Clause{$DualAndOr}) = Normal($and_or, p, q)
+
+    @eval $and_or(p::Union{LiteralProposition, Clause{$AndOr}}, q::Clause{$DualAndOr}) =
+        $and_or(Normal($and_or, p), q)
+    @eval $and_or(p::Clause{$DualAndOr}, q::Union{LiteralProposition, Clause{$AndOr}}) =
+        $and_or(p, Normal($and_or, q))
+
+    foreach([(Clause, LiteralProposition), (Normal, Clause{DualAndOr})]) do (left, right)
+        @eval $and_or(p::$left{$AndOr}, q::$right) = $left($and_or, vcat(getfield(p, 1), q))
+        @eval $and_or(p::$right, q::$left{$AndOr}) = $left($and_or, vcat(p, getfield(q, 1)))
     end
-    @eval $ao(p::Clause{$DAO}, q::Clause{$DAO}) = Normal($ao, p, q)
-    @eval $ao(p::Normal, q::Normal)= $ao(Normal($ao, p), Normal($ao, q))
 
-    @eval $ao(p::LiteralProposition, q::Clause{AO}) where AO <: typeof($ao) =
-        Clause($ao, vcat(p, q.literals))
-    @eval $ao(p::Clause{AO}, q::LiteralProposition) where AO <: typeof($ao) =
-        Clause($ao, vcat(p.literals, q))
+    foreach([Clause, Normal]) do ClauseNormal
+        @eval $and_or(p::$ClauseNormal{$AndOr}, q::$ClauseNormal{$AndOr}) =
+            $ClauseNormal($and_or, vcat(getfield(p, 1), getfield(q, 1)))
+    end
 
-    @eval $ao(p::Clause{$DAO}, q::Normal{AO}) where AO <: typeof($ao) = Normal($ao, vcat(p, q.clauses))
-    @eval $ao(p::Normal{AO}, q::Clause{$DAO}) where AO <: typeof($ao) = Normal($ao, vcat(p.clauses, q))
+    @eval $and_or(p::Normal, q::Normal) = $and_or(Normal($and_or, p), Normal($and_or, q))
+    @eval $and_or(p::Clause, q::Normal) = $and_or(Normal($and_or, p), q)
+    @eval $and_or(p::Normal, q::Clause) = $and_or(p, Normal($and_or, q))
 end
-# or(p::Valuation, q::Valuation) = Valuation(vcat(p.p, q.p))
-
-not(p::AbstractArray) = map(not, p)
 
 foreach(Base.uniontypes(BinaryOperator)) do BO
     binary_operator = Symbol(BO.instance)
-
     @eval $binary_operator(p) = Base.Fix1($binary_operator, p)
-
-    @eval $binary_operator(p::Proposition, q::AbstractArray) = map($binary_operator(p), q)
-    @eval $binary_operator(p::AbstractArray, q::Proposition) = map($binary_operator(q), p)
-    # @eval $bo(p::VecOrMat, q::VecOrMat) = ?
-
-    foreach([Atom, Literal]) do AL
-        @eval $binary_operator(p::$AL, q::$AL) = $binary_operator(Tree(p), Tree(q))
-    end
     @eval $binary_operator(p::Tree, q::Tree) = Tree($binary_operator, p, q)
-    @eval $binary_operator(p::Union{Atom, Literal}, q::Tree) = Tree($binary_operator, Tree(p), q)
-    @eval $binary_operator(p::Tree, q::Union{Atom, Literal}) = Tree($binary_operator, p, Tree(q))
+    @eval $binary_operator(p::Tree, q::Proposition) = Tree($binary_operator, p, Tree(q))
+    @eval $binary_operator(p::Proposition, q::Tree) = Tree($binary_operator, Tree(p), q)
+    @eval $binary_operator(p::Union{Atom, Literal}, q::Union{Atom, Literal}) = $binary_operator(Tree(p), Tree(q))
 end
-
-and(p::Proposition, q::Proposition) = and(promote(p, q)...)
-or(p::Union{Clause, Normal}, q::Union{Clause, Normal}) = or(promote(p, q)...)
 
 # Constructors
 
@@ -518,7 +511,7 @@ Clause(::AO, ps...) where AO <: AndOr = Clause(AO.instance, collect(ps))
 
 Normal(::AO, p::Tree{BO}) where {AO <: AndOr, BO <: BooleanOperator} = BO.instance(
     map(p.node) do branch
-        return Normal(AO.instance, branch)
+        Normal(AO.instance, branch)
     end...
 )
 Normal(::AO, p::Clause{AO}) where AO <: AndOr = Normal(AO.instance, map(p.literals) do literal
@@ -538,30 +531,6 @@ Normal(::AO, p::Normal) where AO <: AndOr = reduce(AO.instance,
 Normal(::AO, p::Normal{AO}) where AO <: AndOr = p
 Normal(::AO, ps...) where AO <: AndOr = Normal(AO.instance, collect(ps))
 
-foreach([Atom, Literal, Clause, Normal, Valuation, Tree]) do P
-    @eval $(nameof(P))(p) = convert($(nameof(P)), p)
-end
-
-# Promotion
-
-"""
-    promote_rule
-"""
-promote_rule(::Type{<:Atom}, ::Type{<:Atom}) = Atom
-promote_rule(::Type{<:Atom}, ::Type{<:Literal}) = Literal
-# promote_rule(::Type{<:Union{Atom, Literal}}, ::Type{<:Clause}) = Clause
-# promote_rule(::Type{<:Clause{AO}}, ::Type{<:Clause{AO}}) where AO <: AndOr = Clause
-# promote_rule(::Type{<:Clause{<:AndOr}}, ::Type{<:Clause{<:AndOr}}) = Normal
-# foreach(get_concrete_types(Expressive)) do type
-#     @eval promote_rule(::Type{<:Proposition}, ::Type{<:$type}) = $type
-# end
-# foreach(setdiff(concrete_propositions, [Clause])) do type
-#     @eval promote_rule(::Type{<:$type}, ::Type{<:$type}) = $type
-# end
-promote_rule(::Type{<:Proposition}, ::Type{<:Proposition}) = Tree # generic fallback
-
-# Conversions
-
 function get_valuations(atoms)
     n = length(atoms)
     truth_sets = Iterators.product(Iterators.repeated([⊤, ⊥], n)...)
@@ -574,6 +543,12 @@ get_interpretation(p, valuations) = map(valuations) do valuation
     interpret(p, valuation)
 end
 
+# Conversions
+
+foreach([Atom, Literal, Clause, Normal, Valuation, Tree]) do P
+    @eval $(nameof(P))(p) = convert($(nameof(P)), p)
+end
+
 """
     convert
 """
@@ -582,8 +557,9 @@ convert(::Type{Atom}, p::Tree{typeof(identity), <:Tuple{Atom}}) = only(p.node)
 convert(::Type{Literal}, p::Tree{UO, <:Tuple{Atom}}) where UO <: UnaryOperator =
     Literal(UO.instance(only(p.node)))
 convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
-convert(::Type{Clause}, p::typeof(tautology)) = Clause(and)
-convert(::Type{Clause}, p::typeof(contradiction)) = Clause(or)
+foreach([and, or]) do and_or
+    @eval convert(::Type{Clause}, p::typeof($(identity(:left, and_or)))) = Clause($and_or)
+end
 function convert(::Type{Tree}, p::typeof(contradiction))
     p = Atom()
     return p ∧ ¬p
@@ -617,44 +593,3 @@ not(p::Bool) = !p
 and(p::Bool, q::Bool) = p && q
 or(p::Bool, q::Bool) = p || q
 converse_imply(p::Bool, q::Bool) = p ^ q
-
-
-# dynamically generate? refactor?
-# Tree(p::Proposition) = convert(Tree, p)
-# Clause(::B, p::Proposition) where B <: Union{typeof(and), typeof(or)} = convert(Clause{B}, p)
-# Normal(::AO, p::Proposition) where AO <: Union{typeof(and), typeof(or)} = convert(Normal{AO}, p)
-
-# convert(::Type{Normal{typeof(and)}}, p::Proposition) = not(Normal(or, ¬p))
-# function convert(::Type{Normal{typeof(or)}}, p::Proposition)
-#     q = Valuation(p)
-
-#     is_tautology(q) && return Normal(or, Clause(and))
-
-#     # TODO: change `===` to `==` - fixes `Normal(and, ⊥)`
-#     interpretations =
-#         if is_contradiction(q)
-#             atom = Atom()
-#             [[atom => ⊤, atom => ⊥]]
-#         else
-#             map(
-#                 first,
-#                 filter(
-#                     literal -> last(literal) == ⊤,
-#                     q.p
-#                 )
-#             )
-#         end
-
-#     clauses = map(
-#         interpretation -> Clause(
-#             and,
-#             map(
-#                 pair -> last(pair) == ⊤ ? Literal(first(pair)) : not(first(pair)),
-#                 interpretation
-#             )
-#         ),
-#         interpretations
-#     )
-
-#     return Normal(or, clauses)
-# end
