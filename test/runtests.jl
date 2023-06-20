@@ -3,8 +3,10 @@ using Test
 using Documenter
 using PAQ
 
-foreach([:detect_ambiguities, :detect_unbound_args]) do f
-    @eval @test isempty($f(PAQ, recursive = true))
+@testset "`detect_ambiguities` and `detect_unbound_args`" begin
+    foreach([:detect_ambiguities, :detect_unbound_args]) do detect
+        @eval @test isempty($detect(PAQ, recursive = true))
+    end
 end
 
 DocMeta.setdocmeta!(
@@ -14,6 +16,6 @@ DocMeta.setdocmeta!(
     recursive=true
 )
 
-@testset "All" begin
+@testset "doctest" begin
     doctest(PAQ)
 end
