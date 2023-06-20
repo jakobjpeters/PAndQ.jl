@@ -19,7 +19,7 @@ export
 
     # types.jl
     Proposition, Compound, Expressive,
-    Atom, Literal, Clause, Normal, Valuation, Tree,
+    Atom, Literal, Tree, Clause, Normal,
 
     # printing.jl
     TruthTable, print_truth_table, println_truth_table,
@@ -32,8 +32,9 @@ export
     #= Base.mapfoldl, Base.mapfoldr, Base.mapreduce =#
 
     # semantics.jl
-    interpret, #= Base.:==, =#
-    is_tautology, is_contradiction, is_truth, is_contingency, is_satisfiable, is_falsifiable,
-    converse, dual, solve #= Base.identity, Base.Bool =#
+    #= Base.==, =# interpret, get_interpretations, get_valuations, solve,
+    identity, converse, dual,
+    is_tautology, is_contradiction, is_truth, is_contingency, is_satisfiable, is_falsifiable
+    #= , Base.Bool, Base.convert =#
 
 end # module

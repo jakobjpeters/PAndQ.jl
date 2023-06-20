@@ -20,8 +20,7 @@ Compound
 Expressive
 Atom
 Literal
+Tree
 Clause
 Normal
-Valuation
-Tree
 ```

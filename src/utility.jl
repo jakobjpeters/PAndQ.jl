@@ -86,12 +86,7 @@ __get_atoms(p::Union{Tree, Clause, Normal}) = mapreduce(get_atoms, vcat, getfiel
 _get_atoms(p::Atom) = [p]
 _get_atoms(p::Literal) = get_atoms(p.atom)
 _get_atoms(p::Union{Clause, Normal}) = isempty(getfield(p, 1)) ? Atom[] : __get_atoms(p)
-_get_atoms(p::Valuation) =
-    mapreduce(vcat, p.interpretations) do interpretation # Pair{Vector{Pair{Atom, Truth}}, Truth}
-        map(first, first(interpretation))
-    end
 _get_atoms(p::Tree) = __get_atoms(p)
-# _get_atoms(p::Proposition) = get_atoms(Tree(p)) # generic fallback
 
 """
     get_atoms(::Proposition)
@@ -111,6 +106,7 @@ julia> @p get_atoms(p ∧ q)
 ```
 """
 get_atoms(p::Proposition) = unique!(_get_atoms(p))
+get_atoms(p::NullaryOperator) = Atom[]
 
 # Reductions
 
@@ -137,4 +133,9 @@ mapreduce(f, ::BO, ps::AbstractArray) where BO <: Union{setdiff(
 )...} = mapfoldr(f, BO.instance, ps)
 
 # import Base: rand
-# rand(::Type{Proposition})
+# rand(::Type{Atom})
+# rand(::Type{Literal}) = rand([Base.uniontypes(UnaryOperator)]).instance(rand(Atom))
+# rand(::Type{Tree})
+# rand(::Type{Clause})
+# rand(::Type{Normal})
+# rand(::Type{Proposition}) = Proposition |> get_concrete_types |> rand |> rand

@@ -44,10 +44,10 @@ Operator associativity determines how operators with the same precedence group t
 | [`converse_imply`](@ref)     | ←      | \\leftarrow      | right         | 4          |
 | [`not_converse_imply`](@ref) | ↚      | \\nleftarrow     | right         | 4          |
 
+<!-- identity -->
 ```@docs
 tautology
 contradiction
-identity
 not
 and
 nand

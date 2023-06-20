@@ -7,6 +7,7 @@
 PAQ.NullaryOperator
 PAQ.UnaryOperator
 PAQ.BinaryOperator
+PAQ.NaryOperator
 PAQ.BooleanOperator
 PAQ.CommutativeOperator
 PAQ.AssociativeOperator
@@ -41,6 +42,5 @@ mapreduce
 ## Semantics
 
 ```@docs
-promote_rule
 convert
 ```

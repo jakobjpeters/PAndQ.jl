@@ -26,7 +26,7 @@ abstract type Compound <: Proposition end
 A proposition that is [expressively complete](https://en.wikipedia.org/wiki/Completeness_(logic)).
 
 Subtype of [`Compound`](@ref).
-Supertype of [`Valuation`](@ref), [`Tree`](@ref), and[`Normal`](@ref).
+Supertype of [`Tree`](@ref) and [`Normal`](@ref).
 """
 abstract type Expressive <: Compound end
 
@@ -101,6 +101,42 @@ struct Literal{UO <: UnaryOperator} <: Compound
 end
 
 """
+    Tree{
+        O <: BooleanOperator,
+        P <: Union{Tuple{Proposition}, Tuple{Proposition, Proposition}}
+    } <: Expressive
+    Tree(::UnaryOperator, ::Atom)
+    Tree(::BinaryOperator, ::Tree, ::Tree)
+    Tree(x)
+
+A proposition represented by an [abstract syntax tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
+
+Subtype of [`Expressive`](@ref).
+
+# Examples
+```jldoctest
+julia> r = @p p ⊻ q
+Tree:
+ p ⊻ q
+
+julia> @p ¬r → s
+Tree:
+ (p ↔ q) → s
+```
+"""
+struct Tree{
+    BO <: BooleanOperator,
+    TP <: Union{Tuple{Proposition}, Tuple{Proposition, Proposition}}
+} <: Expressive
+    node::TP
+
+    Tree(::UO, leaf_node::A) where {UO <: UnaryOperator, A <: Atom} =
+        new{UO, Tuple{A}}((leaf_node,))
+    Tree(::BO, left_node::T1, right_node::T2) where {BO <: BinaryOperator, T1 <: Tree, T2 <: Tree} =
+        new{BO, Tuple{T1, T2}}((left_node, right_node))
+end
+
+"""
     Clause{AO <: AndOr, L <: Literal} <: Compound
     Clause(::AO, ::Vector = Literal[])
     Clause(::AO, ps...)
@@ -169,75 +205,6 @@ struct Normal{AO <: AndOr, C <: Clause} <: Expressive
         new{A, C}(union(clauses))
     Normal(::O, clauses::Vector{C} = Clause{typeof(and)}[]) where {O <: typeof(or), C <: Clause{typeof(and)}} =
         new{O, C}(union(clauses))
-end
-
-"""
-    Valuation{P <: Pair} <: Expressive
-    Valuation(::Vector{P})
-    Valuation(p)
-
-Proposition represented by a vector of [interpretations]
-(https://en.wikipedia.org/wiki/Interpretation_(logic)).
-
-Subtype of [`Expressive`](@ref).
-
-# Examples
-```jldoctest
-julia> @p Valuation(p ∧ q)
-Valuation:
- [p => ⊤, q => ⊤] => ⊤
- [p => ⊥, q => ⊤] => ⊥
- [p => ⊤, q => ⊥] => ⊥
- [p => ⊥, q => ⊥] => ⊥
-
-julia> Valuation(⊥)
-Valuation:
- [] => ⊥
-```
-"""
-struct Valuation{P <: Pair} <: Expressive # {<:Vector{<:Pair{<:Atom, <:Truth}}, <:Truth}} <: Expressive
-    interpretations::Vector{P}
-
-    function Valuation(interpretations::Vector{P}) where P <: Pair # {Vector{Pair{<:Atom, <:Truth}}, <:Truth}}
-        isempty(interpretations) && error("TODO: write this exception")
-        return new{P}(union(interpretations))
-    end
-end
-
-"""
-    Tree{
-        O <: BooleanOperator,
-        P <: Union{Tuple{Proposition}, Tuple{Proposition, Proposition}}
-    } <: Expressive
-    Tree(::UnaryOperator, ::Atom)
-    Tree(::BinaryOperator, ::Tree, ::Tree)
-    Tree(x)
-
-A proposition represented by an [abstract syntax tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
-
-Subtype of [`Expressive`](@ref).
-
-# Examples
-```jldoctest
-julia> r = @p p ⊻ q
-Tree:
- p ⊻ q
-
-julia> @p ¬r → s
-Tree:
- (p ↔ q) → s
-```
-"""
-struct Tree{
-    BO <: BooleanOperator,
-    TP <: Union{Tuple{Proposition}, Tuple{Proposition, Proposition}}
-} <: Expressive
-    node::TP
-
-    Tree(::UO, leaf_node::A) where {UO <: UnaryOperator, A <: Atom} =
-        new{UO, Tuple{A}}((leaf_node,))
-    Tree(::BO, left_node::T1, right_node::T2) where {BO <: BinaryOperator, T1 <: Tree, T2 <: Tree} =
-        new{BO, Tuple{T1, T2}}((left_node, right_node))
 end
 
 get_concrete_types(type::UnionAll) = type

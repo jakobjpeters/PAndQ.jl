@@ -75,7 +75,6 @@ struct TruthTable{VM <: VecOrMat{<:Function}}
     function TruthTable(ps::AbstractArray)
         # ToDo: write docstring - define behavior
         # ToDo: write tests
-        # TODO: fix `truth_table(Valuation(⊤))`?
         # TODO: make header support operators (`⊤; NullaryOperator`, `⊻; BinaryOperator`)
 
         ps = map(operator_to_proposition, ps)
@@ -121,7 +120,7 @@ struct TruthTable{VM <: VecOrMat{<:Function}}
 
         valuations = map(Dict, get_valuations(atoms))
         body = stack(grouped_ps) do grouped_p
-            get_interpretation(first(grouped_p), valuations)
+            get_interpretations(first(grouped_p), valuations)
         end
 
         merge_string = x -> join(x, ", ")
@@ -335,24 +334,6 @@ foreach([:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, 
 end
 _show(p::Atom{Symbol}) = string(p.statement)
 _show(p::Atom{String}) = "\"" * p.statement * "\""
-function _show(p::Valuation) # TODO: improve, support `[Valuation(and, p), etc]`
-    return join(
-        map(p.interpretations) do interpretation
-            join([
-                "[",
-                join(
-                    map(first(interpretation)) do (left, right)
-                        join([_show(left), " => ", _show(right)])
-                    end,
-                    ", "
-                ),
-                "] => ",
-                _show(last(interpretation))
-            ])
-        end,
-        "\n "
-    )
-end
 _show(p::Tuple{Proposition}) = _show(only(p))
 _show(p::Union{Literal{UO}, Tree{UO}}) where UO <: UnaryOperator =
     _show(UO.instance) * _show(getfield(p, 1))
