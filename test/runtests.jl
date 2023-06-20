@@ -16,6 +16,6 @@ DocMeta.setdocmeta!(
     recursive=true
 )
 
-@testset "doctest" begin
+@testset "`doctest`" begin
     doctest(PAQ)
 end

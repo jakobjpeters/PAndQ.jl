@@ -5,22 +5,6 @@ DocTestSetup = :(using PAQ)
 
 # [Operators](@id operators_operators)
 
-Every possible truth table can be constructed with the functionally complete set of operators `not` and `and`. For convenience, all sixteen of them have been prepared. There are ten binary operators, with the remaining six being expressed with truth values, individual propositions, and the unary [`not`](@ref) operator.
-
-```jldoctest
-julia> @p TruthTable(⊤, ⊥, ¬p, ¬q)
-┌────────┬────────┬──────┬──────┬─────────┬─────────┐
-│ ⊤      │ ⊥      │ p    │ q    │ ¬p      │ ¬q      │
-│ Clause │ Clause │ Atom │ Atom │ Literal │ Literal │
-├────────┼────────┼──────┼──────┼─────────┼─────────┤
-│ ⊤      │ ⊥      │ ⊤    │ ⊤    │ ⊥       │ ⊥       │
-│ ⊤      │ ⊥      │ ⊥    │ ⊤    │ ⊤       │ ⊥       │
-├────────┼────────┼──────┼──────┼─────────┼─────────┤
-│ ⊤      │ ⊥      │ ⊤    │ ⊥    │ ⊥       │ ⊤       │
-│ ⊤      │ ⊥      │ ⊥    │ ⊥    │ ⊤       │ ⊤       │
-└────────┴────────┴──────┴──────┴─────────┴─────────┘
-```
-
 Typing symbols with tab completion is performed by typing `\`, followed by the given characters, and then the `[TAB]` key. For example, `⊥` is typed with `\bot[TAB]`. See also Julia's documentation on [Tab Completion](https://docs.julialang.org/en/v1/stdlib/REPL/#Tab-completion) and [Unicode Input](https://docs.julialang.org/en/v1/manual/unicode-input/).
 
 Operator associativity determines how operators with the same precedence group their operands. For example, `∧` is left associative. Therefore, `p ∧ q ∧ r` is equivalent to `(p ∧ q) ∧ r`. Operator precedence determines how expressions with distinct operators are grouped together. Higher precedence operators will group their operands before lower precedence operators. For example, `∧` has a higher precedence than `∨`. Therefore, `p ∨ q ∧ r` is equivalent to `p ∨ (q ∧ r)`, even though both operators are left associative. See also Julia's documentation on [Operator Precedence and Associativity](https://docs.julialang.org/en/v1/manual/mathematical-operations/#Operator-Precedence-and-Associativity).
@@ -44,11 +28,39 @@ Operator associativity determines how operators with the same precedence group t
 | [`converse_imply`](@ref)     | ←      | \\leftarrow      | right         | 4          |
 | [`not_converse_imply`](@ref) | ↚      | \\nleftarrow     | right         | 4          |
 
-<!-- identity -->
+Every possible truth table can be constructed with the functionally complete set of operators `not` and `and`. For convenience, all sixteen of them have been prepared. There are ten binary operators, with the remaining six being expressed with truth values, individual propositions, and the unary [`not`](@ref) operator.
+
+```jldoctest
+julia> @p TruthTable(⊤, ⊥, ¬p, ¬q)
+┌────────┬────────┬──────┬──────┬─────────┬─────────┐
+│ ⊤      │ ⊥      │ p    │ q    │ ¬p      │ ¬q      │
+│ Clause │ Clause │ Atom │ Atom │ Literal │ Literal │
+├────────┼────────┼──────┼──────┼─────────┼─────────┤
+│ ⊤      │ ⊥      │ ⊤    │ ⊤    │ ⊥       │ ⊥       │
+│ ⊤      │ ⊥      │ ⊥    │ ⊤    │ ⊤       │ ⊥       │
+├────────┼────────┼──────┼──────┼─────────┼─────────┤
+│ ⊤      │ ⊥      │ ⊤    │ ⊥    │ ⊥       │ ⊤       │
+│ ⊤      │ ⊥      │ ⊥    │ ⊥    │ ⊤       │ ⊤       │
+└────────┴────────┴──────┴──────┴─────────┴─────────┘
+```
+
+## Nullary Operators
+
 ```@docs
 tautology
 contradiction
+```
+
+## Unary Operators
+
+<!-- identity -->
+```@docs
 not
+```
+
+## Binary Operators
+
+```@docs
 and
 nand
 nor
@@ -59,6 +71,11 @@ imply
 not_imply
 converse_imply
 not_converse_imply
+```
+
+## Nary Operators
+
+```@docs
 reduce_and
 reduce_or
 ```
