@@ -122,9 +122,12 @@ julia> @p get_valuations([p, q])
  Pair{Atom{Symbol}, typeof(contradiction)}[p => ⊥, q => ⊥]
 ```
 """
-get_valuations(atoms) = vec(map(Iterators.product(Iterators.repeated([⊤, ⊥], length(atoms))...)) do truth_set
-    map(Pair, atoms, truth_set)
-end)
+function get_valuations(atoms)
+    n = length(atoms)
+    return map(0:2 ^ n - 1) do i
+        map((left, right) -> left => right == 0 ? ⊤ : ⊥, atoms, digits(i, base = 2, pad = n))
+    end
+end
 get_valuations(p::Proposition) = get_valuations(get_atoms(p))
 get_valuations(p::NullaryOperator) = [p => p]
 
