@@ -531,6 +531,8 @@ Normal(::AO, ps::AbstractArray) where AO <: AndOr =
     isempty(ps) ? Normal(AO.instance) : Normal(AO.instance, map(ps) do p
         Clause(dual(AO.instance), p)
     end)
+# TODO: see `https://en.wikipedia.org/wiki/Tseytin_transformation`
+# TODO: fix excessive recompilation dependent on `length(p.clauses)`
 Normal(::AO, p::Normal) where AO <: AndOr = Normal(AO.instance,
     vec(map(Iterators.product(map(p.clauses) do clause
         clause.literals
