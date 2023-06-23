@@ -97,11 +97,12 @@ Clause:
  s
 ```
 """
+(p::Proposition)(valuation::Dict) = interpret(p, valuation)
 (p::Proposition)(valuation...) = interpret(p, valuation)
 
 """
-    get_valuations(atoms)
-    get_valuations(::Proposition)
+    valuations(atoms)
+    valuations(::Proposition)
 
 Return a `Vector`` containing every possible valuation of the [`Atom`](@ref)s.
 
@@ -109,12 +110,12 @@ A valuation is a vector of `Pair`s which map from an atom to a truth value.
 
 # Examples
 ```jldoctest
-julia> @p get_valuations([p])
+julia> @p valuations([p])
 2-element Vector{Vector}:
  Pair{Atom{Symbol}, typeof(tautology)}[p => ⊤]
  Pair{Atom{Symbol}, typeof(contradiction)}[p => ⊥]
 
-julia> @p get_valuations([p, q])
+julia> @p valuations([p, q])
 4-element Vector{Vector}:
  Pair{Atom{Symbol}, typeof(tautology)}[p => ⊤, q => ⊤]
  Pair{Atom{Symbol}}[p => ⊥, q => ⊤]
@@ -122,42 +123,44 @@ julia> @p get_valuations([p, q])
  Pair{Atom{Symbol}, typeof(contradiction)}[p => ⊥, q => ⊥]
 ```
 """
-function get_valuations(atoms)
+function valuations(atoms)
     n = length(atoms)
     return map(0:2 ^ n - 1) do i
-        map((left, right) -> left => right == 0 ? ⊤ : ⊥, atoms, digits(i, base = 2, pad = n))
+        map(zip(atoms, digits(i, base = 2, pad = n))) do (left, right)
+            left => right == 0 ? ⊤ : ⊥
+        end
     end
 end
-get_valuations(p::Proposition) = get_valuations(get_atoms(p))
-get_valuations(p::NullaryOperator) = [p => p]
+valuations(p::Proposition) = valuations(atoms(p))
+valuations(x::NullaryOperator) = [x => x]
 
 """
-    get_interpretations(p, valuations = get_valuations(p))
+    interpretations(p, valuations = valuations(p))
 
 Return a vector of values given by [`interpret`](@ref)ing `p` each valuation.
 
-See also [`get_valuations`](@ref).
+See also [`valuations`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p get_interpretations(p)
+julia> @p interpretations(p)
 2-element Vector{Function}:
  tautology (generic function with 1 method)
  contradiction (generic function with 1 method)
 
-julia> @p get_interpretations(p → q, [p => ⊤])
+julia> @p interpretations(p → q, [p => ⊤])
 1-element Vector{Normal{typeof(or), Clause{typeof(and)}}}:
  (q)
 ```
 """
-get_interpretations(p, valuations = get_valuations(p)) = map(valuations) do valuation
+interpretations(p, valuations = valuations(p)) = map(valuations) do valuation
     interpret(p, valuation)
 end
 
 """
     solve(p)
 
-Return a vector of every [`interpretation`](@ref get_interpretations) where
+Return a vector containing all [`interpretations`](@ref) such that
 `interpret(p, interpretation) == ⊤`.
 
 # Examples
@@ -173,9 +176,9 @@ julia> @p solve(p ⊻ q)
 ```
 """
 function solve(p)
-    valuations = get_valuations(p)
-    interpretations = get_interpretations(p, valuations)
-    return map(filter(collect(zip(valuations, interpretations))) do (valuation, interpretation)
+    _valuations = valuations(p)
+    _interpretations = interpretations(p, _valuations)
+    return map(filter(collect(zip(_valuations, _interpretations))) do (valuation, interpretation)
         interpretation == ⊤
     end) do (valuation, interpretation)
         valuation
@@ -297,7 +300,7 @@ julia> @p is_tautology(¬(p ∧ ¬p))
 true
 ```
 """
-is_tautology(p) = all(Base.Fix1(==, ⊤), get_interpretations(p))
+is_tautology(p) = all(Base.Fix1(==, ⊤), interpretations(p))
 is_tautology(p::CN) where {A <: typeof(and), CN <: Union{Clause{A}, Normal{A}}} =
     isempty(getfield(p, 1))
 
@@ -343,7 +346,7 @@ julia> @p is_truth(p ∧ q)
 false
 ```
 """
-is_truth(p) = length(unique(get_interpretations(p))) == 1
+is_truth(p) = length(unique(interpretations(p))) == 1
 
 """
     is_contingency(p)

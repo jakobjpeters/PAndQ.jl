@@ -80,16 +80,15 @@ macro p_str(p)
     return esc(:(@p $(Meta.parse(p))))
 end
 
-__get_atoms(p::Union{Tree, Clause, Normal}) = mapreduce(get_atoms, vcat, getfield(p, 1))
+__atoms(p::Union{Tree, Clause, Normal}) = mapreduce(atoms, vcat, getfield(p, 1))
 
-# _get_atoms(::NullaryOperator) = Atom[]
-_get_atoms(p::Atom) = [p]
-_get_atoms(p::Literal) = get_atoms(p.atom)
-_get_atoms(p::Union{Clause, Normal}) = isempty(getfield(p, 1)) ? Atom[] : __get_atoms(p)
-_get_atoms(p::Tree) = __get_atoms(p)
+_atoms(p::Atom) = [p]
+_atoms(p::Literal) = atoms(p.atom)
+_atoms(p::Tree) = __atoms(p)
+_atoms(p::Union{Clause, Normal}) = isempty(getfield(p, 1)) ? Atom[] : __atoms(p)
 
 """
-    get_atoms(::Proposition)
+    atoms(::Proposition)
 
 Returns a vector of unique [`Atom`](@ref)s
 contained in the given [`Proposition`](@ref).
@@ -99,14 +98,14 @@ contained in the given [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p get_atoms(p ∧ q)
+julia> @p atoms(p ∧ q)
 2-element Vector{Atom{Symbol}}:
  p
  q
 ```
 """
-get_atoms(p::Proposition) = unique!(_get_atoms(p))
-get_atoms(p::NullaryOperator) = Atom[]
+atoms(p::Proposition) = unique!(_atoms(p))
+atoms(p::NullaryOperator) = Atom[]
 
 # Reductions
 

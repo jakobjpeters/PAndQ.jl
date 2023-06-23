@@ -4,8 +4,8 @@
 ```@docs
 ==
 interpret
-get_interpretations
-get_valuations
+interpretations
+valuations
 solve
 PAQ.identity
 converse

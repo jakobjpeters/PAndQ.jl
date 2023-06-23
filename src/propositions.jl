@@ -219,19 +219,20 @@ const abstract_propositions = get_abstract_types(Proposition)
 """
     AtomicProposition
 
-A [`Proposition`](@ref) that is known by its type to be equivalent to an [`Atom`](@ref).
+A [`Proposition`](@ref) that is known by its type to be logically equivalent to an [`Atom`](@ref).
 """
 const AtomicProposition = Union{Atom, Literal{typeof(identity)}, Tree{typeof(identity)}}
 
 """
     LiteralProposition
 
-A [`Proposition`](@ref) that is known by its type to be equivalent to a [`Literal`](@ref).
+A [`Proposition`](@ref) that is known by its type to be logically equivalent to a [`Literal`](@ref).
 """
 const LiteralProposition = Union{
     Base.uniontypes(AtomicProposition)...,
-    Literal{typeof(not)},
-    Tree{typeof(not), <:Tuple{Tree{typeof(identity), <:Tuple{Atom}}}}
+    map([Literal, Tree]) do LT
+        LT{typeof(not)}
+    end...
 }
 
 """

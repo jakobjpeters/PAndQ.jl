@@ -71,15 +71,15 @@ true
 ```
 
 We know that since these are propositions, they can be true or false. It is simple to evaluate atomic propositions:
-`p` is true if you think that "Logic is fun" and is false otherwise. Assigning meaning to any number of atomic propositions is called a [`Valuation`](@ref get_valuations). Since `p` is can only be true or false, it has two possible valuations. If you think that "Logic is fun", it would be invalid to assign it the valuation false. `r` doesn't depend on any other propositions, so it also has two possible valuations. However, the valuation and result of evaluating it are not longer the same. Since `r == ¬p`, if `p` is assigned true, then `r` is determined to be false. An [`interpretation`](@ref get_interpretations) is the truth values of any number of propositions determined by a given valuation.
+`p` is true if you think that "Logic is fun" and is false otherwise. Assigning meaning to any number of atomic propositions is called a [`valuation`](@ref valuations). Since `p` is can only be true or false, it has two possible valuations. If you think that "Logic is fun", it would be invalid to assign it the valuation false. `r` doesn't depend on any other propositions, so it also has two possible valuations. However, the valuation and result of evaluating it are not longer the same. Since `r == ¬p`, if `p` is assigned true, then `r` is determined to be false. An [`interpretation`](@ref interpretations) is the truth values of any number of propositions determined by a given valuation.
 
 ```jldoctest 1
-julia> get_valuations(r)
+julia> valuations(r)
 2-element Vector{Vector}:
  Pair{Atom{String}, typeof(tautology)}["Logic is fun" => ⊤]
  Pair{Atom{String}, typeof(contradiction)}["Logic is fun" => ⊥]
 
-julia> get_interpretations(r)
+julia> interpretations(r)
 2-element Vector{Function}:
  contradiction (generic function with 1 method)
  tautology (generic function with 1 method)
@@ -108,18 +108,18 @@ Tree:
  p ∧ q
 ```
 
-Since `s` contains two atomic propositions, there are four valuations: `p` is true and `q` is true, `p` is false and `q` is true, `p` is true and `q` is false, and `p` is false and `q` is false. Each additional atomic proposition in a proposition doubles the number of possible valuations. Mathematically, if [`n = length(get_atoms(p))`](@ref get_atoms), then there are ``\(2 ^ n\)`` valuations. Since each interpretation depends on a valuation, the number of valuations and interpretations are equal.
+Since `s` contains two atomic propositions, there are four valuations: `p` is true and `q` is true, `p` is false and `q` is true, `p` is true and `q` is false, and `p` is false and `q` is false. Each additional atomic proposition in a proposition doubles the number of possible valuations. Mathematically, if [`n = length(atoms(p))`](@ref atoms), then there are ``\(2 ^ n\)`` valuations. Since each interpretation depends on a valuation, the number of valuations and interpretations are equal.
 
 ```jldoctest 2
-julia> atoms = get_atoms(s)
+julia> as = atoms(s)
 2-element Vector{Atom{Symbol}}:
  p
  q
 
-julia> n = length(atoms)
+julia> n = length(as)
 2
 
-julia> length(get_valuations(s)) == length(get_interpretations(s)) == 2 ^ n == 4
+julia> length(valuations(s)) == length(interpretations(s)) == 2 ^ n == 4
 true
 ```
 

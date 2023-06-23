@@ -28,11 +28,11 @@ export
     #= Base.show, Base.print, =#
 
     # utility.jl
-    @atoms, @p, @p_str, get_atoms,
+    @atoms, @p, @p_str, atoms,
     #= Base.mapfoldl, Base.mapfoldr, Base.mapreduce =#
 
     # semantics.jl
-    #= Base.==, =# interpret, get_interpretations, get_valuations, solve,
+    #= Base.==, =# interpret, interpretations, valuations, solve,
     identity, converse, dual,
     is_tautology, is_contradiction, is_truth, is_contingency, is_satisfiable, is_falsifiable
     #= , Base.Bool, Base.convert =#

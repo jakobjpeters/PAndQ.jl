@@ -79,7 +79,7 @@ struct TruthTable{VM <: VecOrMat{<:Function}}
 
         ps = map(operator_to_proposition, ps)
         # atoms = get_atoms(map(interpret ∘ Valuation, ps)) # TODO: only atoms that affect the outcome (p ∧ ¬p ∨ q)
-        atoms = mapreduce(get_atoms, union, ps)
+        _atoms = mapreduce(atoms, union, ps)
         grouped_ps = Vector{Proposition}[]
 
         foreach(ps) do p
@@ -98,7 +98,7 @@ struct TruthTable{VM <: VecOrMat{<:Function}}
         grouped_atoms = Vector{Proposition}[]
         grouped_compounds = Vector{Proposition}[]
 
-        append!(grouped_atoms, map(p -> [p], atoms))
+        append!(grouped_atoms, map(p -> [p], _atoms))
         foreach(grouped_ps) do group
             if is_truth(first(group))
                 push!(grouped_truths, group)
@@ -118,9 +118,9 @@ struct TruthTable{VM <: VecOrMat{<:Function}}
 
         grouped_ps = map(unique, vcat(grouped_truths, grouped_atoms, grouped_compounds))
 
-        valuations = map(Dict, get_valuations(atoms))
+        _valuations = map(Dict, valuations(_atoms))
         body = stack(grouped_ps) do grouped_p
-            get_interpretations(first(grouped_p), valuations)
+            interpretations(first(grouped_p), _valuations)
         end
 
         merge_string = x -> join(x, ", ")
@@ -211,8 +211,6 @@ children(p::Tree{typeof(identity)}) = ()
 nodevalue(p::Tree{BO}) where BO <: BooleanOperator = BO.instance
 nodevalue(p::Tree{typeof(identity)}) = p
 
-_print_tree(args...; kwargs...) = AbstractTrees.print_tree(args...; kwargs...)
-
 """
     print_tree([io::Union{IO, String} = stdout], p; max_depth = typemax(Int64), newline = false, kwargs...)
 
@@ -240,7 +238,7 @@ julia> @p print_tree((p ∧ ¬q) ∨ (¬p ∧ q))
 ```
 """
 function print_tree(io::IO, p::Tree; max_depth = typemax(Int), newline = false, kwargs...)
-    print(io, rstrip(print_string(_print_tree, p; maxdepth = max_depth, kwargs...)))
+    print(io, rstrip(print_string(AbstractTrees.print_tree, p; maxdepth = max_depth, kwargs...)))
     newline && println(io)
     return nothing
 end
@@ -329,7 +327,7 @@ parenthesize(p::Union{Literal, Tree{<:UnaryOperator}}) = p |> _show
 parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * _show(p) * ")"
 
 _show(::typeof(identity)) = ""
-foreach([:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚]) do boolean_operator
+foreach([:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚, :⋀, :⋁]) do boolean_operator
     @eval _show(::typeof($boolean_operator)) = $(string(boolean_operator))
 end
 _show(p::Atom{Symbol}) = string(p.statement)
