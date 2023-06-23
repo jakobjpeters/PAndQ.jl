@@ -5,7 +5,7 @@ on:
     paths:
       - 'HEADER.md'
       - 'docs/src/index.md'
-      - 'docs/src/assets**'
+      - 'docs/src/assets/**'
       - '.github/workflows/readme.yml'
     branches:
       - main
