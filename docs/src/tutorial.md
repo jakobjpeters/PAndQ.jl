@@ -41,10 +41,7 @@ There are several more operators, which will be discussed later.
 
 ## Propositions
 
-A proposition is a statement that can be either true or false. For example, "Logic is fun" is a proposition because
-it may be true for you but false for someone else. Note that the proposition exists on its own, regardless of whether or not it is known to be true or false. We can also perform operations on propositions. In a written form, we can negate the above proposition by saying "Logic is not fun". We could combine two propositions using another operator, such as "Logic is fun and Julia is awesome". An [`Atom`](@ref)ic proposition is such that it has not been
-operated on and is not composed of any other propositions. Thus the first proposition, "Logic is fun", is atomic.
-Notice that the other two propositions, "Logic is not fun" and "Logic is fun and Julia is awesome", are [`Compound`](@ref) propositions.
+A [`Proposition`](@ref) is a statement that can be either true or false. For example, "Logic is fun" is a proposition because it may be true for you but false for someone else. Note that the proposition exists on its own, regardless of whether or not it is known to be true or false. We can also perform operations on propositions. In a written form, we can negate the above proposition by saying "Logic is not fun". We could combine two propositions using another operator, such as "Logic is fun and Julia is awesome".
 
 ```jldoctest 1
 julia> p = Atom("Logic is fun")
@@ -62,32 +59,25 @@ Literal:
 julia> s = p ∧ q
 Tree:
  "Logic is fun" ∧ "Julia is awesome"
-
-julia> p isa Atom && q isa Atom
-true
-
-julia> r isa Compound && s isa Compound
-true
 ```
 
-We know that since these are propositions, they can be true or false. It is simple to evaluate atomic propositions:
-`p` is true if you think that "Logic is fun" and is false otherwise. Assigning meaning to any number of atomic propositions is called a [`valuation`](@ref valuations). Since `p` is can only be true or false, it has two possible valuations. If you think that "Logic is fun", it would be invalid to assign it the valuation false. `r` doesn't depend on any other propositions, so it also has two possible valuations. However, the valuation and result of evaluating it are not longer the same. Since `r == ¬p`, if `p` is assigned true, then `r` is determined to be false. An [`interpretation`](@ref interpretations) is the truth values of any number of propositions determined by a given valuation.
+An [`Atom`](@ref)ic proposition is such that it has not been operated on and is not composed of any other propositions. Thus the first proposition, "Logic is fun", is atomic. A [`Compound`](@ref) proposition is any proposition that is not an atom. "Logic is not fun" and "Logic is fun and Julia is awesome" are [`Compound`](@ref) propositions. A [`Literal`](@ref) proposition is a proposition that is either an atom or its negation. "Logic is fun" and "Logic is not fun" are literals. Since propositions can be nested arbitrarily, a [`Tree`](@ref) structure can be used to represent them.
 
 ```jldoctest 1
-julia> valuations(r)
-2-element Vector{Vector}:
- Pair{Atom{String}, typeof(tautology)}["Logic is fun" => ⊤]
- Pair{Atom{String}, typeof(contradiction)}["Logic is fun" => ⊥]
+julia> p isa Atom && q isa Atom && Atom <: Proposition
+true
 
-julia> interpretations(r)
-2-element Vector{Function}:
- contradiction (generic function with 1 method)
- tautology (generic function with 1 method)
+julia> r isa Compound && s isa Compound && Compound <: Proposition
+true
+
+julia> r isa Literal && Literal <: Compound
+true
+
+julia> s isa Tree && Tree <: Compound
+true
 ```
 
-## Symbolic Logic
-
-In mathematics, it's useful to replace individual numbers with a symbolic variable that can represent any number. Since these propositions are for demonstration and could really be any proposition, we will do the same with our propositions `p` and `q`. To do so, we will use the [`@atoms`](@ref) macro to define each atomic proposition as a `const`ant.
+In mathematics, it's useful to replace individual numbers with a symbolic variable that can represent any number. Since these propositions are for demonstration and could really be any proposition, we will do the same with our propositions `p` and `q`. To do so, we will use the [`@atoms`](@ref) macro to define each atomic proposition as a `const`ant. Alternatively, you can construct this kind of atom with a `Symbol`: `Atom(:p)`.
 
 ```jldoctest 2
 julia> @atoms p q
@@ -103,45 +93,80 @@ julia> q
 Atom:
  q
 
+julia> r = ¬p
+Literal:
+ ¬p
+
 julia> s = p ∧ q
 Tree:
  p ∧ q
 ```
 
-Since `s` contains two atomic propositions, there are four valuations: `p` is true and `q` is true, `p` is false and `q` is true, `p` is true and `q` is false, and `p` is false and `q` is false. Each additional atomic proposition in a proposition doubles the number of possible valuations. Mathematically, if [`n = length(atoms(p))`](@ref atoms), then there are ``\(2 ^ n\)`` valuations. Since each interpretation depends on a valuation, the number of valuations and interpretations are equal.
+The function [`atoms`](@ref) returns a vector of each unique `Atom` in a proposition.
 
 ```jldoctest 2
-julia> as = atoms(s)
+julia> atoms(r)
+1-element Vector{Atom{Symbol}}:
+ p
+
+julia> atoms(s)
 2-element Vector{Atom{Symbol}}:
  p
  q
-
-julia> n = length(as)
-2
-
-julia> length(valuations(s)) == length(interpretations(s)) == 2 ^ n == 4
-true
 ```
 
-TODO: write paragraph
+We know that since these are propositions, they can be true or false. If you think that "Logic is fun", it would be invalid to assign it the valuation false. So the proposition `p` is true if you think that "Logic is fun" and is false otherwise. If we assign the value true to the proposition "Logic is fun", then we know that the validity of the proposition "Logic is fun and Julia is awesome" depends on whether or not "Julia is awesome". If "Julia is awesome" is assigned false, then the conjunction of the two propositions is false. Use the [`interpret`](@ref) function to assign meaning to atomic propositions and then simplify the proposition.
 
 ```jldoctest 2
 julia> interpret(s, p => ⊤)
 Normal:
  (q)
 
-julia> interpret(s, p => ⊤, q => ⊤)
-tautology (generic function with 1 method)
+julia> interpret(s, p => ⊤, q => ⊥)
+contradiction (generic function with 1 method)
 ```
 
-We are often interested in valuations that result in a valid interpretation. This is accomplished with the [`solve`](@ref) function. It would also be helpful to enumerate each valuation and interpretation in a visual format. This is accomplished by creating a [`TruthTable`](@ref). A truth table is a table where each column in the header identifies a proposition, and each row contains an interpretation (including the valuation of atomic propositions). To demonstrate these, we will use the [`xor`](@ref) operator, represented by the symbol `⊻`. Try to understand the meaning of this operator as it is interpreted with different valuations.
+Assigning meaning to any number of atomic propositions is called a [`Valuation`](@ref valuations). Since `p` can only be true or false, it has two possible valuations. `r` doesn't depend on any other propositions, because it is just a negation of `p`. Thus, it also has two possible valuations. However, the valuation and result of evaluating it are not longer the same. Since `r == ¬p`, if `p` is assigned true, then `r` is determined to be false, and vice versa. An [`interpretation`](@ref interpretations) is the truth values of any number of propositions determined by a given valuation.
 
 ```jldoctest 2
-julia> solve(p ⊻ q)
-2-element Vector{Vector{Pair{Atom{Symbol}}}}:
- [p => ⊥, q => ⊤]
- [p => ⊤, q => ⊥]
+julia> valuations(r)
+2-element Vector{Vector}:
+ Pair{Atom{Symbol}, typeof(tautology)}[p => ⊤]
+ Pair{Atom{Symbol}, typeof(contradiction)}[p => ⊥]
 
+julia> interpretations(r)
+2-element Vector{Function}:
+ contradiction (generic function with 1 method)
+ tautology (generic function with 1 method)
+```
+
+Since `s` contains two atomic propositions, there are four valuations: `p` is true and `q` is true, `p` is false and `q` is true, `p` is true and `q` is false, and `p` is false and `q` is false. Each additional atomic proposition in a proposition doubles the number of possible valuations. Mathematically, there are ``{2 ^ n}`` valuations where `n = length(atoms(p))`. Since each interpretation depends on a valuation, the number of valuations and interpretations are equal.
+
+```jldoctest 2
+julia> n = length(atoms(s))
+2
+
+julia> length(valuations(s)) == length(interpretations(s)) == 2 ^ n == 4
+true
+```
+
+We are often interested in valuations that result in a valid interpretation. This is accomplished with the [`solve`](@ref) function. The proposition `s` is the conjunction of `p` and `p`, so it is only true if both `p` and `q` are true. Each of the other three possible valuations are invalid.
+
+```
+julia> valid(s)
+1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
+ [p => ⊤, q => ⊤]
+
+julia> invalid(s)
+3-element Vector{Vector}:
+ Pair{Atom{Symbol}, typeof(tautology)}[p => ⊤, q => ⊤]
+ Pair{Atom{Symbol}}[p => ⊥, q => ⊤]
+ Pair{Atom{Symbol}}[p => ⊤, q => ⊥]
+```
+
+It would also be helpful to enumerate each valuation and interpretation in a visual format. This is accomplished by creating a [`TruthTable`](@ref). A truth table is a table where each column in the header identifies a proposition, and each row contains an interpretation (including the valuation of atomic propositions). To demonstrate these, we will use the [`xor`](@ref) operator, represented by the symbol `⊻`. Try to understand the meaning of this operator as it is interpreted with different valuations.
+
+```jldoctest 2
 julia> TruthTable(p ⊻ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ⊻ q │
