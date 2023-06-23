@@ -152,16 +152,16 @@ true
 
 We are often interested in valuations that result in a valid interpretation. This is accomplished with the [`solve`](@ref) function. The proposition `s` is the conjunction of `p` and `p`, so it is only true if both `p` and `q` are true. Each of the other three possible valuations are invalid.
 
-```
-julia> valid(s)
+```jldoctest 2
+julia> solve(s, ⊤)
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
  [p => ⊤, q => ⊤]
 
-julia> invalid(s)
+julia> solve(s, ⊥)
 3-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[p => ⊤, q => ⊤]
  Pair{Atom{Symbol}}[p => ⊥, q => ⊤]
  Pair{Atom{Symbol}}[p => ⊤, q => ⊥]
+ Pair{Atom{Symbol}, typeof(contradiction)}[p => ⊥, q => ⊥]
 ```
 
 It would also be helpful to enumerate each valuation and interpretation in a visual format. This is accomplished by creating a [`TruthTable`](@ref). A truth table is a table where each column in the header identifies a proposition, and each row contains an interpretation (including the valuation of atomic propositions). To demonstrate these, we will use the [`xor`](@ref) operator, represented by the symbol `⊻`. Try to understand the meaning of this operator as it is interpreted with different valuations.

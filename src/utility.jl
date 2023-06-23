@@ -43,10 +43,10 @@ atomize(x::Expr) = Meta.isexpr(x, [:(=), :kw]) ?
 atomize(x) = x
 
 """
-    @p(x)
+    @p(expression)
 
-Returns a propositions by instantiating all strings and undefined
-variables as [`Atom`](@ref)s, and then evaluating the expression.
+Instantiates all strings and undefined variables as [`Atom`](@ref)s,
+and then returns the expression.
 
 # Examples
 ```jldoctest
@@ -59,8 +59,8 @@ Tree:
  (p ∧ q) → "r"
 ```
 """
-macro p(x)
-    return esc(:($(atomize(x))))
+macro p(expression)
+    return esc(:($(atomize(expression))))
 end
 
 """

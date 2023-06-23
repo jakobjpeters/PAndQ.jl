@@ -158,10 +158,10 @@ interpretations(p, valuations = valuations(p)) = map(valuations) do valuation
 end
 
 """
-    solve(p)
+    solve(p, truth_value = ⊤)
 
 Return a vector containing all [`interpretations`](@ref) such that
-`interpret(p, interpretation) == ⊤`.
+`interpret(p, interpretation) == truth_value`.
 
 # Examples
 ```jldoctest
@@ -169,17 +169,17 @@ julia> @p solve(p)
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
  [p => ⊤]
 
-julia> @p solve(p ⊻ q)
-2-element Vector{Vector{Pair{Atom{Symbol}}}}:
- [p => ⊥, q => ⊤]
- [p => ⊤, q => ⊥]
+julia> @p solve(p ⊻ q, ⊥)
+2-element Vector{Vector}:
+ Pair{Atom{Symbol}, typeof(tautology)}[p => ⊤, q => ⊤]
+ Pair{Atom{Symbol}, typeof(contradiction)}[p => ⊥, q => ⊥]
 ```
 """
-function solve(p)
+function solve(p, truth_value = ⊤)
     _valuations = valuations(p)
     _interpretations = interpretations(p, _valuations)
     return map(filter(collect(zip(_valuations, _interpretations))) do (valuation, interpretation)
-        interpretation == ⊤
+        interpretation == truth_value
     end) do (valuation, interpretation)
         valuation
     end
