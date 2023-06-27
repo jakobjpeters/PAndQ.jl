@@ -127,7 +127,7 @@ function valuations(atoms)
     n = length(atoms)
     return map(0:2 ^ n - 1) do i
         map(zip(atoms, digits(i, base = 2, pad = n))) do (left, right)
-            left => right == 0 ? ⊤ : ⊥
+            left => right == 0 ? tautology : contradiction
         end
     end
 end

@@ -1,5 +1,5 @@
 
-using InteractiveUtils
+using InteractiveUtils: subtypes
 
 """
     Proposition
