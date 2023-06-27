@@ -32,11 +32,14 @@ operator_to_proposition(p::Proposition) = p
     TruthTable(::AbstractArray)
     TruthTable(ps...)
 
-Print a [truth table](https://en.wikipedia.org/wiki/Truth_table)
+Construct a [truth table](https://en.wikipedia.org/wiki/Truth_table)
 for the given [`Proposition`](@ref)s and [`BinaryOperator`](@ref)s.
 
-The first row of the header is the expression representing that column's proposition,
-while the second row indicates that expression's type.
+The `header` is a vector containing vectors of logically equivalent propositions.
+The `sub_header` corresponds to the `header`, but contains each proposition's `UnionAll` type.
+The `body` is a matrix where the rows contain [`interpretations`](@ref)
+and the columns correspond to elements in the `header` and `sub_header`.
+
 Logically equivalent propositions will be grouped in the same column, seperated by a comma.
 
 See also [`tautology`](@ref) and [`contradiction`](@ref).
@@ -68,9 +71,10 @@ julia> TruthTable([⊻, imply])
 └──────┴──────┴────────┴────────┘
 ```
 """
-struct TruthTable{VM <: VecOrMat{<:Function}}
-    header::Tuple{Vector{String}, Vector{String}}
-    body::VM
+struct TruthTable
+    header::Vector{Vector{Proposition}}
+    sub_header::Vector{Vector{UnionAll}}
+    body::Matrix{Function}
 
     function TruthTable(ps::AbstractArray)
         # ToDo: write docstring - define behavior
@@ -78,61 +82,47 @@ struct TruthTable{VM <: VecOrMat{<:Function}}
         # TODO: make header support operators (`⊤; NullaryOperator`, `⊻; BinaryOperator`)
 
         ps = map(operator_to_proposition, ps)
-        # atoms = get_atoms(map(interpret ∘ Valuation, ps)) # TODO: only atoms that affect the outcome (p ∧ ¬p ∨ q)
         _atoms = mapreduce(atoms, union, ps)
-        grouped_ps = Vector{Proposition}[]
+        ps = union(_atoms, ps)
+        _valuations = valuations(_atoms)
+        _interpretations = map(p -> interpretations(p, _valuations), ps)
 
-        foreach(ps) do p
-            equivalent = false
-            for group in grouped_ps
-                if p == first(group)
-                    push!(group, p)
-                    equivalent = true
-                    break
-                end
+        truths_interpretations, atoms_interpretations, compounds_interpretations =
+            Vector{Function}[], Vector{Function}[], Vector{Function}[]
+
+        group = xs -> Dict(map(xs) do x
+            interpretations(x, _valuations) => Proposition[]
+        end)
+        grouped_truths, grouped_atoms = map(group, ([tautology, contradiction], _atoms))
+        grouped_compounds = Dict{Vector{Function}, Vector{Proposition}}()
+
+        foreach(zip(ps, _interpretations)) do (p, interpretation)
+            _union! = (key, group) -> begin
+                union!(key, [interpretation])
+                union!(get!(group, interpretation, Proposition[]), [p])
             end
-            !equivalent && push!(grouped_ps, [p])
-        end
-
-        grouped_truths = Vector{Proposition}[]
-        grouped_atoms = Vector{Proposition}[]
-        grouped_compounds = Vector{Proposition}[]
-
-        append!(grouped_atoms, map(p -> [p], _atoms))
-        foreach(grouped_ps) do group
-            if is_truth(first(group))
-                push!(grouped_truths, group)
-            else
-                is_atom = false
-                for grouped_atom in grouped_atoms
-                    if first(grouped_atom) == first(group)
-                        append!(grouped_atom, group)
-                        is_atom = true
-                        break
-                    end
-                end
-
-                !is_atom && push!(grouped_compounds, group)
+            if interpretation in keys(grouped_truths) _union!(truths_interpretations, grouped_truths)
+            elseif interpretation in keys(grouped_atoms) _union!(atoms_interpretations, grouped_atoms)
+            else _union!(compounds_interpretations, grouped_compounds)
             end
         end
 
-        grouped_ps = map(unique, vcat(grouped_truths, grouped_atoms, grouped_compounds))
-
-        _valuations = map(Dict, valuations(_atoms))
-        body = stack(grouped_ps) do grouped_p
-            interpretations(first(grouped_p), _valuations)
+        header = Vector{Proposition}[]
+        sub_header = Vector{UnionAll}[]
+        body = Vector{Function}[]
+        foreach([
+            truths_interpretations => grouped_truths,
+            atoms_interpretations => grouped_atoms,
+            compounds_interpretations => grouped_compounds
+        ]) do (interpretations, group)
+            foreach(interpretations) do interpretation
+                xs = get(group, interpretation, Proposition[])
+                push!(header, xs)
+                push!(sub_header, map(x -> getfield(Main, nameof(typeof(x))), xs))
+                push!(body, interpretation)
+            end
         end
-
-        merge_string = x -> join(x, ", ")
-
-        header = map(grouped_ps) do group
-            merge_string(map(string, group))
-        end
-        sub_header = map(grouped_ps) do group
-            merge_string(map(nameof ∘ typeof, group))
-        end
-
-        return new{typeof(body)}((header, sub_header), body)
+        return new(header, sub_header, reduce(hcat, body))
     end
 end
 TruthTable(ps...) = TruthTable(collect(ps))
@@ -164,21 +154,24 @@ ___print_truth_table(
 ___print_truth_table(backend::Val{:html}, io, body; kwargs...) =
     pretty_table(io, body; backend, kwargs...)
 
-function __print_truth_table(backend, io, truth_table;
-    format = :truth, alignment = :l, numbered_rows = false, kwargs...
-) # TODO: sub_header = true
-    header = (
-        map(first(truth_table.header)) do p
-            return format_head(Val(format), p)
-        end,
-        last(truth_table.header)
-    )
+merge_string(x) = join(x, ", ")
+
+function __print_truth_table(
+    backend, io, truth_table;
+    sub_header = true, numbered_rows = false, format = :truth, alignment = :l,
+    kwargs...
+)
+    header = map(truth_table.header) do p
+        merge_string(format_head(Val(format), p))
+    end
+    sub_header && (header = (header, map(merge_string, truth_table.sub_header)))
+
     body = map(truth_table.body) do cell
-        return format_body(Val(format), cell)
+        format_body(Val(format), cell)
     end
 
     if numbered_rows
-        header = (map(vcat, ["", "#"], header)...,)
+        header = sub_header ? (map(vcat, ["#", ""], header)...,) : vcat("#", header)
         body = hcat(map(string, 1:size(body, 1)), body)
     end
 
