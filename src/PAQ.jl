@@ -17,7 +17,7 @@ export
     not_imply, ↛, converse_imply, ←, not_converse_imply, ↚,
     reduce_and, ⋀, reduce_or, ⋁,
 
-    # types.jl
+    # propositions.jl
     Proposition, Compound, Expressive,
     Atom, Literal, Tree, Clause, Normal,
 
@@ -28,7 +28,7 @@ export
     #= Base.show, Base.print, =#
 
     # utility.jl
-    @atoms, @p, @p_str, atoms,
+    arity, @atoms, @p, @p_str, atoms,
     #= Base.mapfoldl, Base.mapfoldr, Base.mapreduce =#
 
     # semantics.jl

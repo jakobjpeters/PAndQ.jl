@@ -1,6 +1,32 @@
 
 import Base: mapfoldl, mapfoldr, mapreduce
 
+"""
+    arity(::BooleanOperator)
+
+Returns the [arity](https://en.wikipedia.org/wiki/Arity)
+of the given [`BooleanOperator`](@ref).
+
+# Examples
+```jldoctest
+julia> arity(tautology)
+0
+
+julia> arity(not)
+1
+
+julia> arity(and)
+2
+
+julia> arity(reduce_and)
+Inf
+```
+"""
+arity(::NullaryOperator) = 0
+arity(::UnaryOperator) = 1
+arity(::BinaryOperator) = 2
+arity(::NaryOperator) = Inf
+
 define_atom(p::Symbol) = :(const $(p) = $(Atom(p)))
 
 """
