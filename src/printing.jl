@@ -23,8 +23,8 @@ the order of the columns is determined first by type
 truths only generate a single row, and no propositions
 =#
 
-operator_to_proposition(x::NullaryOperator) = Clause(x)
-operator_to_proposition(x::UnaryOperator) = x(Atom(:_))
+operator_to_proposition(x::NullaryOperator) = x |> Clause
+operator_to_proposition(x::UnaryOperator) = :_ |> Atom |> x
 operator_to_proposition(x::BinaryOperator) = x(Atom(:_), Atom(:__))
 operator_to_proposition(p::Proposition) = p
 
@@ -84,7 +84,7 @@ struct TruthTable
         ps = map(operator_to_proposition, ps)
         _atoms = mapreduce(atoms, union, ps)
         ps = union(_atoms, ps)
-        _valuations = valuations(_atoms)
+        _valuations = _atoms |> valuations
         _interpretations = map(p -> interpretations(p, _valuations), ps)
 
         truths_interpretations, atoms_interpretations, compounds_interpretations =
@@ -101,8 +101,8 @@ struct TruthTable
                 union!(key, [interpretation])
                 union!(get!(group, interpretation, Proposition[]), [p])
             end
-            if interpretation in keys(grouped_truths) _union!(truths_interpretations, grouped_truths)
-            elseif interpretation in keys(grouped_atoms) _union!(atoms_interpretations, grouped_atoms)
+            if interpretation in grouped_truths |> keys _union!(truths_interpretations, grouped_truths)
+            elseif interpretation in grouped_atoms |> keys _union!(atoms_interpretations, grouped_atoms)
             else _union!(compounds_interpretations, grouped_compounds)
             end
         end
@@ -122,15 +122,16 @@ struct TruthTable
                 push!(body, interpretation)
             end
         end
-        return new(header, sub_header, reduce(hcat, body))
+
+        new(header, sub_header, reduce(hcat, body))
     end
 end
-TruthTable(ps...) = TruthTable(collect(ps))
+TruthTable(ps...) = ps |> collect |> TruthTable
 
 letter(::typeof(tautology)) = "T"
 letter(::typeof(contradiction)) = "F"
 
-format_latex(x) = LatexCell(print_latex(String, x))
+format_latex(x) = print_latex(String, x) |> LatexCell
 
 format_head(::Val{:latex}, x) = x |> format_latex
 format_head(::Val, x) = x
@@ -149,12 +150,12 @@ ____print_truth_table(backend::Val{:text}, io, body; crop = :none, newline, kwar
 
 ___print_truth_table(
     backend::Union{Val{:text}, Val{:latex}}, io, body;
-    body_hlines = collect(0:2:size(body, 1)), kwargs...
+    body_hlines = 0:2:size(body, 1) |> collect, kwargs...
 ) = ____print_truth_table(backend, io, body; body_hlines, kwargs...)
 ___print_truth_table(backend::Val{:html}, io, body; kwargs...) =
     pretty_table(io, body; backend, kwargs...)
 
-merge_string(x) = join(x, ", ")
+merge_string(xs) = join(xs, ", ")
 
 function __print_truth_table(
     backend, io, truth_table;
@@ -162,12 +163,12 @@ function __print_truth_table(
     kwargs...
 )
     header = map(truth_table.header) do p
-        merge_string(format_head(Val(format), p))
+        format_head(format |> Val, p) |> merge_string
     end
     sub_header && (header = (header, map(merge_string, truth_table.sub_header)))
 
     body = map(truth_table.body) do cell
-        format_body(Val(format), cell)
+        format_body(format |> Val, cell)
     end
 
     if numbered_rows
@@ -191,14 +192,13 @@ _print_truth_table(backend::Val{:text}, io, truth_table; newline = false, kwargs
 # Examples
 """
 print_truth_table(io::IO, truth_table::TruthTable; backend = :text, kwargs...) =
-    _print_truth_table(Val(backend), io, truth_table; kwargs...)
+    _print_truth_table(backend |> Val, io, truth_table; kwargs...)
 print_truth_table(io::IO, x; kwargs...) =
-    print_truth_table(io, TruthTable(x); kwargs...)
+    print_truth_table(io, x |> TruthTable; kwargs...)
 print_truth_table(x; kwargs...) =
     print_truth_table(stdout, x; kwargs...)
 
-children(p::Tree) = Tuple(p.node)
-children(p::Tree{typeof(not)}) = p.node
+children(p::Tree) = p.node
 children(p::Tree{typeof(identity)}) = ()
 
 nodevalue(p::Tree{BO}) where BO <: BooleanOperator = BO.instance
@@ -231,11 +231,11 @@ julia> @p print_tree((p ∧ ¬q) ∨ (¬p ∧ q))
 ```
 """
 function print_tree(io::IO, p::Tree; max_depth = typemax(Int), newline = false, kwargs...)
-    print(io, rstrip(print_string(AbstractTrees.print_tree, p; maxdepth = max_depth, kwargs...)))
-    newline && println(io)
-    return nothing
+    print(io, print_string(AbstractTrees.print_tree, p; maxdepth = max_depth, kwargs...) |> rstrip)
+    newline && io |> println
+    nothing
 end
-print_tree(io::IO, p; kwargs...) = print_tree(io, Tree(p); kwargs...)
+print_tree(io::IO, p; kwargs...) = print_tree(io, p |> Tree; kwargs...)
 print_tree(p; kwargs...) = print_tree(stdout, p; kwargs...)
 
 """
@@ -255,23 +255,23 @@ julia> println(s)
 """
 function print_latex(io::IO, x::String; newline = false, delimeter = "\\(" => "\\)")
     # populates `symbols_latex`
-    isempty(symbols_latex) && symbol_latex("∧")
+    symbols_latex |> isempty && "∧" |> symbol_latex
 
     latex = join([
-        first(delimeter),
-        rstrip(mapreduce(*, x) do c
-            c == ' ' ? "" : get(symbols_latex, string(c), c) * " "
-        end),
-        last(delimeter)
+        delimeter |> first,
+        mapreduce(*, x) do c
+            c == ' ' ? "" : get(symbols_latex, c |> string, c) * " "
+        end |> rstrip,
+        delimeter |> last
     ])
 
     print(io, latex)
-    newline && println(io)
-    return nothing
+    newline && io |> println
+    nothing
 end
 print_latex(io::IO, x::TruthTable; kwargs...) =
     print_truth_table(io, x; backend = :latex, kwargs...)
-print_latex(io::IO, x; kwargs...) = print_latex(io, string(x); kwargs...)
+print_latex(io::IO, x; kwargs...) = print_latex(io, x |> string; kwargs...)
 print_latex(x; kwargs...) = print_latex(stdout, x; kwargs...)
 
 """
@@ -279,32 +279,32 @@ print_latex(x; kwargs...) = print_latex(stdout, x; kwargs...)
 
 # Examples
 """
-print_markdown(::Type{MD}, p) = MD(string(p))
+print_markdown(::Type{MD}, p) = p |> string |> MD
 print_markdown(::Type{MD}, truth_table::TruthTable; alignment = :c) =
-    MD(Table(
-        [first(truth_table.header), eachrow(map(string, truth_table.body))...],
-        repeat([alignment], length(first(truth_table.header)))
-    ))
+    Table(
+        [truth_table.header |> first, map(string, truth_table.body) |> eachrow...],
+        repeat([alignment], truth_table.header |> first |> length)
+    ) |> MD
 function print_markdown(io::IO, x; newline = false, kwargs...)
     print(io, string(print_markdown(MD, x; kwargs...))[begin:end - 1])
-    newline && println(io)
-    return nothing
+    newline && io |> println
+    nothing
 end
 print_markdown(x; kwargs...) = print_markdown(stdout, x; kwargs...)
 
 function print_string(f, args...; kwargs...)
     buffer = IOBuffer()
     f(buffer, args...; kwargs...)
-    return buffer |> take! |> String
+    buffer |> take! |> String
 end
 
 foreach([:tree, :latex, :truth_table, :markdown]) do f
-    print_f = Symbol("print_" * string(f))
-    println_f = Symbol("println_" * string(f))
+    print_f, println_f = map(s -> Symbol("print", s, "_", f), ["", "ln"])
+
     @eval $print_f(::Type{String}, args...; kwargs...) = print_string($print_f, args...; kwargs...)
     @eval begin
         print_f = $print_f
-        println_f = $(string(println_f))
+        println_f = $(println_f |> string)
         """
             $println_f(args...; kwargs...)
 
@@ -321,29 +321,29 @@ parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * _show(p) * ")"
 
 _show(::typeof(identity)) = ""
 foreach([:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚, :⋀, :⋁]) do boolean_operator
-    @eval _show(::typeof($boolean_operator)) = $(string(boolean_operator))
+    @eval _show(::typeof($boolean_operator)) = $(boolean_operator |> string)
 end
-_show(p::Atom{Symbol}) = string(p.statement)
+_show(p::Atom{Symbol}) = p.statement |> string
 _show(p::Atom{String}) = "\"" * p.statement * "\""
-_show(p::Tuple{Proposition}) = _show(only(p))
+_show(p::Tuple{Proposition}) = p |> only |> _show
 _show(p::Union{Literal{UO}, Tree{UO}}) where UO <: UnaryOperator =
     _show(UO.instance) * _show(getfield(p, 1))
 _show(p::Tree{BO}) where BO <: BinaryOperator = join([
-    parenthesize(first(p.node)),
-    _show(BO.instance),
-    parenthesize(last(p.node))
+    p.node |> first |> parenthesize,
+    BO.instance |> _show,
+    p.node |> last |> parenthesize
 ], " ")
 _show(p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr =
-    isempty(getfield(p, 1)) ?
-        _show(identity(:left, AO.instance)) :
-        join(map(parenthesize, getfield(p, 1)), join(repeat([" "], 2), _show(AO.instance)))
+    getfield(p, 1) |> isempty ?
+        identity(:left, AO.instance) |> _show :
+        join(map(parenthesize, getfield(p, 1)), join([" ", " "], AO.instance |> _show))
 
 """
     show
 """
-show(io::IO, p::Union{BooleanOperator, Proposition}) = print(io, _show(p))
+show(io::IO, p::Union{BooleanOperator, Proposition}) = print(io, p |> _show)
 show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition =
-    print(io, nameof(P), ":\n ", _show(p))
+    print(io, P |> nameof, ":\n ", p |> _show)
 show(io::IO, ::MIME"text/plain", truth_table::TruthTable) =
     print_truth_table(io, truth_table)
 

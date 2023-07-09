@@ -1,4 +1,5 @@
 
+using Base: uniontypes
 import Base: mapfoldl, mapfoldr, mapreduce
 
 """
@@ -27,7 +28,7 @@ arity(::UnaryOperator) = 1
 arity(::BinaryOperator) = 2
 arity(::NaryOperator) = Inf
 
-define_atom(p::Symbol) = :(const $(p) = $(Atom(p)))
+define_atom(p::Symbol) = :(const $p = $(p |> Atom))
 
 """
     @atoms(ps...)
@@ -54,7 +55,10 @@ Atom:
 ```
 """
 macro atoms(ps...)
-    return esc(:($(map(define_atom, ps)...); Atom{Symbol}[$(ps...)]))
+    quote
+        $(map(define_atom, ps)...)
+        Atom{Symbol}[$(ps...)]
+    end |> esc
 end
 #=
 Source:
@@ -62,7 +66,7 @@ Source:
 =#
 
 atomize(p::String) = p |> Atom
-atomize(p::Symbol) = :((@isdefined $p) ? $p : $(Atom(p)))
+atomize(p::Symbol) = :((@isdefined $p) ? $p : $(p |> Atom))
 atomize(x::Expr) = Meta.isexpr(x, [:(=), :kw]) ?
     Expr(x.head, x.args[1], map(atomize, x.args[2:end])...) :
     Expr(x.head, map(atomize, x.args)...)
@@ -86,7 +90,7 @@ Tree:
 ```
 """
 macro p(expression)
-    return esc(:($(atomize(expression))))
+    :($(expression |> atomize)) |> esc
 end
 
 """
@@ -103,15 +107,15 @@ julia> p"\\"p\\" ∧ p, Clause(and)"
 ```
 """
 macro p_str(p)
-    return esc(:(@p $(Meta.parse(p))))
+    :(@p $(p |> Meta.parse)) |> esc
 end
 
 __atoms(p::Union{Tree, Clause, Normal}) = mapreduce(atoms, vcat, getfield(p, 1))
 
 _atoms(p::Atom) = [p]
-_atoms(p::Literal) = atoms(p.atom)
-_atoms(p::Tree) = __atoms(p)
-_atoms(p::Union{Clause, Normal}) = isempty(getfield(p, 1)) ? Atom[] : __atoms(p)
+_atoms(p::Literal) = p.atom |> atoms
+_atoms(p::Tree) = p |> __atoms
+_atoms(p::Union{Clause, Normal}) = getfield(p, 1) |> isempty ? Atom[] : p |> __atoms
 
 """
     atoms(::Proposition)
@@ -130,7 +134,7 @@ julia> @p atoms(p ∧ q)
  q
 ```
 """
-atoms(p::Proposition) = unique!(_atoms(p))
+atoms(p::Proposition) = p |> _atoms |> unique!
 atoms(p::NullaryOperator) = Atom[]
 
 # Reductions
@@ -152,10 +156,9 @@ mapfoldr(f,::RIO, ps::AbstractArray) where RIO <: RightIdentityOperator =
 """
 mapreduce(f, ::LIO, ps::AbstractArray) where LIO <: LeftIdentityOperator =
     mapfoldl(f, LIO.instance, ps)
-mapreduce(f, ::BO, ps::AbstractArray) where BO <: Union{setdiff(
-    Base.uniontypes(RightIdentityOperator),
-    Base.uniontypes(LeftIdentityOperator)
-)...} = mapfoldr(f, BO.instance, ps)
+mapreduce(f, ::BO, ps::AbstractArray) where BO <: Union{
+    setdiff(map(uniontypes, [RightIdentityOperator, LeftIdentityOperator])...)...
+} = mapfoldr(f, BO.instance, ps)
 
 # import Base: rand
 # rand(::Type{Atom})

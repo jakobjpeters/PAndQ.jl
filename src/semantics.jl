@@ -1,5 +1,5 @@
 
-import Base: ==, convert, Bool
+import Base: ==, Fix1, convert, Bool
 
 """
     p == q
@@ -62,20 +62,22 @@ Clause:
 interpret(p::NullaryOperator, valuation::Dict) = p
 interpret(p::Atom, valuation::Dict) = get(valuation, p, p)
 interpret(p::Literal{UO}, valuation::Dict) where UO <: UnaryOperator =
-    UO.instance(interpret(p.atom, valuation))
+    interpret(p.atom, valuation) |> UO.instance
 function interpret(p::CN, valuation::Dict) where {AO <: AndOr, CN <: Union{Clause{AO}, Normal{AO}}}
     neutral_element = identity(:left, AO.instance)
-    not_neutral_element = not(neutral_element)
-    q = getfield(Main, nameof(CN))(AO.instance)
+    not_neutral_element = neutral_element |> not
+    q = AO.instance |> getfield(Main, CN |> nameof)
+
     for r in getfield(p, 1)
         s = interpret(r, valuation)
         s == not_neutral_element && return not_neutral_element
         q = AO.instance(q, s)
     end
-    return isempty(getfield(q, 1)) ? neutral_element : q
+
+    getfield(q, 1) |> isempty ? neutral_element : q
 end
 interpret(p::Proposition, valuation::Dict) = interpret(Normal(and, p), valuation)
-interpret(p, valuation) = interpret(p, Dict(valuation))
+interpret(p, valuation) = interpret(p, valuation |> Dict)
 interpret(p, valuation...) = interpret(p, valuation)
 
 """
@@ -124,14 +126,14 @@ julia> @p valuations([p, q])
 ```
 """
 function valuations(atoms)
-    n = length(atoms)
+    n = atoms |> length
     return map(0:2 ^ n - 1) do i
         map(zip(atoms, digits(i, base = 2, pad = n))) do (left, right)
             left => right == 0 ? tautology : contradiction
         end
     end
 end
-valuations(p::Proposition) = valuations(atoms(p))
+valuations(p::Proposition) = p |> atoms |> valuations
 valuations(x::NullaryOperator) = [x => x]
 
 """
@@ -176,9 +178,9 @@ julia> @p solve(p ⊻ q, ⊥)
 ```
 """
 function solve(p, truth_value = ⊤)
-    _valuations = valuations(p)
+    _valuations = p |> valuations
     _interpretations = interpretations(p, _valuations)
-    return map(filter(collect(zip(_valuations, _interpretations))) do (valuation, interpretation)
+    return map(filter(zip(_valuations, _interpretations) |> collect) do (valuation, interpretation)
         interpretation == truth_value
     end) do (valuation, interpretation)
         valuation
@@ -203,7 +205,7 @@ julia> identity(:left, imply)
 tautology (generic function with 1 method)
 ```
 """
-identity(x, binary_operator::BinaryOperator) = identity(Val(x), binary_operator)
+identity(x, binary_operator::BinaryOperator) = identity(x |> Val, binary_operator)
 foreach([(:and, :xnor, :⊤), (:or, :xor, :⊥)]) do (left, middle, right)
     @eval identity(::Union{Val{:left}, Val{:right}}, ::union_typeof([$left, $middle])) = $right
 end
@@ -213,7 +215,13 @@ foreach([
     (:right, :converse_imply, :⊤),
     (:left, :not_converse_imply, :⊥)
 ]) do (left, middle, right)
-    @eval identity(::$(typeof(Val(left))), ::typeof($middle)) = $right
+    @eval identity(::$(typeof(left |> Val)), ::typeof($middle)) = $right
+end
+
+eval_doubles(f, doubles) = foreach(doubles) do double
+    foreach([double, double |> reverse]) do (left, right)
+        @eval $f(::typeof($left)) = $right
+    end
 end
 
 """
@@ -239,11 +247,7 @@ true
 ```
 """
 converse(::CO) where CO <: CommutativeOperator = CO.instance
-foreach([(imply, converse_imply), (not_imply, not_converse_imply)]) do double
-    foreach([double, reverse(double)]) do (left, right)
-        @eval converse(::typeof($left)) = $right
-    end
-end
+eval_doubles(:converse, [(imply, converse_imply), (not_imply, not_converse_imply)])
 
 """
     dual(::BooleanOperator)
@@ -268,18 +272,14 @@ true
 ```
 """
 dual(::BO) where BO <: [tautology, contradiction, xor, xnor] |> union_typeof =
-    not(BO.instance)
-foreach([
+    BO.instance |> not
+eval_doubles(:dual, [
     (and, or),
     (nand, nor),
     (xor, xnor),
     (imply, not_converse_imply),
     (not_imply, converse_imply)
-]) do double
-    foreach([double, reverse(double)]) do (left, right)
-        @eval dual(::typeof($left)) = $right
-    end
-end
+])
 # TODO: `dual(::typeof(not))` and `dual(::typeof(identity))` ?
 
 """
@@ -299,9 +299,9 @@ julia> @p is_tautology(¬(p ∧ ¬p))
 true
 ```
 """
-is_tautology(p) = all(Base.Fix1(==, ⊤), interpretations(p))
+is_tautology(p) = all(Fix1(==, ⊤), p |> interpretations)
 is_tautology(p::CN) where {A <: typeof(and), CN <: Union{Clause{A}, Normal{A}}} =
-    isempty(getfield(p, 1))
+    getfield(p, 1) |> isempty
 
 """
     is_contradiction(p)
@@ -320,7 +320,7 @@ julia> @p is_contradiction(p ∧ ¬p)
 true
 ```
 """
-is_contradiction(p) = is_tautology(¬p)
+is_contradiction(p) = ¬p |> is_tautology
 
 """
     is_truth(p)
@@ -345,7 +345,7 @@ julia> @p is_truth(p ∧ q)
 false
 ```
 """
-is_truth(p) = length(unique(interpretations(p))) == 1
+is_truth(p) = p |> interpretations |> unique! |> length == 1
 
 """
     is_contingency(p)
@@ -371,7 +371,7 @@ julia> @p is_contingency(p ∧ q)
 true
 ```
 """
-is_contingency(p) = !is_truth(p)
+is_contingency(p) = p |> !is_truth
 
 """
     is_satisfiable(p)
@@ -397,7 +397,7 @@ julia> @p is_satisfiable(p ∧ q)
 true
 ```
 """
-is_satisfiable(p) = !is_contradiction(p)
+is_satisfiable(p) = p |> !is_contradiction
 
 """
     is_falsifiable(p)
@@ -423,7 +423,7 @@ julia> @p is_falsifiable(p ∧ q)
 true
 ```
 """
-is_falsifiable(p) = !is_tautology(p)
+is_falsifiable(p) = p |> !is_tautology
 
 # TODO: write all conversions
 # TODO: if simplification is about the operator, put it with operators
@@ -432,8 +432,8 @@ is_falsifiable(p) = !is_tautology(p)
 # Boolean Operators
 
 # generic
-foreach([tautology, contradiction]) do truth
-    @eval $(Symbol(truth))() = $truth
+foreach([:tautology, :contradiction]) do truth
+    @eval $truth() = $truth
 end
 nand(p, q) = ¬(p ∧ q)
 nor(p, q) = ¬p ∧ ¬q
@@ -449,7 +449,7 @@ foreach([:and, :or]) do and_or
 end
 
 # boolean operators
-foreach([
+eval_doubles(:not, [
     (tautology, contradiction),
     (identity, not),
     (and, nand),
@@ -457,18 +457,14 @@ foreach([
     (xor, xnor),
     (imply, not_imply),
     (converse_imply, not_converse_imply)
-]) do double
-    foreach([double, reverse(double)]) do (left, right)
-        @eval not(::typeof($left)) = $right
-    end
-end
+])
 
 # propositions
 not(p::Atom) = Literal(not, p)
-not(p::Literal{UO}) where UO <: UnaryOperator = not(UO.instance)(p.atom)
+not(p::Literal{UO}) where UO <: UnaryOperator = p.atom |> not(UO.instance)
 not(p::Tree{BO}) where BO <: BooleanOperator = not(BO.instance)(p.node...)
 not(p::CN) where CN <: Union{Clause{AO}, Normal{AO}} where AO <: AndOr =
-    getfield(Main, nameof(CN))(dual(AO.instance), map(not, getfield(p, 1)))
+    getfield(Main, CN |> nameof)(AO.instance |> dual, map(not, getfield(p, 1)))
 
 and(::typeof(tautology), ::typeof(tautology)) = ⊤
 and(::typeof(contradiction), ::Union{NullaryOperator, Proposition}) = ⊥ # domination law
@@ -476,47 +472,48 @@ and(::typeof(tautology), q::Union{NullaryOperator, Proposition}) = q # identity 
 and(p::Proposition, q::NullaryOperator) = q ∧ p # commutative property
 and(p::Proposition, q::Proposition) = and(Normal(and, p), Normal(and, q))
 
-foreach(Base.uniontypes(BinaryOperator)) do BO
-    binary_operator = Symbol(BO.instance)
-    @eval $binary_operator(p) = Base.Fix1($binary_operator, p)
+foreach(BinaryOperator |> uniontypes) do BO
+    binary_operator = BO.instance |> Symbol
+    @eval $binary_operator(p) = Fix1($binary_operator, p)
     @eval $binary_operator(p::Tree, q::Tree) = Tree($binary_operator, p, q)
-    @eval $binary_operator(p::Tree, q::Proposition) = Tree($binary_operator, p, Tree(q))
-    @eval $binary_operator(p::Proposition, q::Tree) = Tree($binary_operator, Tree(p), q)
-    @eval $binary_operator(p::Union{Atom, Literal}, q::Union{Atom, Literal}) = $binary_operator(Tree(p), Tree(q))
+    @eval $binary_operator(p::Tree, q::Proposition) = Tree($binary_operator, p, q |> Tree)
+    @eval $binary_operator(p::Proposition, q::Tree) = Tree($binary_operator, p |> Tree, q)
+    @eval $binary_operator(p::Union{Atom, Literal}, q::Union{Atom, Literal}) =
+        $binary_operator(p |> Tree, q |> Tree)
 end
 
-foreach(Base.uniontypes(AndOr)) do AndOr
-    and_or = Symbol(AndOr.instance)
-    dual_and_or = Symbol(dual(AndOr.instance))
-    DualAndOr = typeof(dual(AndOr.instance))
+foreach(AndOr |> uniontypes) do AO
+    ao = AO.instance |> Symbol
+    dao = AO.instance |> dual |> Symbol
+    DAO = AO.instance |> dual |> typeof
 
-    @eval $and_or(p::Clause{$DualAndOr}, q::Clause{$DualAndOr}) = Normal($and_or, p, q)
+    @eval $ao(p::Clause{$DAO}, q::Clause{$DAO}) = Normal($ao, p, q)
 
-    @eval $and_or(p::Union{LiteralProposition, Clause{$AndOr}}, q::Clause{$DualAndOr}) =
-        $and_or(Normal($and_or, p), q)
-    @eval $and_or(p::Clause{$DualAndOr}, q::Union{LiteralProposition, Clause{$AndOr}}) =
-        $and_or(p, Normal($and_or, q))
+    @eval $ao(p::Union{LiteralProposition, Clause{$AO}}, q::Clause{$DAO}) =
+        $ao(Normal($ao, p), q)
+    @eval $ao(p::Clause{$DAO}, q::Union{LiteralProposition, Clause{$AO}}) =
+        $ao(p, Normal($ao, q))
 
-    foreach([(Clause, LiteralProposition), (Normal, Clause{DualAndOr})]) do (left, right)
-        @eval $and_or(p::$left{$AndOr}, q::$right) = $left($and_or, vcat(getfield(p, 1), q))
-        @eval $and_or(p::$right, q::$left{$AndOr}) = $left($and_or, vcat(p, getfield(q, 1)))
+    foreach([(Clause, LiteralProposition), (Normal, Clause{DAO})]) do (left, right)
+        @eval $ao(p::$left{$AO}, q::$right) = $left($ao, vcat(getfield(p, 1), q))
+        @eval $ao(p::$right, q::$left{$AO}) = $left($ao, vcat(p, getfield(q, 1)))
     end
 
     foreach([Clause, Normal]) do ClauseNormal
-        @eval $and_or(p::$ClauseNormal{$AndOr}, q::$ClauseNormal{$AndOr}) =
-            $ClauseNormal($and_or, vcat(getfield(p, 1), getfield(q, 1)))
+        @eval $ao(p::$ClauseNormal{$AO}, q::$ClauseNormal{$AO}) =
+            $ClauseNormal($ao, vcat(getfield(p, 1), getfield(q, 1)))
     end
 
-    @eval $and_or(p::Normal, q::Normal) = $and_or(Normal($and_or, p), Normal($and_or, q))
-    @eval $and_or(p::Clause, q::Normal) = $and_or(Normal($and_or, p), q)
-    @eval $and_or(p::Normal, q::Clause) = $and_or(p, Normal($and_or, q))
+    @eval $ao(p::Normal, q::Normal) = $ao(Normal($ao, p), Normal($ao, q))
+    @eval $ao(p::Clause, q::Normal) = $ao(Normal($ao, p), q)
+    @eval $ao(p::Normal, q::Clause) = $ao(p, Normal($ao, q))
 end
 
 # Constructors
 
 Clause(::AO, ps::AbstractArray) where AO <: AndOr =
-    isempty(ps) ? Clause(AO.instance) : Clause(AO.instance, map(Literal, ps))
-Clause(::AO, ps...) where AO <: AndOr = Clause(AO.instance, collect(ps))
+    ps |> isempty ? AO.instance |> Clause : Clause(AO.instance, map(Literal, ps))
+Clause(::AO, ps...) where AO <: AndOr = Clause(AO.instance, ps |> collect)
 
 Normal(::AO, p::Tree{BO}) where {AO <: AndOr, BO <: BooleanOperator} = BO.instance(
     map(p.node) do branch
@@ -524,23 +521,23 @@ Normal(::AO, p::Tree{BO}) where {AO <: AndOr, BO <: BooleanOperator} = BO.instan
     end...
 )
 Normal(::AO, p::Clause{AO}) where AO <: AndOr = Normal(AO.instance, map(p.literals) do literal
-    Clause(dual(AO.instance), literal)
+    Clause(AO.instance |> dual, literal)
 end)
 Normal(::AO, ps::AbstractArray) where AO <: AndOr =
-    isempty(ps) ? Normal(AO.instance) : Normal(AO.instance, map(ps) do p
-        Clause(dual(AO.instance), p)
+    ps |> isempty ? AO.instance |> Normal : Normal(AO.instance, map(ps) do p
+        Clause(AO.instance |> dual, p)
     end)
 # TODO: see `https://en.wikipedia.org/wiki/Tseytin_transformation`
 # TODO: fix excessive recompilation dependent on `length(p.clauses)`
 Normal(::AO, p::Normal) where AO <: AndOr = Normal(AO.instance,
-    vec(map(Iterators.product(map(p.clauses) do clause
+    map(Iterators.product(map(p.clauses) do clause
         clause.literals
     end...)) do literals
-        Clause(dual(AO.instance), collect(literals))
-    end)
+        Clause(AO.instance |> dual, literals |> collect)
+    end |> vec
 )
 Normal(::AO, p::Normal{AO}) where AO <: AndOr = p
-Normal(::AO, ps::Proposition...) where AO <: AndOr = Normal(AO.instance, collect(ps))
+Normal(::AO, ps::Proposition...) where AO <: AndOr = Normal(AO.instance, ps |> collect)
 
 # Conversions
 
@@ -552,22 +549,22 @@ end
     convert
 """
 convert(::Type{Atom}, p::Literal{typeof(identity)}) = p.atom
-convert(::Type{Atom}, p::Tree{typeof(identity), <:Tuple{Atom}}) = only(p.node)
+convert(::Type{Atom}, p::Tree{typeof(identity), <:Tuple{Atom}}) = p.node |> only
 convert(::Type{Literal}, p::Tree{UO, <:Tuple{Atom}}) where UO <: UnaryOperator =
-    Literal(UO.instance(only(p.node)))
+    p.node |> only |> UO.instance |> Literal
 convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
 function convert(::Type{Tree}, p::typeof(contradiction))
     p = Atom()
-    return p ∧ ¬p
+    p ∧ ¬p
 end
-convert(::Type{Tree}, p::typeof(tautology)) = not(Tree(contradiction))
+convert(::Type{Tree}, p::typeof(tautology)) = contradiction |> Tree |> not
 convert(::Type{Tree}, p::Literal{UO}) where UO <: UnaryOperator = Tree(UO.instance, p.atom)
-convert(::Type{Tree}, p::Clause{AO}) where AO <: AndOr = Tree(reduce(AO.instance, p.literals))
-convert(::Type{Tree}, p::Normal{AO}) where AO <: AndOr = Tree(mapreduce(Tree, AO.instance, p.clauses))
+convert(::Type{Tree}, p::Clause{AO}) where AO <: AndOr = reduce(AO.instance, p.literals) |> Tree
+convert(::Type{Tree}, p::Normal{AO}) where AO <: AndOr = mapreduce(Tree, AO.instance, p.clauses) |> Tree
 convert(::Type{Clause}, p::LiteralProposition) = Clause(or, p)
-foreach([Clause, Normal]) do ClauseNormal
-    foreach([and, or]) do and_or
-        @eval convert(::Type{$ClauseNormal}, p::typeof(identity(:left, $and_or))) = $ClauseNormal($and_or)
+foreach([Clause, Normal]) do CN
+    foreach([and, or]) do ao
+        @eval convert(::Type{$CN}, p::typeof(identity(:left, $ao))) = $ao |> $CN
     end
 end
 convert(::Type{Normal}, p::Clause{typeof(and)}) = Normal(or, p)

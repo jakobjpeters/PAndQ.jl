@@ -1,6 +1,4 @@
 
-using InteractiveUtils: subtypes
-
 """
     Proposition
 
@@ -169,7 +167,7 @@ struct Clause{AO <: AndOr, L <: Literal} <: Compound
     literals::Vector{L}
 
     Clause(::AO, literals::Vector{L} = Literal[]) where {AO <: AndOr, L <: Literal} =
-        new{AO, L}(union(literals))
+        new{AO, L}(literals |> union)
 end
 
 """
@@ -202,45 +200,27 @@ struct Normal{AO <: AndOr, C <: Clause} <: Expressive
     clauses::Vector{C}
 
     Normal(::A, clauses::Vector{C} = Clause{typeof(or)}[]) where {A <: typeof(and), C <: Clause{typeof(or)}} =
-        new{A, C}(union(clauses))
+        new{A, C}(clauses |> union)
     Normal(::O, clauses::Vector{C} = Clause{typeof(and)}[]) where {O <: typeof(or), C <: Clause{typeof(and)}} =
-        new{O, C}(union(clauses))
+        new{O, C}(clauses |> union)
 end
 
-get_concrete_types(type::UnionAll) = type
-get_concrete_types(type::DataType) = mapreduce(get_concrete_types, vcat, subtypes(type))
-
-get_abstract_types(type::UnionAll) = []
-get_abstract_types(type::DataType) = mapreduce(get_abstract_types, vcat, subtypes(type), init = type)
-
-const concrete_propositions = get_concrete_types(Proposition)
-const abstract_propositions = get_abstract_types(Proposition)
+literal_tree_types(unary_operator) = Union{map([Literal, Tree]) do LT
+    LT{unary_operator |> typeof}
+end...}
 
 """
     AtomicProposition
 
 A [`Proposition`](@ref) that is known by its type to be logically equivalent to an [`Atom`](@ref).
 """
-const AtomicProposition = Union{Atom, Literal{typeof(identity)}, Tree{typeof(identity)}}
+const AtomicProposition = Union{Atom, identity |> literal_tree_types}
 
 """
     LiteralProposition
 
 A [`Proposition`](@ref) that is known by its type to be logically equivalent to a [`Literal`](@ref).
 """
-const LiteralProposition = Union{
-    Base.uniontypes(AtomicProposition)...,
-    map([Literal, Tree]) do LT
-        LT{typeof(not)}
-    end...
-}
+const LiteralProposition = Union{AtomicProposition, not |> literal_tree_types}
 
-"""
-    NonExpressive
-
-A [`Proposition`](@ref) that is not an [`Expressive`](@ref).
-"""
-const NonExpressive = Union{filter(concrete_propositions) do type
-    !(type <: Expressive)
-end...}
 # TODO: make traits?

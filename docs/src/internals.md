@@ -21,7 +21,6 @@ PAQ.AndOr
 ```@docs
 PAQ.AtomicProposition
 PAQ.LiteralProposition
-PAQ.NonExpressive
 ```
 
 ## Printing
