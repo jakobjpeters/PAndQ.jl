@@ -205,7 +205,7 @@ tautology (generic function with 1 method)
 """
 identity(x, binary_operator::BinaryOperator) = identity(Val(x), binary_operator)
 foreach([(:and, :xnor, :⊤), (:or, :xor, :⊥)]) do (left, middle, right)
-    @eval identity(::Union{Val{:left}, Val{:right}}, ::Union{map(typeof, [$left, $middle])...}) = $right
+    @eval identity(::Union{Val{:left}, Val{:right}}, ::union_typeof([$left, $middle])) = $right
 end
 foreach([
     (:left, :imply, :⊤),
@@ -267,9 +267,8 @@ julia> @p imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
 ```
 """
-dual(::BO) where BO <: Union{
-    map(typeof, [tautology, contradiction, xor, xnor])...
-} = not(BO.instance)
+dual(::BO) where BO <: [tautology, contradiction, xor, xnor] |> union_typeof =
+    not(BO.instance)
 foreach([
     (and, or),
     (nand, nor),
