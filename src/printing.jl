@@ -339,10 +339,11 @@ show(io::IO, p::Tree{BO}) where BO <: BinaryOperator =
         p.node |> last |> parenthesize,
     ], " ")
 function show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr
+    ao = AO.instance
     qs = getfield(p, 1)
     qs |> isempty ?
-        show(io, identity(:left, AO.instance)) :
-        join(io, map(parenthesize, qs), " " * string(AO.instance) * " ")
+        show(io, identity(:left, ao)) :
+        join(io, map(parenthesize, qs), " " * string(ao) * " ")
 end
 function show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition
     print(io, P |> nameof, ":\n ")
@@ -354,4 +355,4 @@ show(io::IO, ::MIME"text/plain", truth_table::TruthTable) =
 """
     print
 """
-print(io::IO, ::BO) where BO <: BooleanOperator = show(io, BO.instance)
+print(io::IO, bo::BooleanOperator) = show(io, bo)

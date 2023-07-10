@@ -142,23 +142,23 @@ atoms(p::NullaryOperator) = Atom[]
 """
     mapfoldl
 """
-mapfoldl(f, ::LIO, ps::AbstractArray) where LIO <: LeftIdentityOperator =
-    mapfoldl(f, LIO.instance, ps, init = identity(:left, LIO.instance))
+mapfoldl(f, lio::LeftIdentityOperator, ps::AbstractArray) =
+    mapfoldl(f, lio, ps, init = identity(:left, lio))
 
 """
     mapfoldr
 """
-mapfoldr(f,::RIO, ps::AbstractArray) where RIO <: RightIdentityOperator =
-    mapfoldr(f, RIO.instance, ps, init = identity(:right, RIO.instance))
+mapfoldr(f, rio::RightIdentityOperator, ps::AbstractArray) =
+    mapfoldr(f, rio, ps, init = identity(:right, rio))
 
 """
     mapreduce
 """
-mapreduce(f, ::LIO, ps::AbstractArray) where LIO <: LeftIdentityOperator =
-    mapfoldl(f, LIO.instance, ps)
-mapreduce(f, ::BO, ps::AbstractArray) where BO <: Union{
+mapreduce(f, lio::LeftIdentityOperator, ps::AbstractArray) =
+    mapfoldl(f, lio, ps)
+mapreduce(f, bo::Union{
     setdiff(map(uniontypes, [RightIdentityOperator, LeftIdentityOperator])...)...
-} = mapfoldr(f, BO.instance, ps)
+}, ps::AbstractArray) = mapfoldr(f, bo, ps)
 
 # import Base: rand
 # rand(::Type{Atom})
