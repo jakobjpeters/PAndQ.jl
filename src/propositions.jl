@@ -29,16 +29,20 @@ Supertype of [`Tree`](@ref) and [`Normal`](@ref).
 abstract type Expressive <: Compound end
 
 """
-    Atom{SS <: Union{String, Symbol}} <: Proposition
-    Atom(::SS = :_)
+    Atom{T} <: Proposition
+    Atom(::T = :_)
     Atom(::AtomicProposition)
 
 A proposition with [no deeper propositional structure](https://en.wikipedia.org/wiki/Atomic_formula).
 
-A string argument can be thought of as a specific statement,while a symbol can be variable.
+A string argument can be thought of as a specific statement, while a symbol can be variable.
 However, the only builtin difference between these are how they pretty-print.
 An atom with a string argument will be encompassed by quotation marks,
 while an atom with a symbol argument will only show the symbol's characters.
+
+!!! tip
+    Define pretty-printing for an instance of `Atom{T}` by overloading
+    [`show(io::IO, p::Atom{T})`](@ref show).
 
 !!! tip
     Use [`@atoms`](@ref) or [`@p`](@ref) as a shortcut to
@@ -64,10 +68,10 @@ Atom:
  "Logic is fun"
 ```
 """
-struct Atom{SS <: Union{String, Symbol}} <: Proposition
-    statement::SS
+struct Atom{T} <: Proposition
+    statement::T
 
-    Atom(statement::SS = :_) where SS <: Union{Symbol, String} = new{SS}(statement)
+    Atom(statement::T = :_) where T = new{T}(statement)
 end
 
 """

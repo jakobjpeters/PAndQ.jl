@@ -542,7 +542,7 @@ Normal(::AO, ps::Proposition...) where AO <: AndOr = Normal(AO.instance, ps |> c
 # Conversions
 
 foreach([:Atom, :Literal, :Tree, :Clause, :Normal]) do P
-    @eval $P(p) = convert($P, p)
+    @eval $P(p::Union{NullaryOperator, Proposition}) = convert($P, p)
 end
 
 """

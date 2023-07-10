@@ -80,7 +80,7 @@ and then returns the expression.
 
 # Examples
 ```jldoctest
-julia> x = @p p
+julia> @p x = p
 Atom:
  p
 
