@@ -131,8 +131,8 @@ Assigning meaning to any number of atomic propositions is called a [`Valuation`]
 ```jldoctest 2
 julia> valuations(r)
 2-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[p => ⊤]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => ⊥]
+ Pair{Atom{Symbol}, typeof(tautology)}[p => PAQ.tautology]
+ Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction]
 
 julia> interpretations(r)
 2-element Vector{Function}:
@@ -155,13 +155,13 @@ We are often interested in valuations that result in a valid interpretation. Thi
 ```jldoctest 2
 julia> solve(s, ⊤)
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
- [p => ⊤, q => ⊤]
+ [p => PAQ.tautology, q => PAQ.tautology]
 
 julia> solve(s, ⊥)
 3-element Vector{Vector}:
- Pair{Atom{Symbol}}[p => ⊥, q => ⊤]
- Pair{Atom{Symbol}}[p => ⊤, q => ⊥]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => ⊥, q => ⊥]
+ Pair{Atom{Symbol}}[p => PAQ.contradiction, q => PAQ.tautology]
+ Pair{Atom{Symbol}}[p => PAQ.tautology, q => PAQ.contradiction]
+ Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction, q => PAQ.contradiction]
 ```
 
 It would also be helpful to enumerate each valuation and interpretation in a visual format. This is accomplished by creating a [`TruthTable`](@ref). A truth table is a table where each column in the header identifies a proposition, and each row contains an interpretation (including the valuation of atomic propositions). To demonstrate these, we will use the [`xor`](@ref) operator, represented by the symbol `⊻`. Try to understand the meaning of this operator as it is interpreted with different valuations.

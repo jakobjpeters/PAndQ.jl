@@ -27,7 +27,6 @@ PAQ.LiteralProposition
 
 ```@docs
 show
-print
 ```
 
 ## Utility

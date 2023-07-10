@@ -1,7 +1,7 @@
 
-import Base: show, print
+import Base: show
 import AbstractTrees # print_tree
-import AbstractTrees: children, nodevalue
+import AbstractTrees: children, nodevalue, printnode
 
 using PrettyTables
 using REPL: symbol_latex, symbols_latex
@@ -136,12 +136,12 @@ format_latex(x) = print_latex(String, x) |> LatexCell
 format_head(::Val{:latex}, x) = x |> format_latex
 format_head(::Val, x) = x
 
-format_body(::Val{:truth}, x) = x |> string
+format_body(::Val{:truth}, x) = x |> operator_to_symbol |> string
 format_body(::Val{:text}, x) = x |> nameof |> string
 format_body(::Val{:letter}, x) = x |> letter
 format_body(::Val{:bool}, x) = x |> Bool |> string
 format_body(::Val{:bit}, x) = x |> Bool |> Int |> string
-format_body(::Val{:latex}, x) = x |> format_latex
+format_body(::Val{:latex}, x) = x |> operator_to_symbol |> format_latex
 
 ____print_truth_table(backend::Val{:latex}, io, body; vlines = :all, kwargs...) =
     pretty_table(io, body; backend, vlines, kwargs...)
@@ -204,6 +204,9 @@ children(p::Tree{typeof(identity)}) = ()
 nodevalue(p::Tree{BO}) where BO <: BooleanOperator = BO.instance
 nodevalue(p::Tree{typeof(identity)}) = p
 
+printnode(io::IO, node::Tree{typeof(identity)}) = print(io, node |> nodevalue)
+printnode(io::IO, node::Tree{BO}) where BO <: BooleanOperator = print(io, BO.instance |> operator_to_symbol)
+
 """
     print_tree([io::Union{IO, String} = stdout], p; max_depth = typemax(Int64), newline = false, kwargs...)
 
@@ -230,11 +233,10 @@ julia> @p print_tree((p ∧ ¬q) ∨ (¬p ∧ q))
    └─ q
 ```
 """
-function print_tree(io::IO, p::Tree; max_depth = typemax(Int), newline = false, kwargs...)
-    print(io, print_string(AbstractTrees.print_tree, p; maxdepth = max_depth, kwargs...) |> rstrip)
-    newline && io |> println
-    nothing
-end
+print_tree(io::IO, p::Tree; max_depth = typemax(Int), newline = false, kwargs...) =
+    print(io, print_string(
+        AbstractTrees.print_tree, p; maxdepth = max_depth, kwargs...
+    ) |> (newline ? identity : rstrip))
 print_tree(io::IO, p; kwargs...) = print_tree(io, p |> Tree; kwargs...)
 print_tree(p; kwargs...) = print_tree(stdout, p; kwargs...)
 
@@ -319,40 +321,33 @@ end
 parenthesize(p::Union{Literal, Tree{<:UnaryOperator}}) = p |> string
 parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * string(p) * ")"
 
-# TODO: fix type piracy
+operator_to_symbol(::typeof(identity)) = ""
+foreach([:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚, :⋀, :⋁]) do boolean_operator
+    @eval operator_to_symbol(::typeof($boolean_operator)) = $(boolean_operator |> string)
+end
+
 """
     show
 """
-show(io::IO, ::typeof(identity)) = nothing
-foreach([:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚, :⋀, :⋁]) do boolean_operator
-    @eval show(io::IO, ::typeof($boolean_operator)) = print(io, $(boolean_operator |> string))
-end
 show(io::IO, p::Atom{Symbol}) = print(io, p.statement)
 show(io::IO, p::Atom{String}) = print(io, "\"", p.statement, "\"")
+show(io::IO, p::Tuple{Proposition}) = print(io, p |> only)
 show(io::IO, p::Union{Literal{UO}, Tree{UO}}) where UO <: UnaryOperator =
-    foreach(x -> show(io, x), [UO.instance, getfield(p, 1)])
-show(io::IO, p::Tuple{Proposition}) = show(io, p |> only)
+    foreach(x -> print(io, x), [UO.instance |> operator_to_symbol, getfield(p, 1)])
 show(io::IO, p::Tree{BO}) where BO <: BinaryOperator =
     join(io, [
         p.node |> first |> parenthesize,
-        BO.instance,
+        BO.instance |> operator_to_symbol,
         p.node |> last |> parenthesize,
     ], " ")
 function show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr
     ao = AO.instance
     qs = getfield(p, 1)
     qs |> isempty ?
-        show(io, identity(:left, ao)) :
-        join(io, map(parenthesize, qs), " " * string(ao) * " ")
+        print(io, identity(:left, ao) |> operator_to_symbol) :
+        join(io, map(parenthesize, qs), " " * operator_to_symbol(ao) * " ")
 end
-function show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition
-    print(io, P |> nameof, ":\n ")
-    show(io, p)
-end
+show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition =
+    foreach(x -> print(io, x), [P |> nameof, ":\n ", p])
 show(io::IO, ::MIME"text/plain", truth_table::TruthTable) =
     print_truth_table(io, truth_table)
-
-"""
-    print
-"""
-print(io::IO, bo::BooleanOperator) = show(io, bo)

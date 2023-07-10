@@ -114,15 +114,15 @@ A valuation is a vector of `Pair`s which map from an atom to a truth value.
 ```jldoctest
 julia> @p valuations([p])
 2-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[p => ⊤]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => ⊥]
+ Pair{Atom{Symbol}, typeof(tautology)}[p => PAQ.tautology]
+ Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction]
 
 julia> @p valuations([p, q])
 4-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[p => ⊤, q => ⊤]
- Pair{Atom{Symbol}}[p => ⊥, q => ⊤]
- Pair{Atom{Symbol}}[p => ⊤, q => ⊥]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => ⊥, q => ⊥]
+ Pair{Atom{Symbol}, typeof(tautology)}[p => PAQ.tautology, q => PAQ.tautology]
+ Pair{Atom{Symbol}}[p => PAQ.contradiction, q => PAQ.tautology]
+ Pair{Atom{Symbol}}[p => PAQ.tautology, q => PAQ.contradiction]
+ Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction, q => PAQ.contradiction]
 ```
 """
 function valuations(atoms)
@@ -169,12 +169,12 @@ Return a vector containing all [`interpretations`](@ref) such that
 ```jldoctest
 julia> @p solve(p)
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
- [p => ⊤]
+ [p => PAQ.tautology]
 
 julia> @p solve(p ⊻ q, ⊥)
 2-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[p => ⊤, q => ⊤]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => ⊥, q => ⊥]
+ Pair{Atom{Symbol}, typeof(tautology)}[p => PAQ.tautology, q => PAQ.tautology]
+ Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction, q => PAQ.contradiction]
 ```
 """
 function solve(p, truth_value = ⊤)
@@ -470,18 +470,18 @@ and(p::Proposition, q::NullaryOperator) = q ∧ p # commutative property
 and(p::Proposition, q::Proposition) = and(Normal(and, p), Normal(and, q))
 
 foreach(BinaryOperator |> uniontypes) do BO
-    binary_operator = BO.instance |> Symbol
-    @eval $binary_operator(p) = Fix1($binary_operator, p)
-    @eval $binary_operator(p::Tree, q::Tree) = Tree($binary_operator, p, q)
-    @eval $binary_operator(p::Tree, q::Proposition) = Tree($binary_operator, p, q |> Tree)
-    @eval $binary_operator(p::Proposition, q::Tree) = Tree($binary_operator, p |> Tree, q)
-    @eval $binary_operator(p::Union{Atom, Literal}, q::Union{Atom, Literal}) =
-        $binary_operator(p |> Tree, q |> Tree)
+    bo = BO.instance |> nameof
+    @eval $bo(p) = Fix1($bo, p)
+    @eval $bo(p::Tree, q::Tree) = Tree($bo, p, q)
+    @eval $bo(p::Tree, q::Proposition) = Tree($bo, p, q |> Tree)
+    @eval $bo(p::Proposition, q::Tree) = Tree($bo, p |> Tree, q)
+    @eval $bo(p::Union{Atom, Literal}, q::Union{Atom, Literal}) =
+        $bo(p |> Tree, q |> Tree)
 end
 
 foreach(AndOr |> uniontypes) do AO
-    ao = AO.instance |> Symbol
-    dao = AO.instance |> dual |> Symbol
+    ao = AO.instance |> nameof
+    dao = AO.instance |> dual |> nameof
     DAO = AO.instance |> dual |> typeof
 
     @eval $ao(p::Clause{$DAO}, q::Clause{$DAO}) = Normal($ao, p, q)
