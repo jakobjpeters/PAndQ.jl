@@ -316,34 +316,38 @@ foreach([:tree, :latex, :truth_table, :markdown]) do f
     end
 end
 
-parenthesize(p::Union{Literal, Tree{<:UnaryOperator}}) = p |> _show
-parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * _show(p) * ")"
+parenthesize(p::Union{Literal, Tree{<:UnaryOperator}}) = p |> string
+parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * string(p) * ")"
 
-_show(::typeof(identity)) = ""
-foreach([:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚, :⋀, :⋁]) do boolean_operator
-    @eval _show(::typeof($boolean_operator)) = $(boolean_operator |> string)
-end
-_show(p::Atom{Symbol}) = p.statement |> string
-_show(p::Atom{String}) = "\"" * p.statement * "\""
-_show(p::Tuple{Proposition}) = p |> only |> _show
-_show(p::Union{Literal{UO}, Tree{UO}}) where UO <: UnaryOperator =
-    _show(UO.instance) * _show(getfield(p, 1))
-_show(p::Tree{BO}) where BO <: BinaryOperator = join([
-    p.node |> first |> parenthesize,
-    BO.instance |> _show,
-    p.node |> last |> parenthesize
-], " ")
-_show(p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr =
-    getfield(p, 1) |> isempty ?
-        identity(:left, AO.instance) |> _show :
-        join(map(parenthesize, getfield(p, 1)), join([" ", " "], AO.instance |> _show))
-
+# TODO: fix type piracy
 """
     show
 """
-show(io::IO, p::Union{BooleanOperator, Proposition}) = print(io, p |> _show)
-show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition =
-    print(io, P |> nameof, ":\n ", p |> _show)
+show(io::IO, ::typeof(identity)) = nothing
+foreach([:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚, :⋀, :⋁]) do boolean_operator
+    @eval show(io::IO, ::typeof($boolean_operator)) = print(io, $(boolean_operator |> string))
+end
+show(io::IO, p::Atom{Symbol}) = print(io, p.statement)
+show(io::IO, p::Atom{String}) = print(io, "\"", p.statement, "\"")
+show(io::IO, p::Union{Literal{UO}, Tree{UO}}) where UO <: UnaryOperator =
+    foreach(x -> show(io, x), [UO.instance, getfield(p, 1)])
+show(io::IO, p::Tuple{Proposition}) = show(io, p |> only)
+show(io::IO, p::Tree{BO}) where BO <: BinaryOperator =
+    join(io, [
+        p.node |> first |> parenthesize,
+        BO.instance,
+        p.node |> last |> parenthesize,
+    ], " ")
+function show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr
+    qs = getfield(p, 1)
+    qs |> isempty ?
+        show(io, identity(:left, AO.instance)) :
+        join(io, map(parenthesize, qs), " " * string(AO.instance) * " ")
+end
+function show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition
+    print(io, P |> nameof, ":\n ")
+    show(io, p)
+end
 show(io::IO, ::MIME"text/plain", truth_table::TruthTable) =
     print_truth_table(io, truth_table)
 
