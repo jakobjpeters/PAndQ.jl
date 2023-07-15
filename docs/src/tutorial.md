@@ -7,7 +7,7 @@ DocTestSetup = :(using PAQ)
 
 ## Truth Values
 
-A truth value is logic's version of a boolean `true` or `false`. These concepts can also be represented as a `1` or a `0`. Similarly, we use [`tautology`](@ref) and [`contradiction`](@ref). These are commonly represented with the symbols `⊤` and `⊥`.
+A truth value is logic's version of a boolean `true` or `false`. These concepts can also be represented as a `1` or a `0`. Similarly, we use [`tautology`](@ref) and [`contradiction`](@ref). These are commonly represented with the symbols `⊤` and `⊥`. These truth values have additional meaning, which will be discussed further on.
 
 ## [Operators](@id tutorial_operators)
 
@@ -37,7 +37,18 @@ julia> ⊤ ∨ ⊥ == ⊤ # logical or
 true
 ```
 
-There are several more operators, which will be discussed later.
+There are several more operators, which will be discussed later. Use the [`arity`](@ref) function to determine the number of arguments for an operator.
+
+```jldoctest
+julia> arity(contradiction)
+0
+
+julia> arity(not)
+1
+
+julia> arity(and)
+2
+```
 
 ## Propositions
 
@@ -115,6 +126,8 @@ julia> atoms(s)
  q
 ```
 
+## Semantics
+
 We know that since these are propositions, they can be true or false. If you think that "Logic is fun", it would be invalid to assign it the valuation false. So the proposition `p` is true if you think that "Logic is fun" and is false otherwise. If we assign the value true to the proposition "Logic is fun", then we know that the validity of the proposition "Logic is fun and Julia is awesome" depends on whether or not "Julia is awesome". If "Julia is awesome" is assigned false, then the conjunction of the two propositions is false. Use the [`interpret`](@ref) function to assign meaning to atomic propositions and then simplify the proposition.
 
 ```jldoctest 2
@@ -140,7 +153,7 @@ julia> interpretations(r)
  tautology (generic function with 1 method)
 ```
 
-Since `s` contains two atomic propositions, there are four valuations: `p` is true and `q` is true, `p` is false and `q` is true, `p` is true and `q` is false, and `p` is false and `q` is false. Each additional atomic proposition in a proposition doubles the number of possible valuations. Mathematically, there are ``{2 ^ n}`` valuations where `n = length(atoms(p))`. Since each interpretation depends on a valuation, the number of valuations and interpretations are equal.
+Since `s` contains two atomic propositions, there are four valuations: `p` is true and `q` is true, `p` is false and `q` is true, `p` is true and `q` is false, and `p` is false and `q` is false. Each additional atomic proposition in a proposition doubles the number of possible valuations. Mathematically, there are `2 ^ n` valuations where `n = length(atoms(p))`. Since each interpretation depends on a valuation, the number of valuations and interpretations are equal.
 
 ```jldoctest 2
 julia> n = length(atoms(s))
@@ -153,16 +166,63 @@ true
 We are often interested in valuations that result in a valid interpretation. This is accomplished with the [`solve`](@ref) function. The proposition `s` is the conjunction of `p` and `p`, so it is only true if both `p` and `q` are true. Each of the other three possible valuations are invalid.
 
 ```jldoctest 2
-julia> solve(s, ⊤)
+julia> solve(s, tautology)
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
  [p => PAQ.tautology, q => PAQ.tautology]
 
-julia> solve(s, ⊥)
+julia> solve(s, contradiction)
 3-element Vector{Vector}:
  Pair{Atom{Symbol}}[p => PAQ.contradiction, q => PAQ.tautology]
  Pair{Atom{Symbol}}[p => PAQ.tautology, q => PAQ.contradiction]
  Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction, q => PAQ.contradiction]
 ```
+
+A proposition [`is_satisfiable`](@ref) if there is at least one valid interpretation. A proposition [`is_falsifiable`](@ref) if there is at least one invalid interpretation. A proposition [`is_contingency`](@ref) if it is both satisfiable and falsifiable.
+
+```jldoctest 2
+julia> is_satisfiable(s) && is_falsifiable(s) && is_contingency(s)
+true
+```
+
+A proposition is a tautology if every possible interpretation is true. A proposition is a contradiction if every possible interpretation is false. For example, `p ∧ ¬p` is always interpreted as false because either `p` or `¬p` must be false. `p ∨ ¬p` is always interpreted as true because either `p` or `¬p` must be true. Use the functions [`is_tautology`](@ref), [`is_contradiction`](@ref), and [`is_truth`](@ref) to check whether a proposition is logically equivalent to a truth value.
+
+```jldoctest 2
+julia> t = p ∧ ¬p
+Tree:
+ p ∧ ¬p
+
+julia> u = p ∨ ¬p
+Tree:
+ p ∨ ¬p
+
+julia> interpretations(t)
+2-element Vector{typeof(contradiction)}:
+ contradiction (generic function with 1 method)
+ contradiction (generic function with 1 method)
+
+julia> interpretations(u)
+2-element Vector{typeof(tautology)}:
+ tautology (generic function with 1 method)
+ tautology (generic function with 1 method)
+
+julia> is_contradiction(t) && is_tautology(u)
+true
+
+julia> is_truth(t) && is_truth(u)
+true
+```
+
+Two propositions are logically equivalent if their interpretation is equivalent for every possible valuation. For example, the propositions `¬(¬p ∧ ¬q)` and `p ∨ q` are logically equivalent. In fact, the `or` operator is implemented this way. Use [`==`](@ref) to test that two propositions are logically equivalent. Use `===` to test that two propositions have an identical internal representation.
+
+```jldoctest 2
+julia> ¬(¬p ∧ ¬q) == p ∨ q
+true
+
+julia> ¬(¬p ∧ ¬q) === p ∨ q
+false
+```
+
+## Visualization
 
 It would also be helpful to enumerate each valuation and interpretation in a visual format. This is accomplished by creating a [`TruthTable`](@ref). A truth table is a table where each column in the header identifies a proposition, and each row contains an interpretation (including the valuation of atomic propositions). To demonstrate these, we will use the [`xor`](@ref) operator, represented by the symbol `⊻`. Try to understand the meaning of this operator as it is interpreted with different valuations.
 
@@ -178,23 +238,4 @@ julia> TruthTable(p ⊻ q)
 │ ⊤    │ ⊥    │ ⊤     │
 │ ⊥    │ ⊥    │ ⊥     │
 └──────┴──────┴───────┘
-```
-
-TODO: write paragraph
-
-```jldoctest 2
-julia> is_contradiction(p ∧ ¬p)
-true
-
-julia> is_tautology(p ∨ ¬p)
-true
-
-julia> TruthTable(p ∧ ¬p, p ∨ ¬p)
-┌────────┬────────┬──────┐
-│ p ∧ ¬p │ p ∨ ¬p │ p    │
-│ Tree   │ Tree   │ Atom │
-├────────┼────────┼──────┤
-│ ⊥      │ ⊤      │ ⊤    │
-│ ⊥      │ ⊤      │ ⊥    │
-└────────┴────────┴──────┘
 ```

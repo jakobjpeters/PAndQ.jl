@@ -31,7 +31,6 @@ abstract type Expressive <: Compound end
 """
     Atom{T} <: Proposition
     Atom(::T = :_)
-    Atom(::AtomicProposition)
 
 A proposition with [no deeper propositional structure](https://en.wikipedia.org/wiki/Atomic_formula).
 
