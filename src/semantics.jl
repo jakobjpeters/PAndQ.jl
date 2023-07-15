@@ -28,7 +28,7 @@ julia> @p ¬(p ⊻ q) === (p → q) ∧ (p ← q)
 false
 ```
 """
-==(p::NullaryOperator, q::NullaryOperator) = p === q
+==(p::Union{NullaryOperator, Atom}, q::Union{NullaryOperator, Atom}) = p === q
 ==(p::Union{NullaryOperator, Proposition}, q::Union{NullaryOperator, Proposition}) =
     is_tautology(p ↔ q)
 
@@ -298,7 +298,7 @@ julia> @p is_tautology(¬(p ∧ ¬p))
 true
 ```
 """
-is_tautology(p) = all(Fix1(==, ⊤), p |> interpretations)
+is_tautology(p) = all(⊤ |> isequal, p |> interpretations)
 is_tautology(p::Union{Clause{A}, Normal{A}}) where A <: typeof(and) =
     getfield(p, 1) |> isempty
 
@@ -442,8 +442,8 @@ not_imply(p, q) = p ∧ ¬q
 imply(p, q) = ¬(p ↛ q)
 not_converse_imply(p, q) = ¬p ∧ q
 converse_imply(p, q) = ¬(p ↚ q)
-reduce_and(xs) = reduce(and, xs)
-reduce_or(xs) = reduce(or, xs)
+reduce_and(ps) = reduce(and, ps)
+reduce_or(ps) = reduce(or, ps)
 
 # boolean operators
 eval_doubles(:not, [

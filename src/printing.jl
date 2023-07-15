@@ -90,9 +90,9 @@ struct TruthTable
         truths_interpretations, atoms_interpretations, compounds_interpretations =
             Vector{Function}[], Vector{Function}[], Vector{Function}[]
 
-        group = xs -> Dict(map(xs) do x
+        group = xs -> map(xs) do x
             interpretations(x, _valuations) => Proposition[]
-        end)
+        end |> Dict
         grouped_truths, grouped_atoms = map(group, ([tautology, contradiction], _atoms))
         grouped_compounds = Dict{Vector{Function}, Vector{Proposition}}()
 
@@ -118,7 +118,7 @@ struct TruthTable
             foreach(interpretations) do interpretation
                 xs = get(group, interpretation, Proposition[])
                 push!(header, xs)
-                push!(sub_header, map(x -> getfield(Main, nameof(typeof(x))), xs))
+                push!(sub_header, map(x -> getfield(Main, x |> typeof |> nameof), xs))
                 push!(body, interpretation)
             end
         end
@@ -333,13 +333,12 @@ show(io::IO, p::Atom{Symbol}) = print(io, p.statement)
 show(io::IO, p::Atom{String}) = print(io, "\"", p.statement, "\"")
 show(io::IO, p::Tuple{Proposition}) = print(io, p |> only)
 show(io::IO, p::Union{Literal{UO}, Tree{UO}}) where UO <: UnaryOperator =
-    foreach(x -> print(io, x), [UO.instance |> operator_to_symbol, getfield(p, 1)])
-show(io::IO, p::Tree{BO}) where BO <: BinaryOperator =
-    join(io, [
-        p.node |> first |> parenthesize,
-        BO.instance |> operator_to_symbol,
-        p.node |> last |> parenthesize,
-    ], " ")
+    print(io, UO.instance |> operator_to_symbol, getfield(p, 1))
+show(io::IO, p::Tree{BO}) where BO <: BinaryOperator = join(io, [
+    p.node |> first |> parenthesize,
+    BO.instance |> operator_to_symbol,
+    p.node |> last |> parenthesize,
+], " ")
 function show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr
     ao = AO.instance
     qs = getfield(p, 1)
@@ -348,6 +347,6 @@ function show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr
         join(io, map(parenthesize, qs), " " * operator_to_symbol(ao) * " ")
 end
 show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition =
-    foreach(x -> print(io, x), [P |> nameof, ":\n ", p])
+    print(io, P |> nameof, ":\n ", p)
 show(io::IO, ::MIME"text/plain", truth_table::TruthTable) =
     print_truth_table(io, truth_table)

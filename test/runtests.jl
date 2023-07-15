@@ -5,7 +5,7 @@ using PAQ
 
 @testset "`detect_ambiguities` and `detect_unbound_args`" begin
     foreach([:detect_ambiguities, :detect_unbound_args]) do detect
-        @eval @test isempty($detect(PAQ, recursive = true))
+        @eval @test $detect(PAQ, recursive = true) |> isempty
     end
 end
 
@@ -16,6 +16,4 @@ DocMeta.setdocmeta!(
     recursive=true
 )
 
-@testset "`doctest`" begin
-    doctest(PAQ)
-end
+@testset "`doctest`" doctest(PAQ)
