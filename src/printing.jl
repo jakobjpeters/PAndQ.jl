@@ -110,11 +110,11 @@ struct TruthTable
         header = Vector{Proposition}[]
         sub_header = Vector{UnionAll}[]
         body = Vector{Function}[]
-        foreach([
+        foreach((
             truths_interpretations => grouped_truths,
             atoms_interpretations => grouped_atoms,
             compounds_interpretations => grouped_compounds
-        ]) do (interpretations, group)
+        )) do (interpretations, group)
             foreach(interpretations) do interpretation
                 xs = get(group, interpretation, Proposition[])
                 push!(header, xs)
@@ -198,6 +198,8 @@ print_truth_table(io::IO, x; kwargs...) =
 print_truth_table(x; kwargs...) =
     print_truth_table(stdout, x; kwargs...)
 
+_newline(newline, io) = newline ? io |> println : nothing
+
 children(p::Tree) = p.node
 children(p::Tree{typeof(identity)}) = ()
 
@@ -233,10 +235,10 @@ julia> @p print_tree((p ∧ ¬q) ∨ (¬p ∧ q))
    └─ q
 ```
 """
-print_tree(io::IO, p::Tree; max_depth = typemax(Int), newline = false, kwargs...) =
-    print(io, print_string(
-        AbstractTrees.print_tree, p; maxdepth = max_depth, kwargs...
-    ) |> (newline ? identity : rstrip))
+function print_tree(io::IO, p::Tree; max_depth = typemax(Int), newline = false, kwargs...)
+    print(io, print_string(AbstractTrees.print_tree, p; maxdepth = max_depth, kwargs...) |> rstrip)
+    _newline(newline, io)
+end
 print_tree(io::IO, p; kwargs...) = print_tree(io, p |> Tree; kwargs...)
 print_tree(p; kwargs...) = print_tree(stdout, p; kwargs...)
 
@@ -268,8 +270,7 @@ function print_latex(io::IO, x::String; newline = false, delimeter = "\\(" => "\
     ])
 
     print(io, latex)
-    newline && io |> println
-    nothing
+    _newline(newline, io)
 end
 print_latex(io::IO, x::TruthTable; kwargs...) =
     print_truth_table(io, x; backend = :latex, kwargs...)
@@ -289,8 +290,7 @@ print_markdown(::Type{MD}, truth_table::TruthTable; alignment = :c) =
     ) |> MD
 function print_markdown(io::IO, x; newline = false, kwargs...)
     print(io, string(print_markdown(MD, x; kwargs...))[begin:end - 1])
-    newline && io |> println
-    nothing
+    _newline(newline, io)
 end
 print_markdown(x; kwargs...) = print_markdown(stdout, x; kwargs...)
 
@@ -301,7 +301,7 @@ function print_string(f, args...; kwargs...)
 end
 
 foreach([:tree, :latex, :truth_table, :markdown]) do f
-    print_f, println_f = map(s -> Symbol("print", s, "_", f), ["", "ln"])
+    print_f, println_f = map(s -> Symbol("print", s, "_", f), ("", "ln"))
 
     @eval $print_f(::Type{String}, args...; kwargs...) = print_string($print_f, args...; kwargs...)
     @eval begin

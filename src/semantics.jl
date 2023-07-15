@@ -206,15 +206,15 @@ tautology (generic function with 1 method)
 ```
 """
 identity(x, binary_operator::BinaryOperator) = identity(x |> Val, binary_operator)
-foreach([(:and, :xnor, :⊤), (:or, :xor, :⊥)]) do (left, middle, right)
-    @eval identity(::Union{Val{:left}, Val{:right}}, ::union_typeof([$left, $middle])) = $right
+foreach(((:and, :xnor, :⊤), (:or, :xor, :⊥))) do (left, middle, right)
+    @eval identity(::Union{Val{:left}, Val{:right}}, ::union_typeof($left, $middle)) = $right
 end
-foreach([
+foreach((
     (:left, :imply, :⊤),
     (:right, :not_imply, :⊥),
     (:right, :converse_imply, :⊤),
     (:left, :not_converse_imply, :⊥)
-]) do (left, middle, right)
+)) do (left, middle, right)
     @eval identity(::$(typeof(left |> Val)), ::typeof($middle)) = $right
 end
 
@@ -247,7 +247,7 @@ true
 ```
 """
 converse(co::CommutativeOperator) = co
-eval_doubles(:converse, [(imply, converse_imply), (not_imply, not_converse_imply)])
+eval_doubles(:converse, ((imply, converse_imply), (not_imply, not_converse_imply)))
 
 """
     dual(::BooleanOperator)
@@ -271,14 +271,14 @@ julia> @p imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
 ```
 """
-dual(bo::union_typeof([tautology, contradiction, xor, xnor])) = bo |> not
-eval_doubles(:dual, [
+dual(bo::union_typeof((tautology, contradiction, xor, xnor))) = bo |> not
+eval_doubles(:dual, (
     (and, or),
     (nand, nor),
     (xor, xnor),
     (imply, not_converse_imply),
     (not_imply, converse_imply)
-])
+))
 # TODO: `dual(::typeof(not))` and `dual(::typeof(identity))` ?
 
 """
@@ -397,6 +397,7 @@ true
 ```
 """
 is_satisfiable(p) = p |> !is_contradiction
+# TODO: improve algorithm
 
 """
     is_falsifiable(p)
@@ -430,6 +431,14 @@ is_falsifiable(p) = p |> !is_tautology
 
 # Boolean Operators
 
+# Bool
+Bool(::typeof(tautology)) = true
+Bool(::typeof(contradiction)) = false
+not(p::Bool) = !p
+and(p::Bool, q::Bool) = p && q
+or(p::Bool, q::Bool) = p || q
+converse_imply(p::Bool, q::Bool) = p ^ q
+
 # generic
 tautology() = ⊤
 contradiction() = ⊥
@@ -446,7 +455,7 @@ reduce_and(ps) = reduce(and, ps)
 reduce_or(ps) = reduce(or, ps)
 
 # boolean operators
-eval_doubles(:not, [
+eval_doubles(:not, (
     (tautology, contradiction),
     (identity, not),
     (and, nand),
@@ -454,7 +463,7 @@ eval_doubles(:not, [
     (xor, xnor),
     (imply, not_imply),
     (converse_imply, not_converse_imply)
-])
+))
 
 # propositions
 not(p::Atom) = Literal(not, p)
@@ -491,12 +500,12 @@ foreach(AndOr |> uniontypes) do AO
     @eval $ao(p::Clause{$DAO}, q::Union{LiteralProposition, Clause{$AO}}) =
         $ao(p, Normal($ao, q))
 
-    foreach([(Clause, LiteralProposition), (Normal, Clause{DAO})]) do (left, right)
+    foreach(((Clause, LiteralProposition), (Normal, Clause{DAO}))) do (left, right)
         @eval $ao(p::$left{$AO}, q::$right) = $left($ao, vcat(getfield(p, 1), q))
         @eval $ao(p::$right, q::$left{$AO}) = $left($ao, vcat(p, getfield(q, 1)))
     end
 
-    foreach([Clause, Normal]) do CN
+    foreach((Clause, Normal)) do CN
         @eval $ao(p::$CN{$AO}, q::$CN{$AO}) =
             $CN($ao, vcat(getfield(p, 1), getfield(q, 1)))
     end
@@ -539,7 +548,7 @@ Normal(ao::AndOr, ps::Proposition...) = Normal(ao, ps |> collect)
 
 # Conversions
 
-foreach([:Atom, :Literal, :Tree, :Clause, :Normal]) do P
+foreach((:Atom, :Literal, :Tree, :Clause, :Normal)) do P
     @eval $P(p::Union{NullaryOperator, Proposition}) = convert($P, p)
 end
 
@@ -567,11 +576,3 @@ convert(::Type{CN}, no::NO) where {CN <: Union{Clause, Normal}, NO <: NullaryOpe
     no |> nullary_operator_to_and_or |> CN
 convert(::Type{Normal}, p::Clause{typeof(and)}) = Normal(or, p)
 convert(::Type{Normal}, p::Proposition) = Normal(and, p)
-
-# Bool
-Bool(::typeof(tautology)) = true
-Bool(::typeof(contradiction)) = false
-not(p::Bool) = !p
-and(p::Bool, q::Bool) = p && q
-or(p::Bool, q::Bool) = p || q
-converse_imply(p::Bool, q::Bool) = p ^ q

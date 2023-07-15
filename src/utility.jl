@@ -154,8 +154,7 @@ mapfoldr(f, rio::RightIdentityOperator, ps::AbstractArray) =
 """
     mapreduce
 """
-mapreduce(f, lio::LeftIdentityOperator, ps::AbstractArray) =
-    mapfoldl(f, lio, ps)
+mapreduce(f, lio::LeftIdentityOperator, ps::AbstractArray) = mapfoldl(f, lio, ps)
 mapreduce(f, bo::Union{
     setdiff(map(uniontypes, [RightIdentityOperator, LeftIdentityOperator])...)...
 }, ps::AbstractArray) = mapfoldr(f, bo, ps)
