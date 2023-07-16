@@ -110,12 +110,9 @@ macro p_str(p)
     :(@p $(p |> Meta.parse)) |> esc
 end
 
-__atoms(p::Union{Tree, Clause, Normal}) = mapreduce(atoms, vcat, getfield(p, 1))
-
 _atoms(p::Atom) = [p]
 _atoms(p::Literal) = p.atom |> atoms
-_atoms(p::Tree) = p |> __atoms
-_atoms(p::Union{Clause, Normal}) = getfield(p, 1) |> isempty ? Atom[] : p |> __atoms
+_atoms(p::Union{Tree, Clause, Normal}) = mapreduce(atoms, vcat, getfield(p, 1); init = Atom[])
 
 """
     atoms(::Proposition)
@@ -129,7 +126,7 @@ contained in the given [`Proposition`](@ref).
 # Examples
 ```jldoctest
 julia> @p atoms(p ∧ q)
-2-element Vector{Atom{Symbol}}:
+2-element Vector{Atom}:
  p
  q
 ```

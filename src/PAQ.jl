@@ -28,7 +28,7 @@ export
     #= Base.show, Base.print, =#
 
     # utility.jl
-    arity, @atoms, @p, @p_str, atoms,
+    arity, @atoms, @p, @p_str, atoms, eltype,
     #= Base.mapfoldl, Base.mapfoldr, Base.mapreduce =#
 
     # semantics.jl

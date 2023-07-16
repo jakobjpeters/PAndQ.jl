@@ -121,7 +121,7 @@ julia> atoms(r)
  p
 
 julia> atoms(s)
-2-element Vector{Atom{Symbol}}:
+2-element Vector{Atom}:
  p
  q
 ```

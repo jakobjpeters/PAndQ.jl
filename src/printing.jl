@@ -200,7 +200,7 @@ print_truth_table(x; kwargs...) =
 
 _newline(newline, io) = newline ? io |> println : nothing
 
-children(p::Tree) = p.node
+children(p::Tree) = p.nodes
 children(p::Tree{typeof(identity)}) = ()
 
 nodevalue(p::Tree{BO}) where BO <: BooleanOperator = BO.instance
@@ -318,7 +318,7 @@ foreach([:tree, :latex, :truth_table, :markdown]) do f
     end
 end
 
-parenthesize(p::Union{Literal, Tree{<:UnaryOperator}}) = p |> string
+parenthesize(p) = p |> string
 parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * string(p) * ")"
 
 operator_to_symbol(::typeof(identity)) = ""
@@ -331,13 +331,18 @@ end
 """
 show(io::IO, p::Atom{Symbol}) = print(io, p.statement)
 show(io::IO, p::Atom{String}) = print(io, "\"", p.statement, "\"")
-show(io::IO, p::Tuple{Proposition}) = print(io, p |> only)
-show(io::IO, p::Union{Literal{UO}, Tree{UO}}) where UO <: UnaryOperator =
-    print(io, UO.instance |> operator_to_symbol, getfield(p, 1))
+show(io::IO, p::Literal{UO}) where UO <: UnaryOperator =
+    print(io, UO.instance |> operator_to_symbol, p.atom)
+show(io::IO, p::Tree{NO}) where NO <: NullaryOperator =
+    print(io, NO.instance |> operator_to_symbol)
+show(io::IO, p::Tree{UO, <:Tuple{Atom}}) where UO <: UnaryOperator = 
+    print(io, UO.instance |> operator_to_symbol, p.nodes |> only)
+show(io::IO, p::Tree{UO}) where UO <: UnaryOperator =
+    print(io, UO.instance |> operator_to_symbol, "(", p.nodes |> only, ")")
 show(io::IO, p::Tree{BO}) where BO <: BinaryOperator = join(io, [
-    p.node |> first |> parenthesize,
+    p.nodes |> first |> parenthesize,
     BO.instance |> operator_to_symbol,
-    p.node |> last |> parenthesize,
+    p.nodes |> last |> parenthesize,
 ], " ")
 function show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr
     ao = AO.instance

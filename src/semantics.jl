@@ -134,7 +134,7 @@ function valuations(atoms)
     end
 end
 valuations(p::Proposition) = p |> atoms |> valuations
-valuations(x::NullaryOperator) = [x => x]
+valuations(no::NullaryOperator) = [no => no]
 
 """
     interpretations(p, valuations = valuations(p))
@@ -207,7 +207,7 @@ tautology (generic function with 1 method)
 """
 identity(x, binary_operator::BinaryOperator) = identity(x |> Val, binary_operator)
 foreach(((:and, :xnor, :⊤), (:or, :xor, :⊥))) do (left, middle, right)
-    @eval identity(::Union{Val{:left}, Val{:right}}, ::union_typeof($left, $middle)) = $right
+    @eval identity(::Union{Val{:left}, Val{:right}}, ::union_typeof(($left, $middle))) = $right
 end
 foreach((
     (:left, :imply, :⊤),
@@ -299,6 +299,7 @@ true
 ```
 """
 is_tautology(p) = all(⊤ |> isequal, p |> interpretations)
+is_tautology(::LiteralProposition) = false
 is_tautology(p::Union{Clause{A}, Normal{A}}) where A <: typeof(and) =
     getfield(p, 1) |> isempty
 
@@ -345,6 +346,7 @@ false
 ```
 """
 is_truth(p) = p |> interpretations |> unique! |> length == 1
+is_truth(::LiteralProposition) = false
 
 """
     is_contingency(p)
@@ -451,8 +453,8 @@ not_imply(p, q) = p ∧ ¬q
 imply(p, q) = ¬(p ↛ q)
 not_converse_imply(p, q) = ¬p ∧ q
 converse_imply(p, q) = ¬(p ↚ q)
-reduce_and(ps) = reduce(and, ps)
-reduce_or(ps) = reduce(or, ps)
+reduce_and(ps; init = ⊤) = reduce(and, ps; init)
+reduce_or(ps; init = ⊥) = reduce(or, ps; init)
 
 # boolean operators
 eval_doubles(:not, (
@@ -468,7 +470,7 @@ eval_doubles(:not, (
 # propositions
 not(p::Atom) = Literal(not, p)
 not(p::Literal{UO}) where UO <: UnaryOperator = p.atom |> not(UO.instance)
-not(p::Tree{BO}) where BO <: BooleanOperator = not(BO.instance)(p.node...)
+not(p::Tree{BO}) where BO <: BooleanOperator = not(BO.instance)(p.nodes...)
 not(p::CN) where {AO <: AndOr, CN <: Union{Clause{AO}, Normal{AO}}} =
     getfield(Main, CN |> nameof)(AO.instance |> dual, map(not, getfield(p, 1)))
 
@@ -522,7 +524,7 @@ Clause(ao::AndOr, ps::AbstractArray) =
 Clause(ao::AndOr, ps...) = Clause(ao, ps |> collect)
 
 Normal(ao::AndOr, p::Tree{BO}) where BO <: BooleanOperator = BO.instance(
-    map(p.node) do branch
+    map(p.nodes) do branch
         Normal(ao, branch)
     end...
 )
@@ -548,8 +550,8 @@ Normal(ao::AndOr, ps::Proposition...) = Normal(ao, ps |> collect)
 
 # Conversions
 
-foreach((:Atom, :Literal, :Tree, :Clause, :Normal)) do P
-    @eval $P(p::Union{NullaryOperator, Proposition}) = convert($P, p)
+foreach((:Literal, :Tree, :Clause, :Normal)) do P
+    @eval $P(p) = convert($P, p)
 end
 
 nullary_operator_to_and_or(::typeof(tautology)) = and
@@ -559,9 +561,9 @@ nullary_operator_to_and_or(::typeof(contradiction)) = or
     convert
 """
 convert(::Type{Atom}, p::Literal{typeof(identity)}) = p.atom
-convert(::Type{Atom}, p::Tree{typeof(identity), <:Tuple{Atom}}) = p.node |> only
+convert(::Type{Atom}, p::Tree{typeof(identity), <:Tuple{Atom}}) = p.nodes |> only
 convert(::Type{Literal}, p::Tree{UO, <:Tuple{Atom}}) where UO <: UnaryOperator =
-    p.node |> only |> UO.instance |> Literal
+    p.nodes |> only |> UO.instance |> Literal
 convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
 function convert(::Type{Tree}, p::typeof(contradiction))
     p = Atom()

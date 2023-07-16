@@ -31,6 +31,7 @@ abstract type Expressive <: Compound end
 """
     Atom{T} <: Proposition
     Atom(::T = :_)
+    Atom(::AtomicProposition)
 
 A proposition with [no deeper propositional structure](https://en.wikipedia.org/wiki/Atomic_formula).
 
@@ -74,7 +75,7 @@ struct Atom{T} <: Proposition
 end
 
 """
-    Literal{UO <: UnaryOperator} <: Compound
+    Literal{UO <: UnaryOperator, T} <: Compound
     Literal(::UO, ::Atom)
     Literal(::LiteralProposition)
 
@@ -95,10 +96,10 @@ Atom:
  p
 ```
 """
-struct Literal{UO <: UnaryOperator} <: Compound
-    atom::Atom
+struct Literal{UO <: UnaryOperator, T} <: Compound
+    atom::Atom{T}
 
-    Literal(::UO, atom::Atom) where UO <: UnaryOperator = new{UO}(atom)
+    Literal(::UO, atom::Atom{T}) where {UO <: UnaryOperator, T} = new{UO, T}(atom)
 end
 
 """
@@ -116,7 +117,7 @@ Subtype of [`Expressive`](@ref).
 
 # Examples
 ```jldoctest
-julia> r = @p p ⊻ q
+julia> @p r = p ⊻ q
 Tree:
  p ⊻ q
 
@@ -127,14 +128,16 @@ Tree:
 """
 struct Tree{
     BO <: BooleanOperator,
-    TP <: Union{Tuple{Proposition}, Tuple{Proposition, Proposition}}
+    NT <: NTuple{N, Proposition} where N
 } <: Expressive
-    node::TP
+    nodes::NT
 
-    Tree(::UO, leaf_node::A) where {UO <: UnaryOperator, A <: Atom} =
-        new{UO, Tuple{A}}((leaf_node,))
-    Tree(::BO, left_node::T1, right_node::T2) where {BO <: BinaryOperator, T1 <: Tree, T2 <: Tree} =
-        new{BO, Tuple{T1, T2}}((left_node, right_node))
+    Tree(::BO, node::A) where {BO <: BooleanOperator, A <: Atom} = new{BO, Tuple{A}}((node,))
+    function Tree(bo::BO, nodes...) where BO <: BooleanOperator
+        _arity = bo |> arity
+        _arity != nodes |> length && "TODO: write this error" |> error
+        new{BO, NTuple{_arity, Tree}}(nodes)
+    end
 end
 
 """
@@ -208,7 +211,7 @@ struct Normal{AO <: AndOr, C <: Clause} <: Expressive
         new{O, C}(clauses |> union)
 end
 
-literal_tree_types(unary_operator) = Union{map([Literal, Tree]) do LT
+literal_tree_types(unary_operator) = Union{map((Literal, Tree)) do LT
     LT{unary_operator |> typeof}
 end...}
 
@@ -217,13 +220,21 @@ end...}
 
 A [`Proposition`](@ref) that is known by its type to be logically equivalent to an [`Atom`](@ref).
 """
-const AtomicProposition = Union{Atom, identity |> literal_tree_types}
+const AtomicProposition = Union{
+    Atom,
+    Literal{identity |> typeof},
+    Tree{identity |> typeof, Tuple{<:Atom}}
+}
 
 """
     LiteralProposition
 
 A [`Proposition`](@ref) that is known by its type to be logically equivalent to a [`Literal`](@ref).
 """
-const LiteralProposition = Union{AtomicProposition, not |> literal_tree_types}
+const LiteralProposition = Union{
+    AtomicProposition,
+    Literal{not |> typeof},
+    Tree{not |> typeof, Tuple{<:Atom}}
+}
 
 # TODO: make traits?
