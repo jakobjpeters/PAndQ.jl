@@ -406,21 +406,21 @@ union_typeof(xs) = Union{map(typeof, xs)...}
 """
     NullaryOperator
 
-The union types of [`BooleanOperator`](@ref)s that take zero arguments.
+The union types of [`LogicalOperator`](@ref)s that take zero arguments.
 """
 const NullaryOperator = (tautology, contradiction) |> union_typeof
 
 """
     UnaryOperator
 
-The union types of [`BooleanOperator`](@ref)s that take one argument.
+The union types of [`LogicalOperator`](@ref)s that take one argument.
 """
 const UnaryOperator = (identity, not) |> union_typeof
 
 """
     BinaryOperator
 
-The union types of [`BooleanOperator`](@ref)s that take two arguments.
+The union types of [`LogicalOperator`](@ref)s that take two arguments.
 """
 const BinaryOperator = (
     and, nand, nor, or, xor, xnor, imply, not_imply, converse_imply, not_converse_imply
@@ -432,18 +432,18 @@ const BinaryOperator = (
 const NaryOperator = (reduce_and, reduce_or) |> union_typeof
 
 """
-    BooleanOperator
+    LogicalOperator
 
-The union types of [boolean operators](@ref operators_operators).
+The union types of [logical operators](@ref operators_operators).
 """
-const BooleanOperator = Union{
+const LogicalOperator = Union{
     NullaryOperator, UnaryOperator, BinaryOperator, NaryOperator
 }
 
 """
     CommutativeOperator
 
-The union types of [`BooleanOperator`](@ref)s
+The union types of [`LogicalOperator`](@ref)s
 with the [commutative property]
 (https://en.wikipedia.org/wiki/Commutative_property).
 """
@@ -452,7 +452,7 @@ const CommutativeOperator = (and, nand, nor, or, xor, xnor) |> union_typeof
 """
     AssociativeOperator
 
-The union types of [`BooleanOperator`](@ref)s
+The union types of [`LogicalOperator`](@ref)s
 with the [associative property]
 (https://en.wikipedia.org/wiki/Associative_property).
 """
@@ -461,7 +461,7 @@ const AssociativeOperator = (and, or, xor, xnor) |> union_typeof
 """
     LeftIdentityOperator
 
-The union types of [`BooleanOperator`](@ref)s
+The union types of [`LogicalOperator`](@ref)s
 that have a left [`identity`](@ref).
 """
 const LeftIdentityOperator = Union{
@@ -472,7 +472,7 @@ const LeftIdentityOperator = Union{
 """
     RightIdentityOperator
 
-The union types of [`BooleanOperator`](@ref)s
+The union types of [`LogicalOperator`](@ref)s
 that have a right [`identity`](@ref).
 """
 const RightIdentityOperator = Union{

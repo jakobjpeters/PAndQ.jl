@@ -63,7 +63,7 @@ interpret(p::NullaryOperator, valuation::Dict) = p
 interpret(p::Atom, valuation::Dict) = get(valuation, p, p)
 interpret(p::Literal{UO}, valuation::Dict) where UO <: UnaryOperator =
     interpret(p.atom, valuation) |> UO.instance
-function interpret(p::CN, valuation::Dict) where {AO <: AndOr, CN <: Union{Clause{AO}, Normal{AO}}}
+interpret(p::CN, valuation::Dict) where {AO <: AndOr, CN <: Union{Clause{AO}, Normal{AO}}} = begin
     neutral_element = identity(:left, AO.instance)
     not_neutral_element = neutral_element |> not
     q = AO.instance |> getfield(Main, CN |> nameof)
@@ -125,7 +125,7 @@ julia> @p valuations([p, q])
  Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction, q => PAQ.contradiction]
 ```
 """
-function valuations(atoms)
+valuations(atoms) = begin
     n = atoms |> length
     map(0:2 ^ n - 1) do i
         map(zip(atoms, digits(i, base = 2, pad = n))) do (left, right)
@@ -177,7 +177,7 @@ julia> @p solve(p ⊻ q, ⊥)
  Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction, q => PAQ.contradiction]
 ```
 """
-function solve(p, truth_value = ⊤)
+solve(p, truth_value = ⊤) = begin
     _valuations = p |> valuations
     _interpretations = interpretations(p, _valuations)
     map(filter(zip(_valuations, _interpretations) |> collect) do (valuation, interpretation)
@@ -188,9 +188,9 @@ function solve(p, truth_value = ⊤)
 end
 
 """
-    identity(::Symbol, ::BooleanOperator)
+    identity(::Symbol, ::LogicalOperator)
 
-Given either `:left` or `:right` and a [`BooleanOperator`](@ref),
+Given either `:left` or `:right` and a [`LogicalOperator`](@ref),
 return the corresponding identity element, if it exists.
 
 The identity element is either [`tautology`](@ref) or [`contradiction`](@ref).
@@ -225,9 +225,9 @@ eval_doubles(f, doubles) = foreach(doubles) do double
 end
 
 """
-    converse(::BooleanOperator)
+    converse(::LogicalOperator)
 
-Returns the [`BooleanOperator`](@ref) that is the
+Returns the [`LogicalOperator`](@ref) that is the
 [converse](https://en.wikipedia.org/wiki/Converse_(logic))
 of the given boolean operator.
 
@@ -250,9 +250,9 @@ converse(co::CommutativeOperator) = co
 eval_doubles(:converse, ((imply, converse_imply), (not_imply, not_converse_imply)))
 
 """
-    dual(::BooleanOperator)
+    dual(::LogicalOperator)
 
-Returns the [`BooleanOperator`](@ref) that is the
+Returns the [`LogicalOperator`](@ref) that is the
 [dual](https://en.wikipedia.org/wiki/Boolean_algebra#Duality_principle)
 of the given boolean operator.
 
@@ -470,7 +470,7 @@ eval_doubles(:not, (
 # propositions
 not(p::Atom) = Literal(not, p)
 not(p::Literal{UO}) where UO <: UnaryOperator = p.atom |> not(UO.instance)
-not(p::Tree{BO}) where BO <: BooleanOperator = not(BO.instance)(p.nodes...)
+not(p::Tree{LO}) where LO <: LogicalOperator = not(LO.instance)(p.nodes...)
 not(p::CN) where {AO <: AndOr, CN <: Union{Clause{AO}, Normal{AO}}} =
     getfield(Main, CN |> nameof)(AO.instance |> dual, map(not, getfield(p, 1)))
 
@@ -523,11 +523,11 @@ Clause(ao::AndOr, ps::AbstractArray) =
     ps |> isempty ? ao |> Clause : Clause(ao, map(Literal, ps))
 Clause(ao::AndOr, ps...) = Clause(ao, ps |> collect)
 
-Normal(ao::AndOr, p::Tree{BO}) where BO <: BooleanOperator = BO.instance(
+Normal(ao::AndOr, p::Tree{LO}) where LO <: LogicalOperator = Normal(ao, LO.instance(
     map(p.nodes) do branch
         Normal(ao, branch)
     end...
-)
+))
 Normal(ao::AndOr, p::Clause{AO}) where AO <: AndOr = Normal(ao, map(p.literals) do literal
     Clause(ao |> dual, literal)
 end)
@@ -565,7 +565,7 @@ convert(::Type{Atom}, p::Tree{typeof(identity), <:Tuple{Atom}}) = p.nodes |> onl
 convert(::Type{Literal}, p::Tree{UO, <:Tuple{Atom}}) where UO <: UnaryOperator =
     p.nodes |> only |> UO.instance |> Literal
 convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
-function convert(::Type{Tree}, p::typeof(contradiction))
+convert(::Type{Tree}, p::typeof(contradiction)) = begin
     p = Atom()
     p ∧ ¬p
 end

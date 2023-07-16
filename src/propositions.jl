@@ -11,7 +11,7 @@ abstract type Proposition end
 """
     Compound <: Proposition
 
-A proposition composed from connecting [`Atom`](@ref)icpropositions with [`BooleanOperator`](@ref)s.
+A proposition composed from connecting [`Atom`](@ref)icpropositions with [`LogicalOperator`](@ref)s.
 
 Subtype of [`Proposition`](@ref).
 Supertype of [`Literal`](@ref), [`Clause`](@ref), and [`Expressive`](@ref).
@@ -104,7 +104,7 @@ end
 
 """
     Tree{
-        O <: BooleanOperator,
+        LO <: LogicalOperator,
         P <: Union{Tuple{Proposition}, Tuple{Proposition, Proposition}}
     } <: Expressive
     Tree(::UnaryOperator, ::Atom)
@@ -127,16 +127,16 @@ Tree:
 ```
 """
 struct Tree{
-    BO <: BooleanOperator,
+    LO <: LogicalOperator,
     NT <: NTuple{N, Proposition} where N
 } <: Expressive
     nodes::NT
 
-    Tree(::BO, node::A) where {BO <: BooleanOperator, A <: Atom} = new{BO, Tuple{A}}((node,))
-    function Tree(bo::BO, nodes...) where BO <: BooleanOperator
-        _arity = bo |> arity
+    Tree(::UO, node::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, Tuple{A}}((node,))
+    Tree(lo::LO, nodes...) where LO <: LogicalOperator = begin
+        _arity = lo |> arity
         _arity != nodes |> length && "TODO: write this error" |> error
-        new{BO, NTuple{_arity, Tree}}(nodes)
+        new{LO, NTuple{_arity, Tree}}(nodes)
     end
 end
 

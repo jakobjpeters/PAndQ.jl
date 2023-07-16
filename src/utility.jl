@@ -3,10 +3,10 @@ using Base: uniontypes
 import Base: mapfoldl, mapfoldr, mapreduce
 
 """
-    arity(::BooleanOperator)
+    arity(::LogicalOperator)
 
 Returns the [arity](https://en.wikipedia.org/wiki/Arity)
-of the given [`BooleanOperator`](@ref).
+of the given [`LogicalOperator`](@ref).
 
 # Examples
 ```jldoctest

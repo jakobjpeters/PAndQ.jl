@@ -8,7 +8,7 @@ PAQ.NullaryOperator
 PAQ.UnaryOperator
 PAQ.BinaryOperator
 PAQ.NaryOperator
-PAQ.BooleanOperator
+PAQ.LogicalOperator
 PAQ.CommutativeOperator
 PAQ.AssociativeOperator
 PAQ.LeftIdentityOperator

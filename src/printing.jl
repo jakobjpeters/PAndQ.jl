@@ -76,7 +76,7 @@ struct TruthTable
     sub_header::Vector{Vector{UnionAll}}
     body::Matrix{Function}
 
-    function TruthTable(ps::AbstractArray)
+    TruthTable(ps::AbstractArray) = begin
         # ToDo: write docstring - define behavior
         # ToDo: write tests
         # TODO: make header support operators (`⊤; NullaryOperator`, `⊻; BinaryOperator`)
@@ -157,11 +157,11 @@ ___print_truth_table(backend::Val{:html}, io, body; kwargs...) =
 
 merge_string(xs) = join(xs, ", ")
 
-function __print_truth_table(
+__print_truth_table(
     backend, io, truth_table;
     sub_header = true, numbered_rows = false, format = :truth, alignment = :l,
     kwargs...
-)
+) = begin
     header = map(truth_table.header) do p
         format_head(format |> Val, p) |> merge_string
     end
@@ -203,11 +203,11 @@ _newline(newline, io) = newline ? io |> println : nothing
 children(p::Tree) = p.nodes
 children(p::Tree{typeof(identity)}) = ()
 
-nodevalue(p::Tree{BO}) where BO <: BooleanOperator = BO.instance
+nodevalue(p::Tree{LO}) where LO <: LogicalOperator = LO.instance
 nodevalue(p::Tree{typeof(identity)}) = p
 
 printnode(io::IO, node::Tree{typeof(identity)}) = print(io, node |> nodevalue)
-printnode(io::IO, node::Tree{BO}) where BO <: BooleanOperator = print(io, BO.instance |> operator_to_symbol)
+printnode(io::IO, node::Tree{LO}) where LO <: LogicalOperator = print(io, LO.instance |> operator_to_symbol)
 
 """
     print_tree([io::Union{IO, String} = stdout], p; max_depth = typemax(Int64), newline = false, kwargs...)
@@ -235,7 +235,7 @@ julia> @p print_tree((p ∧ ¬q) ∨ (¬p ∧ q))
    └─ q
 ```
 """
-function print_tree(io::IO, p::Tree; max_depth = typemax(Int), newline = false, kwargs...)
+print_tree(io::IO, p::Tree; max_depth = typemax(Int), newline = false, kwargs...) = begin
     print(io, print_string(AbstractTrees.print_tree, p; maxdepth = max_depth, kwargs...) |> rstrip)
     _newline(newline, io)
 end
@@ -257,7 +257,7 @@ julia> println(s)
 \\(p \\wedge q\\)
 ```
 """
-function print_latex(io::IO, x::String; newline = false, delimeter = "\\(" => "\\)")
+print_latex(io::IO, x::String; newline = false, delimeter = "\\(" => "\\)") = begin
     # populates `symbols_latex`
     symbols_latex |> isempty && "∧" |> symbol_latex
 
@@ -288,13 +288,13 @@ print_markdown(::Type{MD}, truth_table::TruthTable; alignment = :c) =
         [truth_table.header |> first, map(string, truth_table.body) |> eachrow...],
         repeat([alignment], truth_table.header |> first |> length)
     ) |> MD
-function print_markdown(io::IO, x; newline = false, kwargs...)
+print_markdown(io::IO, x; newline = false, kwargs...) = begin
     print(io, string(print_markdown(MD, x; kwargs...))[begin:end - 1])
     _newline(newline, io)
 end
 print_markdown(x; kwargs...) = print_markdown(stdout, x; kwargs...)
 
-function print_string(f, args...; kwargs...)
+print_string(f, args...; kwargs...) = begin
     buffer = IOBuffer()
     f(buffer, args...; kwargs...)
     buffer |> take! |> String
@@ -344,7 +344,7 @@ show(io::IO, p::Tree{BO}) where BO <: BinaryOperator = join(io, [
     BO.instance |> operator_to_symbol,
     p.nodes |> last |> parenthesize,
 ], " ")
-function show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr
+show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr = begin
     ao = AO.instance
     qs = getfield(p, 1)
     qs |> isempty ?
