@@ -300,8 +300,6 @@ true
 """
 is_tautology(p) = all(⊤ |> isequal, p |> interpretations)
 is_tautology(::LiteralProposition) = false
-is_tautology(p::Union{Clause{A}, Normal{A}}) where A <: typeof(and) =
-    getfield(p, 1) |> isempty
 
 """
     is_contradiction(p)
@@ -525,7 +523,7 @@ Clause(ao::AndOr, ps...) = Clause(ao, ps |> collect)
 
 Normal(ao::AndOr, p::Tree{LO}) where LO <: LogicalOperator = Normal(ao, LO.instance(
     map(p.nodes) do branch
-        Normal(ao, branch)
+        Normal(branch)
     end...
 ))
 Normal(ao::AndOr, p::Clause{AO}) where AO <: AndOr = Normal(ao, map(p.literals) do literal
