@@ -68,13 +68,13 @@ interpret(p::CN, valuation::Dict) where {AO, CN <: Union{Clause{AO}, Normal{AO}}
     not_neutral_element = neutral_element |> not
     q = AO.instance |> getfield(Main, CN |> nameof)
 
-    for r in getfield(p, 1)
+    for r in p |> first_field
         s = interpret(r, valuation)
         s == not_neutral_element && return not_neutral_element
         q = AO.instance(q, s)
     end
 
-    getfield(q, 1) |> isempty ? neutral_element : q
+    q |> first_field |> isempty ? neutral_element : q
 end
 interpret(p::Proposition, valuation::Dict) = interpret(p |> Normal, valuation)
 interpret(p, valuation) = interpret(p, valuation |> Dict)
@@ -472,7 +472,7 @@ not(p::Atom) = Literal(not, p)
 not(p::Literal{UO}) where UO = p.atom |> not(UO.instance)
 not(p::Tree{LO}) where LO = not(LO.instance)(p.nodes...)
 not(p::CN) where {AO, CN <: Union{Clause{AO}, Normal{AO}}} =
-    getfield(Main, CN |> nameof)(AO.instance |> dual, map(not, getfield(p, 1)))
+    getfield(Main, CN |> nameof)(AO.instance |> dual, map(not, p |> first_field))
 
 and(::typeof(tautology), ::typeof(tautology)) = ⊤
 and(::typeof(contradiction), ::Union{NullaryOperator, Proposition}) = ⊥ # domination law
@@ -503,13 +503,13 @@ foreach(AndOr |> uniontypes) do AO
         $ao(p, Normal($ao, q))
 
     foreach(((Clause, LiteralProposition), (Normal, Clause{DAO}))) do (left, right)
-        @eval $ao(p::$left{$AO}, q::$right) = $left($ao, vcat(getfield(p, 1), q))
-        @eval $ao(p::$right, q::$left{$AO}) = $left($ao, vcat(p, getfield(q, 1)))
+        @eval $ao(p::$left{$AO}, q::$right) = $left($ao, vcat(p |> first_field, q))
+        @eval $ao(p::$right, q::$left{$AO}) = $left($ao, vcat(p, q |> first_field))
     end
 
     foreach((Clause, Normal)) do CN
         @eval $ao(p::$CN{$AO}, q::$CN{$AO}) =
-            $CN($ao, vcat(getfield(p, 1), getfield(q, 1)))
+            $CN($ao, vcat(p |> first_field, q |> first_field))
     end
 
     @eval $ao(p::Normal, q::Normal) = $ao(Normal($ao, p), Normal($ao, q))

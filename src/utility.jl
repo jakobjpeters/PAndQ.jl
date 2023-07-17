@@ -112,7 +112,7 @@ end
 
 _atoms(p::Atom) = [p]
 _atoms(p::Literal) = p.atom |> atoms
-_atoms(p::Union{Tree, Clause, Normal}) = mapreduce(atoms, vcat, getfield(p, 1); init = Atom[])
+_atoms(p::Union{Tree, Clause, Normal}) = mapreduce(atoms, vcat, p |> first_field; init = Atom[])
 
 """
     atoms(::Proposition)

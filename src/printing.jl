@@ -330,6 +330,8 @@ foreach([:tree, :latex, :truth_table, :markdown]) do f
     end
 end
 
+first_field(p) = getfield(p, 1)
+
 parenthesize(p) = p |> string
 parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * string(p) * ")"
 
@@ -353,7 +355,7 @@ show(io::IO, p::Tree{BO, <:NTuple{2, Tree}}) where BO = join(io, [
 ], " ")
 show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO = begin
     ao = AO.instance
-    qs = getfield(p, 1) |> Iterators.Stateful
+    qs = p |> first_field |> Iterators.Stateful
     qs |> isempty ?
         print(io, identity(:left, ao) |> operator_to_symbol) :
         join(io, Iterators.map(parenthesize, qs), " " * operator_to_symbol(ao) * " ")
