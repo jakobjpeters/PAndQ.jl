@@ -35,11 +35,6 @@ abstract type Expressive <: Compound end
 
 A proposition with [no deeper propositional structure](https://en.wikipedia.org/wiki/Atomic_formula).
 
-A string argument can be thought of as a specific statement, while a symbol can be variable.
-However, the only builtin difference between these are how they pretty-print.
-An atom with a string argument will be encompassed by quotation marks,
-while an atom with a symbol argument will only show the symbol's characters.
-
 !!! tip
     Define pretty-printing for an instance of `Atom{T}` by overloading
     [`show(io::IO, p::Atom{T})`](@ref show).

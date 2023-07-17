@@ -52,7 +52,7 @@ julia> arity(and)
 
 ## Propositions
 
-A [`Proposition`](@ref) is a statement that can be either true or false. For example, "Logic is fun" is a proposition because it may be true for you but false for someone else. Note that the proposition exists on its own, regardless of whether or not it is known to be true or false. We can also perform operations on propositions. In a written form, we can negate the above proposition by saying "Logic is not fun". We could combine two propositions using another operator, such as "Logic is fun and Julia is awesome".
+A [`Proposition`](@ref) is a statement that can be either true or false. For example, "Logic is fun" is a proposition because it may be true for you but false for someone else. Note that the proposition exists on its own, regardless of whether or not it is known to be true or false.
 
 ```jldoctest 1
 julia> p = Atom("Logic is fun")
@@ -62,7 +62,11 @@ Atom:
 julia> q = Atom("Julia is awesome")
 Atom:
  "Julia is awesome"
+```
 
+We can also perform operations on propositions. In a written form, we can negate the above proposition by saying "Logic is not fun". We could combine two propositions using another operator, such as "Logic is fun and Julia is awesome".
+
+```jldoctest 1
 julia> r = ¬p
 Literal:
  ¬"Logic is fun"

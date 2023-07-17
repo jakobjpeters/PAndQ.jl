@@ -128,10 +128,10 @@ struct TruthTable
 end
 TruthTable(ps...) = ps |> collect |> TruthTable
 
-const operator_symbols = (:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚, :⋀, :⋁)
-
 operator_to_symbol(::typeof(identity)) = ""
-foreach(operator_symbols) do operator_symbol
+foreach(
+    (:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚, :⋀, :⋁)
+) do operator_symbol
     @eval operator_to_symbol(::typeof($operator_symbol)) = $(operator_symbol |> string)
 end
 
@@ -336,24 +336,24 @@ parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * string(p) * ")"
 """
     show
 """
+show(io::IO, p::Atom) = show(io, p.statement)
 show(io::IO, p::Atom{Symbol}) = print(io, p.statement)
-show(io::IO, p::Atom{String}) = print(io, "\"", p.statement, "\"")
 show(io::IO, p::Literal{UO}) where UO =
     print(io, UO.instance |> operator_to_symbol, p.atom)
-show(io::IO, p::Tree{NO}) where NO <: NullaryOperator =
+show(io::IO, p::Tree{NO, <:Tuple{}}) where NO =
     print(io, NO.instance |> operator_to_symbol)
-show(io::IO, p::Tree{UO, <:Tuple{Atom}}) where UO <: UnaryOperator = 
+show(io::IO, p::Tree{UO, <:Tuple{Atom}}) where UO = 
     print(io, UO.instance |> operator_to_symbol, p.nodes |> only)
-show(io::IO, p::Tree{UO}) where UO <: UnaryOperator =
+show(io::IO, p::Tree{UO, <:Tuple{Tree}}) where UO =
     print(io, UO.instance |> operator_to_symbol, "(", p.nodes |> only, ")")
-show(io::IO, p::Tree{BO}) where BO <: BinaryOperator = join(io, [
+show(io::IO, p::Tree{BO, <:NTuple{2, Tree}}) where BO = join(io, [
     p.nodes |> first |> parenthesize,
     BO.instance |> operator_to_symbol,
     p.nodes |> last |> parenthesize,
 ], " ")
 show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO = begin
     ao = AO.instance
-    qs = getfield(p, 1)
+    qs = getfield(p, 1) |> Iterators.Stateful
     qs |> isempty ?
         print(io, identity(:left, ao) |> operator_to_symbol) :
         join(io, Iterators.map(parenthesize, qs), " " * operator_to_symbol(ao) * " ")

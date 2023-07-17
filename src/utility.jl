@@ -62,10 +62,10 @@ macro atoms(ps...)
 end
 #=
 Source:
-    https://github.com/JuliaSymbolics/Symbolics.jl
+Symbolics.jl
+https://github.com/JuliaSymbolics/Symbolics.jl
 =#
 
-atomize(p::String) = p |> Atom
 atomize(p::Symbol) = :((@isdefined $p) ? $p : $(p |> Atom))
 atomize(x::Expr) = Meta.isexpr(x, [:(=), :kw]) ?
     Expr(x.head, x.args[1], map(atomize, x.args[2:end])...) :
@@ -84,9 +84,9 @@ julia> @p x = p
 Atom:
  p
 
-julia> @p x ∧ q → "r"
+julia> @p x ∧ q → r
 Tree:
- (p ∧ q) → "r"
+ (p ∧ q) → r
 ```
 """
 macro p(expression)
@@ -102,8 +102,8 @@ julia> p = @p_str("x")
 Atom:
  x
 
-julia> p"\\"p\\" ∧ p, Clause(and)"
-("p" ∧ x, ⊤)
+julia> p"p ∧ q, Clause(and)"
+(x ∧ q, ⊤)
 ```
 """
 macro p_str(p)

@@ -576,5 +576,8 @@ convert(::Type{Tree}, p::Normal{AO}) where AO = mapreduce(Tree, AO.instance, p.c
 convert(::Type{Clause}, p::LiteralProposition) = Clause(or, p)
 convert(::Type{CN}, no::NullaryOperator) where CN <: Union{Clause, Normal} =
     no |> nullary_operator_to_and_or |> CN
-convert(::Type{Normal}, p::Clause{typeof(and)}) = Normal(or, p)
+convert(::Type{Normal}, p::Union{
+    Tree{<:union_typeof((and, nor, not_imply, not_converse_imply))},
+    Clause{typeof(and)}
+}) = Normal(or, p)
 convert(::Type{Normal}, p::Proposition) = Normal(and, p)
