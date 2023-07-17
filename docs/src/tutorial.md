@@ -142,12 +142,12 @@ contradiction (generic function with 1 method)
 Assigning meaning to any number of atomic propositions is called a [`Valuation`](@ref valuations). Since `p` can only be true or false, it has two possible valuations. `r` doesn't depend on any other propositions, because it is just a negation of `p`. Thus, it also has two possible valuations. However, the valuation and result of evaluating it are not longer the same. Since `r == ¬p`, if `p` is assigned true, then `r` is determined to be false, and vice versa. An [`interpretation`](@ref interpretations) is the truth values of any number of propositions determined by a given valuation.
 
 ```jldoctest 2
-julia> valuations(r)
+julia> collect(valuations(r))
 2-element Vector{Vector}:
  Pair{Atom{Symbol}, typeof(tautology)}[p => PAQ.tautology]
  Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction]
 
-julia> interpretations(r)
+julia> collect(interpretations(r))
 2-element Vector{Function}:
  contradiction (generic function with 1 method)
  tautology (generic function with 1 method)
@@ -166,11 +166,11 @@ true
 We are often interested in valuations that result in a valid interpretation. This is accomplished with the [`solve`](@ref) function. The proposition `s` is the conjunction of `p` and `p`, so it is only true if both `p` and `q` are true. Each of the other three possible valuations are invalid.
 
 ```jldoctest 2
-julia> solve(s, tautology)
+julia> collect(solve(s, tautology))
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
  [p => PAQ.tautology, q => PAQ.tautology]
 
-julia> solve(s, contradiction)
+julia> collect(solve(s, contradiction))
 3-element Vector{Vector}:
  Pair{Atom{Symbol}}[p => PAQ.contradiction, q => PAQ.tautology]
  Pair{Atom{Symbol}}[p => PAQ.tautology, q => PAQ.contradiction]
@@ -195,12 +195,12 @@ julia> u = p ∨ ¬p
 Tree:
  p ∨ ¬p
 
-julia> interpretations(t)
+julia> collect(interpretations(t))
 2-element Vector{typeof(contradiction)}:
  contradiction (generic function with 1 method)
  contradiction (generic function with 1 method)
 
-julia> interpretations(u)
+julia> collect(interpretations(u))
 2-element Vector{typeof(tautology)}:
  tautology (generic function with 1 method)
  tautology (generic function with 1 method)

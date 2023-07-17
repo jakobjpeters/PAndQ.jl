@@ -76,7 +76,7 @@ interpret(p::CN, valuation::Dict) where {AO <: AndOr, CN <: Union{Clause{AO}, No
 
     getfield(q, 1) |> isempty ? neutral_element : q
 end
-interpret(p::Proposition, valuation::Dict) = interpret(Normal(and, p), valuation)
+interpret(p::Proposition, valuation::Dict) = interpret(p |> Normal, valuation)
 interpret(p, valuation) = interpret(p, valuation |> Dict)
 interpret(p, valuation...) = interpret(p, valuation)
 
@@ -112,12 +112,12 @@ A valuation is a vector of `Pair`s which map from an atom to a truth value.
 
 # Examples
 ```jldoctest
-julia> @p valuations([p])
+julia> @p collect(valuations([p]))
 2-element Vector{Vector}:
  Pair{Atom{Symbol}, typeof(tautology)}[p => PAQ.tautology]
  Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction]
 
-julia> @p valuations([p, q])
+julia> @p collect(valuations([p, q]))
 4-element Vector{Vector}:
  Pair{Atom{Symbol}, typeof(tautology)}[p => PAQ.tautology, q => PAQ.tautology]
  Pair{Atom{Symbol}}[p => PAQ.contradiction, q => PAQ.tautology]
@@ -127,7 +127,7 @@ julia> @p valuations([p, q])
 """
 valuations(atoms) = begin
     n = atoms |> length
-    map(0:2 ^ n - 1) do i
+    Iterators.map(0:BigInt(2) ^ n - 1) do i
         map(zip(atoms, digits(i, base = 2, pad = n))) do (left, right)
             left => right == 0 ? tautology : contradiction
         end
@@ -145,19 +145,18 @@ See also [`valuations`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p interpretations(p)
+julia> @p collect(interpretations(p))
 2-element Vector{Function}:
  tautology (generic function with 1 method)
  contradiction (generic function with 1 method)
 
-julia> @p interpretations(p → q, [p => ⊤])
-1-element Vector{Normal{typeof(or), Clause{typeof(and)}}}:
+julia> @p collect(interpretations(p → q, [p => ⊤]))
+1-element Vector{Normal{typeof(and), Clause{typeof(or)}}}:
  (q)
 ```
 """
-interpretations(p, valuations = valuations(p)) = map(valuations) do valuation
-    interpret(p, valuation)
-end
+interpretations(p, valuations = valuations(p)) =
+    Iterators.map(valuation -> interpret(p, valuation), valuations)
 
 """
     solve(p, truth_value = ⊤)
@@ -167,11 +166,11 @@ Return a vector containing all [`interpretations`](@ref) such that
 
 # Examples
 ```jldoctest
-julia> @p solve(p)
+julia> @p collect(solve(p))
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
  [p => PAQ.tautology]
 
-julia> @p solve(p ⊻ q, ⊥)
+julia> @p collect(solve(p ⊻ q, ⊥))
 2-element Vector{Vector}:
  Pair{Atom{Symbol}, typeof(tautology)}[p => PAQ.tautology, q => PAQ.tautology]
  Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction, q => PAQ.contradiction]
@@ -180,7 +179,7 @@ julia> @p solve(p ⊻ q, ⊥)
 solve(p, truth_value = ⊤) = begin
     _valuations = p |> valuations
     _interpretations = interpretations(p, _valuations)
-    map(filter(zip(_valuations, _interpretations) |> collect) do (valuation, interpretation)
+    Iterators.map(Iterators.filter(zip(_valuations, _interpretations)) do (valuation, interpretation)
         interpretation == truth_value
     end) do (valuation, interpretation)
         valuation
@@ -343,7 +342,10 @@ julia> @p is_truth(p ∧ q)
 false
 ```
 """
-is_truth(p) = p |> interpretations |> unique! |> length == 1
+is_truth(p) = begin
+    _first, _interpretations = p |> interpretations |> Iterators.peel
+    all(_first |> isequal, _interpretations)
+end
 is_truth(::LiteralProposition) = false
 
 """

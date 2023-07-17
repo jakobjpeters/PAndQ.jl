@@ -153,7 +153,7 @@ mapfoldr(f, rio::RightIdentityOperator, ps::AbstractArray) =
 """
 mapreduce(f, lio::LeftIdentityOperator, ps::AbstractArray) = mapfoldl(f, lio, ps)
 mapreduce(f, bo::Union{
-    setdiff(map(uniontypes, [RightIdentityOperator, LeftIdentityOperator])...)...
+    setdiff(map(uniontypes, (RightIdentityOperator, LeftIdentityOperator))...)...
 }, ps::AbstractArray) = mapfoldr(f, bo, ps)
 
 # import Base: rand

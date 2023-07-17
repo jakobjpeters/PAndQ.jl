@@ -81,17 +81,17 @@ struct TruthTable
         # ToDo: write tests
         # TODO: make header support operators (`⊤; NullaryOperator`, `⊻; BinaryOperator`)
 
-        ps = map(operator_to_proposition, ps)
+        ps = Iterators.map(operator_to_proposition, ps)
         _atoms = mapreduce(atoms, union, ps)
         ps = union(_atoms, ps)
         _valuations = _atoms |> valuations
-        _interpretations = map(p -> interpretations(p, _valuations), ps)
+        _interpretations = Iterators.map(p -> interpretations(p, _valuations) |> collect, ps)
 
         truths_interpretations, atoms_interpretations, compounds_interpretations =
             Vector{Function}[], Vector{Function}[], Vector{Function}[]
 
         group = xs -> map(xs) do x
-            interpretations(x, _valuations) => Proposition[]
+            interpretations(x, _valuations) |> collect => Proposition[]
         end |> Dict
         grouped_truths, grouped_atoms = map(group, ([tautology, contradiction], _atoms))
         grouped_compounds = Dict{Vector{Function}, Vector{Proposition}}()
@@ -356,7 +356,7 @@ show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr = begin
     qs = getfield(p, 1)
     qs |> isempty ?
         print(io, identity(:left, ao) |> operator_to_symbol) :
-        join(io, map(parenthesize, qs), " " * operator_to_symbol(ao) * " ")
+        join(io, Iterators.map(parenthesize, qs), " " * operator_to_symbol(ao) * " ")
 end
 show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition =
     print(io, P |> nameof, ":\n ", p)

@@ -12,7 +12,7 @@ Operator associativity determines how operators with the same precedence group t
 !!! info
     `==` has a precedence of 7, which is higher than that of several binary operators. For some cases, you may need to use parentheses. For example, `@p p → q == r` will error, but `@p (p → q) == r` will correctly return `false`.
 
-| Name                         | Symbol | Tab completion   | Associativity | Precedence |
+| Name                         | Symbol | Tab Completion   | Associativity | Precedence |
 |:-----------------------------|:-------|:-----------------|:--------------|:-----------|
 | [`tautology`](@ref)          | ⊤      | \\top            | none          | 0          |
 | [`contradiction`](@ref)      | ⊥      | \\bot            | none          | 0          |
