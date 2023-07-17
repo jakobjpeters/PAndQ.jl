@@ -211,10 +211,6 @@ struct Normal{AO <: AndOr, C <: Clause} <: Expressive
         new{O, C}(clauses |> union)
 end
 
-literal_tree_types(unary_operator) = Union{map((Literal, Tree)) do LT
-    LT{unary_operator |> typeof}
-end...}
-
 """
     AtomicProposition
 

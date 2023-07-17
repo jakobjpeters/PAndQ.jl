@@ -61,9 +61,9 @@ Clause:
 """
 interpret(p::NullaryOperator, valuation::Dict) = p
 interpret(p::Atom, valuation::Dict) = get(valuation, p, p)
-interpret(p::Literal{UO}, valuation::Dict) where UO <: UnaryOperator =
+interpret(p::Literal{UO}, valuation::Dict) where UO =
     interpret(p.atom, valuation) |> UO.instance
-interpret(p::CN, valuation::Dict) where {AO <: AndOr, CN <: Union{Clause{AO}, Normal{AO}}} = begin
+interpret(p::CN, valuation::Dict) where {AO, CN <: Union{Clause{AO}, Normal{AO}}} = begin
     neutral_element = identity(:left, AO.instance)
     not_neutral_element = neutral_element |> not
     q = AO.instance |> getfield(Main, CN |> nameof)
@@ -469,9 +469,9 @@ eval_doubles(:not, (
 
 # propositions
 not(p::Atom) = Literal(not, p)
-not(p::Literal{UO}) where UO <: UnaryOperator = p.atom |> not(UO.instance)
-not(p::Tree{LO}) where LO <: LogicalOperator = not(LO.instance)(p.nodes...)
-not(p::CN) where {AO <: AndOr, CN <: Union{Clause{AO}, Normal{AO}}} =
+not(p::Literal{UO}) where UO = p.atom |> not(UO.instance)
+not(p::Tree{LO}) where LO = not(LO.instance)(p.nodes...)
+not(p::CN) where {AO, CN <: Union{Clause{AO}, Normal{AO}}} =
     getfield(Main, CN |> nameof)(AO.instance |> dual, map(not, getfield(p, 1)))
 
 and(::typeof(tautology), ::typeof(tautology)) = ⊤
@@ -523,12 +523,12 @@ Clause(ao::AndOr, ps::AbstractArray) =
     ps |> isempty ? ao |> Clause : Clause(ao, map(Literal, ps))
 Clause(ao::AndOr, ps...) = Clause(ao, ps |> collect)
 
-Normal(ao::AndOr, p::Tree{LO}) where LO <: LogicalOperator = Normal(ao, LO.instance(
+Normal(ao::AndOr, p::Tree{LO}) where LO = Normal(ao, LO.instance(
     map(p.nodes) do branch
         Normal(branch)
     end...
 ))
-Normal(ao::AO, p::Clause{AO}) where AO <: AndOr = Normal(ao, map(p.literals) do literal
+Normal(ao::AO, p::Clause{AO}) where AO = Normal(ao, map(p.literals) do literal
     Clause(ao |> dual, literal)
 end)
 Normal(ao::AndOr, ps::AbstractArray) = ps |> isempty ?
@@ -562,7 +562,7 @@ nullary_operator_to_and_or(::typeof(contradiction)) = or
 """
 convert(::Type{Atom}, p::Literal{typeof(identity)}) = p.atom
 convert(::Type{Atom}, p::Tree{typeof(identity), <:Tuple{Atom}}) = p.nodes |> only
-convert(::Type{Literal}, p::Tree{UO, <:Tuple{Atom}}) where UO <: UnaryOperator =
+convert(::Type{Literal}, p::Tree{UO, <:Tuple{Atom}}) where UO =
     p.nodes |> only |> UO.instance |> Literal
 convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
 convert(::Type{Tree}, p::typeof(contradiction)) = begin
@@ -570,11 +570,11 @@ convert(::Type{Tree}, p::typeof(contradiction)) = begin
     p ∧ ¬p
 end
 convert(::Type{Tree}, p::typeof(tautology)) = contradiction |> Tree |> not
-convert(::Type{Tree}, p::Literal{UO}) where UO <: UnaryOperator = Tree(UO.instance, p.atom)
-convert(::Type{Tree}, p::Clause{AO}) where AO <: AndOr = reduce(AO.instance, p.literals) |> Tree
-convert(::Type{Tree}, p::Normal{AO}) where AO <: AndOr = mapreduce(Tree, AO.instance, p.clauses) |> Tree
+convert(::Type{Tree}, p::Literal{UO}) where UO = Tree(UO.instance, p.atom)
+convert(::Type{Tree}, p::Clause{AO}) where AO = reduce(AO.instance, p.literals) |> Tree
+convert(::Type{Tree}, p::Normal{AO}) where AO = mapreduce(Tree, AO.instance, p.clauses) |> Tree
 convert(::Type{Clause}, p::LiteralProposition) = Clause(or, p)
-convert(::Type{CN}, no::NO) where {CN <: Union{Clause, Normal}, NO <: NullaryOperator} =
+convert(::Type{CN}, no::NullaryOperator) where CN <: Union{Clause, Normal} =
     no |> nullary_operator_to_and_or |> CN
 convert(::Type{Normal}, p::Clause{typeof(and)}) = Normal(or, p)
 convert(::Type{Normal}, p::Proposition) = Normal(and, p)

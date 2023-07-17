@@ -213,11 +213,11 @@ _newline(newline, io) = newline ? io |> println : nothing
 children(p::Tree) = p.nodes
 children(p::Tree{typeof(identity)}) = ()
 
-nodevalue(p::Tree{LO}) where LO <: LogicalOperator = LO.instance
+nodevalue(p::Tree{LO}) where LO = LO.instance
 nodevalue(p::Tree{typeof(identity)}) = p
 
 printnode(io::IO, node::Tree{typeof(identity)}) = print(io, node |> nodevalue)
-printnode(io::IO, node::Tree{LO}) where LO <: LogicalOperator = print(io, LO.instance |> operator_to_symbol)
+printnode(io::IO, node::Tree{LO}) where LO = print(io, LO.instance |> operator_to_symbol)
 
 """
     print_tree([io::Union{IO, String} = stdout], p; max_depth = typemax(Int64), newline = false, kwargs...)
@@ -338,7 +338,7 @@ parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * string(p) * ")"
 """
 show(io::IO, p::Atom{Symbol}) = print(io, p.statement)
 show(io::IO, p::Atom{String}) = print(io, "\"", p.statement, "\"")
-show(io::IO, p::Literal{UO}) where UO <: UnaryOperator =
+show(io::IO, p::Literal{UO}) where UO =
     print(io, UO.instance |> operator_to_symbol, p.atom)
 show(io::IO, p::Tree{NO}) where NO <: NullaryOperator =
     print(io, NO.instance |> operator_to_symbol)
@@ -351,7 +351,7 @@ show(io::IO, p::Tree{BO}) where BO <: BinaryOperator = join(io, [
     BO.instance |> operator_to_symbol,
     p.nodes |> last |> parenthesize,
 ], " ")
-show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr = begin
+show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO = begin
     ao = AO.instance
     qs = getfield(p, 1)
     qs |> isempty ?
