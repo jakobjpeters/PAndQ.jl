@@ -565,11 +565,6 @@ convert(::Type{Atom}, p::Tree{typeof(identity), <:Tuple{Atom}}) = p.nodes |> onl
 convert(::Type{Literal}, p::Tree{UO, <:Tuple{Atom}}) where UO =
     p.nodes |> only |> UO.instance |> Literal
 convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
-convert(::Type{Tree}, p::typeof(contradiction)) = begin
-    p = Atom()
-    p ∧ ¬p
-end
-convert(::Type{Tree}, p::typeof(tautology)) = contradiction |> Tree |> not
 convert(::Type{Tree}, p::Literal{UO}) where UO = Tree(UO.instance, p.atom)
 convert(::Type{Tree}, p::Clause{AO}) where AO = reduce(AO.instance, p.literals) |> Tree
 convert(::Type{Tree}, p::Normal{AO}) where AO = mapreduce(Tree, AO.instance, p.clauses) |> Tree
