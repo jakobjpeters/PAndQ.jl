@@ -128,20 +128,30 @@ struct TruthTable
 end
 TruthTable(ps...) = ps |> collect |> TruthTable
 
+const operator_symbols = (:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚, :⋀, :⋁)
+
+operator_to_symbol(::typeof(identity)) = ""
+foreach(operator_symbols) do operator_symbol
+    @eval operator_to_symbol(::typeof($operator_symbol)) = $(operator_symbol |> string)
+end
+
 letter(::typeof(tautology)) = "T"
 letter(::typeof(contradiction)) = "F"
 
 format_latex(x) = print_latex(String, x) |> LatexCell
 
-format_head(::Val{:latex}, x) = x |> format_latex
-format_head(::Val, x) = x
+format_head(format, cell) = format == :latex ? format_latex(cell) : cell
 
-format_body(::Val{:truth}, x) = x |> operator_to_symbol |> string
-format_body(::Val{:text}, x) = x |> nameof |> string
-format_body(::Val{:letter}, x) = x |> letter
-format_body(::Val{:bool}, x) = x |> Bool |> string
-format_body(::Val{:bit}, x) = x |> Bool |> Int |> string
-format_body(::Val{:latex}, x) = x |> operator_to_symbol |> format_latex
+const _format_body = Dict(
+    :truth => string ∘ operator_to_symbol,
+    :text => string ∘ nameof,
+    :letter => letter,
+    :bool => string ∘ Bool,
+    :bit =>  string ∘ Int ∘ Bool,
+    :latex => format_latex ∘ operator_to_symbol
+)
+
+format_body(format, cell) = cell |> _format_body[format]
 
 ____print_truth_table(backend::Val{:latex}, io, body; vlines = :all, kwargs...) =
     pretty_table(io, body; backend, vlines, kwargs...)
@@ -163,12 +173,12 @@ __print_truth_table(
     kwargs...
 ) = begin
     header = map(truth_table.header) do p
-        format_head(format |> Val, p) |> merge_string
+        format_head(format, p) |> merge_string
     end
     sub_header && (header = (header, map(merge_string, truth_table.sub_header)))
 
     body = map(truth_table.body) do cell
-        format_body(format |> Val, cell)
+        format_body(format, cell)
     end
 
     if numbered_rows
@@ -283,11 +293,13 @@ print_latex(x; kwargs...) = print_latex(stdout, x; kwargs...)
 # Examples
 """
 print_markdown(::Type{MD}, p) = p |> string |> MD
-print_markdown(::Type{MD}, truth_table::TruthTable; alignment = :c) =
-    Table(
-        [truth_table.header |> first, map(string, truth_table.body) |> eachrow...],
-        repeat([alignment], truth_table.header |> first |> length)
-    ) |> MD
+print_markdown(::Type{MD}, truth_table::TruthTable; format = :truth, alignment = :l) = Table(
+    [
+        map(merge_string, truth_table.header),
+        eachrow(map(no -> format_body(format, no), truth_table.body))...
+    ],
+    repeat([alignment], truth_table.header |> length)
+) |> MD
 print_markdown(io::IO, x; newline = false, kwargs...) = begin
     print(io, string(print_markdown(MD, x; kwargs...))[begin:end - 1])
     _newline(newline, io)
@@ -320,11 +332,6 @@ end
 
 parenthesize(p) = p |> string
 parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * string(p) * ")"
-
-operator_to_symbol(::typeof(identity)) = ""
-foreach([:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚, :⋀, :⋁]) do boolean_operator
-    @eval operator_to_symbol(::typeof($boolean_operator)) = $(boolean_operator |> string)
-end
 
 """
     show
