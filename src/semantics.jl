@@ -535,7 +535,7 @@ Normal(ao::AndOr, p::Tree{LO}) where LO = Normal(ao, LO.instance(
         Normal(branch)
     end...
 ))
-Normal(ao::AO, p::Clause{AO}) where AO = Normal(ao, map(p.literals) do literal
+Normal(ao::AO, p::Clause{AO}) where AO <:AndOr = Normal(ao, map(p.literals) do literal
     Clause(ao |> dual, literal)
 end)
 Normal(ao::AndOr, ps::AbstractArray) = ps |> isempty ?
