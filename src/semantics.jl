@@ -64,7 +64,7 @@ interpret(p::Atom, valuation::Dict) = get(valuation, p, p)
 interpret(p::Literal{UO}, valuation::Dict) where UO =
     interpret(p.atom, valuation) |> UO.instance
 interpret(p::CN, valuation::Dict) where {AO, CN <: Union{Clause{AO}, Normal{AO}}} = begin
-    neutral_element = identity(:left, AO.instance)
+    neutral_element = AO.instance |> left_identity
     not_neutral_element = neutral_element |> not
     q = AO.instance |> getfield(Main, CN |> nameof)
 
@@ -187,35 +187,42 @@ solve(p, truth_value = ⊤) = begin
 end
 
 """
-    identity(::Symbol, ::LogicalOperator)
+    left_identity(::LogicalOperator)
 
-Given either `:left` or `:right` and a [`LogicalOperator`](@ref),
-return the corresponding identity element, if it exists.
-
+Return the corresponding identity element or `nothing` if it does not exist.
 The identity element is either [`tautology`](@ref) or [`contradiction`](@ref).
-Throws an exception if the identity element does not exist.
 
 # Examples
 ```jldoctest
-julia> identity(:right, or)
+julia> left_identity(or)
 contradiction (generic function with 1 method)
 
-julia> identity(:left, imply)
+julia> left_identity(imply)
 tautology (generic function with 1 method)
 ```
 """
-identity(x, binary_operator::BinaryOperator) = identity(x |> Val, binary_operator)
-foreach(((:and, :xnor, :⊤), (:or, :xor, :⊥))) do (left, middle, right)
-    @eval identity(::Union{Val{:left}, Val{:right}}, ::union_typeof(($left, $middle))) = $right
-end
-foreach((
-    (:left, :imply, :⊤),
-    (:right, :not_imply, :⊥),
-    (:right, :converse_imply, :⊤),
-    (:left, :not_converse_imply, :⊥)
-)) do (left, middle, right)
-    @eval identity(::$(typeof(left |> Val)), ::typeof($middle)) = $right
-end
+left_identity(::union_typeof((and, xnor, imply))) = tautology
+left_identity(::union_typeof((or, xor, not_converse_imply))) = contradiction
+left_identity(::LogicalOperator) = nothing
+
+"""
+    right_identity(::LogicalOperator)
+
+Return the corresponding identity element or `nothing` if it does not exist.
+The identity element is either [`tautology`](@ref) or [`contradiction`](@ref).
+
+# Examples
+```jldoctest
+julia> right_identity(or)
+contradiction (generic function with 1 method)
+
+julia> right_identity(converse_imply)
+tautology (generic function with 1 method)
+```
+"""
+right_identity(::union_typeof((and, xnor, converse_imply))) = tautology
+right_identity(::union_typeof((or, xor, not_imply))) = contradiction
+right_identity(::LogicalOperator) = nothing
 
 eval_doubles(f, doubles) = foreach(doubles) do double
     foreach([double, double |> reverse]) do (left, right)

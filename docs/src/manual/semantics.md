@@ -7,7 +7,8 @@ interpret
 interpretations
 valuations
 solve
-PAQ.identity
+left_identity
+right_identity
 converse
 dual
 is_tautology

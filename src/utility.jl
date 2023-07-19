@@ -140,13 +140,13 @@ atoms(p::NullaryOperator) = Atom[]
     mapfoldl
 """
 mapfoldl(f, lio::LeftIdentityOperator, ps::AbstractArray) =
-    mapfoldl(f, lio, ps, init = identity(:left, lio))
+    mapfoldl(f, lio, ps, init = lio |> left_identity)
 
 """
     mapfoldr
 """
 mapfoldr(f, rio::RightIdentityOperator, ps::AbstractArray) =
-    mapfoldr(f, rio, ps, init = identity(:right, rio))
+    mapfoldr(f, rio, ps, init = rio |> right_identity)
 
 """
     mapreduce

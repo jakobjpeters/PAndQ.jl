@@ -53,8 +53,8 @@ contradiction
 
 ## Unary Operators
 
-<!-- identity -->
 ```@docs
+identity
 not
 ```
 

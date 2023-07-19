@@ -357,7 +357,7 @@ show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO = begin
     ao = AO.instance
     qs = p |> first_field |> Iterators.Stateful
     qs |> isempty ?
-        print(io, identity(:left, ao) |> operator_to_symbol) :
+        print(io, ao |> left_identity |> operator_to_symbol) :
         join(io, Iterators.map(parenthesize, qs), " " * operator_to_symbol(ao) * " ")
 end
 show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition =
