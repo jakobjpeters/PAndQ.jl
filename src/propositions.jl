@@ -167,7 +167,7 @@ Clause:
 struct Clause{AO <: AndOr, L <: Literal} <: Compound
     literals::Vector{L}
 
-    Clause(::AO, literals::Vector{L} = Literal[]) where {AO <: AndOr, L <: Literal} =
+    Clause(::AO, literals::Vector{L}) where {AO <: AndOr, L <: Literal} =
         new{AO, L}(literals |> union)
 end
 
@@ -200,9 +200,9 @@ Normal:
 struct Normal{AO <: AndOr, C <: Clause} <: Expressive
     clauses::Vector{C}
 
-    Normal(::A, clauses::Vector{C} = Clause{typeof(or)}[]) where {A <: typeof(and), C <: Clause{typeof(or)}} =
+    Normal(::A, clauses::Vector{C}) where {A <: typeof(and), C <: Clause{or |> typeof}} =
         new{A, C}(clauses |> union)
-    Normal(::O, clauses::Vector{C} = Clause{typeof(and)}[]) where {O <: typeof(or), C <: Clause{typeof(and)}} =
+    Normal(::O, clauses::Vector{C}) where {O <: typeof(or), C <: Clause{and |> typeof}} =
         new{O, C}(clauses |> union)
 end
 

@@ -151,7 +151,7 @@ julia> @p collect(interpretations(p))
  contradiction (generic function with 1 method)
 
 julia> @p collect(interpretations(p → q, [p => ⊤]))
-1-element Vector{Normal{typeof(and), Clause{typeof(or)}}}:
+1-element Vector{Normal{typeof(and), Clause{typeof(or), Literal{typeof(identity), Symbol}}}}:
  (q)
 ```
 """
