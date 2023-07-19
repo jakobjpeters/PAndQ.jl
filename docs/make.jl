@@ -23,7 +23,7 @@ makedocs(
         "Home" => "index.md",
         "Tutorial" => "tutorial.md",
         "Manual" => map(
-            ("operators", "propositions", "printing", "utility", "semantics", "extensions")
+            ["operators", "propositions", "printing", "utility", "semantics", "extensions"]
         ) do name
             name |> titlecase => "manual/" * name * ".md"
         end,
