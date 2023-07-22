@@ -374,7 +374,7 @@ const ← = converse_imply
 
 """
     ⋀(ps)
-    conjuction(ps)
+    conjunction(ps)
 
 Equivalent to `reduce(and, ps; init = ⊤)`.
 
@@ -382,8 +382,8 @@ Equivalent to `reduce(and, ps; init = ⊤)`.
 
 # Examples
 """
-function conjuction end
-const ⋀ = conjuction
+function conjunction end
+const ⋀ = conjunction
 
 """
     ⋁(ps)
@@ -429,7 +429,7 @@ const BinaryOperator = (
 """
     NaryOperator
 """
-const NaryOperator = (conjuction, disjunction) |> union_typeof
+const NaryOperator = (conjunction, disjunction) |> union_typeof
 
 """
     LogicalOperator

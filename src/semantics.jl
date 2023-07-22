@@ -461,7 +461,7 @@ imply(p, q) = ¬(p ↛ q)
 not_converse_imply(p, q) = ¬p ∧ q
 converse_imply(p, q) = ¬(p ↚ q)
 
-conjuction(ps) = reduce(and, ps; init = ⊤)
+conjunction(ps) = reduce(and, ps; init = ⊤)
 disjunction(ps) = reduce(or, ps; init = ⊥)
 
 # boolean operators

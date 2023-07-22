@@ -19,7 +19,7 @@ julia> arity(not)
 julia> arity(and)
 2
 
-julia> arity(conjuction)
+julia> arity(conjunction)
 Inf
 ```
 """
