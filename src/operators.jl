@@ -374,29 +374,29 @@ const ← = converse_imply
 
 """
     ⋀(ps)
-    reduce_and(ps)
+    conjuction(ps)
 
-Equivalent to `reduce(and, ps)`.
+Equivalent to `reduce(and, ps; init = ⊤)`.
 
 `⋀` can be typed by `\\bigwedge<tab>`.
 
 # Examples
 """
-function reduce_and end
-const ⋀ = reduce_and
+function conjuction end
+const ⋀ = conjuction
 
 """
     ⋁(ps)
-    reduce_or(ps)
+    disjunction(ps)
 
-Equivalent to `reduce(and, ps)`.
+Equivalent to `reduce(or, ps, init = ⊥)`.
 
 `⋁` can be typed by `\\bigvee<tab>`.
 
 # Examples
 """
-function reduce_or end
-const ⋁ = reduce_or
+function disjunction end
+const ⋁ = disjunction
 
 # Unions of Operators
 # TODO: make traits?
@@ -429,7 +429,7 @@ const BinaryOperator = (
 """
     NaryOperator
 """
-const NaryOperator = (reduce_and, reduce_or) |> union_typeof
+const NaryOperator = (conjuction, disjunction) |> union_typeof
 
 """
     LogicalOperator
