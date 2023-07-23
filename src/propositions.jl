@@ -30,7 +30,7 @@ abstract type Expressive <: Compound end
 
 """
     Atom{T} <: Proposition
-    Atom(::T = :_)
+    Atom(::T)
     Atom(::AtomicProposition)
 
 A proposition with [no deeper propositional structure](https://en.wikipedia.org/wiki/Atomic_formula).
@@ -40,17 +40,11 @@ A proposition with [no deeper propositional structure](https://en.wikipedia.org/
     [`show(io::IO, p::Atom{T})`](@ref show).
 
 !!! tip
-    Use [`@atoms`](@ref) or [`@p`](@ref) as a shortcut to
+    Use [`@atoms`](@ref) and [`@p`](@ref) as shortcuts to
     define atoms or instantiate them inline, respectively.
 
-!!! info
-    The default parameter `:_` represents an Atom with an unspecified statement.
-    For example, `Tree(⊥)` returns `Tree(and(Atom(:_), not(Atom(:_)))`,
-    which pretty-prints as `_ ∧ ¬_`.
-    The underscore is a special case; it is not idiomatic to use for most purposes.
-
 Subtype of [`Proposition`](@ref).
-See also [`AtomicProposition`](@ref).
+See also [`AtomicProposition`](@ref) and [`LiteralProposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -63,11 +57,7 @@ Atom:
  "Logic is fun"
 ```
 """
-struct Atom{T} <: Proposition
-    statement::T
-
-    Atom(statement::T = :_) where T = new{T}(statement)
-end
+struct Atom{T} <: Proposition statement::T end
 
 """
     Literal{UO <: UnaryOperator, T} <: Compound
