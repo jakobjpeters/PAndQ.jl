@@ -34,7 +34,6 @@ show
 ```@docs
 mapfoldl
 mapfoldr
-mapreduce
 ```
 
 ## Semantics
