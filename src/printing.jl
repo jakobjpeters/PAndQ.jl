@@ -93,7 +93,7 @@ struct TruthTable
         group = xs -> map(xs) do x
             interpretations(x, _valuations) |> collect => Proposition[]
         end |> Dict
-        grouped_truths, grouped_atoms = map(group, ([tautology, contradiction], _atoms))
+        grouped_truths, grouped_atoms = map(group, ((tautology, contradiction), _atoms))
         grouped_compounds = Dict{Vector{Function}, Vector{Proposition}}()
 
         foreach(zip(ps, _interpretations)) do (p, interpretation)

@@ -460,9 +460,8 @@ not_imply(p, q) = p ∧ ¬q
 imply(p, q) = ¬(p ↛ q)
 not_converse_imply(p, q) = ¬p ∧ q
 converse_imply(p, q) = ¬(p ↚ q)
-
-conjunction(ps) = reduce(and, ps; init = ⊤)
-disjunction(ps) = reduce(or, ps; init = ⊥)
+conjunction(ps...) = foldl(and, ps)
+disjunction(ps...) = foldl(or, ps)
 
 # boolean operators
 eval_doubles(:not, (

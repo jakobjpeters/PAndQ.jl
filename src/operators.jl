@@ -373,10 +373,10 @@ function converse_imply end
 const ← = converse_imply
 
 """
-    ⋀(ps)
-    conjunction(ps)
+    ⋀(ps...)
+    conjunction(ps...)
 
-Equivalent to `reduce(and, ps; init = ⊤)`.
+Equivalent to `foldl(and, ps; init = ⊤)`.
 
 `⋀` can be typed by `\\bigwedge<tab>`.
 
@@ -386,10 +386,10 @@ function conjunction end
 const ⋀ = conjunction
 
 """
-    ⋁(ps)
-    disjunction(ps)
+    ⋁(ps...)
+    disjunction(ps...)
 
-Equivalent to `reduce(or, ps, init = ⊥)`.
+Equivalent to `foldl(or, ps; init = ⊥)`.
 
 `⋁` can be typed by `\\bigvee<tab>`.
 
