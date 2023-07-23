@@ -568,13 +568,10 @@ convert(::Type{Literal}, p::Tree{UO, <:Tuple{Atom}}) where UO =
     p.nodes |> only |> UO.instance |> Literal
 convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
 convert(::Type{Tree}, p::Literal{UO}) where UO = Tree(UO.instance, p.atom)
-convert(::Type{Tree}, p::Clause{AO}) where AO = reduce(AO.instance, p.literals) |> Tree
-convert(::Type{Tree}, p::Normal{AO}) where AO = mapreduce(Tree, AO.instance, p.clauses) |> Tree
+convert(::Type{Tree}, p::Clause{AO}) where AO = foldl(AO.instance, p.literals) |> Tree
+convert(::Type{Tree}, p::Normal{AO}) where AO = mapfoldl(Tree, AO.instance, p.clauses) |> Tree
 convert(::Type{Clause}, p::LiteralProposition) = Clause(or, p)
 convert(::Type{CN}, no::NullaryOperator) where CN <: Union{Clause, Normal} =
     no |> nullary_operator_to_and_or |> CN
-convert(::Type{Normal}, p::Union{
-    Tree{<:union_typeof((and, nor, not_imply, not_converse_imply))},
-    Clause{typeof(and)}
-}) = Normal(or, p)
+convert(::Type{Normal}, p::Clause{typeof(and)}) = Normal(or, p)
 convert(::Type{Normal}, p::Proposition) = Normal(and, p)
