@@ -4,9 +4,7 @@ import Base: identity, nand, ⊼, nor, ⊽, xor, ⊻
 # Nullary Operators
 
 """
-    ⊤
     ⊤()
-    tautology
     tautology()
 
 Logical [true](https://en.wikipedia.org/wiki/Tautology_(logic)) operator.
@@ -31,9 +29,7 @@ function tautology end
 const ⊤ = tautology
 
 """
-    ⊥
     ⊥()
-    contradiction
     contradiction()
 
 Logical [false](https://en.wikipedia.org/wiki/Contradiction) operator.

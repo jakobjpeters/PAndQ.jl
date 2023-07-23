@@ -106,7 +106,7 @@ Clause:
     valuations(atoms)
     valuations(::Proposition)
 
-Return a `Vector`` containing every possible valuation of the [`Atom`](@ref)s.
+Return an iterator containing every possible valuation of the [`Atom`](@ref)s.
 
 A valuation is a vector of `Pair`s which map from an atom to a truth value.
 
@@ -139,7 +139,7 @@ valuations(no::NullaryOperator) = [no => no]
 """
     interpretations(p, valuations = valuations(p))
 
-Return a vector of values given by [`interpret`](@ref)ing `p` each valuation.
+Return an iterator of values given by [`interpret`](@ref)ing `p` by each valuation.
 
 See also [`valuations`](@ref).
 
@@ -155,7 +155,7 @@ julia> @p collect(interpretations(p → q, [p => ⊤]))
  (q)
 ```
 """
-interpretations(p, valuations = valuations(p)) =
+interpretations(p, valuations = p |> valuations) =
     Iterators.map(valuation -> interpret(p, valuation), valuations)
 
 """
@@ -544,7 +544,6 @@ Normal(ao::AndOr, ps::AbstractArray) = ps |> isempty ?
         Clause(ao |> dual, p)
     end)
 # TODO: see `https://en.wikipedia.org/wiki/Tseytin_transformation`
-# TODO: fix excessive recompilation dependent on `length(p.clauses)`
 Normal(ao::AndOr, p::Normal) = Normal(ao,
     map(Iterators.product(map(p.clauses) do clause
         clause.literals
