@@ -368,32 +368,6 @@ julia> @p TruthTable(p ← q)
 function converse_imply end
 const ← = converse_imply
 
-"""
-    ⋀(ps...)
-    conjunction(ps...)
-
-Equivalent to `foldl(and, ps; init = ⊤)`.
-
-`⋀` can be typed by `\\bigwedge<tab>`.
-
-# Examples
-"""
-function conjunction end
-const ⋀ = conjunction
-
-"""
-    ⋁(ps...)
-    disjunction(ps...)
-
-Equivalent to `foldl(or, ps; init = ⊥)`.
-
-`⋁` can be typed by `\\bigvee<tab>`.
-
-# Examples
-"""
-function disjunction end
-const ⋁ = disjunction
-
 # Unions of Operators
 # TODO: make traits?
 
@@ -423,18 +397,11 @@ const BinaryOperator = (
 ) |> union_typeof
 
 """
-    NaryOperator
-"""
-const NaryOperator = (conjunction, disjunction) |> union_typeof
-
-"""
     LogicalOperator
 
 The union types of [logical operators](@ref operators_operators).
 """
-const LogicalOperator = Union{
-    NullaryOperator, UnaryOperator, BinaryOperator, NaryOperator
-}
+const LogicalOperator = Union{NullaryOperator, UnaryOperator, BinaryOperator}
 
 """
     CommutativeOperator

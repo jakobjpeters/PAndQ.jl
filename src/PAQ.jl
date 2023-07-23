@@ -15,7 +15,6 @@ export
     and, ∧, #= Base.nand, Base.:⊼, Base.nor, Base.:⊽, =#
     or, ∨, #= Base.xor, Base.:⊻, =# xnor, ↔, imply, →,
     not_imply, ↛, converse_imply, ←, not_converse_imply, ↚,
-    conjunction, ⋀, disjunction, ⋁,
 
     # propositions.jl
     Proposition, Compound, Expressive,
@@ -29,7 +28,7 @@ export
 
     # utility.jl
     arity, @atoms, @p, @p_str, atoms, eltype,
-    #= Base.mapfoldl, Base.mapfoldr, Base.mapreduce =#
+    conjunction, ⋀, disjunction, ⋁, #= Base.mapfoldl, Base.mapfoldr, =#
 
     # semantics.jl
     #= Base.==, =# interpret, interpretations, valuations, solve,

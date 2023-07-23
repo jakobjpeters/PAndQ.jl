@@ -129,9 +129,7 @@ end
 TruthTable(ps...) = ps |> collect |> TruthTable
 
 operator_to_symbol(::typeof(identity)) = ""
-foreach(
-    (:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚, :⋀, :⋁)
-) do operator_symbol
+foreach((:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚)) do operator_symbol
     @eval operator_to_symbol(::typeof($operator_symbol)) = $(operator_symbol |> string)
 end
 

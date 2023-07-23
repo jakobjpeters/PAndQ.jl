@@ -7,7 +7,6 @@
 PAQ.NullaryOperator
 PAQ.UnaryOperator
 PAQ.BinaryOperator
-PAQ.NaryOperator
 PAQ.LogicalOperator
 PAQ.CommutativeOperator
 PAQ.AssociativeOperator

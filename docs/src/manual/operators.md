@@ -27,8 +27,6 @@ Operator associativity determines how operators with the same precedence group t
 | [`not_imply`](@ref)          | ↛      | \\nrightarrow    | right         | 4          |
 | [`converse_imply`](@ref)     | ←      | \\leftarrow      | right         | 4          |
 | [`not_converse_imply`](@ref) | ↚      | \\nleftarrow     | right         | 4          |
-| [`conjunction`](@ref)        | ⋀      | \\bigwedge       | none          | 0          |
-| [`disjunction`](@ref)        | ⋁      | \\bigvee         | none          | 0          |
 
 Every possible truth table can be constructed with the functionally complete set of operators `not` and `and`. For convenience, all sixteen of them have been prepared. There are ten binary operators, with the remaining six being expressed with truth values, individual propositions, and the unary [`not`](@ref) operator.
 
@@ -73,11 +71,4 @@ imply
 not_imply
 converse_imply
 not_converse_imply
-```
-
-## Nary Operators
-
-```@docs
-conjunction
-disjunction
 ```

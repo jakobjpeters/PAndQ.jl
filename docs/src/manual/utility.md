@@ -7,4 +7,6 @@ arity
 @p
 @p_str
 atoms
+conjunction
+disjunction
 ```

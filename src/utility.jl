@@ -18,15 +18,11 @@ julia> arity(not)
 
 julia> arity(and)
 2
-
-julia> arity(conjunction)
-Inf
 ```
 """
 arity(::NullaryOperator) = 0
 arity(::UnaryOperator) = 1
 arity(::BinaryOperator) = 2
-arity(::NaryOperator) = Inf
 
 define_atom(p::Symbol) = :(const $p = $(p |> Atom))
 
@@ -135,6 +131,42 @@ atoms(p::Proposition) = p |> _atoms |> unique!
 atoms(p::NullaryOperator) = Atom[]
 
 # Reductions
+
+"""
+    ⋀(ps)
+    conjunction(ps)
+
+Equivalent to `foldl(and, ps; init = ⊤)`.
+
+`⋀` can be typed by `\\bigwedge<tab>`.
+
+# Examples
+```jldoctest
+julia> @p ⋀([p, q, r, s])
+Tree:
+ ((p ∧ q) ∧ r) ∧ s
+```
+"""
+conjunction(ps) = foldl(and, ps)
+const ⋀ = conjunction
+
+"""
+    ⋁(ps)
+    disjunction(ps)
+
+Equivalent to `foldl(or, ps; init = ⊥)`.
+
+`⋁` can be typed by `\\bigvee<tab>`.
+
+# Examples
+```jldoctest
+julia> @p ⋁([p, q, r, s])
+Tree:
+ ((p ∨ q) ∨ r) ∨ s
+```
+"""
+disjunction(ps) = foldl(or, ps)
+const ⋁ = disjunction
 
 """
     mapfoldl
