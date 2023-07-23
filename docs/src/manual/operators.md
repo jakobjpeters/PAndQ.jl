@@ -76,6 +76,6 @@ not_converse_imply
 ## Nary Operators
 
 ```@docs
-reduce_and
-reduce_or
+conjunction
+disjunction
 ```

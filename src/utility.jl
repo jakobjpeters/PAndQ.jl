@@ -19,7 +19,7 @@ julia> arity(not)
 julia> arity(and)
 2
 
-julia> arity(reduce_and)
+julia> arity(conjunction)
 Inf
 ```
 """
