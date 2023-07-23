@@ -61,7 +61,7 @@ struct Atom{T} <: Proposition statement::T end
 
 """
     Literal{UO <: UnaryOperator, T} <: Compound
-    Literal(::UO, ::Atom)
+    Literal(::UO, ::Atom{T})
     Literal(::LiteralProposition)
 
 A proposition represented by [an atomic formula or its negation]
@@ -92,9 +92,9 @@ end
         LO <: LogicalOperator,
         P <: Union{Tuple{Proposition}, Tuple{Proposition, Proposition}}
     } <: Expressive
+    Tree(::Union{NullaryOperator, Proposition})
     Tree(::UnaryOperator, ::Atom)
     Tree(::BinaryOperator, ::Tree, ::Tree)
-    Tree(x)
 
 A proposition represented by an [abstract syntax tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 

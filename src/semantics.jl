@@ -531,18 +531,14 @@ Clause(ao::AndOr, ps::AbstractArray) =
 Clause(ao::AndOr, ps...) = Clause(ao, ps |> collect)
 
 Normal(ao::AndOr, p::Tree{LO}) where LO = Normal(ao, LO.instance(
-    map(p.nodes) do branch
-        Normal(branch)
-    end...
+    map(node -> node |> Normal, p.nodes)...
 ))
 Normal(ao::AO, p::Clause{AO}) where AO <:AndOr = Normal(ao, map(p.literals) do literal
     Clause(ao |> dual, literal)
 end)
 Normal(ao::AndOr, ps::AbstractArray) = ps |> isempty ?
     ao |> Normal :
-    Normal(ao, map(ps) do p
-        Clause(ao |> dual, p)
-    end)
+    Normal(ao, map(p -> Clause(ao |> dual, p), ps))
 # TODO: see `https://en.wikipedia.org/wiki/Tseytin_transformation`
 Normal(ao::AndOr, p::Normal) = Normal(ao,
     map(Iterators.product(map(p.clauses) do clause
