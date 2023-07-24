@@ -140,10 +140,10 @@ See also [`Literal`](@ref).
 Subtype of [`Compound`](@ref).
 
 # Examples
-```
+```jldoctest
 julia> Clause(and)
 Clause:
- ⊥
+ ⊤
 
 julia> @p Clause(and, p, q)
 Clause:

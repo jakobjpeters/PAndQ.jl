@@ -17,7 +17,7 @@ Returns a boolean indicating whether `p` and `q` are [logically equivalent]
 See also [`Proposition`](@ref).
 
 # Examples
-```
+```jldoctest
 julia> @p p == ¬p
 false
 
@@ -46,7 +46,7 @@ Calling `p` with an incomplete mapping will partially interpret it.
 See also [`tautology`](@ref) and [`contradiction`].
 
 # Examples
-```
+```jldoctest
 julia> @p interpret(¬p, p => ⊤)
 contradiction (generic function with 1 method)
 
