@@ -7,8 +7,8 @@ interpret
 interpretations
 valuations
 solve
-left_identity
-right_identity
+left_idelems
+right_idelems
 converse
 dual
 is_tautology
