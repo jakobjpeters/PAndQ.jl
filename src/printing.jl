@@ -29,8 +29,7 @@ operator_to_proposition(x::BinaryOperator) = x(Atom(:_), Atom(:__))
 operator_to_proposition(p::Proposition) = p
 
 """
-    TruthTable(::AbstractArray)
-    TruthTable(ps...)
+    TruthTable(ps)
 
 Construct a [truth table](https://en.wikipedia.org/wiki/Truth_table)
 for the given [`Proposition`](@ref)s and [`BinaryOperator`](@ref)s.
@@ -74,9 +73,9 @@ julia> TruthTable([⊻, imply])
 struct TruthTable
     header::Vector{Vector{Proposition}}
     sub_header::Vector{Vector{UnionAll}}
-    body::Matrix{Function}
+    body::Matrix{NullaryOperator}
 
-    TruthTable(ps::AbstractArray) = begin
+    TruthTable(ps) = begin
         # ToDo: write docstring - define behavior
         # ToDo: write tests
         # TODO: make header support operators (`⊤; NullaryOperator`, `⊻; BinaryOperator`)
@@ -88,13 +87,13 @@ struct TruthTable
         _interpretations = Iterators.map(p -> interpretations(p, _valuations) |> collect, ps)
 
         truths_interpretations, atoms_interpretations, compounds_interpretations =
-            Vector{Function}[], Vector{Function}[], Vector{Function}[]
+            Vector{NullaryOperator}[], Vector{NullaryOperator}[], Vector{NullaryOperator}[]
 
         group = xs -> map(xs) do x
             interpretations(x, _valuations) |> collect => Proposition[]
         end |> Dict
         grouped_truths, grouped_atoms = map(group, ((tautology, contradiction), _atoms))
-        grouped_compounds = Dict{Vector{Function}, Vector{Proposition}}()
+        grouped_compounds = Dict{Vector{NullaryOperator}, Vector{Proposition}}()
 
         foreach(zip(ps, _interpretations)) do (p, interpretation)
             _union! = (key, group) -> begin
@@ -109,13 +108,13 @@ struct TruthTable
 
         header = Vector{Proposition}[]
         sub_header = Vector{UnionAll}[]
-        body = Vector{Function}[]
+        body = Vector{NullaryOperator}[]
         foreach((
             truths_interpretations => grouped_truths,
             atoms_interpretations => grouped_atoms,
             compounds_interpretations => grouped_compounds
-        )) do (interpretations, group)
-            foreach(interpretations) do interpretation
+        )) do (_interpretations, group)
+            foreach(_interpretations) do interpretation
                 xs = get(group, interpretation, Proposition[])
                 push!(header, xs)
                 push!(sub_header, map(x -> getfield(Main, x |> typeof |> nameof), xs))
@@ -126,7 +125,8 @@ struct TruthTable
         new(header, sub_header, reduce(hcat, body))
     end
 end
-TruthTable(ps...) = ps |> collect |> TruthTable
+TruthTable(p::Union{LogicalOperator, Proposition}) = (p,) |> TruthTable
+TruthTable(ps...) = ps |> TruthTable
 
 operator_to_symbol(::typeof(identity)) = ""
 foreach((:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚)) do operator_symbol
