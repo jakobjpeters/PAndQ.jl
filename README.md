@@ -85,7 +85,7 @@ Features such as a fast satisfiability algorithm, proofs, and other logics are s
 - [LogicCircuits.jl](https://github.com/Juice-jl/LogicCircuits.jl)
 - [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl)
 - [FirstOrderLogic.jl](https://github.com/roberthoenig/FirstOrderLogic.jl)
-- [ModalDecisionTrees.jl](https://github.com/giopaglia/ModalDecisionTrees.jl)
+- [ModalDecisionTrees.jl](https://github.com/aclai-lab/ModalDecisionTrees.jl)
 
 ### Computer Algebra Systems
 
