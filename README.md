@@ -9,15 +9,15 @@
 
 <div align="center">
 
-[![Documentation dev](https://img.shields.io/badge/Documentation-dev-blue.svg)](https://jakobjpeters.github.io/PAQ.jl/dev/)
-[![Codecov](https://codecov.io/gh/jakobjpeters/PAQ.jl/branch/main/graph/badge.svg?token=XFWU66WSD7)](https://codecov.io/gh/jakobjpeters/PAQ.jl)
-![License](https://img.shields.io/github/license/jakobjpeters/PAQ.jl)
+[![Documentation dev](https://img.shields.io/badge/Documentation-dev-blue.svg)](https://jakobjpeters.github.io/PAndQ.jl/dev/)
+[![Codecov](https://codecov.io/gh/jakobjpeters/PAndQ.jl/branch/main/graph/badge.svg?token=XFWU66WSD7)](https://codecov.io/gh/jakobjpeters/PAndQ.jl)
+![License](https://img.shields.io/github/license/jakobjpeters/PAndQ.jl)
 
-[![Documentation](https://github.com/jakobjpeters/PAQ.jl/workflows/Documentation/badge.svg)](https://github.com/jakobjpeters/PAQ.jl/actions/documentation.yml)
-[![Continuous Integration](https://github.com/jakobjpeters/PAQ.jl/workflows/Continuous%20Integration/badge.svg)](https://github.com/jakobjpeters/PAQ.jl/actions/continuous_integration.yml)
+[![Documentation](https://github.com/jakobjpeters/PAndQ.jl/workflows/Documentation/badge.svg)](https://github.com/jakobjpeters/PAndQ.jl/actions/documentation.yml)
+[![Continuous Integration](https://github.com/jakobjpeters/PAndQ.jl/workflows/Continuous%20Integration/badge.svg)](https://github.com/jakobjpeters/PAndQ.jl/actions/continuous_integration.yml)
 
-<!-- ![Version](https://img.shields.io/github/v/release/jakobjpeters/PAQ.jl) -->
-<!-- [![Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/PAQ)](https://pkgs.genieframework.com?packages=PAQ) -->
+<!-- ![Version](https://img.shields.io/github/v/release/jakobjpeters/PAndQ.jl) -->
+<!-- [![Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/PAndQ)](https://pkgs.genieframework.com?packages=PAndQ) -->
 
 </div>
 
@@ -32,9 +32,9 @@ P∧Q has an intuitive interface that enables you to manipulate logical expressi
 ```julia
 julia> import Pkg
 
-julia> Pkg.add(url = "https://github.com/jakobjpeters/PAQ.jl")
+julia> Pkg.add(url = "https://github.com/jakobjpeters/PAndQ.jl")
 
-julia> using PAQ
+julia> using PAndQ
 
 julia> ¬⊥
 tautology (generic function with 1 method)
@@ -75,7 +75,7 @@ julia> TruthTable(p ∧ ¬p, r, p ⊻ q, u)
 
 ## Related Projects
 
-`PAQ.jl` is currently best suited for learning and visualizing propositional logic. The user interface is well-documented and has numerous quality of life features that make it easy to create, manipulate, and query about propositions. Further, propositions can be converted, visualized, and output in several different forms.
+`PAndQ.jl` is currently best suited for learning and visualizing propositional logic. The user interface is well-documented and has numerous quality of life features that make it easy to create, manipulate, and query about propositions. Further, propositions can be converted, visualized, and output in several different forms.
 
 Features such as a fast satisfiability algorithm, proofs, and other logics are still in development. In the meantime, check out the these excellent projects.
 
