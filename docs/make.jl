@@ -1,6 +1,6 @@
 
 using Documenter
-using PAQ
+using PAndQ
 
 const directory = (@__DIR__) * "/src/assets/"
 if !ispath(directory * "logo.svg")
@@ -9,16 +9,16 @@ if !ispath(directory * "logo.svg")
 end
 
 DocMeta.setdocmeta!(
-    PAQ,
+    PAndQ,
     :DocTestSetup,
-    :(using PAQ),
+    :(using PAndQ),
     recursive = true,
 )
 
 makedocs(
-    sitename = "PAQ.jl",
+    sitename = "PAndQ.jl",
     format = Documenter.HTML(),
-    modules = [PAQ],
+    modules = [PAndQ],
     pages = [
         "Home" => "index.md",
         "Tutorial" => "tutorial.md",
@@ -32,4 +32,4 @@ makedocs(
     strict = true
 )
 
-deploydocs(repo = "github.com/jakobjpeters/PAQ.jl.git")
+deploydocs(repo = "github.com/jakobjpeters/PAndQ.jl.git")

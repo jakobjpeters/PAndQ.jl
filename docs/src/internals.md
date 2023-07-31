@@ -4,22 +4,22 @@
 ## [Operators](@id internals_operators)
 
 ```@docs
-PAQ.NullaryOperator
-PAQ.UnaryOperator
-PAQ.BinaryOperator
-PAQ.LogicalOperator
-PAQ.CommutativeOperator
-PAQ.AssociativeOperator
-PAQ.LeftIdentityOperator
-PAQ.RightIdentityOperator
-PAQ.AndOr
+PAndQ.NullaryOperator
+PAndQ.UnaryOperator
+PAndQ.BinaryOperator
+PAndQ.LogicalOperator
+PAndQ.CommutativeOperator
+PAndQ.AssociativeOperator
+PAndQ.LeftIdentityOperator
+PAndQ.RightIdentityOperator
+PAndQ.AndOr
 ```
 
 ## Propositions
 
 ```@docs
-PAQ.AtomicProposition
-PAQ.LiteralProposition
+PAndQ.AtomicProposition
+PAndQ.LiteralProposition
 ```
 
 ## Printing

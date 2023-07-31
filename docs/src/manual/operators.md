@@ -1,6 +1,6 @@
 
 ```@meta
-DocTestSetup = :(using PAQ)
+DocTestSetup = :(using PAndQ)
 ```
 
 # [Operators](@id operators_operators)

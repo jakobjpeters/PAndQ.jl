@@ -1,19 +1,19 @@
 
 using Test
 using Documenter
-using PAQ
+using PAndQ
 
 @testset "`detect_ambiguities` and `detect_unbound_args`" begin
     foreach([:detect_ambiguities, :detect_unbound_args]) do detect
-        @eval @test $detect(PAQ, recursive = true) |> isempty
+        @eval @test $detect(PAndQ, recursive = true) |> isempty
     end
 end
 
 DocMeta.setdocmeta!(
-    PAQ,
+    PAndQ,
     :DocTestSetup,
-    :(using PAQ),
+    :(using PAndQ),
     recursive=true
 )
 
-@testset "`doctest`" PAQ |> doctest
+@testset "`doctest`" PAndQ |> doctest

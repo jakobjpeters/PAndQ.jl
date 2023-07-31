@@ -8,7 +8,7 @@
 import AbstractTrees: children # hide
 using AbstractTrees: print_tree # hide
 using InteractiveUtils: subtypes # hide
-using PAQ: Proposition # hide
+using PAndQ: Proposition # hide
 
 children(x::Type) = subtypes(x) # hide
 print_tree(Proposition) # hide

@@ -12,9 +12,9 @@ P∧Q has an intuitive interface that enables you to manipulate logical expressi
 ```julia
 julia> import Pkg
 
-julia> Pkg.add(url = "https://github.com/jakobjpeters/PAQ.jl")
+julia> Pkg.add(url = "https://github.com/jakobjpeters/PAndQ.jl")
 
-julia> using PAQ
+julia> using PAndQ
 
 julia> ¬⊥
 tautology (generic function with 1 method)
@@ -55,7 +55,7 @@ julia> TruthTable(p ∧ ¬p, r, p ⊻ q, u)
 
 ## Related Projects
 
-`PAQ.jl` is currently best suited for learning and visualizing propositional logic. The user interface is well-documented and has numerous quality of life features that make it easy to create, manipulate, and query about propositions. Further, propositions can be converted, visualized, and output in several different forms.
+`PAndQ.jl` is currently best suited for learning and visualizing propositional logic. The user interface is well-documented and has numerous quality of life features that make it easy to create, manipulate, and query about propositions. Further, propositions can be converted, visualized, and output in several different forms.
 
 Features such as a fast satisfiability algorithm, proofs, and other logics are still in development. In the meantime, check out the these excellent projects.
 

@@ -1,6 +1,6 @@
 
 ```@meta
-DocTestSetup = :(using PAQ)
+DocTestSetup = :(using PAndQ)
 ```
 
 # Tutorial
@@ -148,8 +148,8 @@ Assigning meaning to any number of atomic propositions is called a [`Valuation`]
 ```jldoctest 2
 julia> collect(valuations(r))
 2-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[p => PAQ.tautology]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction]
+ Pair{Atom{Symbol}, typeof(tautology)}[p => PAndQ.tautology]
+ Pair{Atom{Symbol}, typeof(contradiction)}[p => PAndQ.contradiction]
 
 julia> collect(interpretations(r))
 2-element Vector{Function}:
@@ -172,13 +172,13 @@ We are often interested in valuations that result in a valid interpretation. Thi
 ```jldoctest 2
 julia> collect(solve(s, tautology))
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
- [p => PAQ.tautology, q => PAQ.tautology]
+ [p => PAndQ.tautology, q => PAndQ.tautology]
 
 julia> collect(solve(s, contradiction))
 3-element Vector{Vector}:
- Pair{Atom{Symbol}}[p => PAQ.contradiction, q => PAQ.tautology]
- Pair{Atom{Symbol}}[p => PAQ.tautology, q => PAQ.contradiction]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction, q => PAQ.contradiction]
+ Pair{Atom{Symbol}}[p => PAndQ.contradiction, q => PAndQ.tautology]
+ Pair{Atom{Symbol}}[p => PAndQ.tautology, q => PAndQ.contradiction]
+ Pair{Atom{Symbol}, typeof(contradiction)}[p => PAndQ.contradiction, q => PAndQ.contradiction]
 ```
 
 A proposition [`is_satisfiable`](@ref) if there is at least one valid interpretation. A proposition [`is_falsifiable`](@ref) if there is at least one invalid interpretation. A proposition [`is_contingency`](@ref) if it is both satisfiable and falsifiable.

@@ -1,6 +1,6 @@
 
 # TODO: module docstring?
-module PAQ
+module PAndQ
 
 include("operators.jl")
 include("propositions.jl")

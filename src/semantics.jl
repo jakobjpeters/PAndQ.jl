@@ -114,15 +114,15 @@ A valuation is a vector of `Pair`s which map from an atom to a truth value.
 ```jldoctest
 julia> @p collect(valuations([p]))
 2-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[p => PAQ.tautology]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction]
+ Pair{Atom{Symbol}, typeof(tautology)}[p => PAndQ.tautology]
+ Pair{Atom{Symbol}, typeof(contradiction)}[p => PAndQ.contradiction]
 
 julia> @p collect(valuations([p, q]))
 4-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[p => PAQ.tautology, q => PAQ.tautology]
- Pair{Atom{Symbol}}[p => PAQ.contradiction, q => PAQ.tautology]
- Pair{Atom{Symbol}}[p => PAQ.tautology, q => PAQ.contradiction]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction, q => PAQ.contradiction]
+ Pair{Atom{Symbol}, typeof(tautology)}[p => PAndQ.tautology, q => PAndQ.tautology]
+ Pair{Atom{Symbol}}[p => PAndQ.contradiction, q => PAndQ.tautology]
+ Pair{Atom{Symbol}}[p => PAndQ.tautology, q => PAndQ.contradiction]
+ Pair{Atom{Symbol}, typeof(contradiction)}[p => PAndQ.contradiction, q => PAndQ.contradiction]
 ```
 """
 valuations(atoms) = begin
@@ -168,12 +168,12 @@ Return a vector containing all [`interpretations`](@ref) such that
 ```jldoctest
 julia> @p collect(solve(p))
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
- [p => PAQ.tautology]
+ [p => PAndQ.tautology]
 
 julia> @p collect(solve(p ⊻ q, ⊥))
 2-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[p => PAQ.tautology, q => PAQ.tautology]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => PAQ.contradiction, q => PAQ.contradiction]
+ Pair{Atom{Symbol}, typeof(tautology)}[p => PAndQ.tautology, q => PAndQ.tautology]
+ Pair{Atom{Symbol}, typeof(contradiction)}[p => PAndQ.contradiction, q => PAndQ.contradiction]
 ```
 """
 solve(p, truth_value = ⊤) = begin
