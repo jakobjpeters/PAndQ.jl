@@ -378,23 +378,23 @@ union_typeof(xs) = Union{map(typeof, xs)...}
 
 The union types of [`LogicalOperator`](@ref)s that take zero arguments.
 """
-const NullaryOperator = (tautology, contradiction) |> union_typeof
+const NullaryOperator = union_typeof((tautology, contradiction))
 
 """
     UnaryOperator
 
 The union types of [`LogicalOperator`](@ref)s that take one argument.
 """
-const UnaryOperator = (identity, not) |> union_typeof
+const UnaryOperator = union_typeof((identity, not))
 
 """
     BinaryOperator
 
 The union types of [`LogicalOperator`](@ref)s that take two arguments.
 """
-const BinaryOperator = (
+const BinaryOperator = union_typeof((
     and, nand, nor, or, xor, xnor, imply, not_imply, converse_imply, not_converse_imply
-) |> union_typeof
+))
 
 """
     LogicalOperator
@@ -410,7 +410,7 @@ The union types of [`LogicalOperator`](@ref)s
 with the [commutative property]
 (https://en.wikipedia.org/wiki/Commutative_property).
 """
-const CommutativeOperator = (and, nand, nor, or, xor, xnor) |> union_typeof
+const CommutativeOperator = union_typeof((and, nand, nor, or, xor, xnor))
 
 """
     AssociativeOperator
@@ -419,7 +419,7 @@ The union types of [`LogicalOperator`](@ref)s
 with the [associative property]
 (https://en.wikipedia.org/wiki/Associative_property).
 """
-const AssociativeOperator = (and, or, xor, xnor) |> union_typeof
+const AssociativeOperator = union_typeof((and, or, xor, xnor))
 
 """
     LeftIdentityOperator
@@ -429,7 +429,7 @@ that have a left [`identity`](@ref).
 """
 const LeftIdentityOperator = Union{
     AssociativeOperator,
-    (imply, not_converse_imply) |> union_typeof
+    union_typeof((imply, not_converse_imply))
 }
 
 """
@@ -440,7 +440,7 @@ that have a right [`identity`](@ref).
 """
 const RightIdentityOperator = Union{
     AssociativeOperator,
-    (not_imply, converse_imply) |> union_typeof
+    union_typeof((not_imply, converse_imply))
 }
 
 """
@@ -448,4 +448,4 @@ const RightIdentityOperator = Union{
 
 The union types of [`and`](@ref) and [`or`](@ref).
 """
-const AndOr = (and, or) |> union_typeof
+const AndOr = union_typeof((and, or))

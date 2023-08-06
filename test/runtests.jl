@@ -1,19 +1,19 @@
 
-using Test
-using Documenter
+using Test: @testset, @test, detect_ambiguities, detect_unbound_args
+using Documenter: DocMeta.setdocmeta!, doctest
 using PAndQ
 
 @testset "`detect_ambiguities` and `detect_unbound_args`" begin
-    foreach([:detect_ambiguities, :detect_unbound_args]) do detect
-        @eval @test $detect(PAndQ, recursive = true) |> isempty
+    for detect in (:detect_ambiguities, :detect_unbound_args)
+        @eval @test isempty($detect(PAndQ, recursive = true))
     end
 end
 
-DocMeta.setdocmeta!(
+setdocmeta!(
     PAndQ,
     :DocTestSetup,
     :(using PAndQ),
-    recursive=true
+    recursive = true
 )
 
-@testset "`doctest`" PAndQ |> doctest
+@testset "`doctest`" doctest(PAndQ)

@@ -118,9 +118,9 @@ struct Tree{
     nodes::NT
 
     Tree(::UO, node::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, Tuple{A}}((node,))
-    Tree(lo::LO, nodes...) where LO <: LogicalOperator = begin
-        _arity = lo |> arity
-        _arity != nodes |> length && "TODO: write this error" |> error
+    function Tree(lo::LO, nodes...) where LO <: LogicalOperator
+        _arity = arity(lo)
+        _arity != length(nodes) && error("TODO: write this error")
         new{LO, NTuple{_arity, Tree}}(nodes)
     end
 end
@@ -158,7 +158,7 @@ struct Clause{AO <: AndOr, L <: Literal} <: Compound
     literals::Vector{L}
 
     Clause(::AO, literals::Vector{L}) where {AO <: AndOr, L <: Literal} =
-        new{AO, L}(literals |> union)
+        new{AO, L}(union(literals))
 end
 
 """
@@ -190,10 +190,10 @@ Normal:
 struct Normal{AO <: AndOr, C <: Clause} <: Expressive
     clauses::Vector{C}
 
-    Normal(::A, clauses::Vector{C}) where {A <: typeof(and), C <: Clause{or |> typeof}} =
-        new{A, C}(clauses |> union)
-    Normal(::O, clauses::Vector{C}) where {O <: typeof(or), C <: Clause{and |> typeof}} =
-        new{O, C}(clauses |> union)
+    Normal(::A, clauses::Vector{C}) where {A <: typeof(and), C <: Clause{typeof(or)}} =
+        new{A, C}(union(clauses))
+    Normal(::O, clauses::Vector{C}) where {O <: typeof(or), C <: Clause{typeof(and)}} =
+        new{O, C}(union(clauses))
 end
 
 """
@@ -203,8 +203,8 @@ A [`Proposition`](@ref) that is known by its type to be logically equivalent to 
 """
 const AtomicProposition = Union{
     Atom,
-    Literal{identity |> typeof},
-    Tree{identity |> typeof, Tuple{<:Atom}}
+    Literal{typeof(identity)},
+    Tree{typeof(identity), Tuple{<:Atom}}
 }
 
 """
@@ -214,8 +214,8 @@ A [`Proposition`](@ref) that is known by its type to be logically equivalent to 
 """
 const LiteralProposition = Union{
     AtomicProposition,
-    Literal{not |> typeof},
-    Tree{not |> typeof, Tuple{<:Atom}}
+    Literal{typeof(not)},
+    Tree{typeof(not), Tuple{<:Atom}}
 }
 
 # TODO: make traits?

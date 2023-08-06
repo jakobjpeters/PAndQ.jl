@@ -24,7 +24,7 @@ arity(::NullaryOperator) = 0
 arity(::UnaryOperator) = 1
 arity(::BinaryOperator) = 2
 
-define_atom(p::Symbol) = :(const $p = $(p |> Atom))
+define_atom(p::Symbol) = :(const $p = $(Atom(p)))
 
 """
     @atoms(ps...)
@@ -51,10 +51,10 @@ Atom:
 ```
 """
 macro atoms(ps...)
-    quote
+    esc(quote
         $(map(define_atom, ps)...)
         Atom{Symbol}[$(ps...)]
-    end |> esc
+    end)
 end
 #=
 Source:
@@ -62,7 +62,7 @@ Symbolics.jl
 https://github.com/JuliaSymbolics/Symbolics.jl
 =#
 
-atomize(p::Symbol) = :((@isdefined $p) ? $p : $(p |> Atom))
+atomize(p::Symbol) = :((@isdefined $p) ? $p : $(Atom(p)))
 atomize(x::Expr) = Meta.isexpr(x, [:(=), :kw]) ?
     Expr(x.head, x.args[1], map(atomize, x.args[2:end])...) :
     Expr(x.head, map(atomize, x.args)...)
@@ -86,7 +86,7 @@ Tree:
 ```
 """
 macro p(expression)
-    :($(expression |> atomize)) |> esc
+    esc(:($(atomize(expression))))
 end
 
 """
@@ -103,12 +103,12 @@ julia> p"p ∧ q, Clause(and)"
 ```
 """
 macro p_str(p)
-    :(@p $(p |> Meta.parse)) |> esc
+    esc(:(@p $(Meta.parse(p))))
 end
 
 _atoms(p::Atom) = [p]
-_atoms(p::Literal) = p.atom |> atoms
-_atoms(p::Union{Tree, Clause, Normal}) = mapreduce(atoms, vcat, p |> first_field; init = Atom[])
+_atoms(p::Literal) = atoms(p.atom)
+_atoms(p::Union{Tree, Clause, Normal}) = mapreduce(atoms, vcat, first_field(p); init = Atom[])
 
 """
     atoms(::Proposition)
@@ -127,7 +127,7 @@ julia> @p atoms(p ∧ q)
  q
 ```
 """
-atoms(p::Proposition) = p |> _atoms |> unique!
+atoms(p::Proposition) = unique!(_atoms(p))
 atoms(p::NullaryOperator) = Atom[]
 
 # Reductions
@@ -172,13 +172,13 @@ const ⋁ = disjunction
     mapfoldl
 """
 mapfoldl(f, lio::LeftIdentityOperator, ps) =
-    mapfoldl(f, lio, ps, init = lio |> left_identity)
+    mapfoldl(f, lio, ps, init = left_identity(lio))
 
 """
     mapfoldr
 """
 mapfoldr(f, rio::RightIdentityOperator, ps) =
-    mapfoldr(f, rio, ps, init = rio |> right_identity)
+    mapfoldr(f, rio, ps, init = right_identity(rio))
 
 # import Base: rand
 # rand(::Type{Atom})
