@@ -277,7 +277,8 @@ julia> @p imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
 ```
 """
-dual(bo::union_typeof((tautology, contradiction, xor, xnor))) = not(bo)
+dual(bo::UnaryOperator) = bo
+dual(bo::Union{NullaryOperator, union_typeof((xor, xnor))}) = not(bo)
 eval_doubles(:dual, (
     (and, or),
     (nand, nor),
@@ -285,7 +286,6 @@ eval_doubles(:dual, (
     (imply, not_converse_imply),
     (not_imply, converse_imply)
 ))
-# TODO: `dual(::typeof(not))` and `dual(::typeof(identity))` ?
 
 """
     is_tautology(p)
