@@ -11,8 +11,7 @@ License
 Modifications
     `P ∧ Q` overlay
 =#
-const julia_dots_url = "https://raw.githubusercontent.com/JuliaLang/julia-logo-graphics/b5551ca7946b4a25746c045c15fbb8806610f8d0/images/julia-dots.svg"
-const julia_dots = readsvg(download(julia_dots_url))
+const julia_dots = readsvg(download("https://raw.githubusercontent.com/JuliaLang/julia-logo-graphics/b5551ca7946b4a25746c045c15fbb8806610f8d0/images/julia-dots.svg"))
 
 function make_logo(directory)
     Drawing(julia_dots.width, julia_dots.height, :svg, directory * "logo.svg")

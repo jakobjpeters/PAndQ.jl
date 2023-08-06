@@ -29,6 +29,7 @@ export
     # utility.jl
     arity, @atoms, @p, @p_str, atoms, eltype,
     conjunction, ⋀, disjunction, ⋁, #= Base.mapfoldl, Base.mapfoldr, =#
+    random_proposition,
 
     # semantics.jl
     #= Base.==, =# interpret, interpretations, valuations, solve,

@@ -3,10 +3,10 @@ using Test: @testset, @test, detect_ambiguities, detect_unbound_args
 using Documenter: DocMeta.setdocmeta!, doctest
 using PAndQ
 
-@testset "`detect_ambiguities` and `detect_unbound_args`" begin
-    for detect in (:detect_ambiguities, :detect_unbound_args)
-        @eval @test isempty($detect(PAndQ, recursive = true))
-    end
+@testset "`detect_ambiguities` and `detect_unbound_args`" for detect in (
+    :detect_ambiguities, :detect_unbound_args
+)
+    @eval @test isempty($detect(PAndQ, recursive = true))
 end
 
 setdocmeta!(

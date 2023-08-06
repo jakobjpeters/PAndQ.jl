@@ -1,5 +1,5 @@
 
-using Documenter
+using Documenter: DocMeta.setdocmeta!, makedocs, HTML, deploydocs
 using PAndQ
 
 const directory = (@__DIR__) * "/src/assets/"
@@ -8,7 +8,7 @@ if !ispath(directory * "logo.svg")
     make_logo(directory)
 end
 
-DocMeta.setdocmeta!(
+setdocmeta!(
     PAndQ,
     :DocTestSetup,
     :(using PAndQ),
@@ -17,7 +17,7 @@ DocMeta.setdocmeta!(
 
 makedocs(
     sitename = "PAndQ.jl",
-    format = Documenter.HTML(),
+    format = HTML(edit_link = "main"),
     modules = [PAndQ],
     pages = [
         "Home" => "index.md",
@@ -31,4 +31,7 @@ makedocs(
     strict = true
 )
 
-deploydocs(repo = "github.com/jakobjpeters/PAndQ.jl.git")
+deploydocs(
+    repo = "github.com/jakobjpeters/PAndQ.jl.git",
+    devbranch = "main"
+)

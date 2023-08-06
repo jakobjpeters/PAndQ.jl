@@ -32,14 +32,14 @@ operator_to_proposition(p::Proposition) = p
     TruthTable(ps)
 
 Construct a [truth table](https://en.wikipedia.org/wiki/Truth_table)
-for the given [`Proposition`](@ref)s and [`BinaryOperator`](@ref)s.
+for the given [`Proposition`](@ref)s and [`LogicalOperator`](@ref)s.
 
 The `header` is a vector containing vectors of logically equivalent propositions.
 The `sub_header` corresponds to the `header`, but contains each proposition's `UnionAll` type.
 The `body` is a matrix where the rows contain [`interpretations`](@ref)
 and the columns correspond to elements in the `header` and `sub_header`.
 
-Logically equivalent propositions will be grouped in the same column, seperated by a comma.
+Logically equivalent propositions are grouped in the same column.
 
 See also [`tautology`](@ref) and [`contradiction`](@ref).
 

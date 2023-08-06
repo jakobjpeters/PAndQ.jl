@@ -1,6 +1,5 @@
 
-using Base: uniontypes
-import Base: mapfoldl, mapfoldr, mapreduce
+import Base: mapfoldl, mapfoldr
 
 """
     arity(::LogicalOperator)
@@ -121,6 +120,10 @@ contained in the given [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
+julia> @p atoms(¬p)
+1-element Vector{Atom{Symbol}}:
+ p
+
 julia> @p atoms(p ∧ q)
 2-element Vector{Atom}:
  p
@@ -140,6 +143,8 @@ Equivalent to `foldl(and, ps; init = ⊤)`.
 
 `⋀` can be typed by `\\bigwedge<tab>`.
 
+See also [`and`](@ref).
+
 # Examples
 ```jldoctest
 julia> @p ⋀([p, q, r, s])
@@ -158,6 +163,8 @@ Equivalent to `foldl(or, ps; init = ⊥)`.
 
 `⋁` can be typed by `\\bigvee<tab>`.
 
+See also [`or`](@ref).
+
 # Examples
 ```jldoctest
 julia> @p ⋁([p, q, r, s])
@@ -169,21 +176,43 @@ disjunction(ps) = foldl(or, ps)
 const ⋁ = disjunction
 
 """
-    mapfoldl
+    mapfoldl(f, lio::LeftIdentityOperator, ps)
+
+Equivalent to `mapfoldl(f, lio, ps; init = left_identity(lio))`
+
+!!! tip
+    This also works with `foldl(lio, ps)`.
+
+# Examples
+```jldoctest
+julia> @p mapfoldl(not, and, [p, q, r, s])
+Tree:
+ ((¬p ∧ ¬q) ∧ ¬r) ∧ ¬s
+
+julia> foldl(and, [])
+tautology (generic function with 1 method)
+```
 """
 mapfoldl(f, lio::LeftIdentityOperator, ps) =
     mapfoldl(f, lio, ps, init = left_identity(lio))
 
 """
-    mapfoldr
+    mapfoldr(f, rio::RightIdentityOperator, ps)
+
+Equivalent to `mapfoldr(f, rio, ps; init = right_identity(rio))`
+
+!!! tip
+    This also works with `foldr(rio, ps)`.
+
+# Examples
+```jldoctest
+julia> @p mapfoldr(not, and, [p, q, r, s])
+Tree:
+ ¬p ∧ (¬q ∧ (¬r ∧ ¬s))
+
+julia> foldr(and, ())
+tautology (generic function with 1 method)
+```
 """
 mapfoldr(f, rio::RightIdentityOperator, ps) =
     mapfoldr(f, rio, ps, init = right_identity(rio))
-
-# import Base: rand
-# rand(::Type{Atom})
-# rand(::Type{Literal}) = rand([Base.uniontypes(UnaryOperator)]).instance(rand(Atom))
-# rand(::Type{Tree})
-# rand(::Type{Clause})
-# rand(::Type{Normal})
-# rand(::Type{Proposition}) = Proposition |> get_concrete_types |> rand |> rand

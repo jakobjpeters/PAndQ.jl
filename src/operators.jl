@@ -376,21 +376,21 @@ union_typeof(xs) = Union{map(typeof, xs)...}
 """
     NullaryOperator
 
-The union types of [`LogicalOperator`](@ref)s that take zero arguments.
+The `Union` of [`LogicalOperator`](@ref)s that take zero arguments.
 """
 const NullaryOperator = union_typeof((tautology, contradiction))
 
 """
     UnaryOperator
 
-The union types of [`LogicalOperator`](@ref)s that take one argument.
+The `Union` of [`LogicalOperator`](@ref)s that take one argument.
 """
 const UnaryOperator = union_typeof((identity, not))
 
 """
     BinaryOperator
 
-The union types of [`LogicalOperator`](@ref)s that take two arguments.
+The `Union` of [`LogicalOperator`](@ref)s that take two arguments.
 """
 const BinaryOperator = union_typeof((
     and, nand, nor, or, xor, xnor, imply, not_imply, converse_imply, not_converse_imply
@@ -399,15 +399,14 @@ const BinaryOperator = union_typeof((
 """
     LogicalOperator
 
-The union types of [logical operators](@ref operators_operators).
+The `Union` of [logical operators](@ref operators_operators).
 """
 const LogicalOperator = Union{NullaryOperator, UnaryOperator, BinaryOperator}
 
 """
     CommutativeOperator
 
-The union types of [`LogicalOperator`](@ref)s
-with the [commutative property]
+The `Union` of [`LogicalOperator`](@ref)s with the [commutative property]
 (https://en.wikipedia.org/wiki/Commutative_property).
 """
 const CommutativeOperator = union_typeof((and, nand, nor, or, xor, xnor))
@@ -415,8 +414,7 @@ const CommutativeOperator = union_typeof((and, nand, nor, or, xor, xnor))
 """
     AssociativeOperator
 
-The union types of [`LogicalOperator`](@ref)s
-with the [associative property]
+The `Union` of [`LogicalOperator`](@ref)s with the [associative property]
 (https://en.wikipedia.org/wiki/Associative_property).
 """
 const AssociativeOperator = union_typeof((and, or, xor, xnor))
@@ -424,8 +422,7 @@ const AssociativeOperator = union_typeof((and, or, xor, xnor))
 """
     LeftIdentityOperator
 
-The union types of [`LogicalOperator`](@ref)s
-that have a left [`identity`](@ref).
+The `Union` of [`LogicalOperator`](@ref)s that have a [`left_identity`](@ref).
 """
 const LeftIdentityOperator = Union{
     AssociativeOperator,
@@ -435,8 +432,7 @@ const LeftIdentityOperator = Union{
 """
     RightIdentityOperator
 
-The union types of [`LogicalOperator`](@ref)s
-that have a right [`identity`](@ref).
+The `Union` of [`LogicalOperator`](@ref)s that have a [`right_identity`](@ref).
 """
 const RightIdentityOperator = Union{
     AssociativeOperator,
@@ -446,6 +442,6 @@ const RightIdentityOperator = Union{
 """
     AndOr
 
-The union types of [`and`](@ref) and [`or`](@ref).
+The `Union` of [`and`](@ref) and [`or`](@ref).
 """
 const AndOr = union_typeof((and, or))

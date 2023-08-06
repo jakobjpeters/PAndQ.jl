@@ -1,5 +1,5 @@
 
-import Base: ==, Fix1, convert, Bool
+import Base: ==, Fix1, convert, Bool, uniontypes
 
 """
     p == q
