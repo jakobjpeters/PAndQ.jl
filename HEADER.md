@@ -1,7 +1,5 @@
 
-<p align="center">
-    <img width="200px" src="docs/src/assets/logo.svg"/>
-</p>
+<p align="center"><img width="200px" src="docs/src/assets/logo.svg"/></p>
 
 <div align="center">
 
@@ -16,3 +14,5 @@
 <!-- [![Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/PAndQ)](https://pkgs.genieframework.com?packages=PAndQ) -->
 
 </div>
+
+# PAndQ.jl
