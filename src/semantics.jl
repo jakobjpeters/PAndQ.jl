@@ -65,7 +65,7 @@ interpret(p::Literal{UO}, valuation::Dict) where UO =
     interpret(p.atom, valuation) |> UO.instance
 
 function interpret(p::Clause{AO}, valuation::Dict) where AO
-    neutral_element = AO.instance |> left_idelems |> only
+    neutral_element = AO.instance |> left_neutrals |> only
     not_neutral_element = neutral_element |> not
     q = Clause(AO.instance)
 
@@ -79,7 +79,7 @@ function interpret(p::Clause{AO}, valuation::Dict) where AO
 end
 
 function interpret(p::Normal{AO}, valuation::Dict) where AO
-    neutral_element = AO.instance |> left_idelems |> only
+    neutral_element = AO.instance |> left_neutrals |> only
     not_neutral_element = neutral_element |> not
     q = Normal(AO.instance)
 
@@ -196,49 +196,49 @@ solve(p, truth_value = ⊤) = Iterators.filter(valuations(p)) do valuation
 end
 
 """
-    left_idelems(::LogicalOperator)
+    left_neutrals(::LogicalOperator)
 
 Return the corresponding left identity elements of the operator.
 The identity elements can be [`tautology`](@ref), [`contradiction`](@ref), neither (empty set), or both.
 
 # Examples
 ```jldoctest
-julia> left_idelems(or)
+julia> left_neutrals(or)
 Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
   PAQ.contradiction
 
-julia> left_idelems(imply)
+julia> left_neutrals(imply)
 Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
   PAQ.tautology
 
-julia> left_idelems(nor)
+julia> left_neutrals(nor)
 Set{Union{typeof(contradiction), typeof(tautology)}}()
 ```
 """
-left_idelems(::union_typeof((and, xnor, imply))) = Set{NullaryOperator}([tautology])
-left_idelems(::union_typeof((or, xor, not_converse_imply))) = Set{NullaryOperator}([contradiction])
-left_idelems(::LogicalOperator) = Set{NullaryOperator}([])
+left_neutrals(::union_typeof((and, xnor, imply))) = Set{NullaryOperator}([tautology])
+left_neutrals(::union_typeof((or, xor, not_converse_imply))) = Set{NullaryOperator}([contradiction])
+left_neutrals(::LogicalOperator) = Set{NullaryOperator}([])
 
 """
-    right_idelems(::LogicalOperator)
+    right_neutrals(::LogicalOperator)
 
 Return the corresponding right identity elements of the operator.
 The identity elements can be [`tautology`](@ref), [`contradiction`](@ref), neither (empty set), or both.
     
 # Examples
 ```jldoctest
-julia> right_idelems(or)
+julia> right_neutrals(or)
 Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
   PAQ.contradiction
 
-julia> right_idelems(converse_imply)
+julia> right_neutrals(converse_imply)
 Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
   PAQ.tautology
 ```
 """
-right_idelems(::union_typeof((and, xnor, converse_imply))) = Set{NullaryOperator}([tautology])
-right_idelems(::union_typeof((or, xor, not_imply))) = Set{NullaryOperator}([contradiction])
-right_idelems(::LogicalOperator) = Set{NullaryOperator}()
+right_neutrals(::union_typeof((and, xnor, converse_imply))) = Set{NullaryOperator}([tautology])
+right_neutrals(::union_typeof((or, xor, not_imply))) = Set{NullaryOperator}([contradiction])
+right_neutrals(::LogicalOperator) = Set{NullaryOperator}()
 
 eval_doubles(f, doubles) = foreach(doubles) do double
     foreach([double, double |> reverse]) do (left, right)
