@@ -62,16 +62,18 @@ https://github.com/JuliaSymbolics/Symbolics.jl
 =#
 
 atomize(p::Symbol) = :((@isdefined $p) ? $p : $(Atom(p)))
-atomize(x::Expr) = Meta.isexpr(x, [:(=), :kw]) ?
-    Expr(x.head, x.args[1], map(atomize, x.args[2:end])...) :
-    Expr(x.head, map(atomize, x.args)...)
+atomize(x::Expr) = Expr(x.head,
+    (Meta.isexpr(x, (:(=), :kw)) ? identity : atomize)(x.args[1]),
+    map(atomize, x.args[2:end])...
+)
 atomize(x) = x
 
 """
     @p(expression)
 
-Instantiates all strings and undefined variables as [`Atom`](@ref)s,
-and then returns the expression.
+Instantiates each undefined variable
+(ignoring variable assignment and keyword arguments)
+as an [`Atom{Symbol}`](@ref).
 
 # Examples
 ```jldoctest

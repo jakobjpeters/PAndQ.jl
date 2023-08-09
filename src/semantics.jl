@@ -308,8 +308,8 @@ julia> @p is_tautology(¬(p ∧ ¬p))
 true
 ```
 """
-is_tautology(p) = all(isequal(⊤), interpretations(p))
 is_tautology(::LiteralProposition) = false
+is_tautology(p) = all(isequal(⊤), interpretations(p))
 
 """
     is_contradiction(p)
@@ -486,7 +486,7 @@ and(::typeof(tautology), q) = q # identity law
 and(p::Proposition, q::NullaryOperator) = q ∧ p # commutative property
 and(p::Proposition, q::Proposition) = and(Normal(and, p), Normal(and, q))
 
-foreach(uniontypes(BinaryOperator)) do BO
+for BO in uniontypes(BinaryOperator)
     bo = nameof(BO.instance)
     @eval $bo(p) = Fix1($bo, p)
     @eval $bo(p::Tree, q::Tree) = Tree($bo, p, q)
@@ -563,7 +563,7 @@ nullary_operator_to_and_or(::typeof(contradiction)) = or
 convert(::Type{Atom}, p::Literal{typeof(identity)}) = p.atom
 convert(::Type{Atom}, p::Tree{typeof(identity), <:Tuple{Atom}}) = only(p.nodes)
 convert(::Type{Literal}, p::Tree{UO, <:Tuple{Atom}}) where UO =
-    p.nodes |> only |> UO.instance |> Literal
+    Literal(UO.instance(only(p.nodes)))
 convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
 convert(::Type{Tree}, p::Literal{UO}) where UO = Tree(UO.instance, p.atom)
 convert(::Type{Tree}, p::Clause{AO}) where AO = Tree(foldl(AO.instance, p.literals))
