@@ -10,9 +10,9 @@ P∧Q has an intuitive interface that enables you to manipulate logical expressi
 ## Showcase
 
 ```julia
-julia> import Pkg
+julia> import Pkg: add
 
-julia> Pkg.add(url = "https://github.com/jakobjpeters/PAndQ.jl")
+julia> add("PAndQ")
 
 julia> using PAndQ
 

@@ -10,8 +10,8 @@
 [![Documentation](https://github.com/jakobjpeters/PAndQ.jl/workflows/Documentation/badge.svg)](https://github.com/jakobjpeters/PAndQ.jl/actions/documentation.yml)
 [![Continuous Integration](https://github.com/jakobjpeters/PAndQ.jl/workflows/Continuous%20Integration/badge.svg)](https://github.com/jakobjpeters/PAndQ.jl/actions/continuous_integration.yml)
 
-<!-- ![Version](https://img.shields.io/github/v/release/jakobjpeters/PAndQ.jl) -->
-<!-- [![Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/PAndQ)](https://pkgs.genieframework.com?packages=PAndQ) -->
+![Version](https://img.shields.io/github/v/release/jakobjpeters/PAndQ.jl)
+[![Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/PAndQ)](https://pkgs.genieframework.com?packages=PAndQ)
 
 </div>
 
