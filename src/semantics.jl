@@ -205,19 +205,19 @@ The identity elements can be [`tautology`](@ref), [`contradiction`](@ref), neith
 ```jldoctest
 julia> left_neutrals(or)
 Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
-  PAQ.contradiction
+  PAndQ.contradiction
 
 julia> left_neutrals(imply)
 Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
-  PAQ.tautology
+  PAndQ.tautology
 
 julia> left_neutrals(nor)
 Set{Union{typeof(contradiction), typeof(tautology)}}()
 ```
 """
-left_neutrals(::union_typeof((and, xnor, imply))) = Set{NullaryOperator}([tautology])
-left_neutrals(::union_typeof((or, xor, not_converse_imply))) = Set{NullaryOperator}([contradiction])
-left_neutrals(::LogicalOperator) = Set{NullaryOperator}([])
+left_neutrals(::union_typeof((and, xnor, imply))) = Set{NullaryOperator}((tautology,))
+left_neutrals(::union_typeof((or, xor, not_converse_imply))) = Set{NullaryOperator}((contradiction,))
+left_neutrals(::LogicalOperator) = Set{NullaryOperator}()
 
 """
     right_neutrals(::LogicalOperator)
@@ -229,15 +229,15 @@ The identity elements can be [`tautology`](@ref), [`contradiction`](@ref), neith
 ```jldoctest
 julia> right_neutrals(or)
 Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
-  PAQ.contradiction
+  PAndQ.contradiction
 
 julia> right_neutrals(converse_imply)
 Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
-  PAQ.tautology
+  PAndQ.tautology
 ```
 """
-right_neutrals(::union_typeof((and, xnor, converse_imply))) = Set{NullaryOperator}([tautology])
-right_neutrals(::union_typeof((or, xor, not_imply))) = Set{NullaryOperator}([contradiction])
+right_neutrals(::union_typeof((and, xnor, converse_imply))) = Set{NullaryOperator}((tautology,))
+right_neutrals(::union_typeof((or, xor, not_imply))) = Set{NullaryOperator}((contradiction,))
 right_neutrals(::LogicalOperator) = Set{NullaryOperator}()
 
 eval_doubles(f, doubles) = foreach(doubles) do double
