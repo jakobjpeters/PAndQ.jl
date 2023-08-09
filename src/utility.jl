@@ -172,14 +172,14 @@ const ⋁ = disjunction
     mapfoldl
 """
 mapfoldl(f, lio::LeftIdentityOperator, ps) =
-    mapfoldl(f, lio, ps, init = lio |> left_identity)
+    mapfoldl(f, lio, ps, init = lio |> left_neutrals |> only)
 
 """
     mapfoldr
 """
 mapfoldr(f, rio::RightIdentityOperator, ps) =
-    mapfoldr(f, rio, ps, init = rio |> right_identity)
-
+    mapfoldr(f, rio, ps, init = rio |> right_neutrals |> only)
+    
 # import Base: rand
 # rand(::Type{Atom})
 # rand(::Type{Literal}) = rand([Base.uniontypes(UnaryOperator)]).instance(rand(Atom))

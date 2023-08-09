@@ -32,7 +32,7 @@ export
 
     # semantics.jl
     #= Base.==, =# interpret, interpretations, valuations, solve,
-    left_identity, right_identity, converse, dual,
+    left_neutrals, right_neutrals, converse, dual,
     is_tautology, is_contradiction, is_truth, is_contingency, is_satisfiable, is_falsifiable
     #= , Base.Bool, Base.convert =#
 
