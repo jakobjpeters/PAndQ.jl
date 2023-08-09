@@ -63,18 +63,18 @@ interpret(p::NullaryOperator, valuation::Dict) = p
 interpret(p::Atom, valuation::Dict) = get(valuation, p, p)
 interpret(p::Literal{UO}, valuation::Dict) where UO =
     UO.instance(interpret(p.atom, valuation))
-function interpret(p::CN, valuation::Dict) where {AO, CN <: Union{Clause{AO}, Normal{AO}}}
-    neutral_element = left_identity(AO.instance)
+function interpret(p::Union{Clause{AO}, Normal{AO}}, valuation::Dict) where AO
+    neutral_element = only(left_neutrals(AO.instance))
     not_neutral_element = not(neutral_element)
-    q = getfield(Main, nameof(CN))(AO.instance)
+    q = union_all_type(p)(AO.instance)
 
-    for r in first_field(p)
+    for r in only_field(p)
         s = interpret(r, valuation)
         s == not_neutral_element && return not_neutral_element
         q = AO.instance(q, s)
     end
 
-    isempty(first_field(q)) ? neutral_element : q
+    isempty(only_field(q)) ? neutral_element : q
 end
 interpret(p::Proposition, valuation::Dict) = interpret(Normal(p), valuation)
 interpret(p, valuation) = interpret(p, Dict(valuation))
@@ -178,51 +178,55 @@ julia> @p collect(solve(p ⊻ q, ⊥))
  Pair{Atom{Symbol}, typeof(contradiction)}[p => PAndQ.contradiction, q => PAndQ.contradiction]
 ```
 """
-function solve(p, truth_value = ⊤)
-    _valuations = valuations(p)
-    _interpretations = interpretations(p, _valuations)
-    Iterators.map(first, Iterators.filter(zip(_valuations, _interpretations)) do (valuation, interpretation)
-        interpretation == truth_value
-    end)
-end
+solve(p, truth_value = ⊤) = Iterators.filter(
+    valuation -> interpret(p, valuation) == truth_value,
+    valuations(p)
+)
 
 """
-    left_identity(::LogicalOperator)
+    left_neutrals(::LogicalOperator)
 
-Return the corresponding identity element or `nothing` if it does not exist.
-The identity element is either [`tautology`](@ref) or [`contradiction`](@ref).
+Return the corresponding left identity elements of the operator.
+The identity elements can be [`tautology`](@ref), [`contradiction`](@ref), neither (empty set), or both.
 
 # Examples
 ```jldoctest
-julia> left_identity(or)
-contradiction (generic function with 1 method)
+julia> left_neutrals(or)
+Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+  PAndQ.contradiction
 
-julia> left_identity(imply)
-tautology (generic function with 1 method)
+julia> left_neutrals(imply)
+Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+  PAndQ.tautology
+
+julia> left_neutrals(nor)
+Set{Union{typeof(contradiction), typeof(tautology)}}()
 ```
 """
-left_identity(::union_typeof((and, xnor, imply))) = tautology
-left_identity(::union_typeof((or, xor, not_converse_imply))) = contradiction
-left_identity(::LogicalOperator) = nothing
+left_neutrals(::union_typeof((and, xnor, imply))) = Set{NullaryOperator}((tautology,))
+left_neutrals(::union_typeof((or, xor, not_converse_imply))) = Set{NullaryOperator}((contradiction,))
+left_neutrals(::LogicalOperator) = Set{NullaryOperator}()
 
 """
-    right_identity(::LogicalOperator)
+    right_neutrals(::LogicalOperator)
 
-Return the corresponding identity element or `nothing` if it does not exist.
-The identity element is either [`tautology`](@ref) or [`contradiction`](@ref).
-
+Return the corresponding right identity elements of the operator.
+The identity elements can be [`tautology`](@ref), [`contradiction`](@ref), neither (empty set), or both.
+    
 # Examples
 ```jldoctest
-julia> right_identity(or)
-contradiction (generic function with 1 method)
+julia> right_neutrals(or)
+Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+  PAndQ.contradiction
 
-julia> right_identity(converse_imply)
-tautology (generic function with 1 method)
+julia> right_neutrals(converse_imply)
+Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+  PAndQ.tautology
 ```
 """
-right_identity(::union_typeof((and, xnor, converse_imply))) = tautology
-right_identity(::union_typeof((or, xor, not_imply))) = contradiction
-right_identity(::LogicalOperator) = nothing
+right_neutrals(::union_typeof((and, xnor, converse_imply))) = Set{NullaryOperator}((tautology,))
+right_neutrals(::union_typeof((or, xor, not_imply))) = Set{NullaryOperator}((contradiction,))
+right_neutrals(::LogicalOperator) = Set{NullaryOperator}()
 
 eval_doubles(f, doubles) = for double in doubles
     for (left, right) in (double, reverse(double))
@@ -349,10 +353,7 @@ julia> @p is_truth(p ∧ q)
 false
 ```
 """
-function is_truth(p)
-    _first, _interpretations = Iterators.peel(interpretations(p))
-    all(isequal(_first), _interpretations)
-end
+is_truth(p) = allequal(interpretations(p))
 is_truth(::LiteralProposition) = false
 
 """
@@ -476,8 +477,8 @@ eval_doubles(:not, (
 not(p::Atom) = Literal(not, p)
 not(p::Literal{UO}) where UO = not(UO.instance)(p.atom)
 not(p::Tree{LO}) where LO = not(LO.instance)(p.nodes...)
-not(p::CN) where {AO, CN <: Union{Clause{AO}, Normal{AO}}} =
-    getfield(Main, nameof(CN))(dual(AO.instance), map(not, first_field(p)))
+not(p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr =
+    union_all_type(p)(dual(AO.instance), map(not, only_field(p)))
 
 and(::typeof(tautology), ::typeof(tautology)) = ⊤
 and(::typeof(contradiction), q) = ⊥ # domination law
@@ -508,13 +509,13 @@ for AO in uniontypes(AndOr)
         $ao(p, Normal($ao, q))
 
     for (left, right) in ((Clause, LiteralProposition), (Normal, Clause{DAO}))
-        @eval $ao(p::$left{$AO}, q::$right) = $left($ao, vcat(first_field(p), q))
-        @eval $ao(p::$right, q::$left{$AO}) = $left($ao, vcat(p, first_field(q)))
+        @eval $ao(p::$left{$AO}, q::$right) = $left($ao, vcat(only_field(p), q))
+        @eval $ao(p::$right, q::$left{$AO}) = $left($ao, vcat(p, only_field(q)))
     end
 
     for CN in (Clause, Normal)
         @eval $ao(p::$CN{$AO}, q::$CN{$AO}) =
-            $CN($ao, vcat(first_field(p), first_field(q)))
+            $CN($ao, vcat(only_field(p), only_field(q)))
     end
 
     @eval $ao(p::Normal, q::Normal) = $ao(Normal($ao, p), Normal($ao, q))

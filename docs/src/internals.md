@@ -10,8 +10,8 @@ PAndQ.BinaryOperator
 PAndQ.LogicalOperator
 PAndQ.CommutativeOperator
 PAndQ.AssociativeOperator
-PAndQ.LeftIdentityOperator
-PAndQ.RightIdentityOperator
+PAndQ.LeftNeutralOperator
+PAndQ.RightNeutralOperator
 PAndQ.AndOr
 ```
 

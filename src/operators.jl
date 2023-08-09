@@ -420,21 +420,21 @@ The `Union` of [`LogicalOperator`](@ref)s with the [associative property]
 const AssociativeOperator = union_typeof((and, or, xor, xnor))
 
 """
-    LeftIdentityOperator
+    LeftNeutralOperator
 
-The `Union` of [`LogicalOperator`](@ref)s that have a [`left_identity`](@ref).
+The `Union` of [`LogicalOperator`](@ref)s that have one or more [`left_neutrals`](@ref).
 """
-const LeftIdentityOperator = Union{
+const LeftNeutralOperator = Union{
     AssociativeOperator,
     union_typeof((imply, not_converse_imply))
 }
 
 """
-    RightIdentityOperator
+    RightNeutralOperator
 
-The `Union` of [`LogicalOperator`](@ref)s that have a [`right_identity`](@ref).
+The `Union` of [`LogicalOperator`](@ref)s that have one or more [`right_neutrals`](@ref).
 """
-const RightIdentityOperator = Union{
+const RightNeutralOperator = Union{
     AssociativeOperator,
     union_typeof((not_imply, converse_imply))
 }

@@ -107,7 +107,7 @@ end
 
 _atoms(p::Atom) = [p]
 _atoms(p::Literal) = atoms(p.atom)
-_atoms(p::Union{Tree, Clause, Normal}) = mapreduce(atoms, vcat, first_field(p); init = Atom[])
+_atoms(p) = mapreduce(atoms, vcat, only_field(p); init = Atom[])
 
 """
     atoms(::Proposition)
@@ -176,9 +176,9 @@ disjunction(ps) = foldl(or, ps)
 const ⋁ = disjunction
 
 """
-    mapfoldl(f, lio::LeftIdentityOperator, ps)
+    mapfoldl(f, lio::LeftNeutralOperator, ps)
 
-Equivalent to `mapfoldl(f, lio, ps; init = left_identity(lio))`
+Equivalent to `mapfoldl(f, lio, ps; init = only(left_neutrals(lio)))`
 
 !!! tip
     This also works with `foldl(lio, ps)`.
@@ -193,13 +193,13 @@ julia> foldl(and, [])
 tautology (generic function with 1 method)
 ```
 """
-mapfoldl(f, lio::LeftIdentityOperator, ps) =
-    mapfoldl(f, lio, ps, init = left_identity(lio))
+mapfoldl(f, lio::LeftNeutralOperator, ps) =
+    mapfoldl(f, lio, ps, init = only(left_neutrals(lio)))
 
 """
-    mapfoldr(f, rio::RightIdentityOperator, ps)
+    mapfoldr(f, rio::RightNeutralOperator, ps)
 
-Equivalent to `mapfoldr(f, rio, ps; init = right_identity(rio))`
+Equivalent to `mapfoldr(f, rio, ps; init = only(right_neutrals(rio)))`
 
 !!! tip
     This also works with `foldr(rio, ps)`.
@@ -210,9 +210,9 @@ julia> @p mapfoldr(not, and, [p, q, r, s])
 Tree:
  ¬p ∧ (¬q ∧ (¬r ∧ ¬s))
 
-julia> foldr(and, ())
+julia> foldr(and, [])
 tautology (generic function with 1 method)
 ```
 """
-mapfoldr(f, rio::RightIdentityOperator, ps) =
-    mapfoldr(f, rio, ps, init = right_identity(rio))
+mapfoldr(f, rio::RightNeutralOperator, ps) =
+    mapfoldr(f, rio, ps, init = only(right_neutrals(rio)))

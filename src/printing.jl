@@ -329,7 +329,17 @@ for f in (:tree, :latex, :truth_table, :markdown)
     end
 end
 
-first_field(p) = getfield(p, 1)
+only_field(p::Atom) = p.statement
+only_field(p::Literal) = p.atom
+only_field(p::Tree) = p.nodes
+only_field(p::Clause) = p.literals
+only_field(p::Normal) = p.clauses
+
+union_all_type(p::Atom) = Atom
+union_all_type(p::Literal) = Literal
+union_all_type(p::Tree) = Tree
+union_all_type(p::Clause) = Clause
+union_all_type(p::Normal) = Normal
 
 parenthesize(p) = string(p)
 parenthesize(p::Union{Clause, Tree{<:BinaryOperator}}) = "(" * string(p) * ")"
@@ -354,9 +364,9 @@ show(io::IO, p::Tree{BO, <:NTuple{2, Tree}}) where BO = join(io, (
 ), " ")
 function show(io::IO, p::Union{Clause{AO}, Normal{AO}}) where AO
     ao = AO.instance
-    qs = Iterators.Stateful(first_field(p))
+    qs = Iterators.Stateful(only_field(p))
     isempty(qs) ?
-        print(io, operator_to_symbol(left_identity(ao))) :
+        print(io, operator_to_symbol(only(left_neutrals(ao)))) :
         join(io, Iterators.map(parenthesize, qs), " " * operator_to_symbol(ao) * " ")
 end
 show(io::IO, ::MIME"text/plain", p::P) where P <: Proposition =
