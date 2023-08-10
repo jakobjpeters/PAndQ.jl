@@ -541,8 +541,8 @@ for P in (:Literal, :Tree, :Clause, :Normal)
     @eval $P(p) = convert($P, p)
 end
 
-nullary_operator_to_and_or(::typeof(tautology)) = and
-nullary_operator_to_and_or(::typeof(contradiction)) = or
+neutral_operator(::typeof(tautology)) = and
+neutral_operator(::typeof(contradiction)) = or
 
 """
     convert
@@ -558,7 +558,7 @@ convert(::Type{Tree}, p::Normal{AO}) where AO = Tree(mapfoldl(Tree, AO.instance,
 convert(::Type{Clause}, p::LiteralProposition) = Clause(or, [p])
 convert(::Type{Clause{AO}}, p::LiteralProposition) where AO <: AndOr = Clause(AO.instance, [p])
 convert(::Type{CN}, no::NullaryOperator) where CN <: Union{Clause, Normal} =
-    CN(nullary_operator_to_and_or(no))
+    CN(neutral_operator(no))
 convert(::Type{Normal}, p::Clause{AO}) where AO <: AndOr = Normal(dual(AO.instance), [p])
 convert(::Type{Normal{AO}}, p::LiteralProposition) where AO <: AndOr = Normal(AO.instance, Clause(p))
 convert(::Type{Normal{AO}}, p::Clause{AO}) where AO <: AndOr =
