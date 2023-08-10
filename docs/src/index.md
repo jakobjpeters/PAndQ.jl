@@ -25,20 +25,16 @@ julia> @atoms p q
  q
 
 julia> r = ¬p
-Literal:
- ¬p
+¬p
 
-julia> s = Clause(and, p, ¬q)
-Clause:
- p ∧ ¬q
+julia> s = Clause(and, [p, ¬q])
+p ∧ ¬q
 
 julia> @p t = ((q ∧ r) ↔ a)(a => ⊤)
-Normal:
- (q) ∧ (¬p)
+(q) ∧ (¬p)
 
 julia> u = s ∨ t
-Normal:
- (p ∧ ¬q) ∨ (q ∧ ¬p)
+(p ∧ ¬q) ∨ (q ∧ ¬p)
 
 julia> TruthTable(p ∧ ¬p, r, p ⊻ q, u)
 ┌────────┬──────┬──────┬─────────┬────────────────────────────┐
