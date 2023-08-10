@@ -127,16 +127,18 @@ end
 
 """
     Clause{AO <: AndOr, L <: Literal} <: Compound
-    Clause(::AO, ::Vector = Literal[])
-    Clause(::AO, ps...)
+    Clause(::AO, ps = Literal[])
+    Clause(::AO, p::Proposition)
+    Clause(::Union{NullaryOperator, Proposition})
 
 A proposition represented as either a [conjunction or disjunction of literals]
 (https://en.wikipedia.org/wiki/Clause_(logic)).
 
 !!! info
-    An empty clause is logically equivalent to the [`identity`](@ref) element of it's binary operator.
+    An empty clause is logically equivalent to the
+    neutral element of it's binary operator.
 
-See also [`Literal`](@ref).
+See also [`Literal`](@ref) and [`NullaryOperator`](@ref).
 Subtype of [`Compound`](@ref).
 
 # Examples
@@ -145,9 +147,9 @@ julia> Clause(and)
 Clause:
  ⊤
 
-julia> @p Clause(and, p, q)
+julia> @p Clause(and, p)
 Clause:
- p ∧ q
+ p
 
 julia> @p Clause(or, [¬p, q])
 Clause:
@@ -157,28 +159,30 @@ Clause:
 struct Clause{AO <: AndOr, L <: Literal} <: Compound
     literals::Vector{L}
 
-    Clause(::AO, literals::Vector{L}) where {AO <: AndOr, L <: Literal} =
+    Clause(::AO, literals::Vector{L} = Literal[]) where {AO <: AndOr, L <: Literal} =
         new{AO, L}(union(literals))
 end
 
 """
     Normal{AO <: AndOr, C <: Clause} <: Expressive
-    Normal(::A, ::Vector{C} = C[]) where {A <: typeof(and), C <: Clause{typeof(or)}}
-    Normal(::O, ::Vector{C} = C[]) where {O <: typeof(or), C <: Clause{typeof(and)}}
-    Normal(::AO, ps...)
+    Normal(::typeof(and), ::Vector{Clause{typeof(or)}} = Clause{typeof(or)}[])
+    Normal(::typeof(or), ::Vector{Clause{typeof(and)}} = Clause{typeof(and)}[])
+    Normal(::AO, ::Proposition)
+    Normal(::Union{NullaryOperator, Proposition})
 
 A proposition represented in [conjunctive](https://en.wikipedia.org/wiki/Conjunctive_normal_form)
 or [disjunctive](https://en.wikipedia.org/wiki/Disjunctive_normal_form) normal form.
 
 !!! info
     An empty normal form is logically equivalent to the
-    [`identity`](@ref) element of it's binary operator.
+    neutral element of it's binary operator.
 
+See also [`Clause`](@ref) and [`NullaryOperator`](@ref).
 Subtype of [`Expressive`](@ref).
 
 # Examples
 ```jldoctest
-julia> s = @p Normal(and, Clause(or, p, q), Clause(or, ¬r))
+julia> s = @p Normal(and, [Clause(or, [p, q]), Clause(or, ¬r)])
 Normal:
  (p ∨ q) ∧ (¬r)
 
@@ -190,9 +194,9 @@ Normal:
 struct Normal{AO <: AndOr, C <: Clause} <: Expressive
     clauses::Vector{C}
 
-    Normal(::A, clauses::Vector{C}) where {A <: typeof(and), C <: Clause{typeof(or)}} =
+    Normal(::A, clauses::Vector{C} = Clause{typeof(or)}[]) where {A <: typeof(and), C <: Clause{typeof(or)}} =
         new{A, C}(union(clauses))
-    Normal(::O, clauses::Vector{C}) where {O <: typeof(or), C <: Clause{typeof(and)}} =
+    Normal(::O, clauses::Vector{C} = Clause{typeof(and)}[]) where {O <: typeof(or), C <: Clause{typeof(and)}} =
         new{O, C}(union(clauses))
 end
 

@@ -50,7 +50,7 @@ See also [`tautology`](@ref) and [`contradiction`].
 julia> @p interpret(¬p, p => ⊤)
 contradiction (generic function with 1 method)
 
-julia> @p p = Clause(and, q, r, s)
+julia> @p p = Clause(and, [q, r, s])
 Clause:
  q ∧ r ∧ s
 
@@ -90,7 +90,7 @@ Equivalent to [`interpret(p, valuation)`](@ref interpret) for all [`Proposition`
 julia> @p (¬p)(p => ⊤)
 contradiction (generic function with 1 method)
 
-julia> @p p = Clause(and, q, r, s)
+julia> @p p = Clause(and, [q, r, s])
 Clause:
  q ∧ r ∧ s
 
@@ -153,7 +153,7 @@ julia> @p collect(interpretations(p))
  contradiction (generic function with 1 method)
 
 julia> @p collect(interpretations(p → q, [p => ⊤]))
-1-element Vector{Normal{typeof(and), Clause{typeof(or), Literal{typeof(identity), Symbol}}}}:
+1-element Vector{Normal{typeof(and), Clause{typeof(or)}}}:
  (q)
 ```
 """
@@ -501,7 +501,7 @@ for AO in uniontypes(AndOr)
     dao = nameof(dual(AO.instance))
     DAO = typeof(dual(AO.instance))
 
-    @eval $ao(p::Clause{$DAO}, q::Clause{$DAO}) = Normal($ao, p, q)
+    @eval $ao(p::Clause{$DAO}, q::Clause{$DAO}) = Normal($ao, [p, q])
 
     @eval $ao(p::Union{LiteralProposition, Clause{$AO}}, q::Clause{$DAO}) =
         $ao(Normal($ao, p), q)
@@ -525,28 +525,15 @@ end
 
 # Constructors
 
-Clause(ao::AndOr, ps::AbstractArray) =
-    isempty(ps) ? Clause(ao) : Clause(ao, map(Literal, ps))
-Clause(ao::AndOr, ps...) = Clause(ao, collect(ps))
+Clause(ao::AndOr, ps) = isempty(ps) ?
+    Clause(ao) :
+    Clause(ao, collect(map(Literal, ps)))
+Clause(ao::AO, p::Proposition) where AO <: AndOr = convert(Clause{AO}, p)
 
-Normal(ao::AndOr, p::Tree{LO}) where LO = Normal(ao, LO.instance(
-    map(node -> Normal(node), p.nodes)...
-))
-Normal(ao::AO, p::Clause{AO}) where AO <:AndOr =
-    Normal(ao, map(literal -> Clause(dual(ao), literal), p.literals))
-Normal(ao::AndOr, ps::AbstractArray) = isempty(ps) ?
+Normal(ao::AndOr, ps) = isempty(ps) ?
     Normal(ao) :
-    Normal(ao, map(p -> Clause(dual(ao), p), ps))
-# TODO: see `https://en.wikipedia.org/wiki/Tseytin_transformation`
-Normal(ao::AndOr, p::Normal) = Normal(ao,
-    vec(map(Iterators.product(map(p.clauses) do clause
-        clause.literals
-    end...)) do literals
-        Clause(dual(ao), collect(literals))
-    end)
-)
-Normal(::AO, p::Normal{AO}) where AO <: AndOr = p
-Normal(ao::AndOr, ps::Proposition...) = Normal(ao, collect(ps))
+    Normal(ao, collect(map(p -> Clause(dual(ao), [p]), ps)))
+Normal(ao::AO, p::Proposition) where AO <: AndOr = convert(Normal{AO}, p)
 
 # Conversions
 
@@ -568,8 +555,24 @@ convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
 convert(::Type{Tree}, p::Literal{UO}) where UO = Tree(UO.instance, p.atom)
 convert(::Type{Tree}, p::Clause{AO}) where AO = Tree(foldl(AO.instance, p.literals))
 convert(::Type{Tree}, p::Normal{AO}) where AO = Tree(mapfoldl(Tree, AO.instance, p.clauses))
-convert(::Type{Clause}, p::LiteralProposition) = Clause(or, p)
+convert(::Type{Clause}, p::LiteralProposition) = Clause(or, [p])
+convert(::Type{Clause{AO}}, p::LiteralProposition) where AO <: AndOr = Clause(AO.instance, [p])
 convert(::Type{CN}, no::NullaryOperator) where CN <: Union{Clause, Normal} =
     CN(nullary_operator_to_and_or(no))
-convert(::Type{Normal}, p::Clause{typeof(and)}) = Normal(or, p)
+convert(::Type{Normal}, p::Clause{AO}) where AO <: AndOr = Normal(dual(AO.instance), [p])
+convert(::Type{Normal{AO}}, p::LiteralProposition) where AO <: AndOr = Normal(AO.instance, Clause(p))
+convert(::Type{Normal{AO}}, p::Clause{AO}) where AO <: AndOr =
+    Normal(AO.instance, map(literal -> Clause(dual(AO.instance), literal), p.literals))
+convert(::Type{Normal{AO}}, p::Clause) where AO <: AndOr = Normal(AO.instance, [p])
 convert(::Type{Normal}, p::Proposition) = Normal(and, p)
+convert(::Type{Normal{AO}}, p::Tree{LO}) where {AO, LO} = Normal(AO.instance, LO.instance(
+    map(node -> Normal(node), p.nodes)...
+))
+convert(::Type{Normal{AO}}, p::Normal{AO}) where AO <: AndOr = p
+convert(::Type{Normal{AO}}, p::Normal) where AO <: AndOr = Normal(AO.instance,
+    vec(map(Iterators.product(map(p.clauses) do clause
+        clause.literals
+    end...)) do literals
+        Clause(dual(AO.instance), literals)
+    end)
+)
