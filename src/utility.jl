@@ -62,7 +62,7 @@ https://github.com/JuliaSymbolics/Symbolics.jl
 =#
 
 atomize(p::Symbol) = :((@isdefined $p) ? $p : $(Atom(p)))
-atomize(x::Expr) = Expr(x.head,
+atomize(x::Expr) = length(x.args) == 0 ? x : Expr(x.head,
     (Meta.isexpr(x, (:(=), :kw)) ? identity : atomize)(x.args[1]),
     map(atomize, x.args[2:end])...
 )
