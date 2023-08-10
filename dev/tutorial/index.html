@@ -21,18 +21,14 @@ julia&gt; arity(not)
 
 julia&gt; arity(and)
 2</code></pre><h2 id="Propositions"><a class="docs-heading-anchor" href="#Propositions">Propositions</a><a id="Propositions-1"></a><a class="docs-heading-anchor-permalink" href="#Propositions" title="Permalink"></a></h2><p>A <a href="../manual/propositions/#PAndQ.Proposition"><code>Proposition</code></a> is a statement that can be either true or false. For example, &quot;Logic is fun&quot; is a proposition because it may be true for you but false for someone else. Note that the proposition exists on its own, regardless of whether or not it is known to be true or false.</p><pre><code class="language-julia-repl hljs">julia&gt; p = Atom(&quot;Logic is fun&quot;)
-Atom:
- &quot;Logic is fun&quot;
+Atom(&quot;Logic is fun&quot;)
 
 julia&gt; q = Atom(&quot;Julia is awesome&quot;)
-Atom:
- &quot;Julia is awesome&quot;</code></pre><p>We can also perform operations on propositions. In a written form, we can negate the above proposition by saying &quot;Logic is not fun&quot;. We could combine two propositions using another operator, such as &quot;Logic is fun and Julia is awesome&quot;.</p><pre><code class="language-julia-repl hljs">julia&gt; r = ¬p
-Literal:
- ¬&quot;Logic is fun&quot;
+Atom(&quot;Julia is awesome&quot;)</code></pre><p>We can also perform operations on propositions. In a written form, we can negate the above proposition by saying &quot;Logic is not fun&quot;. We could combine two propositions using another operator, such as &quot;Logic is fun and Julia is awesome&quot;.</p><pre><code class="language-julia-repl hljs">julia&gt; r = ¬p
+¬Atom(&quot;Logic is fun&quot;)
 
 julia&gt; s = p ∧ q
-Tree:
- &quot;Logic is fun&quot; ∧ &quot;Julia is awesome&quot;</code></pre><p>An <a href="../manual/propositions/#PAndQ.Atom"><code>Atom</code></a>ic proposition is such that it has not been operated on and is not composed of any other propositions. Thus the first proposition, &quot;Logic is fun&quot;, is atomic. A <a href="../manual/propositions/#PAndQ.Compound"><code>Compound</code></a> proposition is any proposition that is not an atom. &quot;Logic is not fun&quot; and &quot;Logic is fun and Julia is awesome&quot; are <a href="../manual/propositions/#PAndQ.Compound"><code>Compound</code></a> propositions. A <a href="../manual/propositions/#PAndQ.Literal"><code>Literal</code></a> proposition is a proposition that is either an atom or its negation. &quot;Logic is fun&quot; and &quot;Logic is not fun&quot; are literals. Since propositions can be nested arbitrarily, a <a href="../manual/propositions/#PAndQ.Tree"><code>Tree</code></a> structure can be used to represent them.</p><pre><code class="language-julia-repl hljs">julia&gt; p isa Atom &amp;&amp; q isa Atom &amp;&amp; Atom &lt;: Proposition
+Atom(&quot;Logic is fun&quot;) ∧ Atom(&quot;Julia is awesome&quot;)</code></pre><p>An <a href="../manual/propositions/#PAndQ.Atom"><code>Atom</code></a>ic proposition is such that it has not been operated on and is not composed of any other propositions. Thus the first proposition, &quot;Logic is fun&quot;, is atomic. A <a href="../manual/propositions/#PAndQ.Compound"><code>Compound</code></a> proposition is any proposition that is not an atom. &quot;Logic is not fun&quot; and &quot;Logic is fun and Julia is awesome&quot; are <a href="../manual/propositions/#PAndQ.Compound"><code>Compound</code></a> propositions. A <a href="../manual/propositions/#PAndQ.Literal"><code>Literal</code></a> proposition is a proposition that is either an atom or its negation. &quot;Logic is fun&quot; and &quot;Logic is not fun&quot; are literals. Since propositions can be nested arbitrarily, a <a href="../manual/propositions/#PAndQ.Tree"><code>Tree</code></a> structure can be used to represent them.</p><pre><code class="language-julia-repl hljs">julia&gt; p isa Atom &amp;&amp; q isa Atom &amp;&amp; Atom &lt;: Proposition
 true
 
 julia&gt; r isa Compound &amp;&amp; s isa Compound &amp;&amp; Compound &lt;: Proposition
@@ -48,20 +44,16 @@ true</code></pre><p>In mathematics, it&#39;s useful to replace individual number
  q
 
 julia&gt; p
-Atom:
- p
+p
 
 julia&gt; q
-Atom:
- q
+q
 
 julia&gt; r = ¬p
-Literal:
- ¬p
+¬p
 
 julia&gt; s = p ∧ q
-Tree:
- p ∧ q</code></pre><p>The function <a href="../manual/utility/#PAndQ.atoms"><code>atoms</code></a> returns a vector of each unique <code>Atom</code> in a proposition.</p><pre><code class="language-julia-repl hljs">julia&gt; atoms(r)
+p ∧ q</code></pre><p>The function <a href="../manual/utility/#PAndQ.atoms"><code>atoms</code></a> returns a vector of each unique <code>Atom</code> in a proposition.</p><pre><code class="language-julia-repl hljs">julia&gt; atoms(r)
 1-element Vector{Atom{Symbol}}:
  p
 
@@ -69,14 +61,13 @@ julia&gt; atoms(s)
 2-element Vector{Atom}:
  p
  q</code></pre><h2 id="Semantics"><a class="docs-heading-anchor" href="#Semantics">Semantics</a><a id="Semantics-1"></a><a class="docs-heading-anchor-permalink" href="#Semantics" title="Permalink"></a></h2><p>We know that since these are propositions, they can be true or false. If you think that &quot;Logic is fun&quot;, it would be invalid to assign it the valuation false. So the proposition <code>p</code> is true if you think that &quot;Logic is fun&quot; and is false otherwise. If we assign the value true to the proposition &quot;Logic is fun&quot;, then we know that the validity of the proposition &quot;Logic is fun and Julia is awesome&quot; depends on whether or not &quot;Julia is awesome&quot;. If &quot;Julia is awesome&quot; is assigned false, then the conjunction of the two propositions is false. Use the <a href="../manual/semantics/#PAndQ.interpret"><code>interpret</code></a> function to assign meaning to atomic propositions and then simplify the proposition.</p><pre><code class="language-julia-repl hljs">julia&gt; interpret(s, p =&gt; ⊤)
-Normal:
- (q)
+(q)
 
 julia&gt; interpret(s, p =&gt; ⊤, q =&gt; ⊥)
 contradiction (generic function with 1 method)</code></pre><p>Assigning meaning to any number of atomic propositions is called a <a href="../manual/semantics/#PAndQ.valuations"><code>Valuation</code></a>. Since <code>p</code> can only be true or false, it has two possible valuations. <code>r</code> doesn&#39;t depend on any other propositions, because it is just a negation of <code>p</code>. Thus, it also has two possible valuations. However, the valuation and result of evaluating it are not longer the same. Since <code>r == ¬p</code>, if <code>p</code> is assigned true, then <code>r</code> is determined to be false, and vice versa. An <a href="../manual/semantics/#PAndQ.interpretations"><code>interpretation</code></a> is the truth values of any number of propositions determined by a given valuation.</p><pre><code class="language-julia-repl hljs">julia&gt; collect(valuations(r))
 2-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[p =&gt; PAndQ.tautology]
- Pair{Atom{Symbol}, typeof(contradiction)}[p =&gt; PAndQ.contradiction]
+ Pair{Atom{Symbol}, typeof(tautology)}[Atom(:p) =&gt; PAndQ.tautology]
+ Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) =&gt; PAndQ.contradiction]
 
 julia&gt; collect(interpretations(r))
 2-element Vector{Function}:
@@ -87,20 +78,18 @@ julia&gt; collect(interpretations(r))
 julia&gt; length(valuations(s)) == length(interpretations(s)) == 2 ^ n == 4
 true</code></pre><p>We are often interested in valuations that result in a valid interpretation. This is accomplished with the <a href="../manual/semantics/#PAndQ.solve"><code>solve</code></a> function. The proposition <code>s</code> is the conjunction of <code>p</code> and <code>p</code>, so it is only true if both <code>p</code> and <code>q</code> are true. Each of the other three possible valuations are invalid.</p><pre><code class="language-julia-repl hljs">julia&gt; collect(solve(s, tautology))
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
- [p =&gt; PAndQ.tautology, q =&gt; PAndQ.tautology]
+ [Atom(:p) =&gt; PAndQ.tautology, Atom(:q) =&gt; PAndQ.tautology]
 
 julia&gt; collect(solve(s, contradiction))
 3-element Vector{Vector}:
- Pair{Atom{Symbol}}[p =&gt; PAndQ.contradiction, q =&gt; PAndQ.tautology]
- Pair{Atom{Symbol}}[p =&gt; PAndQ.tautology, q =&gt; PAndQ.contradiction]
- Pair{Atom{Symbol}, typeof(contradiction)}[p =&gt; PAndQ.contradiction, q =&gt; PAndQ.contradiction]</code></pre><p>A proposition <a href="../manual/semantics/#PAndQ.is_satisfiable"><code>is_satisfiable</code></a> if there is at least one valid interpretation. A proposition <a href="../manual/semantics/#PAndQ.is_falsifiable"><code>is_falsifiable</code></a> if there is at least one invalid interpretation. A proposition <a href="../manual/semantics/#PAndQ.is_contingency"><code>is_contingency</code></a> if it is both satisfiable and falsifiable.</p><pre><code class="language-julia-repl hljs">julia&gt; is_satisfiable(s) &amp;&amp; is_falsifiable(s) &amp;&amp; is_contingency(s)
+ Pair{Atom{Symbol}}[Atom(:p) =&gt; PAndQ.contradiction, Atom(:q) =&gt; PAndQ.tautology]
+ Pair{Atom{Symbol}}[Atom(:p) =&gt; PAndQ.tautology, Atom(:q) =&gt; PAndQ.contradiction]
+ Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) =&gt; PAndQ.contradiction, Atom(:q) =&gt; PAndQ.contradiction]</code></pre><p>A proposition <a href="../manual/semantics/#PAndQ.is_satisfiable"><code>is_satisfiable</code></a> if there is at least one valid interpretation. A proposition <a href="../manual/semantics/#PAndQ.is_falsifiable"><code>is_falsifiable</code></a> if there is at least one invalid interpretation. A proposition <a href="../manual/semantics/#PAndQ.is_contingency"><code>is_contingency</code></a> if it is both satisfiable and falsifiable.</p><pre><code class="language-julia-repl hljs">julia&gt; is_satisfiable(s) &amp;&amp; is_falsifiable(s) &amp;&amp; is_contingency(s)
 true</code></pre><p>A proposition is a tautology if every possible interpretation is true. A proposition is a contradiction if every possible interpretation is false. For example, <code>p ∧ ¬p</code> is always interpreted as false because either <code>p</code> or <code>¬p</code> must be false. <code>p ∨ ¬p</code> is always interpreted as true because either <code>p</code> or <code>¬p</code> must be true. Use the functions <a href="../manual/semantics/#PAndQ.is_tautology"><code>is_tautology</code></a>, <a href="../manual/semantics/#PAndQ.is_contradiction"><code>is_contradiction</code></a>, and <a href="../manual/semantics/#PAndQ.is_truth"><code>is_truth</code></a> to check whether a proposition is logically equivalent to a truth value.</p><pre><code class="language-julia-repl hljs">julia&gt; t = p ∧ ¬p
-Tree:
- p ∧ ¬p
+p ∧ ¬p
 
 julia&gt; u = p ∨ ¬p
-Tree:
- p ∨ ¬p
+p ∨ ¬p
 
 julia&gt; collect(interpretations(t))
 2-element Vector{typeof(contradiction)}:
@@ -130,4 +119,4 @@ false</code></pre><h2 id="Visualization"><a class="docs-heading-anchor" href="#V
 ├──────┼──────┼───────┤
 │ ⊤    │ ⊥    │ ⊤     │
 │ ⊥    │ ⊥    │ ⊥     │
-└──────┴──────┴───────┘</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../manual/operators/">Operators »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Wednesday 9 August 2023 23:18">Wednesday 9 August 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+└──────┴──────┴───────┘</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../manual/operators/">Operators »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Thursday 10 August 2023 13:59">Thursday 10 August 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
