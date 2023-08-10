@@ -41,12 +41,10 @@ julia> @atoms p q
  q
 
 julia> p
-Atom:
- p
+p
 
 julia> q
-Atom:
- q
+q
 ```
 """
 macro atoms(ps...)
@@ -78,12 +76,10 @@ as an [`Atom{Symbol}`](@ref).
 # Examples
 ```jldoctest
 julia> @p x = p
-Atom:
- p
+p
 
 julia> @p x ∧ q → r
-Tree:
- (p ∧ q) → r
+(p ∧ q) → r
 ```
 """
 macro p(expression)
@@ -96,11 +92,10 @@ end
 # Examples
 ```jldoctest
 julia> p = @p_str("x")
-Atom:
- x
+x
 
 julia> p"p ∧ q, Clause(and)"
-(x ∧ q, ⊤)
+(Tree(and, Tree(identity, Atom(:x)), Tree(identity, Atom(:q))), Clause(and, []))
 ```
 """
 macro p_str(p)
@@ -150,8 +145,7 @@ See also [`and`](@ref).
 # Examples
 ```jldoctest
 julia> @p ⋀([p, q, r, s])
-Tree:
- ((p ∧ q) ∧ r) ∧ s
+((p ∧ q) ∧ r) ∧ s
 ```
 """
 conjunction(ps) = foldl(and, ps)
@@ -170,8 +164,7 @@ See also [`or`](@ref).
 # Examples
 ```jldoctest
 julia> @p ⋁([p, q, r, s])
-Tree:
- ((p ∨ q) ∨ r) ∨ s
+((p ∨ q) ∨ r) ∨ s
 ```
 """
 disjunction(ps) = foldl(or, ps)
@@ -188,8 +181,7 @@ Equivalent to `mapfoldl(f, lio, ps; init = only(left_neutrals(lio)))`
 # Examples
 ```jldoctest
 julia> @p mapfoldl(not, and, [p, q, r, s])
-Tree:
- ((¬p ∧ ¬q) ∧ ¬r) ∧ ¬s
+((¬p ∧ ¬q) ∧ ¬r) ∧ ¬s
 
 julia> foldl(and, [])
 tautology (generic function with 1 method)
@@ -209,8 +201,7 @@ Equivalent to `mapfoldr(f, rio, ps; init = only(right_neutrals(rio)))`
 # Examples
 ```jldoctest
 julia> @p mapfoldr(not, and, [p, q, r, s])
-Tree:
- ¬p ∧ (¬q ∧ (¬r ∧ ¬s))
+¬p ∧ (¬q ∧ (¬r ∧ ¬s))
 
 julia> foldr(and, [])
 tautology (generic function with 1 method)

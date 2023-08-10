@@ -51,12 +51,10 @@ julia> @p interpret(¬p, p => ⊤)
 contradiction (generic function with 1 method)
 
 julia> @p p = Clause(and, [q, r, s])
-Clause:
- q ∧ r ∧ s
+q ∧ r ∧ s
 
 julia> @p interpret(p, q => ⊤, r => ⊤)
-Clause:
- s
+s
 ```
 """
 interpret(p::NullaryOperator, valuation::Dict) = p
@@ -91,12 +89,10 @@ julia> @p (¬p)(p => ⊤)
 contradiction (generic function with 1 method)
 
 julia> @p p = Clause(and, [q, r, s])
-Clause:
- q ∧ r ∧ s
+q ∧ r ∧ s
 
 julia> @p p(q => ⊤, r => ⊤)
-Clause:
- s
+s
 ```
 """
 (p::Proposition)(valuation::Dict) = interpret(p, valuation)
@@ -114,15 +110,15 @@ A valuation is a vector of `Pair`s which map from an atom to a truth value.
 ```jldoctest
 julia> @p collect(valuations([p]))
 2-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[p => PAndQ.tautology]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => PAndQ.contradiction]
+ Pair{Atom{Symbol}, typeof(tautology)}[Atom(:p) => PAndQ.tautology]
+ Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) => PAndQ.contradiction]
 
 julia> @p collect(valuations([p, q]))
 4-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[p => PAndQ.tautology, q => PAndQ.tautology]
- Pair{Atom{Symbol}}[p => PAndQ.contradiction, q => PAndQ.tautology]
- Pair{Atom{Symbol}}[p => PAndQ.tautology, q => PAndQ.contradiction]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => PAndQ.contradiction, q => PAndQ.contradiction]
+ Pair{Atom{Symbol}, typeof(tautology)}[Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.tautology]
+ Pair{Atom{Symbol}}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.tautology]
+ Pair{Atom{Symbol}}[Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.contradiction]
+ Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.contradiction]
 ```
 """
 function valuations(atoms)
@@ -170,12 +166,12 @@ Return a vector containing all [`interpretations`](@ref) such that
 ```jldoctest
 julia> @p collect(solve(p))
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
- [p => PAndQ.tautology]
+ [Atom(:p) => PAndQ.tautology]
 
 julia> @p collect(solve(p ⊻ q, ⊥))
 2-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[p => PAndQ.tautology, q => PAndQ.tautology]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => PAndQ.contradiction, q => PAndQ.contradiction]
+ Pair{Atom{Symbol}, typeof(tautology)}[Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.tautology]
+ Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.contradiction]
 ```
 """
 solve(p, truth_value = ⊤) = Iterators.filter(

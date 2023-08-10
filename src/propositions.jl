@@ -49,15 +49,15 @@ See also [`AtomicProposition`](@ref) and [`LiteralProposition`](@ref).
 # Examples
 ```jldoctest
 julia> Atom(:p)
-Atom:
- p
+p
 
 julia> Atom("Logic is fun")
-Atom:
- "Logic is fun"
+Atom("Logic is fun")
 ```
 """
-struct Atom{T} <: Proposition statement::T end
+struct Atom{T} <: Proposition
+    statement::T
+end
 
 """
     Literal{UO <: UnaryOperator, T} <: Compound
@@ -73,12 +73,10 @@ See also [`UnaryOperator`](@ref), [`Atom`](@ref), and [`LiteralProposition`](@re
 # Examples
 ```jldoctest
 julia> r = @p ¬p
-Literal:
- ¬p
+¬p
 
 julia> ¬r
-Atom:
- p
+p
 ```
 """
 struct Literal{UO <: UnaryOperator, T} <: Compound
@@ -103,12 +101,10 @@ Subtype of [`Expressive`](@ref).
 # Examples
 ```jldoctest
 julia> @p r = p ⊻ q
-Tree:
- p ⊻ q
+p ⊻ q
 
 julia> @p ¬r → s
-Tree:
- (p ↔ q) → s
+(p ↔ q) → s
 ```
 """
 struct Tree{
@@ -144,16 +140,13 @@ Subtype of [`Compound`](@ref).
 # Examples
 ```jldoctest
 julia> Clause(and)
-Clause:
- ⊤
+⊤
 
-julia> @p Clause(and, p)
-Clause:
- p
+julia> @p Clause(p)
+p
 
 julia> @p Clause(or, [¬p, q])
-Clause:
- ¬p ∨ q
+¬p ∨ q
 ```
 """
 struct Clause{AO <: AndOr, L <: Literal} <: Compound
@@ -183,12 +176,10 @@ Subtype of [`Expressive`](@ref).
 # Examples
 ```jldoctest
 julia> s = @p Normal(and, [Clause(or, [p, q]), Clause(or, ¬r)])
-Normal:
- (p ∨ q) ∧ (¬r)
+(p ∨ q) ∧ (¬r)
 
 julia> ¬s
-Normal:
- (¬p ∧ ¬q) ∨ (r)
+(¬p ∧ ¬q) ∨ (r)
 ```
 """
 struct Normal{AO <: AndOr, C <: Clause} <: Expressive

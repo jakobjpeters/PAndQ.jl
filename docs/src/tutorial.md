@@ -56,24 +56,20 @@ A [`Proposition`](@ref) is a statement that can be either true or false. For exa
 
 ```jldoctest 1
 julia> p = Atom("Logic is fun")
-Atom:
- "Logic is fun"
+Atom("Logic is fun")
 
 julia> q = Atom("Julia is awesome")
-Atom:
- "Julia is awesome"
+Atom("Julia is awesome")
 ```
 
 We can also perform operations on propositions. In a written form, we can negate the above proposition by saying "Logic is not fun". We could combine two propositions using another operator, such as "Logic is fun and Julia is awesome".
 
 ```jldoctest 1
 julia> r = ¬p
-Literal:
- ¬"Logic is fun"
+¬Atom("Logic is fun")
 
 julia> s = p ∧ q
-Tree:
- "Logic is fun" ∧ "Julia is awesome"
+Atom("Logic is fun") ∧ Atom("Julia is awesome")
 ```
 
 An [`Atom`](@ref)ic proposition is such that it has not been operated on and is not composed of any other propositions. Thus the first proposition, "Logic is fun", is atomic. A [`Compound`](@ref) proposition is any proposition that is not an atom. "Logic is not fun" and "Logic is fun and Julia is awesome" are [`Compound`](@ref) propositions. A [`Literal`](@ref) proposition is a proposition that is either an atom or its negation. "Logic is fun" and "Logic is not fun" are literals. Since propositions can be nested arbitrarily, a [`Tree`](@ref) structure can be used to represent them.
@@ -101,20 +97,16 @@ julia> @atoms p q
  q
 
 julia> p
-Atom:
- p
+p
 
 julia> q
-Atom:
- q
+q
 
 julia> r = ¬p
-Literal:
- ¬p
+¬p
 
 julia> s = p ∧ q
-Tree:
- p ∧ q
+p ∧ q
 ```
 
 The function [`atoms`](@ref) returns a vector of each unique `Atom` in a proposition.
@@ -136,8 +128,7 @@ We know that since these are propositions, they can be true or false. If you thi
 
 ```jldoctest 2
 julia> interpret(s, p => ⊤)
-Normal:
- (q)
+(q)
 
 julia> interpret(s, p => ⊤, q => ⊥)
 contradiction (generic function with 1 method)
@@ -148,8 +139,8 @@ Assigning meaning to any number of atomic propositions is called a [`Valuation`]
 ```jldoctest 2
 julia> collect(valuations(r))
 2-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[p => PAndQ.tautology]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => PAndQ.contradiction]
+ Pair{Atom{Symbol}, typeof(tautology)}[Atom(:p) => PAndQ.tautology]
+ Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) => PAndQ.contradiction]
 
 julia> collect(interpretations(r))
 2-element Vector{Function}:
@@ -172,13 +163,13 @@ We are often interested in valuations that result in a valid interpretation. Thi
 ```jldoctest 2
 julia> collect(solve(s, tautology))
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
- [p => PAndQ.tautology, q => PAndQ.tautology]
+ [Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.tautology]
 
 julia> collect(solve(s, contradiction))
 3-element Vector{Vector}:
- Pair{Atom{Symbol}}[p => PAndQ.contradiction, q => PAndQ.tautology]
- Pair{Atom{Symbol}}[p => PAndQ.tautology, q => PAndQ.contradiction]
- Pair{Atom{Symbol}, typeof(contradiction)}[p => PAndQ.contradiction, q => PAndQ.contradiction]
+ Pair{Atom{Symbol}}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.tautology]
+ Pair{Atom{Symbol}}[Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.contradiction]
+ Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.contradiction]
 ```
 
 A proposition [`is_satisfiable`](@ref) if there is at least one valid interpretation. A proposition [`is_falsifiable`](@ref) if there is at least one invalid interpretation. A proposition [`is_contingency`](@ref) if it is both satisfiable and falsifiable.
@@ -192,12 +183,10 @@ A proposition is a tautology if every possible interpretation is true. A proposi
 
 ```jldoctest 2
 julia> t = p ∧ ¬p
-Tree:
- p ∧ ¬p
+p ∧ ¬p
 
 julia> u = p ∨ ¬p
-Tree:
- p ∨ ¬p
+p ∨ ¬p
 
 julia> collect(interpretations(t))
 2-element Vector{typeof(contradiction)}:
