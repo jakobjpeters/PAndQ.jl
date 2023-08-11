@@ -431,10 +431,6 @@ true
 """
 is_falsifiable(p) = !is_tautology(p)
 
-# TODO: write all conversions
-# TODO: if simplification is about the operator, put it with operators
-#    if it's about the types, put it in constructors/convert
-
 # Boolean Operators
 
 # Bool
@@ -544,8 +540,8 @@ neutral_operator(::typeof(contradiction)) = or
     convert
 """
 convert(::Type{Atom}, p::Literal{typeof(identity)}) = p.atom
-convert(::Type{Atom}, p::Tree{typeof(identity), <:Tuple{Atom}}) = only(p.nodes)
-convert(::Type{Literal}, p::Tree{UO, <:Tuple{Atom}}) where UO =
+convert(::Type{Atom}, p::Tree{typeof(identity), <:Atom}) = only(p.nodes)
+convert(::Type{Literal}, p::Tree{UO, <:Atom}) where UO =
     Literal(UO.instance(only(p.nodes)))
 convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
 convert(::Type{Tree}, p::Literal{UO}) where UO = Tree(UO.instance, p.atom)

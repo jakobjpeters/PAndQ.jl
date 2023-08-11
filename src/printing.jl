@@ -212,13 +212,16 @@ print_truth_table(x; kwargs...) =
 _newline(newline) = newline ? "\n" : ""
 
 children(p::Tree) = p.nodes
-children(p::Tree{typeof(identity)}) = ()
+children(p::Tree{typeof(identity)}) = children(only(p.nodes))
+children(p::Atom) = ()
 
 nodevalue(p::Tree{LO}) where LO = LO.instance
-nodevalue(p::Tree{typeof(identity)}) = p
+nodevalue(p::Tree{typeof(identity), <:Atom}) = only(p.nodes)
+nodevalue(p::Tree{typeof(identity)}) = nodevalue(only(p.nodes))
 
-printnode(io::IO, node::Union{Atom, Tree{typeof(identity)}}) = show(io, MIME"text/plain"(), nodevalue(node))
-printnode(io::IO, node::Tree{LO}) where LO = print(io, operator_to_symbol(LO.instance))
+printnode(io::IO, node::Atom; kwargs...) = show(io, MIME"text/plain"(), node)
+printnode(io::IO, node::Tree{typeof(identity)}; kwargs...) = printnode(io, only(node.nodes))
+printnode(io::IO, node::Tree{LO}; kwargs...) where LO = print(io, operator_to_symbol(LO.instance))
 
 """
     print_tree([io::Union{IO, String} = stdout], p; max_depth = typemax(Int64), newline = false, kwargs...)
@@ -376,18 +379,20 @@ function show(io::IO, ::MIME"text/plain", p::Literal{UO}) where UO
     print(io, operator_to_symbol(UO.instance))
     show(io, MIME"text/plain"(), p.atom)
 end
-show(io::IO, ::MIME"text/plain", p::Tree{NO, <:Tuple{}}) where NO =
+show(io::IO, ::MIME"text/plain", p::Tree{NO}) where NO <: NullaryOperator =
     print(io, operator_to_symbol(NO.instance))
-function show(io::IO, ::MIME"text/plain", p::Tree{UO, <:Tuple{Atom}}) where UO
-    print(io, operator_to_symbol(UO.instance))
+show(io::IO, ::MIME"text/plain", p::Tree{typeof(identity)}) =
+    show(io, MIME"text/plain"(), only(p.nodes))
+function show(io::IO, ::MIME"text/plain", p::Tree{N, <:Atom}) where N <: typeof(not)
+    print(io, operator_to_symbol(N.instance))
     show(io, MIME"text/plain"(), only(p.nodes))
 end
-function show(io::IO, ::MIME"text/plain", p::Tree{UO, <:Tuple{Tree}}) where UO
-    print(io, operator_to_symbol(UO.instance), "(")
+function show(io::IO, ::MIME"text/plain", p::Tree{N, <:Tree}) where N <: typeof(not)
+    print(io, operator_to_symbol(N.instance), "(")
     show(io, MIME"text/plain"(), only(p.nodes))
     print(io, ")")
 end
-function show(io::IO, ::MIME"text/plain", p::Tree{BO, <:NTuple{2, Tree}}) where BO
+function show(io::IO, ::MIME"text/plain", p::Tree{BO}) where BO <: BinaryOperator
     parenthesize(io, first(p.nodes))
     print(io, " ", operator_to_symbol(BO.instance), " ")
     parenthesize(io, last(p.nodes))

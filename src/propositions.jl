@@ -86,13 +86,9 @@ struct Literal{UO <: UnaryOperator, T} <: Compound
 end
 
 """
-    Tree{
-        LO <: LogicalOperator,
-        P <: Union{Tuple{Proposition}, Tuple{Proposition, Proposition}}
-    } <: Expressive
-    Tree(::Union{NullaryOperator, Proposition})
-    Tree(::UnaryOperator, ::Atom)
-    Tree(::BinaryOperator, ::Tree, ::Tree)
+    Tree{LO <: LogicalOperator, P <: Proposition} <: Expressive
+    Tree(::LogicalOperator, ::Proposition...)
+    Tree(::Proposition)
 
 A proposition represented by an [abstract syntax tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 
@@ -107,17 +103,19 @@ julia> @p ¬r → s
 (p ↔ q) → s
 ```
 """
-struct Tree{
-    LO <: LogicalOperator,
-    NT <: NTuple{N, Proposition} where N
-} <: Expressive
-    nodes::NT
+struct Tree{LO <: LogicalOperator, P <: Proposition} <: Expressive
+    nodes::Vector{P}
 
-    Tree(::UO, node::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, Tuple{A}}((node,))
-    function Tree(lo::LO, nodes...) where LO <: LogicalOperator
+    Tree(::NO) where NO <: NullaryOperator = new{NO, Tree}([])
+    Tree(::UO, node::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, A}([node])
+    Tree(::UO, node::Tree{LO}) where {UO <: UnaryOperator, LO <: LogicalOperator} = new{UO, Tree{LO}}([node])
+    function Tree(lo::LO, nodes::Tree...) where {LO <: LogicalOperator}
         _arity = arity(lo)
-        _arity != length(nodes) && error("TODO: write this error")
-        new{LO, NTuple{_arity, Tree}}(nodes)
+        _length = length(nodes)
+        _arity != _length && throw(ArgumentError(
+            "The arity of `$lo` is `$_arity`, but `$_length` nodes were provided"
+        ))
+        new{LO, Tree}(collect(nodes))
     end
 end
 
@@ -199,7 +197,7 @@ A [`Proposition`](@ref) that is known by its type to be logically equivalent to 
 const AtomicProposition = Union{
     Atom,
     Literal{typeof(identity)},
-    Tree{typeof(identity), Tuple{<:Atom}}
+    Tree{typeof(identity), <:Atom}
 }
 
 """
@@ -210,7 +208,7 @@ A [`Proposition`](@ref) that is known by its type to be logically equivalent to 
 const LiteralProposition = Union{
     AtomicProposition,
     Literal{typeof(not)},
-    Tree{typeof(not), Tuple{<:Atom}}
+    Tree{typeof(not), <:Atom}
 }
 
 # TODO: make traits?
