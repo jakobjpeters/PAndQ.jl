@@ -1,4 +1,8 @@
 
+```@meta
+DocTestSetup = :(using PAndQ)
+```
+
 # Home
 
 ## Introduction
