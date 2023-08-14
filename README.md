@@ -30,7 +30,7 @@ P∧Q has an intuitive interface that enables you to manipulate logical expressi
 ## Showcase
 
 ```julia
-julia> import Pkg: add
+julia> using Pkg: add
 
 julia> add("PAndQ")
 
