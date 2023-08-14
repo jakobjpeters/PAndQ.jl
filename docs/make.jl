@@ -4,6 +4,7 @@ using PAndQ
 
 const directory = (@__DIR__) * "/src/assets/"
 if !ispath(directory * "logo.svg")
+    mkpath(directory)
     include("logo.jl")
     make_logo(directory)
 end
