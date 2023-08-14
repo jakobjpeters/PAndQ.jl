@@ -13,14 +13,34 @@ using PAndQ: Proposition # hide
 children(x::Type) = subtypes(x) # hide
 print_tree(Proposition) # hide
 ```
+## Abstract Types
 
 ```@docs
 Proposition
 Compound
 Expressive
+```
+
+## Concrete Types
+
+```@docs
 Atom
 Literal
 Tree
 Clause
 Normal
+```
+
+## Macros
+
+```@docs
+@atoms
+@p
+@p_str
+```
+
+## Utilities
+
+```@docs
+atoms
 ```

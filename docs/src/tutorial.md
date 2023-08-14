@@ -109,15 +109,15 @@ julia> s = p ∧ q
 p ∧ q
 ```
 
-The function [`atoms`](@ref) returns a vector of each unique `Atom` in a proposition.
+The function [`atoms`](@ref) returns an iterator of each `Atom` in a proposition.
 
 ```jldoctest 2
-julia> atoms(r)
+julia> collect(atoms(r))
 1-element Vector{Atom{Symbol}}:
  p
 
-julia> atoms(s)
-2-element Vector{Atom}:
+julia> collect(atoms(s))
+2-element Vector{Atom{Symbol}}:
  p
  q
 ```
@@ -148,10 +148,10 @@ julia> collect(interpretations(r))
  tautology (generic function with 1 method)
 ```
 
-Since `s` contains two atomic propositions, there are four valuations: `p` is true and `q` is true, `p` is false and `q` is true, `p` is true and `q` is false, and `p` is false and `q` is false. Each additional atomic proposition in a proposition doubles the number of possible valuations. Mathematically, there are `2 ^ n` valuations where `n = length(atoms(p))`. Since each interpretation depends on a valuation, the number of valuations and interpretations are equal.
+Since `s` contains two atomic propositions, there are four valuations: `p` is true and `q` is true, `p` is false and `q` is true, `p` is true and `q` is false, and `p` is false and `q` is false. Each additional atomic proposition in a proposition doubles the number of possible valuations. Mathematically, there are `2 ^ n` valuations where `n = length(unique!(collect(atoms(p))))`. Since each interpretation depends on a valuation, the number of valuations and interpretations are equal.
 
 ```jldoctest 2
-julia> n = length(atoms(s))
+julia> n = length(unique!(collect(atoms(s))))
 2
 
 julia> length(valuations(s)) == length(interpretations(s)) == 2 ^ n == 4

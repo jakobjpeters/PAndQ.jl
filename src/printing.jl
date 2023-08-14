@@ -1,13 +1,9 @@
 
 import Base: show
-import AbstractTrees # print_tree
-import AbstractTrees: children, nodevalue, printnode
-
+using AbstractTrees: print_tree
 using PrettyTables: LatexCell, pretty_table
 using REPL: symbol_latex, symbols_latex
 using Markdown: MD, Table
-
-# TODO: print_html, print_typst
 
 #=
     truth_table specification
@@ -22,12 +18,6 @@ the order of the columns is determined first by type
     and then by the order it was entered/found
 truths only generate a single row, and no propositions
 =#
-
-operator_to_proposition(x::NullaryOperator) = Clause(x)
-operator_to_proposition(x::UnaryOperator) = x(Atom(:_))
-operator_to_proposition(x::BinaryOperator) = x(Atom(:_), Atom(:__))
-operator_to_proposition(p::Proposition) = p
-
 """
     TruthTable(ps)
 
@@ -36,10 +26,7 @@ for the given [`Proposition`](@ref)s and [`LogicalOperator`](@ref)s.
 
 The `header` is a vector containing vectors of logically equivalent propositions.
 The `sub_header` corresponds to the `header`, but contains each proposition's `UnionAll` type.
-The `body` is a matrix where the rows contain [`interpretations`](@ref)
-and the columns correspond to elements in the `header` and `sub_header`.
-
-Logically equivalent propositions are grouped in the same column.
+The `body` is a matrix where the rows contain [`interpretations`](@ref) of each proposition in the given column.
 
 See also [`tautology`](@ref) and [`contradiction`](@ref).
 
@@ -81,7 +68,7 @@ struct TruthTable
         # TODO: make header support operators (`⊤; NullaryOperator`, `⊻; BinaryOperator`)
 
         ps = Iterators.map(operator_to_proposition, ps)
-        _atoms = mapreduce(atoms, union, ps)
+        _atoms = union(map(atoms, ps)...)
         ps = union(_atoms, ps)
         _valuations = valuations(_atoms)
         _interpretations = Iterators.map(p -> collect(interpretations(p, _valuations)), ps)
@@ -129,16 +116,62 @@ end
 TruthTable(p::Union{LogicalOperator, Proposition}) = TruthTable((p,))
 TruthTable(ps...) = TruthTable(ps)
 
+# Internals
+
+"""
+    operator_to_symbol(::LogicalOperator)
+
+Return the Unicode character that is an alias for the given [`LogicalOperator`](@ref).
+
+# Examples
+```jldoctest
+julia> PAndQ.operator_to_symbol(⊤)
+"⊤"
+
+julia> PAndQ.operator_to_symbol(¬)
+"¬"
+
+julia> PAndQ.operator_to_symbol(∧)
+"∧"
+```
+"""
 operator_to_symbol(::typeof(identity)) = ""
 for operator_symbol in (:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚)
     @eval operator_to_symbol(::typeof($operator_symbol)) = $(string(operator_symbol))
 end
 
+"""
+    merge_string(cell)
+"""
+merge_string(cell) = join(Iterators.map(
+    p -> sprint(
+        (io, q) -> show(io, MIME"text/plain"(), q), p
+    ), cell
+), ", ")
+
+"""
+    letter(::NullaryOperator)
+
+# Examples
+```jldoctest
+julia> PAndQ.letter(tautology)
+"T"
+
+julia> PAndQ.letter(contradiction)
+"F"
+```
+"""
 letter(::typeof(tautology)) = "T"
 letter(::typeof(contradiction)) = "F"
 
+"""
+    format_latex(x)
+"""
 format_latex(x) = LatexCell(print_latex(String, x))
 
+"""
+    format_head(format, cell)
+"""
 format_head(format, cell) = (format == :latex ? format_latex : identity)(cell)
 
 const _format_body = Dict(
@@ -150,7 +183,160 @@ const _format_body = Dict(
     :latex => format_latex ∘ operator_to_symbol
 )
 
+"""
+    format_body(format, cell)
+"""
 format_body(format, cell) = _format_body[format](cell)
+
+"""
+    _newline(::Bool)
+"""
+_newline(newline) = newline ? "\n" : ""
+
+"""
+    print_string
+"""
+function print_string(f, args...; kwargs...)
+    buffer = IOBuffer()
+    f(buffer, args...; kwargs...)
+    String(take!(buffer))
+end
+
+"""
+    parenthesize(::IO, x)
+"""
+parenthesize(io::IO, x) = show(io, MIME"text/plain"(), x)
+function parenthesize(io::IO, x::Union{Clause, Tree{<:BinaryOperator}})
+    print(io, "(")
+    show(io, MIME"text/plain"(), x)
+    print(io, ")")
+end
+
+# `show`
+
+"""
+    show(::IO, ::MIME"text/plain", ::Proposition)
+
+Represent the given [`Proposition`](@ref) as a [propositional formula]
+(https://en.wikipedia.org/wiki/Propositional_formula).
+
+# Examples
+```jldoctest
+julia> @p x = p ⊻ q;
+
+julia> show(stdout, MIME"text/plain"(), x)
+p ⊻ q
+
+julia> show(stdout, MIME"text/plain"(), Normal(x))
+(p ∨ q) ∧ (¬p ∨ ¬q)
+```
+"""
+show(io::IO, ::MIME"text/plain", p::Atom{Symbol}) = print(io, p.statement)
+function show(io::IO, ::MIME"text/plain", p::Literal{UO}) where UO
+    print(io, operator_to_symbol(UO.instance))
+    show(io, MIME"text/plain"(), p.atom)
+end
+show(io::IO, ::MIME"text/plain", p::Tree{NO}) where NO <: NullaryOperator =
+    print(io, operator_to_symbol(NO.instance))
+show(io::IO, ::MIME"text/plain", p::Tree{typeof(identity)}) =
+    show(io, MIME"text/plain"(), only(p.nodes))
+function show(io::IO, ::MIME"text/plain", p::Tree{N, <:Atom}) where N <: typeof(not)
+    print(io, operator_to_symbol(N.instance))
+    show(io, MIME"text/plain"(), only(p.nodes))
+end
+function show(io::IO, ::MIME"text/plain", p::Tree{N, <:Tree}) where N <: typeof(not)
+    print(io, operator_to_symbol(N.instance), "(")
+    show(io, MIME"text/plain"(), only(p.nodes))
+    print(io, ")")
+end
+function show(io::IO, ::MIME"text/plain", p::Tree{BO}) where BO <: BinaryOperator
+    parenthesize(io, first(p.nodes))
+    print(io, " ", operator_to_symbol(BO.instance), " ")
+    parenthesize(io, last(p.nodes))
+end
+function show(io::IO, ::MIME"text/plain", p::Union{Clause{AO}, Normal{AO}}) where AO
+    ao = AO.instance
+    qs = only_field(p)
+    isempty(qs) ?
+        print(io, operator_to_symbol(only(left_neutrals(ao)))) :
+        join(
+            io,
+            Iterators.map(q -> sprint(parenthesize, q), qs),
+            " " * operator_to_symbol(ao) * " "
+        )
+end
+show(io::IO, ::MIME"text/plain", truth_table::TruthTable) =
+    print_truth_table(io, truth_table)
+show(io::IO, ::MIME"text/latex", truth_table::TruthTable) =
+    print_latex(io, truth_table)
+
+"""
+    show(::IO, ::Proposition)
+
+Represent the given [`Proposition`](@ref) as valid Julia code.
+
+# Examples
+```jldoctest
+julia> @p s = sprint(show, p ∧ q)
+"Tree(and, Tree(identity, Atom(:p)), Tree(identity, Atom(:q)))"
+
+julia> @eval \$(Meta.parse(s))
+p ∧ q
+```
+"""
+function show(io::IO, p::A) where A <: Atom
+    print(io, nameof(A), "(")
+    show(io, p.statement)
+    print(io, ")")
+end
+show(io::IO, p::L) where {UO, L <: Literal{UO}} =
+    print(io, nameof(L), "(", UO.instance, ", ", p.atom, ")")
+function show(io::IO, p::T) where {LO, T <: Tree{LO}}
+    print(io, nameof(T), "(", LO.instance)
+    !isempty(p.nodes) && print(io, ", ", sprint((io, node) -> join(io, node, ", "), p.nodes))
+    print(io, ")")
+end
+show(io::IO, p::CN) where {AO, CN <: Union{Clause{AO}, Normal{AO}}} = print(io,
+    nameof(CN), "(", AO.instance, ", [", sprint((io, xs) -> join(io, xs, ", "), only_field(p)), "])"
+)
+
+# Works In Progress
+
+"""
+    print_tree(::Proposition)
+
+Prints a tree diagram of the given [`Proposition`](@ref).
+
+```jldoctest
+julia> @p r = p ∧ ¬q ⊻ s
+(p ∧ ¬q) ⊻ s
+
+julia> print_tree(r)
+⊻
+├─ ∧
+│  ├─ p
+│  └─ ¬
+│     └─ q
+└─ s
+
+julia> print_tree(Normal(r))
+∧
+├─ ∨
+│  ├─ p
+│  └─ s
+├─ ∨
+│  ├─ ¬
+│  │  └─ q
+│  └─ s
+└─ ∨
+   ├─ ¬
+   │  └─ p
+   ├─ q
+   └─ ¬
+      └─ s
+```
+"""
+print_tree
 
 ____print_truth_table(backend::Val{:latex}, io, body; vlines = :all, kwargs...) =
     pretty_table(io, body; backend, vlines, kwargs...)
@@ -163,12 +349,6 @@ ___print_truth_table(
 ) = ____print_truth_table(backend, io, body; body_hlines, kwargs...)
 ___print_truth_table(backend::Val{:html}, io, body; kwargs...) =
     pretty_table(io, body; backend, kwargs...)
-
-merge_string(cell) = join(Iterators.map(
-    p -> sprint(
-        (io, q) -> show(io, MIME"text/plain"(), q), p
-    ), cell
-), ", ")
 
 function __print_truth_table(
     backend, io, truth_table;
@@ -208,54 +388,6 @@ print_truth_table(io::IO, x; kwargs...) =
     print_truth_table(io, TruthTable(x); kwargs...)
 print_truth_table(x; kwargs...) =
     print_truth_table(stdout, x; kwargs...)
-
-_newline(newline) = newline ? "\n" : ""
-
-children(p::Tree) = p.nodes
-children(p::Tree{typeof(identity)}) = children(only(p.nodes))
-children(p::Atom) = ()
-
-nodevalue(p::Tree{LO}) where LO = LO.instance
-nodevalue(p::Tree{typeof(identity), <:Atom}) = only(p.nodes)
-nodevalue(p::Tree{typeof(identity)}) = nodevalue(only(p.nodes))
-
-printnode(io::IO, node::Atom; kwargs...) = show(io, MIME"text/plain"(), node)
-printnode(io::IO, node::Tree{typeof(identity)}; kwargs...) = printnode(io, only(node.nodes))
-printnode(io::IO, node::Tree{LO}; kwargs...) where LO = print(io, operator_to_symbol(LO.instance))
-
-"""
-    print_tree([io::Union{IO, String} = stdout], p; max_depth = typemax(Int64), newline = false, kwargs...)
-
-Prints a tree diagram of `p`.
-
-If `p` isn't a [`Tree`](@ref), it will be converted to one.
-The optional argument `max_depth` will truncate sub-trees at that depth.
-
-```jldoctest
-julia> @p print_tree(p ⊻ q)
-⊻
-├─ p
-└─ q
-
-julia> @p print_tree((p ∧ ¬q) ∨ (¬p ∧ q))
-∨
-├─ ∧
-│  ├─ p
-│  └─ ¬
-│     └─ q
-└─ ∧
-   ├─ ¬
-   │  └─ p
-   └─ q
-```
-"""
-print_tree(io::IO, p::Tree; max_depth = typemax(Int), newline = false, kwargs...) =
-    print(io,
-        rstrip(print_string(AbstractTrees.print_tree, p; maxdepth = max_depth, kwargs...)),
-        _newline(newline)
-    )
-print_tree(io::IO, p; kwargs...) = print_tree(io, Tree(p); kwargs...)
-print_tree(p; kwargs...) = print_tree(stdout, p; kwargs...)
 
 """
     print_latex([io::Union{IO, String} = stdout], x, delimeter = "\\(" => "\\)")
@@ -314,13 +446,7 @@ print_markdown(io::IO, x; newline = false, kwargs...) = print(io,
 )
 print_markdown(x; kwargs...) = print_markdown(stdout, x; kwargs...)
 
-function print_string(f, args...; kwargs...)
-    buffer = IOBuffer()
-    f(buffer, args...; kwargs...)
-    String(take!(buffer))
-end
-
-for f in (:tree, :latex, :truth_table, :markdown)
+for f in (:latex, :truth_table, :markdown)
     print_f, println_f = map(s -> Symbol("print", s, "_", f), ("", "ln"))
 
     @eval $print_f(::Type{String}, args...; kwargs...) = print_string($print_f, args...; kwargs...)
@@ -337,78 +463,3 @@ for f in (:tree, :latex, :truth_table, :markdown)
         $println_f(args...; kwargs...) = $print_f(args...; kwargs..., newline = true)
     end
 end
-
-only_field(p::Atom) = p.statement
-only_field(p::Literal) = p.atom
-only_field(p::Tree) = p.nodes
-only_field(p::Clause) = p.literals
-only_field(p::Normal) = p.clauses
-
-union_all_type(p::Atom) = Atom
-union_all_type(p::Literal) = Literal
-union_all_type(p::Tree) = Tree
-union_all_type(p::Clause) = Clause
-union_all_type(p::Normal) = Normal
-
-parenthesize(io, p) = show(io, MIME"text/plain"(), p)
-function parenthesize(io, p::Union{Clause, Tree{<:BinaryOperator}})
-    print(io, "(")
-    show(io, MIME"text/plain"(), p)
-    print(io, ")")
-end
-
-"""
-    show
-"""
-function show(io::IO, p::A) where A <: Atom
-    print(io, nameof(A), "(")
-    show(io, p.statement)
-    print(io, ")")
-end
-show(io::IO, p::L) where {UO, L <: Literal{UO}} =
-    print(io, nameof(L), "(", UO.instance, ", ", p.atom, ")")
-show(io::IO, p::T) where {LO, T <: Tree{LO}} = print(io,
-    nameof(T), "(", LO.instance, ", ", sprint((io, node) -> join(io, node, ", "), p.nodes), ")"
-)
-show(io::IO, p::CN) where {AO, CN <: Union{Clause{AO}, Normal{AO}}} = print(io,
-    nameof(CN), "(", AO.instance, ", [", sprint((io, xs) -> join(io, xs, ", "), only_field(p)), "])"
-)
-show(io::IO, ::MIME"text/plain", p::Atom) = show(io, p)
-show(io::IO, ::MIME"text/plain", p::Atom{Symbol}) = print(io, p.statement)
-function show(io::IO, ::MIME"text/plain", p::Literal{UO}) where UO
-    print(io, operator_to_symbol(UO.instance))
-    show(io, MIME"text/plain"(), p.atom)
-end
-show(io::IO, ::MIME"text/plain", p::Tree{NO}) where NO <: NullaryOperator =
-    print(io, operator_to_symbol(NO.instance))
-show(io::IO, ::MIME"text/plain", p::Tree{typeof(identity)}) =
-    show(io, MIME"text/plain"(), only(p.nodes))
-function show(io::IO, ::MIME"text/plain", p::Tree{N, <:Atom}) where N <: typeof(not)
-    print(io, operator_to_symbol(N.instance))
-    show(io, MIME"text/plain"(), only(p.nodes))
-end
-function show(io::IO, ::MIME"text/plain", p::Tree{N, <:Tree}) where N <: typeof(not)
-    print(io, operator_to_symbol(N.instance), "(")
-    show(io, MIME"text/plain"(), only(p.nodes))
-    print(io, ")")
-end
-function show(io::IO, ::MIME"text/plain", p::Tree{BO}) where BO <: BinaryOperator
-    parenthesize(io, first(p.nodes))
-    print(io, " ", operator_to_symbol(BO.instance), " ")
-    parenthesize(io, last(p.nodes))
-end
-function show(io::IO, ::MIME"text/plain", p::Union{Clause{AO}, Normal{AO}}) where AO
-    ao = AO.instance
-    qs = only_field(p)
-    isempty(qs) ?
-        print(io, operator_to_symbol(only(left_neutrals(ao)))) :
-        join(
-            io,
-            Iterators.map(q -> sprint(parenthesize, q), qs),
-            " " * operator_to_symbol(ao) * " "
-        )
-end
-show(io::IO, ::MIME"text/plain", truth_table::TruthTable) =
-    print_truth_table(io, truth_table)
-show(io::IO, ::MIME"text/latex", truth_table::TruthTable) =
-    print_latex(io, truth_table)

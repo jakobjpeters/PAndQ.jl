@@ -1,36 +1,187 @@
 
 import Base: ==, Fix1, convert, Bool, uniontypes
 
+# Internals
+
 """
-    p == q
-    ==(p, q)
+    CallableObjectDocumentation
 
-Returns a boolean indicating whether `p` and `q` are [logically equivalent]
-(https://en.wikipedia.org/wiki/Logical_equivalence).
+A dummy type to attach a docstring to a [callable object]
+(https://docs.julialang.org/en/v1/manual/methods/#Function-like-objects).
 
-!!! info
-    The `≡` symbol is sometimes used to represent logical equivalence.
-    However, Julia uses `≡` as an alias for the builtin function `===`
-    which cannot have methods added to it.
-    Use `==` and `===` to test for equivalence and identity, respectively.
+See also this [Documenter.jl issue](https://github.com/JuliaDocs/Documenter.jl/issues/558)
+"""
+struct CallableObjectDocumentation end
 
-See also [`Proposition`](@ref).
+"""
+    neutral_operator(::NullaryOperator)
+
+Return a subtype of [`AndOr`](@ref) that is the neutral element of the given [`NullaryOperator`](@ref).
+
+See also [`left_neutrals`](@ref) and [`right_neutrals`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p p == ¬p
-false
+julia> PAndQ.neutral_operator(tautology)
+and (generic function with 23 methods)
 
-julia> @p ¬(p ⊻ q) == (p → q) ∧ (p ← q)
-true
-
-julia> @p ¬(p ⊻ q) === (p → q) ∧ (p ← q)
-false
+julia> PAndQ.neutral_operator(contradiction)
+or (generic function with 19 methods)
 ```
 """
-==(p::Union{NullaryOperator, Atom}, q::Union{NullaryOperator, Atom}) = p === q
-==(p::Union{NullaryOperator, Proposition}, q::Union{NullaryOperator, Proposition}) =
-    is_tautology(p ↔ q)
+neutral_operator(::typeof(tautology)) = and
+neutral_operator(::typeof(contradiction)) = or
+
+"""
+    eval_doubles(f, doubles)
+"""
+eval_doubles(f, doubles) = for double in doubles
+    for (left, right) in (double, reverse(double))
+        @eval $f(::typeof($left)) = $right
+    end
+end
+
+# Properties
+
+"""
+    dual(::LogicalOperator)
+
+Returns the [`LogicalOperator`](@ref) that is the
+[dual](https://en.wikipedia.org/wiki/Boolean_algebra#Duality_principle)
+of the given boolean operator.
+
+# Examples
+```jldoctest
+julia> dual(and)
+or (generic function with 19 methods)
+
+julia> @p and(p, q) == not(dual(and)(not(p), not(q)))
+true
+
+julia> dual(imply)
+not_converse_imply (generic function with 6 methods)
+
+julia> @p imply(p, q) == not(dual(imply)(not(p), not(q)))
+true
+```
+"""
+dual(bo::UnaryOperator) = bo
+dual(bo::Union{NullaryOperator, union_typeof((xor, xnor))}) = not(bo)
+eval_doubles(:dual, (
+    (and, or),
+    (nand, nor),
+    (xor, xnor),
+    (imply, not_converse_imply),
+    (not_imply, converse_imply)
+))
+
+"""
+    converse(::LogicalOperator)
+
+Returns the [`LogicalOperator`](@ref) that is the
+[converse](https://en.wikipedia.org/wiki/Converse_(logic))
+of the given boolean operator.
+
+# Examples
+```jldoctest
+julia> converse(and)
+and (generic function with 23 methods)
+
+julia> @p and(p, q) == converse(and)(q, p)
+true
+
+julia> converse(imply)
+converse_imply (generic function with 7 methods)
+
+julia> @p imply(p, q) == converse(imply)(q, p)
+true
+```
+"""
+converse(co::CommutativeOperator) = co
+eval_doubles(:converse, ((imply, converse_imply), (not_imply, not_converse_imply)))
+
+"""
+    left_neutrals(::LogicalOperator)
+
+Return the corresponding left identity elements of the operator.
+The identity elements can be [`tautology`](@ref), [`contradiction`](@ref), neither (empty set), or both.
+
+# Examples
+```jldoctest
+julia> left_neutrals(or)
+Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+  PAndQ.contradiction
+
+julia> left_neutrals(imply)
+Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+  PAndQ.tautology
+
+julia> left_neutrals(nor)
+Set{Union{typeof(contradiction), typeof(tautology)}}()
+```
+"""
+left_neutrals(::union_typeof((and, xnor, imply))) = Set{NullaryOperator}((tautology,))
+left_neutrals(::union_typeof((or, xor, not_converse_imply))) = Set{NullaryOperator}((contradiction,))
+left_neutrals(::LogicalOperator) = Set{NullaryOperator}()
+
+"""
+    right_neutrals(::LogicalOperator)
+
+Return the corresponding right identity elements of the operator.
+The identity elements can be [`tautology`](@ref), [`contradiction`](@ref), neither (empty set), or both.
+
+# Examples
+```jldoctest
+julia> right_neutrals(or)
+Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+  PAndQ.contradiction
+
+julia> right_neutrals(converse_imply)
+Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+  PAndQ.tautology
+```
+"""
+right_neutrals(::union_typeof((and, xnor, converse_imply))) = Set{NullaryOperator}((tautology,))
+right_neutrals(::union_typeof((or, xor, not_imply))) = Set{NullaryOperator}((contradiction,))
+right_neutrals(::LogicalOperator) = Set{NullaryOperator}()
+
+# Truths
+
+"""
+    valuations(atoms)
+    valuations(::Proposition)
+
+Return an iterator of every possible [valuation]
+(https://en.wikipedia.org/wiki/Valuation_(logic))
+of the [`Atom`](@ref)s.
+
+# Examples
+```jldoctest
+julia> @p collect(valuations([p]))
+2-element Vector{Vector}:
+ Pair{Atom{Symbol}, typeof(tautology)}[Atom(:p) => PAndQ.tautology]
+ Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) => PAndQ.contradiction]
+
+julia> @p collect(valuations([p, q]))
+4-element Vector{Vector}:
+ Pair{Atom{Symbol}, typeof(tautology)}[Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.tautology]
+ Pair{Atom{Symbol}}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.tautology]
+ Pair{Atom{Symbol}}[Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.contradiction]
+ Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.contradiction]
+```
+"""
+function valuations(atoms)
+    n = length(unique(atoms))
+    Iterators.map(
+        i -> map(
+            (left, right) -> left => right == 0 ? tautology : contradiction,
+            atoms, digits(i, base = 2, pad = n)
+        ),
+        0:BigInt(2) ^ n - 1
+    )
+end
+valuations(p::Proposition) = valuations(atoms(p))
+valuations(no::NullaryOperator) = [no => no]
 
 """
     interpret(p::Union{NullaryOperator, Proposition}, valuation...)
@@ -43,7 +194,7 @@ that maps from atoms to their respective truth values.
 
 Calling `p` with an incomplete mapping will partially interpret it.
 
-See also [`tautology`](@ref) and [`contradiction`].
+See also [`tautology`](@ref) and [`contradiction`](@ref).
 
 # Examples
 ```jldoctest
@@ -62,17 +213,17 @@ interpret(p::Atom, valuation::Dict) = get(valuation, p, p)
 interpret(p::Literal{UO}, valuation::Dict) where UO =
     UO.instance(interpret(p.atom, valuation))
 function interpret(p::Union{Clause{AO}, Normal{AO}}, valuation::Dict) where AO
-    neutral_element = only(left_neutrals(AO.instance))
-    not_neutral_element = not(neutral_element)
+    neutral = only(left_neutrals(AO.instance))
+    not_neutral = not(neutral)
     q = union_all_type(p)(AO.instance)
 
     for r in only_field(p)
         s = interpret(r, valuation)
-        s == not_neutral_element && return not_neutral_element
+        s == not_neutral && return not_neutral
         q = AO.instance(q, s)
     end
 
-    isempty(only_field(q)) ? neutral_element : q
+    isempty(only_field(q)) ? neutral : q
 end
 interpret(p::Proposition, valuation::Dict) = interpret(Normal(p), valuation)
 interpret(p, valuation) = interpret(p, Dict(valuation))
@@ -81,7 +232,9 @@ interpret(p, valuation...) = interpret(p, valuation)
 """
     (p::Proposition)(valuation...)
 
-Equivalent to [`interpret(p, valuation)`](@ref interpret) for all [`Proposition`](@ref)s.
+Equivalent to [`interpret(p, valuation)`](@ref interpret).
+
+See also [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -95,49 +248,14 @@ julia> @p p(q => ⊤, r => ⊤)
 s
 ```
 """
+function interpret(::CallableObjectDocumentation) end
 (p::Proposition)(valuation::Dict) = interpret(p, valuation)
 (p::Proposition)(valuation...) = interpret(p, valuation)
 
 """
-    valuations(atoms)
-    valuations(::Proposition)
-
-Return an iterator containing every possible valuation of the [`Atom`](@ref)s.
-
-A valuation is a vector of `Pair`s which map from an atom to a truth value.
-
-# Examples
-```jldoctest
-julia> @p collect(valuations([p]))
-2-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[Atom(:p) => PAndQ.tautology]
- Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) => PAndQ.contradiction]
-
-julia> @p collect(valuations([p, q]))
-4-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.tautology]
- Pair{Atom{Symbol}}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.tautology]
- Pair{Atom{Symbol}}[Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.contradiction]
- Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.contradiction]
-```
-"""
-function valuations(atoms)
-    n = length(atoms)
-    Iterators.map(
-        i -> map(
-            (left, right) -> left => right == 0 ? tautology : contradiction,
-            atoms, digits(i, base = 2, pad = n)
-        ),
-        0:BigInt(2) ^ n - 1
-    )
-end
-valuations(p::Proposition) = valuations(atoms(p))
-valuations(no::NullaryOperator) = [no => no]
-
-"""
     interpretations(p, valuations = valuations(p))
 
-Return an iterator of values given by [`interpret`](@ref)ing `p` by each valuation.
+Return an iterator of truth values given by [`interpret`](@ref)ing `p` by each valuation.
 
 See also [`valuations`](@ref).
 
@@ -179,113 +297,38 @@ solve(p, truth_value = ⊤) = Iterators.filter(
     valuations(p)
 )
 
-"""
-    left_neutrals(::LogicalOperator)
+# Queries
 
-Return the corresponding left identity elements of the operator.
-The identity elements can be [`tautology`](@ref), [`contradiction`](@ref), neither (empty set), or both.
+"""
+    ==(::Union{NullaryOperator, Proposition}, ::Union{NullaryOperator, Proposition})
+    p == q
+
+Returns a boolean indicating whether `p` and `q` are [logically equivalent]
+(https://en.wikipedia.org/wiki/Logical_equivalence).
+
+!!! info
+    The `≡` symbol is sometimes used to represent logical equivalence.
+    However, Julia uses `≡` as an alias for the builtin function `===`
+    which cannot have methods added to it.
+    Use `==` and `===` to test for equivalence and identity, respectively.
+
+See also [`NullaryOperator`](@ref) and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> left_neutrals(or)
-Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
-  PAndQ.contradiction
+julia> @p p == ¬p
+false
 
-julia> left_neutrals(imply)
-Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
-  PAndQ.tautology
-
-julia> left_neutrals(nor)
-Set{Union{typeof(contradiction), typeof(tautology)}}()
-```
-"""
-left_neutrals(::union_typeof((and, xnor, imply))) = Set{NullaryOperator}((tautology,))
-left_neutrals(::union_typeof((or, xor, not_converse_imply))) = Set{NullaryOperator}((contradiction,))
-left_neutrals(::LogicalOperator) = Set{NullaryOperator}()
-
-"""
-    right_neutrals(::LogicalOperator)
-
-Return the corresponding right identity elements of the operator.
-The identity elements can be [`tautology`](@ref), [`contradiction`](@ref), neither (empty set), or both.
-    
-# Examples
-```jldoctest
-julia> right_neutrals(or)
-Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
-  PAndQ.contradiction
-
-julia> right_neutrals(converse_imply)
-Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
-  PAndQ.tautology
-```
-"""
-right_neutrals(::union_typeof((and, xnor, converse_imply))) = Set{NullaryOperator}((tautology,))
-right_neutrals(::union_typeof((or, xor, not_imply))) = Set{NullaryOperator}((contradiction,))
-right_neutrals(::LogicalOperator) = Set{NullaryOperator}()
-
-eval_doubles(f, doubles) = for double in doubles
-    for (left, right) in (double, reverse(double))
-        @eval $f(::typeof($left)) = $right
-    end
-end
-
-"""
-    converse(::LogicalOperator)
-
-Returns the [`LogicalOperator`](@ref) that is the
-[converse](https://en.wikipedia.org/wiki/Converse_(logic))
-of the given boolean operator.
-
-# Examples
-```jldoctest
-julia> converse(and)
-and (generic function with 23 methods)
-
-julia> @p and(p, q) == converse(and)(q, p)
+julia> @p ¬(p ⊻ q) == (p → q) ∧ (p ← q)
 true
 
-julia> converse(imply)
-converse_imply (generic function with 7 methods)
-
-julia> @p imply(p, q) == converse(imply)(q, p)
-true
+julia> @p ¬(p ⊻ q) === (p → q) ∧ (p ← q)
+false
 ```
 """
-converse(co::CommutativeOperator) = co
-eval_doubles(:converse, ((imply, converse_imply), (not_imply, not_converse_imply)))
-
-"""
-    dual(::LogicalOperator)
-
-Returns the [`LogicalOperator`](@ref) that is the
-[dual](https://en.wikipedia.org/wiki/Boolean_algebra#Duality_principle)
-of the given boolean operator.
-
-# Examples
-```jldoctest
-julia> dual(and)
-or (generic function with 19 methods)
-
-julia> @p and(p, q) == not(dual(and)(not(p), not(q)))
-true
-
-julia> dual(imply)
-not_converse_imply (generic function with 6 methods)
-
-julia> @p imply(p, q) == not(dual(imply)(not(p), not(q)))
-true
-```
-"""
-dual(bo::UnaryOperator) = bo
-dual(bo::Union{NullaryOperator, union_typeof((xor, xnor))}) = not(bo)
-eval_doubles(:dual, (
-    (and, or),
-    (nand, nor),
-    (xor, xnor),
-    (imply, not_converse_imply),
-    (not_imply, converse_imply)
-))
+==(p::Union{NullaryOperator, Atom}, q::Union{NullaryOperator, Atom}) = p === q
+==(p::Union{NullaryOperator, Proposition}, q::Union{NullaryOperator, Proposition}) =
+    is_tautology(p ↔ q)
 
 """
     is_tautology(p)
@@ -403,7 +446,6 @@ true
 ```
 """
 is_satisfiable(p) = !is_contradiction(p)
-# TODO: improve algorithm
 
 """
     is_falsifiable(p)
@@ -431,17 +473,10 @@ true
 """
 is_falsifiable(p) = !is_tautology(p)
 
-# Boolean Operators
+# Operators
 
-# Bool
-Bool(::typeof(tautology)) = true
-Bool(::typeof(contradiction)) = false
-not(p::Bool) = !p
-and(p::Bool, q::Bool) = p && q
-or(p::Bool, q::Bool) = p || q
-converse_imply(p::Bool, q::Bool) = p ^ q
+## Generic
 
-# generic
 tautology() = ⊤
 contradiction() = ⊥
 nand(p, q) = ¬(p ∧ q)
@@ -454,7 +489,17 @@ imply(p, q) = ¬(p ↛ q)
 not_converse_imply(p, q) = ¬p ∧ q
 converse_imply(p, q) = ¬(p ↚ q)
 
-# boolean operators
+## Bool
+
+Bool(::typeof(tautology)) = true
+Bool(::typeof(contradiction)) = false
+not(p::Bool) = !p
+and(p::Bool, q::Bool) = p && q
+or(p::Bool, q::Bool) = p || q
+converse_imply(p::Bool, q::Bool) = p ^ q
+
+## Operators
+
 eval_doubles(:not, (
     (tautology, contradiction),
     (identity, not),
@@ -465,7 +510,8 @@ eval_doubles(:not, (
     (converse_imply, not_converse_imply)
 ))
 
-# propositions
+## Propositions
+
 not(p::Atom) = Literal(not, p)
 not(p::Literal{UO}) where UO = not(UO.instance)(p.atom)
 not(p::Tree{LO}) where LO = not(LO.instance)(p.nodes...)
@@ -527,17 +573,14 @@ Normal(ao::AndOr, ps) = isempty(ps) ?
     Normal(ao, collect(map(p -> Clause(dual(ao), [p]), ps)))
 Normal(ao::AO, p::Proposition) where AO <: AndOr = convert(Normal{AO}, p)
 
-# Conversions
-
 for P in (:Literal, :Tree, :Clause, :Normal)
     @eval $P(p) = convert($P, p)
 end
 
-neutral_operator(::typeof(tautology)) = and
-neutral_operator(::typeof(contradiction)) = or
+# Utilities
 
 """
-    convert
+    convert(::Type{<:Proposition}, ::Union{NullaryOperator, Proposition})
 """
 convert(::Type{Atom}, p::Literal{typeof(identity)}) = p.atom
 convert(::Type{Atom}, p::Tree{typeof(identity), <:Atom}) = only(p.nodes)

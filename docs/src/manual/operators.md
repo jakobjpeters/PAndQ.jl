@@ -72,3 +72,18 @@ not_imply
 converse_imply
 not_converse_imply
 ```
+
+## Reductions
+
+```@docs
+conjunction
+disjunction
+mapfoldl
+mapfoldr
+```
+
+## Utilities
+
+```@docs
+arity
+```

@@ -1,20 +1,38 @@
 
 # Semantics
 
+## Properties
+
 ```@docs
-==
-interpret
-interpretations
-valuations
-solve
+dual
+converse
 left_neutrals
 right_neutrals
-converse
-dual
+```
+
+## Truths
+
+```@docs
+valuations
+interpret
+interpretations
+solve
+```
+
+## Queries
+
+```@docs
+==
 is_tautology
 is_contradiction
 is_truth
 is_contingency
 is_satisfiable
 is_falsifiable
+```
+
+## Utilities
+
+```@docs
+convert
 ```
