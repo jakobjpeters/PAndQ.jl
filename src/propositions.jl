@@ -345,12 +345,12 @@ operator_to_proposition(p::Proposition) = p
 If `x` is a symbol, return an expression that
 instantiates it as an [`Atom`](@ref) if it is undefined.
 If `x` is an expression, traverse it with recursive calls to `atomize`
-(ignoring variable assignment and keyword arguments).
+(ignoring variable assignment, keyword arguments, and anonymous functions).
 Otherise, return x.
 """
 atomize(x::Symbol) = :((@isdefined $x) ? $x : $(Atom(x)))
 atomize(x::Expr) = length(x.args) == 0 ? x : Expr(x.head,
-    Meta.isexpr(x, (:(=), :kw)) ? x.args[1] : atomize(x.args[1]),
+    Meta.isexpr(x, (:(=), :kw, :->)) ? x.args[1] : atomize(x.args[1]),
     map(atomize, x.args[2:end])...
 )
 atomize(x) = x
