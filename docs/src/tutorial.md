@@ -161,11 +161,11 @@ true
 We are often interested in valuations that result in a valid interpretation. This is accomplished with the [`solve`](@ref) function. The proposition `s` is the conjunction of `p` and `p`, so it is only true if both `p` and `q` are true. Each of the other three possible valuations are invalid.
 
 ```jldoctest 2
-julia> collect(solve(s, tautology))
+julia> collect(solve(s))
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
  [Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.tautology]
 
-julia> collect(solve(s, contradiction))
+julia> collect(solve(¬s))
 3-element Vector{Vector}:
  Pair{Atom{Symbol}}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.tautology]
  Pair{Atom{Symbol}}[Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.contradiction]

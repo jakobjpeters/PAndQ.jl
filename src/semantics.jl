@@ -275,10 +275,10 @@ interpretations(p, valuations = valuations(p)) =
     Iterators.map(valuation -> interpret(p, valuation), valuations)
 
 """
-    solve(p, truth_value = ⊤)
+    solve(p)
 
 Return a vector containing all [`interpretations`](@ref) such that
-`interpret(p, interpretation) == truth_value`.
+`interpret(p, valuation) == tautology`.
 
 # Examples
 ```jldoctest
@@ -286,14 +286,14 @@ julia> @p collect(solve(p))
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
  [Atom(:p) => PAndQ.tautology]
 
-julia> @p collect(solve(p ⊻ q, ⊥))
-2-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.tautology]
- Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.contradiction]
+julia> @p collect(solve(p ⊻ q))
+2-element Vector{Vector{Pair{Atom{Symbol}}}}:
+ [Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.tautology]
+ [Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.contradiction]
 ```
 """
-solve(p, truth_value = ⊤) = Iterators.filter(
-    valuation -> interpret(p, valuation) == truth_value,
+solve(p) = Iterators.filter(
+    valuation -> interpret(p, valuation) == tautology,
     valuations(p)
 )
 
