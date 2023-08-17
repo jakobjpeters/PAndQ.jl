@@ -1,5 +1,6 @@
 
-import Base: ==, Fix1, convert, Bool, uniontypes
+import Base: ==, convert, Bool, uniontypes
+using Base: Fix1
 
 # Internals
 

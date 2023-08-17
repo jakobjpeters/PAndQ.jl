@@ -43,4 +43,5 @@ Normal
 
 ```@docs
 atoms
+operators
 ```

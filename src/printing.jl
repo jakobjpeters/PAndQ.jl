@@ -314,24 +314,30 @@ julia> @p r = p ∧ ¬q ⊻ s
 julia> print_tree(r)
 ⊻
 ├─ ∧
-│  ├─ p
+│  ├─ I
+│  │  └─ p
 │  └─ ¬
 │     └─ q
-└─ s
+└─ I
+   └─ s
 
 julia> print_tree(Normal(r))
 ∧
 ├─ ∨
-│  ├─ p
-│  └─ s
+│  ├─ I
+│  │  └─ p
+│  └─ I
+│     └─ s
 ├─ ∨
 │  ├─ ¬
 │  │  └─ q
-│  └─ s
+│  └─ I
+│     └─ s
 └─ ∨
    ├─ ¬
    │  └─ p
-   ├─ q
+   ├─ I
+   │  └─ q
    └─ ¬
       └─ s
 ```

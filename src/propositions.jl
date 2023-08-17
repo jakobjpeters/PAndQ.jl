@@ -1,6 +1,6 @@
 
-import AbstractTrees: children, printnode
-using AbstractTrees: childtype, Leaves
+import AbstractTrees: children, nodevalue, printnode
+using AbstractTrees: childtype, Leaves, PreOrderDFS
 
 # Abstract Types
 
@@ -224,58 +224,61 @@ const LiteralProposition = Union{
 """
     children(::Proposition)
 
-Return an iterator over the leaf nodes of the given [`Proposition`](@ref).
-
-!!! warning
-    Nodes that apply the [`identity`](@ref) function are skipped.
+Return an iterator over the child nodes of the given [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p PAndQ.children(Literal(identity, p))
+julia> @p PAndQ.children(p)
 ()
 
-julia> @p PAndQ.children(Literal(not, p))
+julia> @p PAndQ.children(¬p)
 (Atom(:p),)
 
-julia> @p PAndQ.children(p ⊻ q)
+julia> @p PAndQ.children(p ∧ q)
 2-element Vector{Tree{typeof(identity), Atom{Symbol}}}:
  p
  q
-
-julia> @p PAndQ.children(Normal(and, p ⊻ q))
-2-element Vector{Clause{typeof(or)}}:
- p ∨ q
- ¬p ∨ ¬q
 ```
 """
-children(p::Literal{typeof(not)}) = (p.atom,)
-children(p::Tree{typeof(identity), <:Atom}) = ()
-children(p::Tree{typeof(identity), <:Tree}) = children(only(p.nodes))
-children(p::Union{Tree, Clause, Normal}) = only_field(p)
+children(p::Atom) = ()
+children(p::Literal) = (p.atom,)
+children(p::Compound) = only_field(p)
 
 """
-    printnode(::IO, ::Proposition)
-
-!!! warning
-    Nodes that apply the [`identity`](@ref) function are skipped.
+    nodevalue(::Compound)
 
 # Examples
 ```jldoctest
-julia> @p PAndQ.printnode(stdout, Literal(identity, p))
+julia> @p PAndQ.nodevalue(¬p)
+not (generic function with 19 methods)
+
+julia> @p PAndQ.nodevalue(p ∧ q)
+and (generic function with 23 methods)
+```
+"""
+nodevalue(::Compound{LO}) where LO = LO.instance
+
+"""
+    printnode(::IO, ::Proposition; kwargs...)
+
+!!! note
+    Instances of [`Compound{typeof(identity)}`](@ref Compound) are represented as `I`.
+
+See also [`Proposition`](@ref).
+
+# Examples
+```jldoctest
+julia> @p PAndQ.printnode(stdout, p)
 p
-julia> @p PAndQ.printnode(stdout, Literal(not, p))
+julia> @p PAndQ.printnode(stdout, ¬p)
 ¬
-julia> @p PAndQ.printnode(stdout, p ⊻ q)
-⊻
-julia> @p PAndQ.printnode(stdout, Normal(and, p ⊻ q))
+julia> @p PAndQ.printnode(stdout, p ∧ q)
 ∧
 ```
 """
 printnode(io::IO, p::Atom; kwargs...) = show(io, MIME"text/plain"(), p)
-printnode(io::IO, p::Literal{typeof(identity)}; kwargs...) = printnode(io, p.atom; kwargs...)
-printnode(io::IO, p::Tree{typeof(identity)}; kwargs...) = printnode(io, only(p.nodes); kwargs...)
-printnode(io::IO, p::Compound{LO}; kwargs...) where LO =
-    print(io, operator_to_symbol(LO.instance))
+printnode(io::IO, ::Compound{typeof(identity)}; kwargs...) = print(io, "I")
+printnode(io::IO, p::Compound; kwargs...) = print(io, operator_to_symbol(nodevalue(p)))
 
 ## Utilities
 
@@ -432,18 +435,10 @@ end
 
 # Utility
 
-_atoms(p::Literal{typeof(identity)}) = p.atom
-_atoms(p::Tree{typeof(identity)}) = _atoms(only(p.nodes))
-_atoms(p) = p
-
 """
-    atoms(::Proposition)
+    atoms(p)
 
-Returns an iterator of [`Atom`](@ref)s
-contained in the given [`Proposition`](@ref).
-
-!!! warning
-    Some atoms may optimized out of an expression, such as in `p ∧ ⊥ == ⊥`.
+Returns an iterator of [`Atom`](@ref)s contained in `p`.
 
 # Examples
 ```jldoctest
@@ -457,4 +452,27 @@ julia> @p collect(atoms(p ∧ q))
  q
 ```
 """
-atoms(p) = Iterators.filter(leaf -> leaf isa Atom, Iterators.map(_atoms, Leaves(p)))
+atoms(p) = Iterators.filter(leaf -> leaf isa Atom, Leaves(p))
+
+"""
+    operators(p)
+
+Returns an iterator of [`LogicalOperator`](@ref)s contained in `p`.
+
+Each node of `p` is iterated over in a [pre-order tree traversal]
+(https://en.wikipedia.org/wiki/Tree_traversal#Pre-order,_NLR).
+
+# Examples
+```jldoctest
+julia> @p collect(operators(¬p))
+1-element Vector{typeof(not)}:
+ not (generic function with 19 methods)
+
+julia> @p collect(operators(¬p ∧ q))
+3-element Vector{Function}:
+ and (generic function with 23 methods)
+ not (generic function with 19 methods)
+ identity (generic function with 1 method)
+```
+"""
+operators(p) = Iterators.map(nodevalue, Iterators.filter(node -> !isa(node, Atom), PreOrderDFS(p)))

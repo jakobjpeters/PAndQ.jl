@@ -36,6 +36,7 @@ PAndQ.LiteralProposition
 
 ```@docs
 PAndQ.children
+PAndQ.nodevalue
 PAndQ.printnode
 ```
 
