@@ -14,24 +14,24 @@ Supertype of [`Atom`](@ref) and [`Compound`](@ref).
 abstract type Proposition end
 
 """
-    Compound <: Proposition
+    Compound{LO} <: Proposition
 
 A proposition composed from connecting [`Atom`](@ref)ic propositions with [`LogicalOperator`](@ref)s.
 
 Subtype of [`Proposition`](@ref).
 Supertype of [`Literal`](@ref), [`Clause`](@ref), and [`Expressive`](@ref).
 """
-abstract type Compound <: Proposition end
+abstract type Compound{LO} <: Proposition end
 
 """
-    Expressive <: Compound
+    Expressive{LO} <: Compound{LO}
 
 A proposition that is [expressively complete](https://en.wikipedia.org/wiki/Completeness_(logic)).
 
 Subtype of [`Compound`](@ref).
 Supertype of [`Tree`](@ref) and [`Normal`](@ref).
 """
-abstract type Expressive <: Compound end
+abstract type Expressive{LO} <: Compound{LO} end
 
 # Concrete Types
 
@@ -65,7 +65,7 @@ struct Atom{T} <: Proposition
 end
 
 """
-    Literal{UO <: UnaryOperator, T} <: Compound
+    Literal{UO <: UnaryOperator, T} <: Compound{UO}
     Literal(::UO, ::Atom{T})
     Literal(::LiteralProposition)
 
@@ -84,14 +84,14 @@ julia> ¬r
 p
 ```
 """
-struct Literal{UO <: UnaryOperator, T} <: Compound
+struct Literal{UO <: UnaryOperator, T} <: Compound{UO}
     atom::Atom{T}
 
     Literal(::UO, atom::Atom{T}) where {UO <: UnaryOperator, T} = new{UO, T}(atom)
 end
 
 """
-    Tree{LO <: LogicalOperator, AT <: Union{Atom, Tree}} <: Expressive
+    Tree{LO <: LogicalOperator, AT <: Union{Atom, Tree}} <: Expressive{LO}
     Tree(::NullaryOperator, ::Atom)
     Tree(::LogicalOperator, ::Tree...)
     Tree(::Proposition)
@@ -99,6 +99,7 @@ end
 A proposition represented by an [abstract syntax tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 
 Subtype of [`Expressive`](@ref).
+See also [`LogicalOperator`](@ref).
 
 # Examples
 ```jldoctest
@@ -109,7 +110,7 @@ julia> @p ¬r → s
 (p ↔ q) → s
 ```
 """
-struct Tree{LO <: LogicalOperator, P <: Proposition} <: Expressive
+struct Tree{LO <: LogicalOperator, P <: Proposition} <: Expressive{LO}
     nodes::Vector{P}
 
     Tree(::NO) where NO <: NullaryOperator = new{NO, Tree}([])
@@ -121,7 +122,7 @@ struct Tree{LO <: LogicalOperator, P <: Proposition} <: Expressive
 end
 
 """
-    Clause{AO <: AndOr, L <: Literal} <: Compound
+    Clause{AO <: AndOr, L <: Literal} <: Compound{AO}
     Clause(::AO, ps = Literal[])
     Clause(::AO, p::Proposition)
     Clause(::Union{NullaryOperator, LiteralProposition})
@@ -133,8 +134,9 @@ A proposition represented as either a [conjunction or disjunction of literals]
     An empty clause is logically equivalent to the
     neutral element of it's binary operator.
 
-See also [`Literal`](@ref) and [`NullaryOperator`](@ref).
 Subtype of [`Compound`](@ref).
+See also [`AndOr`](@ref), [`Literal`](@ref),
+[`NullaryOperator`](@ref), and [`LiteralProposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -148,7 +150,7 @@ julia> @p Clause(or, [¬p, q])
 ¬p ∨ q
 ```
 """
-struct Clause{AO <: AndOr, L <: Literal} <: Compound
+struct Clause{AO <: AndOr, L <: Literal} <: Compound{AO}
     literals::Vector{L}
 
     Clause(::AO, literals::Vector{L} = Literal[]) where {AO <: AndOr, L <: Literal} =
@@ -156,7 +158,7 @@ struct Clause{AO <: AndOr, L <: Literal} <: Compound
 end
 
 """
-    Normal{AO <: AndOr, C <: Clause} <: Expressive
+    Normal{AO <: AndOr, C <: Clause} <: Expressive{AO}
     Normal(::typeof(and), ps = Clause{typeof(or)}[])
     Normal(::typeof(or), ps = Clause{typeof(and)}[])
     Normal(::AO, ::Proposition)
@@ -169,8 +171,9 @@ or [disjunctive](https://en.wikipedia.org/wiki/Disjunctive_normal_form) normal f
     An empty normal form is logically equivalent to the
     neutral element of it's binary operator.
 
-See also [`Clause`](@ref) and [`NullaryOperator`](@ref).
 Subtype of [`Expressive`](@ref).
+See also [`AndOr`](@ref), [`Clause`](@ref),
+[`NullaryOperator`](@ref), and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -181,7 +184,7 @@ julia> ¬s
 (¬p ∧ ¬q) ∨ (r)
 ```
 """
-struct Normal{AO <: AndOr, C <: Clause} <: Expressive
+struct Normal{AO <: AndOr, C <: Clause} <: Expressive{AO}
     clauses::Vector{C}
 
     Normal(::A, clauses::Vector{C} = Clause{typeof(or)}[]) where {A <: typeof(and), C <: Clause{typeof(or)}} =
@@ -271,7 +274,7 @@ julia> @p PAndQ.printnode(stdout, Normal(and, p ⊻ q))
 printnode(io::IO, p::Atom; kwargs...) = show(io, MIME"text/plain"(), p)
 printnode(io::IO, p::Literal{typeof(identity)}; kwargs...) = printnode(io, p.atom; kwargs...)
 printnode(io::IO, p::Tree{typeof(identity)}; kwargs...) = printnode(io, only(p.nodes); kwargs...)
-printnode(io::IO, p::Union{Literal{LO}, Tree{LO}, Clause{LO}, Normal{LO}}; kwargs...) where LO =
+printnode(io::IO, p::Compound{LO}; kwargs...) where LO =
     print(io, operator_to_symbol(LO.instance))
 
 ## Utilities
