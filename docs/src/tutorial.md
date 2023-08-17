@@ -127,10 +127,10 @@ julia> collect(atoms(s))
 We know that since these are propositions, they can be true or false. If you think that "Logic is fun", it would be invalid to assign it the valuation false. So the proposition `p` is true if you think that "Logic is fun" and is false otherwise. If we assign the value true to the proposition "Logic is fun", then we know that the validity of the proposition "Logic is fun and Julia is awesome" depends on whether or not "Julia is awesome". If "Julia is awesome" is assigned false, then the conjunction of the two propositions is false. Use the [`interpret`](@ref) function to assign meaning to atomic propositions and then simplify the proposition.
 
 ```jldoctest 2
-julia> interpret(s, p => ⊤)
-(q)
+julia> interpret(a -> ⊥, r)
+tautology (generic function with 1 method)
 
-julia> interpret(s, p => ⊤, q => ⊥)
+julia> s(p => ⊤, q => ⊥)
 contradiction (generic function with 1 method)
 ```
 

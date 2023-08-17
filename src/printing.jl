@@ -76,11 +76,11 @@ struct TruthTable
         truths_interpretations, atoms_interpretations, compounds_interpretations =
             Vector{NullaryOperator}[], Vector{NullaryOperator}[], Vector{NullaryOperator}[]
 
-        group = xs -> Dict(map(
-            x -> collect(interpretations(x, _valuations)) => Proposition[],
-            xs
+        grouped_truths = Dict(map(no -> repeat([no], length(_valuations)) => Proposition[], (tautology, contradiction)))
+        grouped_atoms = Dict(map(
+            p -> collect(interpretations(p, _valuations)) => Proposition[],
+            _atoms
         ))
-        grouped_truths, grouped_atoms = map(group, ((tautology, contradiction), _atoms))
         grouped_compounds = Dict{Vector{NullaryOperator}, Vector{Proposition}}()
 
         for (p, interpretation) in zip(ps, _interpretations)

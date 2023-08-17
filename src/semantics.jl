@@ -148,7 +148,7 @@ right_neutrals(::LogicalOperator) = Set{NullaryOperator}()
 # Truths
 
 """
-    valuations(atoms)
+    valuations(as, n = length(unique(atoms(as))))
     valuations(::Proposition)
 
 Return an iterator of every possible [valuation]
@@ -170,27 +170,17 @@ julia> @p collect(valuations([p, q]))
  Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.contradiction]
 ```
 """
-function valuations(atoms)
-    n = length(unique(atoms))
-    Iterators.map(
-        i -> map(
-            (left, right) -> left => right == 0 ? tautology : contradiction,
-            atoms, digits(i, base = 2, pad = n)
-        ),
-        0:BigInt(2) ^ n - 1
-    )
-end
+valuations(atoms, n = length(unique(atoms))) = Iterators.map(i -> map(
+    (left, right) -> left => right == 0 ? tautology : contradiction,
+    atoms, digits(i, base = 2, pad = n)
+), 0:BigInt(2) ^ n - 1)
 valuations(p::Proposition) = valuations(atoms(p))
-valuations(no::NullaryOperator) = [no => no]
 
 """
-    interpret(p::Union{NullaryOperator, Proposition}, valuation...)
+    interpret(valuation, ::Proposition)
 
-Replaces each [`Atom`](@ref) in `p` with its truth value in `valuation`,
-then simplifies.
-
-`valuation` is either a `Dict` or a set that can construct one
-that maps from atoms to their respective truth values.
+Replaces each [`Atom`](@ref) `p` in the given
+[`Proposition`](@ref) with `valuation(p)`, then simplifies.
 
 Calling `p` with an incomplete mapping will partially interpret it.
 
@@ -198,41 +188,36 @@ See also [`tautology`](@ref) and [`contradiction`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p interpret(¬p, p => ⊤)
+julia> @p interpret(a -> ⊤, ¬p)
 contradiction (generic function with 1 method)
 
-julia> @p p = Clause(and, [q, r, s])
-q ∧ r ∧ s
-
-julia> @p interpret(p, q => ⊤, r => ⊤)
-s
+julia> @p interpret(a -> get(Dict(p => ⊤), a, a), p ∧ q)
+(q)
 ```
 """
-interpret(p::NullaryOperator, valuation::Dict) = p
-interpret(p::Atom, valuation::Dict) = get(valuation, p, p)
-interpret(p::Literal{UO}, valuation::Dict) where UO =
-    UO.instance(interpret(p.atom, valuation))
-function interpret(p::Union{Clause{AO}, Normal{AO}}, valuation::Dict) where AO
+interpret(valuation, p::Atom) = valuation(p)
+interpret(valuation, p::Literal{UO}) where UO =
+    UO.instance(interpret(valuation, p.atom))
+interpret(valuation, p::Tree) = interpret(valuation, Normal(p))
+function interpret(valuation, p::Union{Clause{AO}, Normal{AO}}) where AO
     neutral = only(left_neutrals(AO.instance))
     not_neutral = not(neutral)
     q = union_all_type(p)(AO.instance)
 
     for r in only_field(p)
-        s = interpret(r, valuation)
+        s = interpret(valuation, r)
         s == not_neutral && return not_neutral
         q = AO.instance(q, s)
     end
 
     isempty(only_field(q)) ? neutral : q
 end
-interpret(p::Proposition, valuation::Dict) = interpret(Normal(p), valuation)
-interpret(p, valuation) = interpret(p, Dict(valuation))
-interpret(p, valuation...) = interpret(p, valuation)
 
 """
-    (p::Proposition)(valuation...)
+    (::Proposition)(valuation)
+    (::Proposition)(valuation...)
 
-Equivalent to [`interpret(p, valuation)`](@ref interpret).
+Equivalent to [`interpret(a -> get(Dict(valuation), a, a), p)`](@ref interpret).
 
 See also [`Proposition`](@ref).
 
@@ -249,15 +234,15 @@ s
 ```
 """
 function interpret(::CallableObjectDocumentation) end
-(p::Proposition)(valuation::Dict) = interpret(p, valuation)
-(p::Proposition)(valuation...) = interpret(p, valuation)
+(p::Proposition)(valuation::Dict) = interpret(a -> get(valuation, a, a), p)
+(p::Proposition)(valuation) = p(Dict(valuation))
+(p::Proposition)(valuation...) = p(valuation)
 
 """
     interpretations(p, valuations = valuations(p))
 
-Return an iterator of truth values given by [`interpret`](@ref)ing `p` by each valuation.
-
-See also [`valuations`](@ref).
+Return an iterator of truth values given by [`interpret`](@ref)ing
+`p` with each [`valuation`](@ref valuations).
 
 # Examples
 ```jldoctest
@@ -272,7 +257,7 @@ julia> @p collect(interpretations(p → q, [p => ⊤]))
 ```
 """
 interpretations(p, valuations = valuations(p)) =
-    Iterators.map(valuation -> interpret(p, valuation), valuations)
+    Iterators.map(valuation -> p(valuation), valuations)
 
 """
     solve(p)
@@ -293,7 +278,7 @@ julia> @p collect(solve(p ⊻ q))
 ```
 """
 solve(p) = Iterators.filter(
-    valuation -> interpret(p, valuation) == tautology,
+    valuation -> p(valuation) == tautology,
     valuations(p)
 )
 
@@ -347,6 +332,8 @@ julia> @p is_tautology(¬(p ∧ ¬p))
 true
 ```
 """
+is_tautology(::typeof(tautology)) = true
+is_tautology(::typeof(contradiction)) = false
 is_tautology(::LiteralProposition) = false
 is_tautology(p) = all(isequal(⊤), interpretations(p))
 
@@ -392,8 +379,9 @@ julia> @p is_truth(p ∧ q)
 false
 ```
 """
-is_truth(p) = allequal(interpretations(p))
+is_truth(::NullaryOperator) = true
 is_truth(::LiteralProposition) = false
+is_truth(p) = allequal(interpretations(p))
 
 """
     is_contingency(p)
