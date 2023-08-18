@@ -116,7 +116,9 @@ struct Tree{LO <: LogicalOperator, P <: Proposition} <: Expressive{LO}
     Tree(::NO) where NO <: NullaryOperator = new{NO, Tree}([])
     Tree(::UO, node::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, A}([node])
     function Tree(lo::LO, nodes::Tree...) where LO <: LogicalOperator
-        @assert arity(lo) == length(nodes)
+        _arity, _length = arity(lo), length(nodes)
+        _arity != _length &&
+            error("`arity($lo) == $_arity`, but `$_length` arguments were given")
         new{LO, childtype(nodes)}(collect(nodes))
     end
 end
