@@ -283,7 +283,7 @@ solve(p) = Iterators.filter(
     valuations(p)
 )
 
-# Queries
+# Predicates
 
 """
     ==(::Union{NullaryOperator, Proposition}, ::Union{NullaryOperator, Proposition})

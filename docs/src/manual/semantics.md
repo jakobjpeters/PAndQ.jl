@@ -19,7 +19,7 @@ interpretations
 solve
 ```
 
-## Queries
+## Predicates
 
 ```@docs
 ==
