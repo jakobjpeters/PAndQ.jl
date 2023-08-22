@@ -1,5 +1,6 @@
 
 import AbstractTrees: children, nodevalue, printnode
+using Base.Meta: isexpr, parse
 using AbstractTrees: childtype, Leaves, PreOrderDFS
 
 # Abstract Types
@@ -358,7 +359,7 @@ Otherise, return x.
 """
 atomize(x::Symbol) = :((@isdefined $x) ? $x : $(Atom(x)))
 atomize(x::Expr) = length(x.args) == 0 ? x : Expr(x.head,
-    Meta.isexpr(x, (:(=), :kw, :->)) ? x.args[1] : atomize(x.args[1]),
+    isexpr(x, (:(=), :kw, :->)) ? x.args[1] : atomize(x.args[1]),
     map(atomize, x.args[2:end])...
 )
 atomize(x) = x
@@ -432,7 +433,7 @@ julia> p"p ∧ q, Clause(and)"
 ```
 """
 macro p_str(p)
-    esc(:(@p $(Meta.parse(p))))
+    esc(:(@p $(parse(p))))
 end
 
 # Utility

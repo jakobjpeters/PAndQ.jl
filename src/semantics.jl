@@ -1,6 +1,6 @@
 
 import Base: ==, convert, Bool, uniontypes
-using Base: Fix1
+using Base: Fix1, Iterators.product
 
 # Internals
 
@@ -594,7 +594,7 @@ convert(::Type{Normal{AO}}, p::Tree{LO}) where {AO, LO} = Normal(AO.instance, LO
 ))
 convert(::Type{Normal{AO}}, p::Normal{AO}) where AO <: AndOr = p
 convert(::Type{Normal{AO}}, p::Normal) where AO <: AndOr = Normal(AO.instance,
-    vec(map(Iterators.product(map(p.clauses) do clause
+    vec(map(product(map(p.clauses) do clause
         clause.literals
     end...)) do literals
         Clause(dual(AO.instance), literals)
