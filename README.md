@@ -5,11 +5,8 @@
 
 <div align="center">
 
-[![Documentation stable](https://img.shields.io/badge/Documentation-dev-blue.svg)](https://jakobjpeters.github.io/PAndQ.jl/stable/)
-[![Version](https://img.shields.io/github/v/release/jakobjpeters/PAndQ.jl)](https://github.com/jakobjpeters/PAndQ.jl/releases/)
-[![License](https://img.shields.io/github/license/jakobjpeters/PAndQ.jl)](https://github.com/jakobjpeters/PAndQ.jl/blob/main/LICENSE.md)
-
-[![Documentation dev](https://img.shields.io/badge/Documentation-dev-blue.svg)](https://jakobjpeters.github.io/PAndQ.jl/dev/)
+[![Documentation stable](https://img.shields.io/badge/Documentation-stable-blue.svg)](https://jakobjpeters.github.io/PAndQ.jl/stable/)
+[![Documentation dev](https://img.shields.io/badge/Documentation-dev-yellow.svg)](https://jakobjpeters.github.io/PAndQ.jl/dev/)
 [![Codecov](https://codecov.io/gh/jakobjpeters/PAndQ.jl/branch/main/graph/badge.svg?token=XFWU66WSD7)](https://codecov.io/gh/jakobjpeters/PAndQ.jl)
 
 [![Documentation](https://github.com/jakobjpeters/PAndQ.jl/workflows/Documentation/badge.svg)](https://github.com/jakobjpeters/PAndQ.jl/actions/workflows/documentation.yml)
