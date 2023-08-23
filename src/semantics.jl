@@ -292,6 +292,8 @@ solve(p) = Iterators.filter(
 Returns a boolean indicating whether `p` and `q` are [logically equivalent]
 (https://en.wikipedia.org/wiki/Logical_equivalence).
 
+[`Atom`](@ref)s are equivalent if and only if their statements are equivalent.
+
 !!! info
     The `≡` symbol is sometimes used to represent logical equivalence.
     However, Julia uses `≡` as an alias for the builtin function `===`
@@ -312,7 +314,7 @@ julia> @p ¬(p ⊻ q) === (p → q) ∧ (p ← q)
 false
 ```
 """
-==(p::Union{NullaryOperator, Atom}, q::Union{NullaryOperator, Atom}) = p === q
+==(p::Atom, q::Atom) = p.statement == q.statement
 ==(p::Union{NullaryOperator, Proposition}, q::Union{NullaryOperator, Proposition}) =
     is_tautology(p ↔ q)
 
