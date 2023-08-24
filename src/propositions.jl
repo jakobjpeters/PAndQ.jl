@@ -462,9 +462,6 @@ atoms(p) = Iterators.filter(leaf -> leaf isa Atom, Leaves(p))
 
 Returns an iterator of [`LogicalOperator`](@ref)s contained in `p`.
 
-Each node of `p` is iterated over in a [pre-order tree traversal]
-(https://en.wikipedia.org/wiki/Tree_traversal#Pre-order,_NLR).
-
 # Examples
 ```jldoctest
 julia> @p collect(operators(¬p))
