@@ -86,12 +86,13 @@ Features such as a fast satisfiability algorithm, proofs, and other logics are s
 
 #### Wrappers
 
-- [Chuffed](https://github.com/JuliaConstraints/Chuffed.jl)
+- [Chuffed.jl](https://github.com/JuliaConstraints/Chuffed.jl)
 - [CPLEXCP.jl](https://github.com/JuliaConstraints/CPLEXCP.jl)
 - [JaCoP.jl](https://github.com/JuliaConstraints/JaCoP.jl)
 
 ### Wrappers
 
+- [Satifsiability.jl](https://github.com/elsoroka/Satisfiability.jl)
 - [Z3.jl](https://github.com/ahumenberger/Z3.jl)
 - [PicoSat.jl](https://github.com/sisl/PicoSAT.jl)
 - [BeeEncoder.jl](https://github.com/newptcai/BeeEncoder.jl)
