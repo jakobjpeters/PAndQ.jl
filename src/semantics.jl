@@ -56,13 +56,13 @@ of the given boolean operator.
 julia> dual(and)
 or (generic function with 19 methods)
 
-julia> @p and(p, q) == not(dual(and)(not(p), not(q)))
+julia> @atomize and(p, q) == not(dual(and)(not(p), not(q)))
 true
 
 julia> dual(imply)
 not_converse_imply (generic function with 6 methods)
 
-julia> @p imply(p, q) == not(dual(imply)(not(p), not(q)))
+julia> @atomize imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
 ```
 """
@@ -88,13 +88,13 @@ of the given boolean operator.
 julia> converse(and)
 and (generic function with 23 methods)
 
-julia> @p and(p, q) == converse(and)(q, p)
+julia> @atomize and(p, q) == converse(and)(q, p)
 true
 
 julia> converse(imply)
 converse_imply (generic function with 7 methods)
 
-julia> @p imply(p, q) == converse(imply)(q, p)
+julia> @atomize imply(p, q) == converse(imply)(q, p)
 true
 ```
 """
@@ -158,12 +158,12 @@ of the [`Atom`](@ref)s.
 
 # Examples
 ```jldoctest
-julia> @p collect(valuations([p]))
+julia> @atomize collect(valuations([p]))
 2-element Vector{Vector}:
  Pair{Atom{Symbol}, typeof(tautology)}[Atom(:p) => PAndQ.tautology]
  Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) => PAndQ.contradiction]
 
-julia> @p collect(valuations([p, q]))
+julia> @atomize collect(valuations([p, q]))
 4-element Vector{Vector}:
  Pair{Atom{Symbol}, typeof(tautology)}[Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.tautology]
  Pair{Atom{Symbol}}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.tautology]
@@ -189,10 +189,10 @@ See also [`tautology`](@ref) and [`contradiction`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p interpret(a -> ⊤, ¬p)
+julia> @atomize interpret(a -> ⊤, ¬p)
 contradiction (generic function with 1 method)
 
-julia> @p interpret(a -> get(Dict(p => ⊤), a, a), p ∧ q)
+julia> @atomize interpret(a -> get(Dict(p => ⊤), a, a), p ∧ q)
 (q)
 ```
 """
@@ -224,13 +224,13 @@ See also [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p (¬p)(p => ⊤)
+julia> @atomize (¬p)(p => ⊤)
 contradiction (generic function with 1 method)
 
-julia> @p p = Clause(and, [q, r, s])
+julia> @atomize p = Clause(and, [q, r, s])
 q ∧ r ∧ s
 
-julia> @p p(q => ⊤, r => ⊤)
+julia> @atomize p(q => ⊤, r => ⊤)
 s
 ```
 """
@@ -247,12 +247,12 @@ Return an iterator of truth values given by [`interpret`](@ref)ing
 
 # Examples
 ```jldoctest
-julia> @p collect(interpretations(p))
+julia> @atomize collect(interpretations(p))
 2-element Vector{Function}:
  tautology (generic function with 1 method)
  contradiction (generic function with 1 method)
 
-julia> @p collect(interpretations(p → q, [p => ⊤]))
+julia> @atomize collect(interpretations(p → q, [p => ⊤]))
 1-element Vector{Normal{typeof(and), Clause{typeof(or)}}}:
  (q)
 ```
@@ -268,11 +268,11 @@ Return a vector containing all [`interpretations`](@ref) such that
 
 # Examples
 ```jldoctest
-julia> @p collect(solve(p))
+julia> @atomize collect(solve(p))
 1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
  [Atom(:p) => PAndQ.tautology]
 
-julia> @p collect(solve(p ⊻ q))
+julia> @atomize collect(solve(p ⊻ q))
 2-element Vector{Vector{Pair{Atom{Symbol}}}}:
  [Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.tautology]
  [Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.contradiction]
@@ -304,13 +304,13 @@ See also [`NullaryOperator`](@ref) and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p p == ¬p
+julia> @atomize p == ¬p
 false
 
-julia> @p ¬(p ⊻ q) == (p → q) ∧ (p ← q)
+julia> @atomize ¬(p ⊻ q) == (p → q) ∧ (p ← q)
 true
 
-julia> @p ¬(p ⊻ q) === (p → q) ∧ (p ← q)
+julia> @atomize ¬(p ⊻ q) === (p → q) ∧ (p ← q)
 false
 ```
 """
@@ -328,10 +328,10 @@ Returns a boolean on whether `p` is a [`tautology`](@ref).
 julia> is_tautology(⊤)
 true
 
-julia> @p is_tautology(p)
+julia> @atomize is_tautology(p)
 false
 
-julia> @p is_tautology(¬(p ∧ ¬p))
+julia> @atomize is_tautology(¬(p ∧ ¬p))
 true
 ```
 """
@@ -350,10 +350,10 @@ Returns a boolean on whether `p` is a [`contradiction`](@ref).
 julia> is_contradiction(⊥)
 true
 
-julia> @p is_contradiction(p)
+julia> @atomize is_contradiction(p)
 false
 
-julia> @p is_contradiction(p ∧ ¬p)
+julia> @atomize is_contradiction(p ∧ ¬p)
 true
 ```
 """
@@ -372,13 +372,13 @@ See also [`Proposition`](@ref).
 julia> is_truth(⊤)
 true
 
-julia> @p is_truth(p ∧ ¬p)
+julia> @atomize is_truth(p ∧ ¬p)
 true
 
-julia> @p is_truth(p)
+julia> @atomize is_truth(p)
 false
 
-julia> @p is_truth(p ∧ q)
+julia> @atomize is_truth(p ∧ q)
 false
 ```
 """
@@ -400,13 +400,13 @@ See also [`Proposition`](@ref).
 julia> is_contingency(⊤)
 false
 
-julia> @p is_contingency(p ∧ ¬p)
+julia> @atomize is_contingency(p ∧ ¬p)
 false
 
-julia> @p is_contingency(p)
+julia> @atomize is_contingency(p)
 true
 
-julia> @p is_contingency(p ∧ q)
+julia> @atomize is_contingency(p ∧ q)
 true
 ```
 """
@@ -426,13 +426,13 @@ See also [`Proposition`](@ref).
 julia> is_satisfiable(⊤)
 true
 
-julia> @p is_satisfiable(p ∧ ¬p)
+julia> @atomize is_satisfiable(p ∧ ¬p)
 false
 
-julia> @p is_satisfiable(p)
+julia> @atomize is_satisfiable(p)
 true
 
-julia> @p is_satisfiable(p ∧ q)
+julia> @atomize is_satisfiable(p ∧ q)
 true
 ```
 """
@@ -452,13 +452,13 @@ See also [`Proposition`](@ref).
 julia> is_falsifiable(⊥)
 true
 
-julia> @p is_falsifiable(¬(p ∧ ¬p))
+julia> @atomize is_falsifiable(¬(p ∧ ¬p))
 false
 
-julia> @p is_falsifiable(p)
+julia> @atomize is_falsifiable(p)
 true
 
-julia> @p is_falsifiable(p ∧ q)
+julia> @atomize is_falsifiable(p ∧ q)
 true
 ```
 """

@@ -13,10 +13,7 @@ Logical [true](https://en.wikipedia.org/wiki/Tautology_(logic)) operator.
 
 # Examples
 ```jldoctest
-julia> ⊤()
-tautology (generic function with 1 method)
-
-julia> @p TruthTable(⊤)
+julia> TruthTable(⊤)
 ┌────────┐
 │ ⊤      │
 │ Clause │
@@ -38,10 +35,7 @@ Logical [false](https://en.wikipedia.org/wiki/Contradiction) operator.
 
 # Examples
 ```jldoctest
-julia> ⊥()
-contradiction (generic function with 1 method)
-
-julia> @p TruthTable(⊥)
+julia> TruthTable(⊥)
 ┌────────┐
 │ ⊥      │
 │ Clause │
@@ -62,7 +56,7 @@ Logical [identity](https://en.wikipedia.org/wiki/Law_of_identity) operator.
 
 # Examples
 ```jldoctest
-julia> @p TruthTable(p)
+julia> @atomize TruthTable(p)
 ┌──────┐
 │ p    │
 │ Atom │
@@ -84,7 +78,7 @@ Logical [negation](https://en.wikipedia.org/wiki/Negation) operator.
 
 # Examples
 ```jldoctest
-julia> @p TruthTable(¬p)
+julia> @atomize TruthTable(¬p)
 ┌──────┬─────────┐
 │ p    │ ¬p      │
 │ Atom │ Literal │
@@ -109,7 +103,7 @@ Logical [conjunction](https://en.wikipedia.org/wiki/Logical_conjunction) operato
 
 # Examples
 ```jldoctest
-julia> @p TruthTable(p ∧ q)
+julia> @atomize TruthTable(p ∧ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ∧ q │
 │ Atom │ Atom │ Tree  │
@@ -135,7 +129,7 @@ Logical [non-conjunction](https://en.wikipedia.org/wiki/Sheffer_stroke) operator
 
 # Examples
 ```jldoctest
-julia> @p TruthTable(p ⊼ q)
+julia> @atomize TruthTable(p ⊼ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ⊼ q │
 │ Atom │ Atom │ Tree  │
@@ -160,7 +154,7 @@ Logical [non-disjunction](https://en.wikipedia.org/wiki/Logical_NOR) operator.
 
 # Examples
 ```jldoctest
-julia> @p TruthTable(p ⊽ q)
+julia> @atomize TruthTable(p ⊽ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ⊽ q │
 │ Atom │ Atom │ Tree  │
@@ -185,7 +179,7 @@ Logical [disjunction](https://en.wikipedia.org/wiki/Logical_disjunction) operato
 
 # Examples
 ```jldoctest
-julia> @p TruthTable(p ∨ q)
+julia> @atomize TruthTable(p ∨ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ∨ q │
 │ Atom │ Atom │ Tree  │
@@ -211,7 +205,7 @@ Logical [exclusive disjunction](https://en.wikipedia.org/wiki/Exclusive_or) oper
 
 # Examples
 ```jldoctest
-julia> @p TruthTable(p ⊻ q)
+julia> @atomize TruthTable(p ⊻ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ⊻ q │
 │ Atom │ Atom │ Tree  │
@@ -237,7 +231,7 @@ and [biconditional](https://en.wikipedia.org/wiki/Logical_biconditional) operato
 
 # Examples
 ```jldoctest
-julia> @p TruthTable(p ↔ q)
+julia> @atomize TruthTable(p ↔ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ↔ q │
 │ Atom │ Atom │ Tree  │
@@ -263,7 +257,7 @@ Logical [non-implication](https://en.wikipedia.org/wiki/Material_nonimplication)
 
 # Examples
 ```jldoctest
-julia> @p TruthTable(p ↛ q)
+julia> @atomize TruthTable(p ↛ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ↛ q │
 │ Atom │ Atom │ Tree  │
@@ -289,7 +283,7 @@ Logical [implication](https://en.wikipedia.org/wiki/Material_conditional) operat
 
 # Examples
 ```jldoctest
-julia> @p TruthTable(p → q)
+julia> @atomize TruthTable(p → q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p → q │
 │ Atom │ Atom │ Tree  │
@@ -315,7 +309,7 @@ Logical [converse non-implication](https://en.wikipedia.org/wiki/Converse_nonimp
 
 # Examples
 ```jldoctest
-julia> @p TruthTable(p ↚ q)
+julia> @atomize TruthTable(p ↚ q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ↚ q │
 │ Atom │ Atom │ Tree  │
@@ -341,7 +335,7 @@ Logical [converse implication](https://en.wikipedia.org/wiki/Converse_(logic)#Im
 
 # Examples
 ```jldoctest
-julia> @p TruthTable(p ← q)
+julia> @atomize TruthTable(p ← q)
 ┌──────┬──────┬───────┐
 │ p    │ q    │ p ← q │
 │ Atom │ Atom │ Tree  │
@@ -448,7 +442,7 @@ See also [`and`](@ref) and [`tautology`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p ⋀([p, q, r, s])
+julia> @atomize ⋀([p, q, r, s])
 ((p ∧ q) ∧ r) ∧ s
 ```
 """
@@ -467,7 +461,7 @@ See also [`or`](@ref) and [`contradiction`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p ⋁([p, q, r, s])
+julia> @atomize ⋁([p, q, r, s])
 ((p ∨ q) ∨ r) ∨ s
 ```
 """
@@ -486,7 +480,7 @@ See also [`LeftNeutralOperator`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p mapfoldl(not, and, [p, q, r, s])
+julia> @atomize mapfoldl(not, and, [p, q, r, s])
 ((¬p ∧ ¬q) ∧ ¬r) ∧ ¬s
 
 julia> foldl(and, [])
@@ -508,7 +502,7 @@ See also [`RightNeutralOperator`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p mapfoldr(not, and, [p, q, r, s])
+julia> @atomize mapfoldr(not, and, [p, q, r, s])
 ¬p ∧ (¬q ∧ (¬r ∧ ¬s))
 
 julia> foldr(and, [])

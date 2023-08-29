@@ -35,7 +35,7 @@ Normal
 
 ```@docs
 @atoms
-@p
+@atomize
 @p_str
 ```
 

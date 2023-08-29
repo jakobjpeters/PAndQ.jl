@@ -38,7 +38,7 @@ julia> r = ¬p
 julia> s = Clause(and, [p, ¬q])
 p ∧ ¬q
 
-julia> @p t = ((q ∧ r) ↔ a)(a => ⊤)
+julia> @atomize t = ((q ∧ r) ↔ a)(a => ⊤)
 (q) ∧ (¬p)
 
 julia> u = s ∨ t

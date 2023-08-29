@@ -32,7 +32,7 @@ See also [`tautology`](@ref) and [`contradiction`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p TruthTable(p ∧ ¬p, p ∧ q)
+julia> @atomize TruthTable(p ∧ ¬p, p ∧ q)
 ┌────────┬──────┬──────┬───────┐
 │ p ∧ ¬p │ p    │ q    │ p ∧ q │
 │ Tree   │ Atom │ Atom │ Tree  │
@@ -222,7 +222,7 @@ Represent the given [`Proposition`](@ref) as a [propositional formula]
 
 # Examples
 ```jldoctest
-julia> @p x = p ⊻ q;
+julia> @atomize x = p ⊻ q;
 
 julia> show(stdout, MIME"text/plain"(), x)
 p ⊻ q
@@ -277,7 +277,7 @@ Represent the given [`Proposition`](@ref) as valid Julia code.
 
 # Examples
 ```jldoctest
-julia> @p s = sprint(show, p ∧ q)
+julia> @atomize s = sprint(show, p ∧ q)
 "Tree(and, Tree(identity, Atom(:p)), Tree(identity, Atom(:q)))"
 
 julia> @eval \$(Meta.parse(s))
@@ -308,7 +308,7 @@ show(io::IO, p::CN) where {AO, CN <: Union{Clause{AO}, Normal{AO}}} = print(io,
 Prints a tree diagram of the given [`Proposition`](@ref).
 
 ```jldoctest
-julia> @p r = p ∧ ¬q ⊻ s
+julia> @atomize r = p ∧ ¬q ⊻ s
 (p ∧ ¬q) ⊻ s
 
 julia> print_tree(r)
@@ -403,7 +403,7 @@ replacing each symbol with it's respective command.
 
 # Examples
 ```jldoctest
-julia> @p s = print_latex(String, p ∧ q)
+julia> @atomize s = print_latex(String, p ∧ q)
 "\\\\(p \\\\wedge q\\\\)"
 
 julia> println(s)

@@ -34,7 +34,7 @@ include("propositions.jl")
 export
     Proposition, Compound, Expressive,
     Atom, Literal, Tree, Clause, Normal,
-    @atoms, @p, @p_str,
+    @atoms, @atomize, @p_str,
     atoms, operators
 
 include("printing.jl")

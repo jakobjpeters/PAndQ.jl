@@ -31,7 +31,7 @@ Operator associativity determines how operators with the same precedence group t
 Every possible truth table can be constructed with the functionally complete set of operators `not` and `and`. For convenience, all sixteen of them have been prepared. There are ten binary operators, with the remaining six being expressed with truth values, individual propositions, and the unary [`not`](@ref) operator.
 
 ```jldoctest
-julia> @p TruthTable(⊤, ⊥, ¬p, ¬q)
+julia> @atomize TruthTable(⊤, ⊥, ¬p, ¬q)
 ┌────────┬────────┬──────┬──────┬─────────┬─────────┐
 │ ⊤      │ ⊥      │ p    │ q    │ ¬p      │ ¬q      │
 │ Clause │ Clause │ Atom │ Atom │ Literal │ Literal │

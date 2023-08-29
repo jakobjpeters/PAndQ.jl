@@ -47,7 +47,7 @@ A proposition with [no deeper propositional structure](https://en.wikipedia.org/
     [`show(io::IO, ::MIME"text/plain", p::Atom{T})`](@ref show).
 
 !!! tip
-    Use [`@atoms`](@ref) and [`@p`](@ref) as shortcuts to
+    Use [`@atoms`](@ref) and [`@atomize`](@ref) as shortcuts to
     define atoms or instantiate them inline, respectively.
 
 Subtype of [`Proposition`](@ref).
@@ -78,7 +78,7 @@ See also [`UnaryOperator`](@ref), [`Atom`](@ref), and [`LiteralProposition`](@re
 
 # Examples
 ```jldoctest
-julia> r = @p ¬p
+julia> @atomize r = ¬p
 ¬p
 
 julia> ¬r
@@ -104,10 +104,10 @@ See also [`LogicalOperator`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p r = p ⊻ q
+julia> @atomize r = p ⊻ q
 p ⊻ q
 
-julia> @p ¬r → s
+julia> @atomize ¬r → s
 (p ↔ q) → s
 ```
 """
@@ -146,10 +146,10 @@ See also [`AndOr`](@ref), [`Literal`](@ref),
 julia> Clause(and)
 ⊤
 
-julia> @p Clause(p)
+julia> @atomize Clause(p)
 p
 
-julia> @p Clause(or, [¬p, q])
+julia> @atomize Clause(or, [¬p, q])
 ¬p ∨ q
 ```
 """
@@ -180,7 +180,7 @@ See also [`AndOr`](@ref), [`Clause`](@ref),
 
 # Examples
 ```jldoctest
-julia> s = @p Normal(and, [Clause(or, [p, q]), Clause(or, ¬r)])
+julia> @atomize s = Normal(and, [Clause(or, [p, q]), Clause(or, ¬r)])
 (p ∨ q) ∧ (¬r)
 
 julia> ¬s
@@ -231,13 +231,13 @@ Return an iterator over the child nodes of the given [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p PAndQ.children(p)
+julia> @atomize PAndQ.children(p)
 ()
 
-julia> @p PAndQ.children(¬p)
+julia> @atomize PAndQ.children(¬p)
 (Atom(:p),)
 
-julia> @p PAndQ.children(p ∧ q)
+julia> @atomize PAndQ.children(p ∧ q)
 2-element Vector{Tree{typeof(identity), Atom{Symbol}}}:
  p
  q
@@ -252,10 +252,10 @@ children(p::Compound) = only_field(p)
 
 # Examples
 ```jldoctest
-julia> @p PAndQ.nodevalue(¬p)
+julia> @atomize PAndQ.nodevalue(¬p)
 not (generic function with 19 methods)
 
-julia> @p PAndQ.nodevalue(p ∧ q)
+julia> @atomize PAndQ.nodevalue(p ∧ q)
 and (generic function with 23 methods)
 ```
 """
@@ -271,11 +271,11 @@ See also [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p PAndQ.printnode(stdout, p)
+julia> @atomize PAndQ.printnode(stdout, p)
 p
-julia> @p PAndQ.printnode(stdout, ¬p)
+julia> @atomize PAndQ.printnode(stdout, ¬p)
 ¬
-julia> @p PAndQ.printnode(stdout, p ∧ q)
+julia> @atomize PAndQ.printnode(stdout, p ∧ q)
 ∧
 ```
 """
@@ -292,10 +292,10 @@ Return the `UnionAll` type of a [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p PAndQ.union_all_type(p)
+julia> @atomize PAndQ.union_all_type(p)
 Atom
 
-julia> @p PAndQ.union_all_type(p ∧ q)
+julia> @atomize PAndQ.union_all_type(p ∧ q)
 Tree
 ```
 """
@@ -311,10 +311,10 @@ Return the only field of a [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> @p PAndQ.only_field(p)
+julia> @atomize PAndQ.only_field(p)
 :p
 
-julia> @p PAndQ.only_field(p ∧ q)
+julia> @atomize PAndQ.only_field(p ∧ q)
 2-element Vector{Tree{typeof(identity), Atom{Symbol}}}:
  p
  q
@@ -351,17 +351,24 @@ operator_to_proposition(p::Proposition) = p
 """
     atomize(x)
 
-If `x` is a symbol, return an expression that
-instantiates it as an [`Atom`](@ref) if it is undefined.
+If `x` is a symbol, return an expression that instantiates it as an
+[`Atom`](@ref) if it is undefined in the caller's scope.
 If `x` is an expression, traverse it with recursive calls to `atomize`
-(ignoring variable assignment, keyword arguments, and anonymous functions).
 Otherise, return x.
 """
 atomize(x::Symbol) = :((@isdefined $x) ? $x : $(Atom(x)))
-atomize(x::Expr) = length(x.args) == 0 ? x : Expr(x.head,
-    isexpr(x, (:(=), :kw, :->)) ? x.args[1] : atomize(x.args[1]),
-    map(atomize, x.args[2:end])...
-)
+function atomize(x::Expr)
+    if length(x.args) == 0 x
+    elseif isexpr(x, :$); :(Atom($(only(x.args))))
+    elseif isexpr(x, (:kw, :<:))
+        Expr(x.head, x.args[1], atomize(x.args[2]))
+    elseif isexpr(x, (:struct, :where)) x # TODO
+    else Expr(x.head, # TODO
+        isexpr(x, (:(=), :->, :function)) ? x.args[1] : atomize(x.args[1]),
+        map(atomize, x.args[2:end])...
+    )
+    end
+end
 atomize(x) = x
 
 # Macros
@@ -401,22 +408,31 @@ https://github.com/JuliaSymbolics/Symbolics.jl
 =#
 
 """
-    @p(expression)
+    @atomize(expression)
 
-Instantiates each undefined variable
-(ignoring variable assignment and keyword arguments)
-as an [`Atom{Symbol}`](@ref).
+Instantiate undefined variables and interpolated values inline as [`Atom`](@ref)s.
+
+!!! warning
+    This macro attempts to ignore symbols that are being assigned a value.
+    For example, `@atomize f(; x = p) = x ∧ q` should be equivalent to
+    `@atomize f(; x = Atom(:p)) = x ∧ Atom(:q)`.
+    However, this feature is in-progress and only works in some cases.
+    The implementation is cautious to skip the parts
+    of the expression that it cannot yet handle.
 
 # Examples
 ```jldoctest
-julia> @p x = p ∧ q
+julia> @atomize x = p ∧ q
 p ∧ q
 
-julia> @p x → r
+julia> @atomize x → r
 (p ∧ q) → r
+
+julia> @atomize \$1 ∧ \$(1 + 1)
+Atom(1) ∧ Atom(2)
 ```
 """
-macro p(expression)
+macro atomize(expression)
     esc(:($(atomize(expression))))
 end
 
@@ -433,7 +449,7 @@ julia> p"p ∧ q, Clause(and)"
 ```
 """
 macro p_str(p)
-    esc(:(@p $(parse(p))))
+    esc(:(@atomize $(parse(p))))
 end
 
 # Utility
@@ -445,11 +461,11 @@ Returns an iterator of [`Atom`](@ref)s contained in `p`.
 
 # Examples
 ```jldoctest
-julia> @p collect(atoms(¬p))
+julia> @atomize collect(atoms(¬p))
 1-element Vector{Atom{Symbol}}:
  p
 
-julia> @p collect(atoms(p ∧ q))
+julia> @atomize collect(atoms(p ∧ q))
 2-element Vector{Atom{Symbol}}:
  p
  q
@@ -464,11 +480,11 @@ Returns an iterator of [`LogicalOperator`](@ref)s contained in `p`.
 
 # Examples
 ```jldoctest
-julia> @p collect(operators(¬p))
+julia> @atomize collect(operators(¬p))
 1-element Vector{typeof(not)}:
  not (generic function with 19 methods)
 
-julia> @p collect(operators(¬p ∧ q))
+julia> @atomize collect(operators(¬p ∧ q))
 3-element Vector{Function}:
  and (generic function with 23 methods)
  not (generic function with 19 methods)
