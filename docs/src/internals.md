@@ -45,7 +45,6 @@ PAndQ.printnode
 ```@docs
 PAndQ.union_all_type
 PAndQ.only_field
-PAndQ.operator_to_proposition
 PAndQ.atomize
 ```
 

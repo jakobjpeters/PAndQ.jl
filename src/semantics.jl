@@ -583,8 +583,10 @@ convert(::Type{Tree}, p::Clause{AO}) where AO = Tree(foldl(AO.instance, p.litera
 convert(::Type{Tree}, p::Normal{AO}) where AO = Tree(mapfoldl(Tree, AO.instance, p.clauses))
 convert(::Type{Clause}, p::LiteralProposition) = Clause(or, [p])
 convert(::Type{Clause{AO}}, p::LiteralProposition) where AO <: AndOr = Clause(AO.instance, [p])
-convert(::Type{CN}, no::NullaryOperator) where CN <: Union{Clause, Normal} =
-    CN(neutral_operator(no))
+convert(::Type{Clause}, no::NullaryOperator) = Clause(neutral_operator(no))
+convert(::Type{Normal}, no::NullaryOperator) = Normal(neutral_operator(no))
+convert(::Type{Clause}, p::Tree{NO}) where NO <: NullaryOperator = Clause(NO.instance)
+convert(::Type{Normal}, p::Tree{NO}) where NO <: NullaryOperator = Normal(NO.instance)
 convert(::Type{Normal}, p::Clause{AO}) where AO <: AndOr = Normal(dual(AO.instance), [p])
 convert(::Type{Normal{AO}}, p::LiteralProposition) where AO <: AndOr = Normal(AO.instance, Clause(p))
 convert(::Type{Normal{AO}}, p::Clause{AO}) where AO <: AndOr =

@@ -327,28 +327,6 @@ only_field(p::Clause) = p.literals
 only_field(p::Normal) = p.clauses
 
 """
-    operator_to_proposition(::Union{LogicalOperator, Proposition})
-
-Construct a [`Proposition`](@ref) with the given operator.
-
-# Examples
-```jldoctest
-julia> PAndQ.operator_to_proposition(⊤)
-⊤
-
-julia> PAndQ.operator_to_proposition(¬)
-¬_
-
-julia> PAndQ.operator_to_proposition(∧)
-_ ∧ __
-```
-"""
-operator_to_proposition(no::NullaryOperator) = Clause(no)
-operator_to_proposition(uo::UnaryOperator) = uo(Atom(:_))
-operator_to_proposition(bo::BinaryOperator) = bo(Atom(:_), Atom(:__))
-operator_to_proposition(p::Proposition) = p
-
-"""
     atomize(x)
 
 If `x` is a symbol, return an expression that instantiates it as an

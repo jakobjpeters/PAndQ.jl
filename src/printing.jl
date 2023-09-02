@@ -32,29 +32,34 @@ See also [`tautology`](@ref) and [`contradiction`](@ref).
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable(p ∧ ¬p, p ∧ q)
-┌────────┬──────┬──────┬───────┐
-│ p ∧ ¬p │ p    │ q    │ p ∧ q │
-│ Tree   │ Atom │ Atom │ Tree  │
-├────────┼──────┼──────┼───────┤
-│ ⊥      │ ⊤    │ ⊤    │ ⊤     │
-│ ⊥      │ ⊥    │ ⊤    │ ⊥     │
-├────────┼──────┼──────┼───────┤
-│ ⊥      │ ⊤    │ ⊥    │ ⊥     │
-│ ⊥      │ ⊥    │ ⊥    │ ⊥     │
-└────────┴──────┴──────┴───────┘
+julia> TruthTable(Tree(⊤))
+┌──────┐
+│ ⊤    │
+│ Tree │
+├──────┤
+│ ⊤    │
+└──────┘
 
-julia> TruthTable([⊻, imply])
-┌──────┬──────┬────────┬────────┐
-│ _    │ __   │ _ ⊻ __ │ _ → __ │
-│ Atom │ Atom │ Tree   │ Tree   │
-├──────┼──────┼────────┼────────┤
-│ ⊤    │ ⊤    │ ⊥      │ ⊤      │
-│ ⊥    │ ⊤    │ ⊤      │ ⊤      │
-├──────┼──────┼────────┼────────┤
-│ ⊤    │ ⊥    │ ⊤      │ ⊥      │
-│ ⊥    │ ⊥    │ ⊥      │ ⊤      │
-└──────┴──────┴────────┴────────┘
+julia> @atomize TruthTable(¬p)
+┌──────┬─────────┐
+│ p    │ ¬p      │
+│ Atom │ Literal │
+├──────┼─────────┤
+│ ⊤    │ ⊥       │
+│ ⊥    │ ⊤       │
+└──────┴─────────┘
+
+julia> @atomize TruthTable(p ∧ ¬p, p ⊻ q, ¬(p ∧ q) ∧ (p ∨ q))
+┌────────┬──────┬──────┬──────────────────────────┐
+│ p ∧ ¬p │ p    │ q    │ p ⊻ q, (p ⊼ q) ∧ (p ∨ q) │
+│ Tree   │ Atom │ Atom │ Tree, Tree               │
+├────────┼──────┼──────┼──────────────────────────┤
+│ ⊥      │ ⊤    │ ⊤    │ ⊥                        │
+│ ⊥      │ ⊥    │ ⊤    │ ⊤                        │
+├────────┼──────┼──────┼──────────────────────────┤
+│ ⊥      │ ⊤    │ ⊥    │ ⊤                        │
+│ ⊥      │ ⊥    │ ⊥    │ ⊥                        │
+└────────┴──────┴──────┴──────────────────────────┘
 ```
 """
 struct TruthTable
@@ -65,9 +70,7 @@ struct TruthTable
     function TruthTable(ps)
         # ToDo: write docstring - define behavior
         # ToDo: write tests
-        # TODO: make header support operators (`⊤; NullaryOperator`, `⊻; BinaryOperator`)
 
-        ps = Iterators.map(operator_to_proposition, ps)
         _atoms = union(map(atoms, ps)...)
         ps = union(_atoms, ps)
         _valuations = valuations(_atoms)

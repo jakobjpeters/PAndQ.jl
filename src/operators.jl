@@ -13,13 +13,13 @@ Logical [true](https://en.wikipedia.org/wiki/Tautology_(logic)) operator.
 
 # Examples
 ```jldoctest
-julia> TruthTable(⊤)
-┌────────┐
-│ ⊤      │
-│ Clause │
-├────────┤
-│ ⊤      │
-└────────┘
+julia> TruthTable(Tree(⊤))
+┌──────┐
+│ ⊤    │
+│ Tree │
+├──────┤
+│ ⊤    │
+└──────┘
 ```
 """
 function tautology end
@@ -35,13 +35,13 @@ Logical [false](https://en.wikipedia.org/wiki/Contradiction) operator.
 
 # Examples
 ```jldoctest
-julia> TruthTable(⊥)
-┌────────┐
-│ ⊥      │
-│ Clause │
-├────────┤
-│ ⊥      │
-└────────┘
+julia> TruthTable(Tree(⊥))
+┌──────┐
+│ ⊥    │
+│ Tree │
+├──────┤
+│ ⊥    │
+└──────┘
 ```
 """
 function contradiction end
@@ -56,7 +56,7 @@ Logical [identity](https://en.wikipedia.org/wiki/Law_of_identity) operator.
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable(p)
+julia> @atomize TruthTable(identity(p))
 ┌──────┐
 │ p    │
 │ Atom │
