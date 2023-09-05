@@ -149,31 +149,31 @@ right_neutrals(::LogicalOperator) = Set{NullaryOperator}()
 # Truths
 
 """
-    valuations(as, n = length(unique(atoms(as))))
+    valuations(ps, n = length(unique(atoms(ps))))
     valuations(::Proposition)
 
 Return an iterator of every possible [valuation]
 (https://en.wikipedia.org/wiki/Valuation_(logic))
-of the [`Atom`](@ref)s.
+of each [`Atom`](@ref).
 
 # Examples
 ```jldoctest
 julia> @atomize collect(valuations([p]))
 2-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[Atom(:p) => PAndQ.tautology]
- Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) => PAndQ.contradiction]
+ Pair{Variable, typeof(tautology)}[Variable(:p) => PAndQ.tautology]
+ Pair{Variable, typeof(contradiction)}[Variable(:p) => PAndQ.contradiction]
 
 julia> @atomize collect(valuations([p, q]))
 4-element Vector{Vector}:
- Pair{Atom{Symbol}, typeof(tautology)}[Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.tautology]
- Pair{Atom{Symbol}}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.tautology]
- Pair{Atom{Symbol}}[Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.contradiction]
- Pair{Atom{Symbol}, typeof(contradiction)}[Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.contradiction]
+ Pair{Variable, typeof(tautology)}[Variable(:p) => PAndQ.tautology, Variable(:q) => PAndQ.tautology]
+ Pair{Variable}[Variable(:p) => PAndQ.contradiction, Variable(:q) => PAndQ.tautology]
+ Pair{Variable}[Variable(:p) => PAndQ.tautology, Variable(:q) => PAndQ.contradiction]
+ Pair{Variable, typeof(contradiction)}[Variable(:p) => PAndQ.contradiction, Variable(:q) => PAndQ.contradiction]
 ```
 """
-valuations(atoms, n = length(unique(atoms))) = Iterators.map(i -> map(
+valuations(ps, n = length(unique(ps))) = Iterators.map(i -> map(
     (left, right) -> left => right == 0 ? tautology : contradiction,
-    atoms, digits(i, base = 2, pad = n)
+    ps, digits(i, base = 2, pad = n)
 ), 0:BigInt(2) ^ n - 1)
 valuations(p::Proposition) = valuations(atoms(p))
 
@@ -269,13 +269,13 @@ Return a vector containing all [`interpretations`](@ref) such that
 # Examples
 ```jldoctest
 julia> @atomize collect(solve(p))
-1-element Vector{Vector{Pair{Atom{Symbol}, typeof(tautology)}}}:
- [Atom(:p) => PAndQ.tautology]
+1-element Vector{Vector{Pair{Variable, typeof(tautology)}}}:
+ [Variable(:p) => PAndQ.tautology]
 
 julia> @atomize collect(solve(p ⊻ q))
-2-element Vector{Vector{Pair{Atom{Symbol}}}}:
- [Atom(:p) => PAndQ.contradiction, Atom(:q) => PAndQ.tautology]
- [Atom(:p) => PAndQ.tautology, Atom(:q) => PAndQ.contradiction]
+2-element Vector{Vector{Pair{Variable}}}:
+ [Variable(:p) => PAndQ.contradiction, Variable(:q) => PAndQ.tautology]
+ [Variable(:p) => PAndQ.tautology, Variable(:q) => PAndQ.contradiction]
 ```
 """
 solve(p) = Iterators.filter(
@@ -292,7 +292,7 @@ solve(p) = Iterators.filter(
 Returns a boolean indicating whether `p` and `q` are [logically equivalent]
 (https://en.wikipedia.org/wiki/Logical_equivalence).
 
-[`Atom`](@ref)s are equivalent if and only if their statements are equivalent.
+[`Constant`](@ref)s are equivalent if and only if their values are equivalent.
 
 !!! info
     The `≡` symbol is sometimes used to represent logical equivalence.
@@ -314,7 +314,7 @@ julia> @atomize ¬(p ⊻ q) === (p → q) ∧ (p ← q)
 false
 ```
 """
-==(p::Atom, q::Atom) = p.statement == q.statement
+==(p::Constant, q::Constant) = p.value == q.value
 ==(p::Union{NullaryOperator, Proposition}, q::Union{NullaryOperator, Proposition}) =
     is_tautology(p ↔ q)
 

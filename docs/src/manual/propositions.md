@@ -17,6 +17,7 @@ print_tree(Proposition) # hide
 
 ```@docs
 Proposition
+Atom
 Compound
 Expressive
 ```
@@ -24,7 +25,8 @@ Expressive
 ## Concrete Types
 
 ```@docs
-Atom
+Constant
+Variable
 Literal
 Tree
 Clause

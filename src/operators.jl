@@ -57,13 +57,13 @@ Logical [identity](https://en.wikipedia.org/wiki/Law_of_identity) operator.
 # Examples
 ```jldoctest
 julia> @atomize TruthTable(identity(p))
-┌──────┐
-│ p    │
-│ Atom │
-├──────┤
-│ ⊤    │
-│ ⊥    │
-└──────┘
+┌──────────┐
+│ p        │
+│ Variable │
+├──────────┤
+│ ⊤        │
+│ ⊥        │
+└──────────┘
 ```
 """
 identity
@@ -79,13 +79,13 @@ Logical [negation](https://en.wikipedia.org/wiki/Negation) operator.
 # Examples
 ```jldoctest
 julia> @atomize TruthTable(¬p)
-┌──────┬─────────┐
-│ p    │ ¬p      │
-│ Atom │ Literal │
-├──────┼─────────┤
-│ ⊤    │ ⊥       │
-│ ⊥    │ ⊤       │
-└──────┴─────────┘
+┌──────────┬─────────┐
+│ p        │ ¬p      │
+│ Variable │ Literal │
+├──────────┼─────────┤
+│ ⊤        │ ⊥       │
+│ ⊥        │ ⊤       │
+└──────────┴─────────┘
 ```
 """
 function not end
@@ -104,16 +104,16 @@ Logical [conjunction](https://en.wikipedia.org/wiki/Logical_conjunction) operato
 # Examples
 ```jldoctest
 julia> @atomize TruthTable(p ∧ q)
-┌──────┬──────┬───────┐
-│ p    │ q    │ p ∧ q │
-│ Atom │ Atom │ Tree  │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊤    │ ⊤     │
-│ ⊥    │ ⊤    │ ⊥     │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊥    │ ⊥     │
-│ ⊥    │ ⊥    │ ⊥     │
-└──────┴──────┴───────┘
+┌──────────┬──────────┬───────┐
+│ p        │ q        │ p ∧ q │
+│ Variable │ Variable │ Tree  │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊤        │ ⊤     │
+│ ⊥        │ ⊤        │ ⊥     │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊥        │ ⊥     │
+│ ⊥        │ ⊥        │ ⊥     │
+└──────────┴──────────┴───────┘
 ```
 """
 function and end
@@ -130,16 +130,16 @@ Logical [non-conjunction](https://en.wikipedia.org/wiki/Sheffer_stroke) operator
 # Examples
 ```jldoctest
 julia> @atomize TruthTable(p ⊼ q)
-┌──────┬──────┬───────┐
-│ p    │ q    │ p ⊼ q │
-│ Atom │ Atom │ Tree  │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊤    │ ⊥     │
-│ ⊥    │ ⊤    │ ⊤     │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊥    │ ⊤     │
-│ ⊥    │ ⊥    │ ⊤     │
-└──────┴──────┴───────┘
+┌──────────┬──────────┬───────┐
+│ p        │ q        │ p ⊼ q │
+│ Variable │ Variable │ Tree  │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊤        │ ⊥     │
+│ ⊥        │ ⊤        │ ⊤     │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊥        │ ⊤     │
+│ ⊥        │ ⊥        │ ⊤     │
+└──────────┴──────────┴───────┘
 ```
 """
 nand
@@ -155,16 +155,16 @@ Logical [non-disjunction](https://en.wikipedia.org/wiki/Logical_NOR) operator.
 # Examples
 ```jldoctest
 julia> @atomize TruthTable(p ⊽ q)
-┌──────┬──────┬───────┐
-│ p    │ q    │ p ⊽ q │
-│ Atom │ Atom │ Tree  │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊤    │ ⊥     │
-│ ⊥    │ ⊤    │ ⊥     │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊥    │ ⊥     │
-│ ⊥    │ ⊥    │ ⊤     │
-└──────┴──────┴───────┘
+┌──────────┬──────────┬───────┐
+│ p        │ q        │ p ⊽ q │
+│ Variable │ Variable │ Tree  │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊤        │ ⊥     │
+│ ⊥        │ ⊤        │ ⊥     │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊥        │ ⊥     │
+│ ⊥        │ ⊥        │ ⊤     │
+└──────────┴──────────┴───────┘
 ```
 """
 nor
@@ -180,16 +180,16 @@ Logical [disjunction](https://en.wikipedia.org/wiki/Logical_disjunction) operato
 # Examples
 ```jldoctest
 julia> @atomize TruthTable(p ∨ q)
-┌──────┬──────┬───────┐
-│ p    │ q    │ p ∨ q │
-│ Atom │ Atom │ Tree  │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊤    │ ⊤     │
-│ ⊥    │ ⊤    │ ⊤     │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊥    │ ⊤     │
-│ ⊥    │ ⊥    │ ⊥     │
-└──────┴──────┴───────┘
+┌──────────┬──────────┬───────┐
+│ p        │ q        │ p ∨ q │
+│ Variable │ Variable │ Tree  │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊤        │ ⊤     │
+│ ⊥        │ ⊤        │ ⊤     │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊥        │ ⊤     │
+│ ⊥        │ ⊥        │ ⊥     │
+└──────────┴──────────┴───────┘
 ```
 """
 function or end
@@ -206,16 +206,16 @@ Logical [exclusive disjunction](https://en.wikipedia.org/wiki/Exclusive_or) oper
 # Examples
 ```jldoctest
 julia> @atomize TruthTable(p ⊻ q)
-┌──────┬──────┬───────┐
-│ p    │ q    │ p ⊻ q │
-│ Atom │ Atom │ Tree  │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊤    │ ⊥     │
-│ ⊥    │ ⊤    │ ⊤     │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊥    │ ⊤     │
-│ ⊥    │ ⊥    │ ⊥     │
-└──────┴──────┴───────┘
+┌──────────┬──────────┬───────┐
+│ p        │ q        │ p ⊻ q │
+│ Variable │ Variable │ Tree  │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊤        │ ⊥     │
+│ ⊥        │ ⊤        │ ⊤     │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊥        │ ⊤     │
+│ ⊥        │ ⊥        │ ⊥     │
+└──────────┴──────────┴───────┘
 ```
 """
 xor
@@ -232,16 +232,16 @@ and [biconditional](https://en.wikipedia.org/wiki/Logical_biconditional) operato
 # Examples
 ```jldoctest
 julia> @atomize TruthTable(p ↔ q)
-┌──────┬──────┬───────┐
-│ p    │ q    │ p ↔ q │
-│ Atom │ Atom │ Tree  │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊤    │ ⊤     │
-│ ⊥    │ ⊤    │ ⊥     │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊥    │ ⊥     │
-│ ⊥    │ ⊥    │ ⊤     │
-└──────┴──────┴───────┘
+┌──────────┬──────────┬───────┐
+│ p        │ q        │ p ↔ q │
+│ Variable │ Variable │ Tree  │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊤        │ ⊤     │
+│ ⊥        │ ⊤        │ ⊥     │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊥        │ ⊥     │
+│ ⊥        │ ⊥        │ ⊤     │
+└──────────┴──────────┴───────┘
 ```
 """
 function xnor end
@@ -258,16 +258,16 @@ Logical [non-implication](https://en.wikipedia.org/wiki/Material_nonimplication)
 # Examples
 ```jldoctest
 julia> @atomize TruthTable(p ↛ q)
-┌──────┬──────┬───────┐
-│ p    │ q    │ p ↛ q │
-│ Atom │ Atom │ Tree  │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊤    │ ⊥     │
-│ ⊥    │ ⊤    │ ⊥     │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊥    │ ⊤     │
-│ ⊥    │ ⊥    │ ⊥     │
-└──────┴──────┴───────┘
+┌──────────┬──────────┬───────┐
+│ p        │ q        │ p ↛ q │
+│ Variable │ Variable │ Tree  │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊤        │ ⊥     │
+│ ⊥        │ ⊤        │ ⊥     │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊥        │ ⊤     │
+│ ⊥        │ ⊥        │ ⊥     │
+└──────────┴──────────┴───────┘
 ```
 """
 function not_imply end
@@ -284,16 +284,16 @@ Logical [implication](https://en.wikipedia.org/wiki/Material_conditional) operat
 # Examples
 ```jldoctest
 julia> @atomize TruthTable(p → q)
-┌──────┬──────┬───────┐
-│ p    │ q    │ p → q │
-│ Atom │ Atom │ Tree  │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊤    │ ⊤     │
-│ ⊥    │ ⊤    │ ⊤     │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊥    │ ⊥     │
-│ ⊥    │ ⊥    │ ⊤     │
-└──────┴──────┴───────┘
+┌──────────┬──────────┬───────┐
+│ p        │ q        │ p → q │
+│ Variable │ Variable │ Tree  │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊤        │ ⊤     │
+│ ⊥        │ ⊤        │ ⊤     │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊥        │ ⊥     │
+│ ⊥        │ ⊥        │ ⊤     │
+└──────────┴──────────┴───────┘
 ```
 """
 function imply end
@@ -310,16 +310,16 @@ Logical [converse non-implication](https://en.wikipedia.org/wiki/Converse_nonimp
 # Examples
 ```jldoctest
 julia> @atomize TruthTable(p ↚ q)
-┌──────┬──────┬───────┐
-│ p    │ q    │ p ↚ q │
-│ Atom │ Atom │ Tree  │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊤    │ ⊥     │
-│ ⊥    │ ⊤    │ ⊤     │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊥    │ ⊥     │
-│ ⊥    │ ⊥    │ ⊥     │
-└──────┴──────┴───────┘
+┌──────────┬──────────┬───────┐
+│ p        │ q        │ p ↚ q │
+│ Variable │ Variable │ Tree  │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊤        │ ⊥     │
+│ ⊥        │ ⊤        │ ⊤     │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊥        │ ⊥     │
+│ ⊥        │ ⊥        │ ⊥     │
+└──────────┴──────────┴───────┘
 ```
 """
 function not_converse_imply end
@@ -336,16 +336,16 @@ Logical [converse implication](https://en.wikipedia.org/wiki/Converse_(logic)#Im
 # Examples
 ```jldoctest
 julia> @atomize TruthTable(p ← q)
-┌──────┬──────┬───────┐
-│ p    │ q    │ p ← q │
-│ Atom │ Atom │ Tree  │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊤    │ ⊤     │
-│ ⊥    │ ⊤    │ ⊥     │
-├──────┼──────┼───────┤
-│ ⊤    │ ⊥    │ ⊤     │
-│ ⊥    │ ⊥    │ ⊤     │
-└──────┴──────┴───────┘
+┌──────────┬──────────┬───────┐
+│ p        │ q        │ p ← q │
+│ Variable │ Variable │ Tree  │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊤        │ ⊤     │
+│ ⊥        │ ⊤        │ ⊥     │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊥        │ ⊤     │
+│ ⊥        │ ⊥        │ ⊤     │
+└──────────┴──────────┴───────┘
 ```
 """
 function converse_imply end

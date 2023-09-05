@@ -15,6 +15,16 @@ Supertype of [`Atom`](@ref) and [`Compound`](@ref).
 abstract type Proposition end
 
 """
+    Atom <: Proposition
+
+A proposition with [no deeper propositional structure](https://en.wikipedia.org/wiki/Atomic_formula).
+
+Subtype of [`Proposition`](@ref).
+Supertype of [`Constant`](@ref) and [`Variable`](@ref).
+"""
+abstract type Atom <: Proposition end
+
+"""
     Compound{LO} <: Proposition
 
 A proposition composed from connecting [`Atom`](@ref)ic propositions with [`LogicalOperator`](@ref)s.
@@ -37,37 +47,69 @@ abstract type Expressive{LO} <: Compound{LO} end
 # Concrete Types
 
 """
-    Atom{T} <: Proposition
-    Atom(::T)
+    Constant{T} <: Atom
+    Constant(::T)
 
-A proposition with [no deeper propositional structure](https://en.wikipedia.org/wiki/Atomic_formula).
+An [atomic sentence](https://en.wikipedia.org/wiki/Atomic_sentence).
 
 !!! tip
-    Define pretty-printing for an instance of `Atom{T}` by overloading
-    [`show(io::IO, ::MIME"text/plain", p::Atom{T})`](@ref show).
+    Define pretty-printing for an instance of `Constant{T}` by overloading
+    [`show(io::IO, ::MIME"text/plain", p::Constant{T})`](@ref show).
 
 !!! tip
     Use [`@atoms`](@ref) and [`@atomize`](@ref) as shortcuts to
-    define atoms or instantiate them inline, respectively.
+    define constants or instantiate them inline, respectively.
 
-Subtype of [`Proposition`](@ref).
+Subtype of [`Atom`](@ref).
 
 # Examples
 ```jldoctest
-julia> Atom(:p)
-p
+julia> Constant(1)
+\$(1)
 
-julia> Atom("Logic is fun")
-Atom("Logic is fun")
+julia> Constant("Logic is fun")
+\$("Logic is fun")
 ```
 """
-struct Atom{T} <: Proposition
-    statement::T
+struct Constant{T} <: Atom
+    value::T
 end
 
 """
-    Literal{UO <: UnaryOperator, T} <: Compound{UO}
-    Literal(::UO, ::Atom{T})
+    Variable <: Atom
+
+An [atomic formula](https://en.wikipedia.org/wiki/Atomic_formula).
+
+!!! tip
+    Use [`@atoms`](@ref) and [`@atomize`](@ref) as shortcuts to
+    define variables or instantiate them inline, respectively.
+
+Subtype of [`Atom`](@ref).
+
+# Examples
+```jldoctest
+julia> Variable(:p)
+p
+
+julia> Variable(:q)
+q
+```
+"""
+struct Variable <: Atom
+    symbol::Symbol
+
+    function Variable(symbol)
+        s = string(symbol)
+        isempty(s) && error("The symbol must be non-empty")
+        all(c -> isprint(c) && !isspace(c), s) ||
+            error("The symbol must contain only printable non-space characters")
+        new(symbol)
+    end
+end
+
+"""
+    Literal{UO <: UnaryOperator, A <: Atom} <: Compound{UO}
+    Literal(::UO, ::A)
     Literal(::LiteralProposition)
 
 A proposition represented by [an atomic formula or its negation]
@@ -85,10 +127,10 @@ julia> ¬r
 p
 ```
 """
-struct Literal{UO <: UnaryOperator, T} <: Compound{UO}
-    atom::Atom{T}
+struct Literal{UO <: UnaryOperator, A <: Atom} <: Compound{UO}
+    atom::A
 
-    Literal(::UO, atom::Atom{T}) where {UO <: UnaryOperator, T} = new{UO, T}(atom)
+    Literal(::UO, atom::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, A}(atom)
 end
 
 """
@@ -235,17 +277,17 @@ julia> @atomize PAndQ.children(p)
 ()
 
 julia> @atomize PAndQ.children(¬p)
-(Atom(:p),)
+(Variable(:p),)
 
 julia> @atomize PAndQ.children(p ∧ q)
-2-element Vector{Tree{typeof(identity), Atom{Symbol}}}:
+2-element Vector{Tree{typeof(identity), Variable}}:
  p
  q
 ```
 """
 children(p::Atom) = ()
 children(p::Literal) = (p.atom,)
-children(p::Compound) = only_field(p)
+children(p::Union{Tree, Clause, Normal}) = only_field(p)
 
 """
     nodevalue(::Compound)
@@ -293,14 +335,14 @@ Return the `UnionAll` type of a [`Proposition`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize PAndQ.union_all_type(p)
-Atom
+Variable
 
 julia> @atomize PAndQ.union_all_type(p ∧ q)
 Tree
 ```
 """
 function union_all_type end
-for T in (:Atom, :Literal, :Tree, :Clause, :Normal)
+for T in (:Constant, :Variable, :Literal, :Tree, :Clause, :Normal)
     @eval union_all_type(::$T) = $T
 end
 
@@ -315,29 +357,39 @@ julia> @atomize PAndQ.only_field(p)
 :p
 
 julia> @atomize PAndQ.only_field(p ∧ q)
-2-element Vector{Tree{typeof(identity), Atom{Symbol}}}:
+2-element Vector{Tree{typeof(identity), Variable}}:
  p
  q
 ```
 """
-only_field(p::Atom) = p.statement
+only_field(p::Constant) = p.value
+only_field(p::Variable) = p.symbol
 only_field(p::Literal) = p.atom
 only_field(p::Tree) = p.nodes
 only_field(p::Clause) = p.literals
 only_field(p::Normal) = p.clauses
 
 """
+    symbol_value
+"""
+symbol_value(x::Symbol) = x, :($(Variable(x)))
+symbol_value(x) = isexpr(x, :(=)) ?
+    (first(x.args), :(Constant($(last(x.args))))) :
+    error("syntax should be `symbol = value` or `symbol`")
+
+"""
     atomize(x)
 
-If `x` is a symbol, return an expression that instantiates it as an
-[`Atom`](@ref) if it is undefined in the caller's scope.
-If `x` is an expression, traverse it with recursive calls to `atomize`
+If `x` is a symbol, return an expression that instantiates it as a
+[`Variable`](@ref) if it is undefined in the caller's scope.
+If `isexpr(x, :\$)`, return an expression that instantiates it as a [`Constant`](@ref).
+If `x` is another expression, traverse it with recursive calls to `atomize`
 Otherise, return x.
 """
-atomize(x::Symbol) = :((@isdefined $x) ? $x : $(Atom(x)))
+atomize(x::Symbol) = :((@isdefined $x) ? $x : $(Variable(x)))
 function atomize(x::Expr)
     if length(x.args) == 0 x
-    elseif isexpr(x, :$); :(Atom($(only(x.args))))
+    elseif isexpr(x, :$); :(Constant($(only(x.args))))
     elseif isexpr(x, (:kw, :<:))
         Expr(x.head, x.args[1], atomize(x.args[2]))
     elseif isexpr(x, (:struct, :where)) x # TODO
@@ -352,38 +404,36 @@ atomize(x) = x
 # Macros
 
 """
-    @atoms(ps...)
+    @atoms(xs...)
 
-Instantiate and define [`Atom`](@ref)s with symbols and return a vector containing them.
+Instantiate and define [`Atom`](@ref)s as `const` and return a vector containing them.
 
-!!! info
-    Atoms are defined in the global scope as constants.
+Expressions of the form `symbol = value` and `symbol` are defined as
+`const symbol = Constant(value)` and `const symbol = Variable(:symbol)`, respectively.
+
+See also [`Atom`](@ref) and [`Variable`](@ref).
 
 Examples
 ```jldoctest
-julia> @atoms p q
-2-element Vector{Atom{Symbol}}:
+julia> @atoms a = 1 p
+2-element Vector{Atom}:
+ \$(1)
  p
- q
+
+julia> a
+\$(1)
 
 julia> p
 p
-
-julia> q
-q
 ```
 """
-macro atoms(ps...)
+macro atoms(xs...)
+    symbols_values = map(symbol_value, xs)
     esc(quote
-        $(map(p -> :(const $p = $(Atom(p))), ps)...)
-        Atom{Symbol}[$(ps...)]
+        $(map(((symbol, value),) -> :(const $symbol = $value), symbols_values)...)
+        [$(map(first, symbols_values)...)]
     end)
 end
-#=
-Source:
-Symbolics.jl
-https://github.com/JuliaSymbolics/Symbolics.jl
-=#
 
 """
     @atomize(expression)
@@ -407,7 +457,7 @@ julia> @atomize x → r
 (p ∧ q) → r
 
 julia> @atomize \$1 ∧ \$(1 + 1)
-Atom(1) ∧ Atom(2)
+\$(1) ∧ \$(2)
 ```
 """
 macro atomize(expression)
@@ -419,11 +469,13 @@ end
 
 # Examples
 ```jldoctest
-julia> p = @p_str("x")
-x
+julia> x = @p_str("p")
+p
 
-julia> p"p ∧ q, Clause(and)"
-(Tree(and, Tree(identity, Atom(:x)), Tree(identity, Atom(:q))), Clause(and, []))
+julia> p"[x ∧ q, Clause(and)]"
+2-element Vector{Compound{typeof(and)}}:
+ p ∧ q
+ ⊤
 ```
 """
 macro p_str(p)
@@ -433,28 +485,31 @@ end
 # Utility
 
 """
-    atoms(p)
+    atoms(p, T = Atom)
 
-Returns an iterator of [`Atom`](@ref)s contained in `p`.
+Return an iterator of each [`Atom`](@ref) of type `T` contained in `p`.
+
+See also [`Constant`](@ref) and [`Variable`](@ref).
 
 # Examples
 ```jldoctest
-julia> @atomize collect(atoms(¬p))
-1-element Vector{Atom{Symbol}}:
- p
-
 julia> @atomize collect(atoms(p ∧ q))
-2-element Vector{Atom{Symbol}}:
+2-element Vector{Variable}:
  p
  q
+
+julia> @atomize collect(atoms(p ∧ q ∨ \$1 ∧ \$2, Constant))
+2-element Vector{Constant{Int64}}:
+ \$(1)
+ \$(2)
 ```
 """
-atoms(p) = Iterators.filter(leaf -> leaf isa Atom, Leaves(p))
+atoms(p, T = Atom) = Iterators.filter(leaf -> leaf isa T, Leaves(p))
 
 """
     operators(p)
 
-Returns an iterator of [`LogicalOperator`](@ref)s contained in `p`.
+Return an iterator of each [`LogicalOperator`](@ref) contained in `p`.
 
 # Examples
 ```jldoctest
@@ -469,4 +524,7 @@ julia> @atomize collect(operators(¬p ∧ q))
  identity (generic function with 1 method)
 ```
 """
-operators(p) = Iterators.map(nodevalue, Iterators.filter(node -> !isa(node, Atom), PreOrderDFS(p)))
+operators(p) = Iterators.map(
+    nodevalue,
+    Iterators.filter(node -> !isa(node, Atom), PreOrderDFS(p))
+)

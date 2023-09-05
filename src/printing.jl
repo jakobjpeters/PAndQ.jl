@@ -41,30 +41,30 @@ julia> TruthTable(Tree(⊤))
 └──────┘
 
 julia> @atomize TruthTable(¬p)
-┌──────┬─────────┐
-│ p    │ ¬p      │
-│ Atom │ Literal │
-├──────┼─────────┤
-│ ⊤    │ ⊥       │
-│ ⊥    │ ⊤       │
-└──────┴─────────┘
+┌──────────┬─────────┐
+│ p        │ ¬p      │
+│ Variable │ Literal │
+├──────────┼─────────┤
+│ ⊤        │ ⊥       │
+│ ⊥        │ ⊤       │
+└──────────┴─────────┘
 
 julia> @atomize TruthTable(p ∧ ¬p, p ⊻ q, ¬(p ∧ q) ∧ (p ∨ q))
-┌────────┬──────┬──────┬──────────────────────────┐
-│ p ∧ ¬p │ p    │ q    │ p ⊻ q, (p ⊼ q) ∧ (p ∨ q) │
-│ Tree   │ Atom │ Atom │ Tree, Tree               │
-├────────┼──────┼──────┼──────────────────────────┤
-│ ⊥      │ ⊤    │ ⊤    │ ⊥                        │
-│ ⊥      │ ⊥    │ ⊤    │ ⊤                        │
-├────────┼──────┼──────┼──────────────────────────┤
-│ ⊥      │ ⊤    │ ⊥    │ ⊤                        │
-│ ⊥      │ ⊥    │ ⊥    │ ⊥                        │
-└────────┴──────┴──────┴──────────────────────────┘
+┌────────┬──────────┬──────────┬──────────────────────────┐
+│ p ∧ ¬p │ p        │ q        │ p ⊻ q, (p ⊼ q) ∧ (p ∨ q) │
+│ Tree   │ Variable │ Variable │ Tree, Tree               │
+├────────┼──────────┼──────────┼──────────────────────────┤
+│ ⊥      │ ⊤        │ ⊤        │ ⊥                        │
+│ ⊥      │ ⊥        │ ⊤        │ ⊤                        │
+├────────┼──────────┼──────────┼──────────────────────────┤
+│ ⊥      │ ⊤        │ ⊥        │ ⊤                        │
+│ ⊥      │ ⊥        │ ⊥        │ ⊥                        │
+└────────┴──────────┴──────────┴──────────────────────────┘
 ```
 """
 struct TruthTable
     header::Vector{Vector{Proposition}}
-    sub_header::Vector{Vector{UnionAll}}
+    sub_header::Vector{Vector{Type}}
     body::Matrix{NullaryOperator}
 
     function TruthTable(ps)
@@ -98,7 +98,7 @@ struct TruthTable
         end
 
         header = Vector{Proposition}[]
-        sub_header = Vector{UnionAll}[]
+        sub_header = Vector{Type}[]
         body = Vector{NullaryOperator}[]
         for (_interpretations, group) in (
             truths_interpretations => grouped_truths,
@@ -234,7 +234,12 @@ julia> show(stdout, MIME"text/plain"(), Normal(x))
 (p ∨ q) ∧ (¬p ∨ ¬q)
 ```
 """
-show(io::IO, ::MIME"text/plain", p::Atom{Symbol}) = print(io, p.statement)
+function show(io::IO, ::MIME"text/plain", p::Constant)
+    print(io, "\$(")
+    show(io, p.value)
+    print(io, ")")
+end
+show(io::IO, ::MIME"text/plain", p::Variable) = print(io, p.symbol)
 function show(io::IO, ::MIME"text/plain", p::Literal{UO}) where UO
     print(io, operator_to_symbol(UO.instance))
     show(io, MIME"text/plain"(), p.atom)
@@ -276,12 +281,12 @@ show(io::IO, ::MIME"text/latex", truth_table::TruthTable) =
 """
     show(::IO, ::Proposition)
 
-Represent the given [`Proposition`](@ref) as valid Julia code.
+Represent the given [`Proposition`](@ref) expanded as valid Julia code.
 
 # Examples
 ```jldoctest
 julia> @atomize s = sprint(show, p ∧ q)
-"Tree(and, Tree(identity, Atom(:p)), Tree(identity, Atom(:q)))"
+"Tree(and, Tree(identity, Variable(:p)), Tree(identity, Variable(:q)))"
 
 julia> @eval \$(Meta.parse(s))
 p ∧ q
@@ -289,7 +294,7 @@ p ∧ q
 """
 function show(io::IO, p::A) where A <: Atom
     print(io, nameof(A), "(")
-    show(io, p.statement)
+    show(io, only_field(p))
     print(io, ")")
 end
 show(io::IO, p::L) where {UO, L <: Literal{UO}} =

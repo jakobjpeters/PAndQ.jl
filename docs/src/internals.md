@@ -45,6 +45,7 @@ PAndQ.printnode
 ```@docs
 PAndQ.union_all_type
 PAndQ.only_field
+PAndQ.symbol_value
 PAndQ.atomize
 ```
 

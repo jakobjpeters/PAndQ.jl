@@ -32,8 +32,8 @@ export
 include("propositions.jl")
 
 export
-    Proposition, Compound, Expressive,
-    Atom, Literal, Tree, Clause, Normal,
+    Proposition, Atom, Compound, Expressive,
+    Constant, Variable, Literal, Tree, Clause, Normal,
     @atoms, @atomize, @p_str,
     atoms, operators
 
