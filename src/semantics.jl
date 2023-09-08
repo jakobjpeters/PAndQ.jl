@@ -149,21 +149,21 @@ right_neutrals(::LogicalOperator) = Set{NullaryOperator}()
 # Truths
 
 """
-    valuations(ps, n = length(unique(atoms(ps))))
+    valuations(atoms)
     valuations(::Proposition)
 
 Return an iterator of every possible [valuation]
 (https://en.wikipedia.org/wiki/Valuation_(logic))
-of each [`Atom`](@ref).
+of [`Atom`](@ref)s.
 
 # Examples
 ```jldoctest
-julia> @atomize collect(valuations([p]))
+julia> @atomize collect(valuations(p))
 2-element Vector{Vector}:
  Pair{Variable, typeof(tautology)}[Variable(:p) => PAndQ.tautology]
  Pair{Variable, typeof(contradiction)}[Variable(:p) => PAndQ.contradiction]
 
-julia> @atomize collect(valuations([p, q]))
+julia> @atomize collect(valuations(p ∧ q))
 4-element Vector{Vector}:
  Pair{Variable, typeof(tautology)}[Variable(:p) => PAndQ.tautology, Variable(:q) => PAndQ.tautology]
  Pair{Variable}[Variable(:p) => PAndQ.contradiction, Variable(:q) => PAndQ.tautology]
@@ -171,10 +171,15 @@ julia> @atomize collect(valuations([p, q]))
  Pair{Variable, typeof(contradiction)}[Variable(:p) => PAndQ.contradiction, Variable(:q) => PAndQ.contradiction]
 ```
 """
-valuations(ps, n = length(unique(ps))) = Iterators.map(i -> map(
-    (left, right) -> left => right == 0 ? tautology : contradiction,
-    ps, digits(i, base = 2, pad = n)
-), 0:BigInt(2) ^ n - 1)
+function valuations(atoms)
+    unique_atoms = unique(atoms)
+    n = length(unique_atoms)
+
+    Iterators.map(i -> map(
+        (left, right) -> left => right == 0 ? tautology : contradiction,
+        unique_atoms, digits(i, base = 2, pad = n)
+    ), 0:BigInt(2) ^ n - 1)
+end
 valuations(p::Proposition) = valuations(atoms(p))
 
 """
