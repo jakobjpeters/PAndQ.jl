@@ -198,13 +198,14 @@ julia> @atomize interpret(a -> ⊤, ¬p)
 contradiction (generic function with 1 method)
 
 julia> @atomize interpret(a -> get(Dict(p => ⊤), a, a), p ∧ q)
-(q)
+q
 ```
 """
 interpret(valuation, p::Atom) = valuation(p)
 interpret(valuation, p::Literal{UO}) where UO =
     UO.instance(interpret(valuation, p.atom))
-interpret(valuation, p::Tree) = interpret(valuation, Normal(p))
+interpret(valuation, p::Tree{LO}) where LO =
+    LO.instance(map(node -> interpret(valuation, node), p.nodes)...)
 function interpret(valuation, p::Union{Clause{AO}, Normal{AO}}) where AO
     neutral = only(left_neutrals(AO.instance))
     not_neutral = not(neutral)
@@ -258,8 +259,8 @@ julia> @atomize collect(interpretations(p))
  contradiction (generic function with 1 method)
 
 julia> @atomize collect(interpretations(p → q, [p => ⊤]))
-1-element Vector{Normal{typeof(and), Clause{typeof(or)}}}:
- (q)
+1-element Vector{Variable}:
+ q
 ```
 """
 interpretations(p, valuations = valuations(p)) =
