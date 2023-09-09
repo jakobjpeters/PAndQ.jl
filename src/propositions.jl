@@ -1,4 +1,5 @@
 
+import Base: map
 import AbstractTrees: children, nodevalue, printnode
 using Base.Meta: isexpr, parse
 using AbstractTrees: childtype, Leaves, nodevalues, PreOrderDFS
@@ -327,6 +328,34 @@ printnode(io::IO, p::Compound; kwargs...) = print(io, operator_to_symbol(nodeval
 
 ## Utilities
 
+_map(P::Type{<:Tree{LO}}, children) where LO = P(LO.instance, children...)
+_map(P::Type{<:Union{Clause, Normal}}, lo, children) = P(lo, children)
+
+"""
+    map(f, ::Proposition)
+
+Apply `f` to each [`Atom`](@ref) in the [`Proposition`](@ref).
+
+# Examples
+```jldoctest
+julia> @atomize map(Tree ∘ ¬, p ∧ q)
+¬p ∧ ¬q
+
+julia> @atomize map(p ∧ q) do atom
+    println(atom)
+    atom
+end
+Variable(:p)
+Variable(:q)
+p ∧ q
+```
+"""
+map(f, p::Atom) = f(p)
+map(f, p::Tree{LO}) where LO =
+    union_all_type(p)(LO.instance, map(child -> map(f, child), children(p))...)
+map(f, p::Union{Clause{AO}, Normal{AO}}) where AO =
+    union_all_type(p)(AO.instance, map(child -> map(f, child), children(p)))
+
 """
     union_all_type(::Proposition)
 
@@ -525,6 +554,6 @@ julia> @atomize collect(operators(¬p ∧ q))
 ```
 """
 operators(p) = Iterators.filter(
-    node -> !isa(node, Proposition),
+    node -> !isa(node, Atom),
     nodevalues(PreOrderDFS(p))
 )
