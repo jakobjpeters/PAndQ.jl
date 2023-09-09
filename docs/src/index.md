@@ -44,7 +44,7 @@ q ∧ ¬p
 julia> u = s ∨ t
 (p ∧ ¬q) ∨ (q ∧ ¬p)
 
-julia> TruthTable(p ∧ ¬p, r, p ⊻ q, u)
+julia> TruthTable([p ∧ ¬p, r, p ⊻ q, u])
 ┌────────┬──────────┬──────────┬─────────┬────────────────────────────┐
 │ p ∧ ¬p │ p        │ q        │ ¬p      │ p ⊻ q, (p ∧ ¬q) ∨ (q ∧ ¬p) │
 │ Tree   │ Variable │ Variable │ Literal │ Tree, Normal               │

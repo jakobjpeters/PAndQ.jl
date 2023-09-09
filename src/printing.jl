@@ -32,7 +32,7 @@ See also [`tautology`](@ref) and [`contradiction`](@ref).
 
 # Examples
 ```jldoctest
-julia> TruthTable(Tree(⊤))
+julia> TruthTable([Tree(⊤)])
 ┌──────┐
 │ ⊤    │
 │ Tree │
@@ -40,7 +40,7 @@ julia> TruthTable(Tree(⊤))
 │ ⊤    │
 └──────┘
 
-julia> @atomize TruthTable(¬p)
+julia> @atomize TruthTable([¬p])
 ┌──────────┬─────────┐
 │ p        │ ¬p      │
 │ Variable │ Literal │
@@ -49,7 +49,7 @@ julia> @atomize TruthTable(¬p)
 │ ⊥        │ ⊤       │
 └──────────┴─────────┘
 
-julia> @atomize TruthTable(p ∧ ¬p, p ⊻ q, ¬(p ∧ q) ∧ (p ∨ q))
+julia> @atomize TruthTable([p ∧ ¬p, p ⊻ q, ¬(p ∧ q) ∧ (p ∨ q)])
 ┌────────┬──────────┬──────────┬──────────────────────────┐
 │ p ∧ ¬p │ p        │ q        │ p ⊻ q, (p ⊼ q) ∧ (p ∨ q) │
 │ Tree   │ Variable │ Variable │ Tree, Tree               │
@@ -116,8 +116,6 @@ struct TruthTable
         new(header, sub_header, reduce(hcat, body))
     end
 end
-TruthTable(p::Union{LogicalOperator, Proposition}) = TruthTable((p,))
-TruthTable(ps...) = TruthTable(ps)
 
 # Internals
 

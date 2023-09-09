@@ -13,7 +13,7 @@ Logical [true](https://en.wikipedia.org/wiki/Tautology_(logic)) operator.
 
 # Examples
 ```jldoctest
-julia> TruthTable(Tree(⊤))
+julia> TruthTable([Tree(⊤)])
 ┌──────┐
 │ ⊤    │
 │ Tree │
@@ -35,7 +35,7 @@ Logical [false](https://en.wikipedia.org/wiki/Contradiction) operator.
 
 # Examples
 ```jldoctest
-julia> TruthTable(Tree(⊥))
+julia> TruthTable([Tree(⊥)])
 ┌──────┐
 │ ⊥    │
 │ Tree │
@@ -56,7 +56,7 @@ Logical [identity](https://en.wikipedia.org/wiki/Law_of_identity) operator.
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable(identity(p))
+julia> @atomize TruthTable([identity(p)])
 ┌──────────┐
 │ p        │
 │ Variable │
@@ -78,7 +78,7 @@ Logical [negation](https://en.wikipedia.org/wiki/Negation) operator.
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable(¬p)
+julia> @atomize TruthTable([¬p])
 ┌──────────┬─────────┐
 │ p        │ ¬p      │
 │ Variable │ Literal │
@@ -103,7 +103,7 @@ Logical [conjunction](https://en.wikipedia.org/wiki/Logical_conjunction) operato
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable(p ∧ q)
+julia> @atomize TruthTable([p ∧ q])
 ┌──────────┬──────────┬───────┐
 │ p        │ q        │ p ∧ q │
 │ Variable │ Variable │ Tree  │
@@ -129,7 +129,7 @@ Logical [non-conjunction](https://en.wikipedia.org/wiki/Sheffer_stroke) operator
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable(p ⊼ q)
+julia> @atomize TruthTable([p ⊼ q])
 ┌──────────┬──────────┬───────┐
 │ p        │ q        │ p ⊼ q │
 │ Variable │ Variable │ Tree  │
@@ -154,7 +154,7 @@ Logical [non-disjunction](https://en.wikipedia.org/wiki/Logical_NOR) operator.
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable(p ⊽ q)
+julia> @atomize TruthTable([p ⊽ q])
 ┌──────────┬──────────┬───────┐
 │ p        │ q        │ p ⊽ q │
 │ Variable │ Variable │ Tree  │
@@ -179,7 +179,7 @@ Logical [disjunction](https://en.wikipedia.org/wiki/Logical_disjunction) operato
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable(p ∨ q)
+julia> @atomize TruthTable([p ∨ q])
 ┌──────────┬──────────┬───────┐
 │ p        │ q        │ p ∨ q │
 │ Variable │ Variable │ Tree  │
@@ -205,7 +205,7 @@ Logical [exclusive disjunction](https://en.wikipedia.org/wiki/Exclusive_or) oper
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable(p ⊻ q)
+julia> @atomize TruthTable([p ⊻ q])
 ┌──────────┬──────────┬───────┐
 │ p        │ q        │ p ⊻ q │
 │ Variable │ Variable │ Tree  │
@@ -231,7 +231,7 @@ and [biconditional](https://en.wikipedia.org/wiki/Logical_biconditional) operato
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable(p ↔ q)
+julia> @atomize TruthTable([p ↔ q])
 ┌──────────┬──────────┬───────┐
 │ p        │ q        │ p ↔ q │
 │ Variable │ Variable │ Tree  │
@@ -257,7 +257,7 @@ Logical [non-implication](https://en.wikipedia.org/wiki/Material_nonimplication)
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable(p ↛ q)
+julia> @atomize TruthTable([p ↛ q])
 ┌──────────┬──────────┬───────┐
 │ p        │ q        │ p ↛ q │
 │ Variable │ Variable │ Tree  │
@@ -283,7 +283,7 @@ Logical [implication](https://en.wikipedia.org/wiki/Material_conditional) operat
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable(p → q)
+julia> @atomize TruthTable([p → q])
 ┌──────────┬──────────┬───────┐
 │ p        │ q        │ p → q │
 │ Variable │ Variable │ Tree  │
@@ -309,7 +309,7 @@ Logical [converse non-implication](https://en.wikipedia.org/wiki/Converse_nonimp
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable(p ↚ q)
+julia> @atomize TruthTable([p ↚ q])
 ┌──────────┬──────────┬───────┐
 │ p        │ q        │ p ↚ q │
 │ Variable │ Variable │ Tree  │
@@ -335,7 +335,7 @@ Logical [converse implication](https://en.wikipedia.org/wiki/Converse_(logic)#Im
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable(p ← q)
+julia> @atomize TruthTable([p ← q])
 ┌──────────┬──────────┬───────┐
 │ p        │ q        │ p ← q │
 │ Variable │ Variable │ Tree  │

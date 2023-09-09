@@ -201,12 +201,12 @@ julia> ¬(¬p ∧ ¬q) === p ∨ q
 false
 ```
 
-## Visualization
+## Printing
 
 It would also be helpful to enumerate each valuation and interpretation in a visual format. This is accomplished by creating a [`TruthTable`](@ref). A truth table is a table where each column in the header identifies a proposition, and each row contains an interpretation (including the valuation of atomic propositions). To demonstrate these, we will use the [`xor`](@ref) operator, represented by the symbol `⊻`. Try to understand the meaning of this operator as it is interpreted with different valuations.
 
 ```jldoctest 1
-julia> TruthTable(p ⊻ q)
+julia> TruthTable([p ⊻ q])
 ┌──────────┬──────────┬───────┐
 │ p        │ q        │ p ⊻ q │
 │ Variable │ Variable │ Tree  │
