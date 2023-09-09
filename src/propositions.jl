@@ -1,7 +1,7 @@
 
 import AbstractTrees: children, nodevalue, printnode
 using Base.Meta: isexpr, parse
-using AbstractTrees: childtype, Leaves, PreOrderDFS
+using AbstractTrees: childtype, Leaves, nodevalues, PreOrderDFS
 
 # Abstract Types
 
@@ -524,7 +524,7 @@ julia> @atomize collect(operators(¬p ∧ q))
  identity (generic function with 1 method)
 ```
 """
-operators(p) = Iterators.map(
-    nodevalue,
-    Iterators.filter(node -> !isa(node, Atom), PreOrderDFS(p))
+operators(p) = Iterators.filter(
+    node -> !isa(node, Proposition),
+    nodevalues(PreOrderDFS(p))
 )
