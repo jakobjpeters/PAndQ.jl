@@ -151,41 +151,36 @@ merge_string(cell) = join(Iterators.map(
 ), ", ")
 
 """
-    letter(::NullaryOperator)
+    format_letter(::NullaryOperator)
 
 # Examples
 ```jldoctest
-julia> PAndQ.letter(tautology)
-"T"
+julia> PAndQ.format_letter(tautology)
+:T
 
-julia> PAndQ.letter(contradiction)
-"F"
+julia> PAndQ.format_letter(contradiction)
+:F
 ```
 """
-letter(::typeof(tautology)) = "T"
-letter(::typeof(contradiction)) = "F"
+format_letter(::typeof(⊤)) = :T
+format_letter(::typeof(⊥)) = :F
 
 """
     format_latex(x)
 """
 format_latex(x) = LatexCell(print_latex(String, x))
 
-"""
-    format_head(format, cell)
-"""
-format_head(format, cell) = (format == :latex ? format_latex : identity)(cell)
-
 const _format_body = Dict(
-    :truth => string ∘ operator_to_symbol,
-    :text => string ∘ nameof,
-    :letter => letter,
-    :bool => string ∘ Bool,
-    :bit =>  string ∘ Int ∘ Bool,
+    :truth => operator_to_symbol,
+    :text => nameof,
+    :letter => format_letter,
+    :bool => Bool,
+    :bit =>  Int ∘ Bool,
     :latex => format_latex ∘ operator_to_symbol
 )
 
 """
-    format_body(format, cell)
+    format_body
 """
 format_body(format, cell) = _format_body[format](cell)
 
@@ -246,11 +241,11 @@ show(io::IO, ::MIME"text/plain", p::Tree{NO}) where NO <: NullaryOperator =
     print(io, operator_to_symbol(NO.instance))
 show(io::IO, ::MIME"text/plain", p::Tree{typeof(identity)}) =
     show(io, MIME"text/plain"(), only(p.nodes))
-function show(io::IO, ::MIME"text/plain", p::Tree{N, <:Atom}) where N <: typeof(not)
+function show(io::IO, ::MIME"text/plain", p::Tree{N, <:Atom}) where N <: typeof(¬)
     print(io, operator_to_symbol(N.instance))
     show(io, MIME"text/plain"(), only(p.nodes))
 end
-function show(io::IO, ::MIME"text/plain", p::Tree{N, <:Tree}) where N <: typeof(not)
+function show(io::IO, ::MIME"text/plain", p::Tree{N, <:Tree}) where N <: typeof(¬)
     print(io, operator_to_symbol(N.instance), "(")
     show(io, MIME"text/plain"(), only(p.nodes))
     print(io, ")")
@@ -367,7 +362,10 @@ function __print_truth_table(
     sub_header = true, numbered_rows = false, format = :truth, alignment = :l,
     kwargs...
 )
-    header = map(cell -> merge_string(format_head(format, cell)), truth_table.header)
+    header = map(
+        cell -> merge_string(format == :latex ? format_latex(cell) : cell),
+        truth_table.header
+    )
     if sub_header
         header = (header, map(merge_string, truth_table.sub_header))
     end
@@ -417,8 +415,7 @@ julia> println(s)
 ```
 """
 function print_latex(io::IO, x::String; newline = false, delimeter = "\\(" => "\\)")
-    # populates `symbols_latex`
-    isempty(symbols_latex) && symbol_latex("∧")
+    isempty(symbols_latex) && symbol_latex("")
 
     latex = join((
         first(delimeter),

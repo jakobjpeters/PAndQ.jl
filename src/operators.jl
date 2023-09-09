@@ -360,23 +360,21 @@ const ← = converse_imply
 
 The `Union` of [`LogicalOperator`](@ref)s that take zero arguments.
 """
-const NullaryOperator = union_typeof((tautology, contradiction))
+const NullaryOperator = union_typeof((⊤, ⊥))
 
 """
     UnaryOperator
 
 The `Union` of [`LogicalOperator`](@ref)s that take one argument.
 """
-const UnaryOperator = union_typeof((identity, not))
+const UnaryOperator = union_typeof((identity, ¬))
 
 """
     BinaryOperator
 
 The `Union` of [`LogicalOperator`](@ref)s that take two arguments.
 """
-const BinaryOperator = union_typeof((
-    and, nand, nor, or, xor, xnor, imply, not_imply, converse_imply, not_converse_imply
-))
+const BinaryOperator = union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔, →, ↛, ←, ↚))
 
 """
     LogicalOperator
@@ -391,7 +389,7 @@ const LogicalOperator = Union{NullaryOperator, UnaryOperator, BinaryOperator}
 The `Union` of [`LogicalOperator`](@ref)s with the [commutative property]
 (https://en.wikipedia.org/wiki/Commutative_property).
 """
-const CommutativeOperator = union_typeof((and, nand, nor, or, xor, xnor))
+const CommutativeOperator = union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔))
 
 """
     AssociativeOperator
@@ -399,7 +397,7 @@ const CommutativeOperator = union_typeof((and, nand, nor, or, xor, xnor))
 The `Union` of [`LogicalOperator`](@ref)s with the [associative property]
 (https://en.wikipedia.org/wiki/Associative_property).
 """
-const AssociativeOperator = union_typeof((and, or, xor, xnor))
+const AssociativeOperator = union_typeof((∧, ∨, ⊻, ↔))
 
 """
     LeftNeutralOperator
@@ -408,7 +406,7 @@ The `Union` of [`LogicalOperator`](@ref)s that have one or more [`left_neutrals`
 """
 const LeftNeutralOperator = Union{
     AssociativeOperator,
-    union_typeof((imply, not_converse_imply))
+    union_typeof((→, ↚))
 }
 
 """
@@ -418,7 +416,7 @@ The `Union` of [`LogicalOperator`](@ref)s that have one or more [`right_neutrals
 """
 const RightNeutralOperator = Union{
     AssociativeOperator,
-    union_typeof((not_imply, converse_imply))
+    union_typeof((↛, ←))
 }
 
 """
@@ -426,7 +424,7 @@ const RightNeutralOperator = Union{
 
 The `Union` of [`and`](@ref) and [`or`](@ref).
 """
-const AndOr = union_typeof((and, or))
+const AndOr = union_typeof((∧, ∨))
 
 # Reductions
 
@@ -434,7 +432,7 @@ const AndOr = union_typeof((and, or))
     conjunction(ps)
     ⋀(ps)
 
-Equivalent to `foldl(and, ps; init = tautology)`.
+Equivalent to `foldl(∧, ps; init = tautology)`.
 
 `⋀` can be typed by `\\bigwedge<tab>`.
 
@@ -446,14 +444,14 @@ julia> @atomize ⋀([p, q, r, s])
 ((p ∧ q) ∧ r) ∧ s
 ```
 """
-conjunction(ps) = foldl(and, ps)
+conjunction(ps) = foldl(∧, ps)
 const ⋀ = conjunction
 
 """
     disjunction(ps)
     ⋁(ps)
 
-Equivalent to `foldl(or, ps; init = contradiction)`.
+Equivalent to `foldl(∨, ps; init = contradiction)`.
 
 `⋁` can be typed by `\\bigvee<tab>`.
 
@@ -465,7 +463,7 @@ julia> @atomize ⋁([p, q, r, s])
 ((p ∨ q) ∨ r) ∨ s
 ```
 """
-disjunction(ps) = foldl(or, ps)
+disjunction(ps) = foldl(∨, ps)
 const ⋁ = disjunction
 
 """

@@ -23,15 +23,15 @@ See also [`left_neutrals`](@ref) and [`right_neutrals`](@ref).
 
 # Examples
 ```jldoctest
-julia> PAndQ.neutral_operator(tautology)
+julia> PAndQ.neutral_operator(⊤)
 and (generic function with 23 methods)
 
-julia> PAndQ.neutral_operator(contradiction)
+julia> PAndQ.neutral_operator(⊥)
 or (generic function with 19 methods)
 ```
 """
-neutral_operator(::typeof(tautology)) = and
-neutral_operator(::typeof(contradiction)) = or
+neutral_operator(::typeof(⊤)) = ∧
+neutral_operator(::typeof(⊥)) = ∨
 
 """
     eval_doubles(f, doubles)
@@ -66,14 +66,14 @@ julia> @atomize imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
 ```
 """
-dual(bo::UnaryOperator) = bo
-dual(bo::Union{NullaryOperator, union_typeof((xor, xnor))}) = not(bo)
+dual(uo::UnaryOperator) = uo
+dual(lo::Union{NullaryOperator, union_typeof((⊻, ↔))}) = ¬lo
 eval_doubles(:dual, (
-    (and, or),
-    (nand, nor),
-    (xor, xnor),
-    (imply, not_converse_imply),
-    (not_imply, converse_imply)
+    (∧, ∨),
+    (⊼, ⊽),
+    (⊻, ↔),
+    (→, ↚),
+    (↛, ←)
 ))
 
 """
@@ -92,14 +92,14 @@ julia> @atomize and(p, q) == converse(and)(q, p)
 true
 
 julia> converse(imply)
-converse_imply (generic function with 7 methods)
+converse_imply (generic function with 6 methods)
 
 julia> @atomize imply(p, q) == converse(imply)(q, p)
 true
 ```
 """
 converse(co::CommutativeOperator) = co
-eval_doubles(:converse, ((imply, converse_imply), (not_imply, not_converse_imply)))
+eval_doubles(:converse, ((→, ←), (↛, ↚)))
 
 """
     left_neutrals(::LogicalOperator)
@@ -121,8 +121,8 @@ julia> left_neutrals(nor)
 Set{Union{typeof(contradiction), typeof(tautology)}}()
 ```
 """
-left_neutrals(::union_typeof((and, xnor, imply))) = Set{NullaryOperator}((tautology,))
-left_neutrals(::union_typeof((or, xor, not_converse_imply))) = Set{NullaryOperator}((contradiction,))
+left_neutrals(::union_typeof((∧, ↔, →))) = Set{NullaryOperator}((⊤,))
+left_neutrals(::union_typeof((∨, ⊻, ↚))) = Set{NullaryOperator}((⊥,))
 left_neutrals(::LogicalOperator) = Set{NullaryOperator}()
 
 """
@@ -142,8 +142,8 @@ Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
   PAndQ.tautology
 ```
 """
-right_neutrals(::union_typeof((and, xnor, converse_imply))) = Set{NullaryOperator}((tautology,))
-right_neutrals(::union_typeof((or, xor, not_imply))) = Set{NullaryOperator}((contradiction,))
+right_neutrals(::union_typeof((∧, ↔, ←))) = Set{NullaryOperator}((⊤,))
+right_neutrals(::union_typeof((∨, ⊻, ↛))) = Set{NullaryOperator}((⊥,))
 right_neutrals(::LogicalOperator) = Set{NullaryOperator}()
 
 # Truths
@@ -176,7 +176,7 @@ function valuations(atoms)
     n = length(unique_atoms)
 
     Iterators.map(i -> map(
-        (left, right) -> left => right == 0 ? tautology : contradiction,
+        (atom, digit) -> atom => Bool(digit) ? ⊥ : ⊤,
         unique_atoms, digits(i, base = 2, pad = n)
     ), 0:BigInt(2) ^ n - 1)
 end
@@ -208,7 +208,7 @@ interpret(valuation, p::Tree{LO}) where LO =
     LO.instance(map(node -> interpret(valuation, node), p.nodes)...)
 function interpret(valuation, p::Union{Clause{AO}, Normal{AO}}) where AO
     neutral = only(left_neutrals(AO.instance))
-    not_neutral = not(neutral)
+    not_neutral = ¬neutral
     q = union_all_type(p)(AO.instance)
 
     for r in only_field(p)
@@ -270,7 +270,9 @@ interpretations(p, valuations = valuations(p)) =
     solve(p)
 
 Return a vector containing all [`interpretations`](@ref) such that
-`interpret(p, valuation) == tautology`.
+`interpret(p, valuation) == ⊤`.
+
+See also [`interpret`](@ref) and [`tautology`](@ref).
 
 # Examples
 ```jldoctest
@@ -284,10 +286,7 @@ julia> @atomize collect(solve(p ⊻ q))
  [Variable(:p) => PAndQ.tautology, Variable(:q) => PAndQ.contradiction]
 ```
 """
-solve(p) = Iterators.filter(
-    valuation -> p(valuation) == tautology,
-    valuations(p)
-)
+solve(p) = Iterators.filter(valuation -> p(valuation) == ⊤, valuations(p))
 
 # Predicates
 
@@ -341,8 +340,8 @@ julia> @atomize is_tautology(¬(p ∧ ¬p))
 true
 ```
 """
-is_tautology(::typeof(tautology)) = true
-is_tautology(::typeof(contradiction)) = false
+is_tautology(::typeof(⊤)) = true
+is_tautology(::typeof(⊥)) = false
 is_tautology(::LiteralProposition) = false
 is_tautology(p) = all(isequal(⊤), interpretations(p))
 
@@ -474,52 +473,45 @@ is_falsifiable(p) = !is_tautology(p)
 
 ## Generic
 
-tautology() = ⊤
-contradiction() = ⊥
-nand(p, q) = ¬(p ∧ q)
-nor(p, q) = ¬p ∧ ¬q
-or(p, q) = ¬(p ⊽ q)
-xor(p, q) = (p ∨ q) ∧ (p ⊼ q)
-xnor(p, q) = (p → q) ∧ (p ← q)
-not_imply(p, q) = p ∧ ¬q
-imply(p, q) = ¬(p ↛ q)
-not_converse_imply(p, q) = ¬p ∧ q
-converse_imply(p, q) = ¬(p ↚ q)
+⊤() = ⊤
+⊥() = ⊥
+p ⊼ q = ¬(p ∧ q)
+p ⊽ q = ¬p ∧ ¬q
+p ∨ q = ¬(p ⊽ q)
+p ⊻ q = (p ∨ q) ∧ (p ⊼ q)
+p ↔ q = (p → q) ∧ (p ← q)
+p ↛ q = p ∧ ¬q
+p → q = ¬(p ↛ q)
+p ↚ q = ¬p ∧ q
+p ← q = ¬(p ↚ q)
 
 ## Bool
 
 Bool(::typeof(tautology)) = true
 Bool(::typeof(contradiction)) = false
-not(p::Bool) = !p
-and(p::Bool, q::Bool) = p && q
-or(p::Bool, q::Bool) = p || q
-converse_imply(p::Bool, q::Bool) = p ^ q
+¬p::Bool = !p
+p::Bool ∧ q::Bool = p && q
+p::Bool ∨ q::Bool = p || q
 
 ## Operators
 
 eval_doubles(:not, (
-    (tautology, contradiction),
-    (identity, not),
-    (and, nand),
-    (or, nor),
-    (xor, xnor),
-    (imply, not_imply),
-    (converse_imply, not_converse_imply)
+    (⊤, ⊥), (identity, ¬), (∧, ⊼), (∨, ⊽), (⊻, ↔), (→, ↛), (←, ↚)
 ))
 
 ## Propositions
 
-not(p::Atom) = Literal(not, p)
-not(p::Literal{UO}) where UO = not(UO.instance)(p.atom)
-not(p::Tree{LO}) where LO = not(LO.instance)(p.nodes...)
+not(p::Atom) = Literal(¬, p)
+not(p::Literal{UO}) where UO = (¬UO.instance)(p.atom)
+not(p::Tree{LO}) where LO = (¬LO.instance)(p.nodes...)
 not(p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr =
-    union_all_type(p)(dual(AO.instance), map(not, only_field(p)))
+    union_all_type(p)(dual(AO.instance), map(¬, only_field(p)))
 
-and(::typeof(tautology), ::typeof(tautology)) = ⊤
-and(::typeof(contradiction), q) = ⊥ # domination law
-and(::typeof(tautology), q) = q # identity law
-and(p::Proposition, q::NullaryOperator) = q ∧ p # commutative property
-and(p::Proposition, q::Proposition) = and(Normal(and, p), Normal(and, q))
+::typeof(⊤) ∧ ::typeof(⊤) = ⊤
+::typeof(⊥) ∧ q::Union{NullaryOperator, Proposition} = ⊥ # domination law
+::typeof(⊤) ∧ q::Union{NullaryOperator, Proposition} = q # identity law
+p::Proposition ∧ q::NullaryOperator = q ∧ p # commutative property
+p::Proposition ∧ q::Proposition = Normal(∧, p) ∧ Normal(∧, q)
 
 for BO in uniontypes(BinaryOperator)
     bo = nameof(BO.instance)
@@ -563,12 +555,12 @@ end
 Clause(ao::AndOr, ps) = isempty(ps) ?
     Clause(ao) :
     Clause(ao, collect(map(Literal, ps)))
-Clause(ao::AO, p::Proposition) where AO <: AndOr = convert(Clause{AO}, p)
+Clause(::AO, p::Proposition) where AO <: AndOr = convert(Clause{AO}, p)
 
 Normal(ao::AndOr, ps) = isempty(ps) ?
     Normal(ao) :
     Normal(ao, collect(map(p -> Clause(dual(ao), [p]), ps)))
-Normal(ao::AO, p::Proposition) where AO <: AndOr = convert(Normal{AO}, p)
+Normal(::AO, p::Proposition) where AO <: AndOr = convert(Normal{AO}, p)
 
 for P in (:Literal, :Tree, :Clause, :Normal)
     @eval $P(p) = convert($P, p)
@@ -598,7 +590,7 @@ convert(::Type{Normal{AO}}, p::LiteralProposition) where AO <: AndOr = Normal(AO
 convert(::Type{Normal{AO}}, p::Clause{AO}) where AO <: AndOr =
     Normal(AO.instance, map(literal -> Clause(dual(AO.instance), literal), p.literals))
 convert(::Type{Normal{AO}}, p::Clause) where AO <: AndOr = Normal(AO.instance, [p])
-convert(::Type{Normal}, p::Proposition) = Normal(and, p)
+convert(::Type{Normal}, p::Proposition) = Normal(∧, p)
 convert(::Type{Normal{AO}}, p::Tree{LO}) where {AO, LO} = Normal(AO.instance, LO.instance(
     map(node -> Normal(node), p.nodes)...
 ))
