@@ -13,6 +13,7 @@ using PAndQ: Proposition # hide
 children(x::Type) = subtypes(x) # hide
 print_tree(Proposition) # hide
 ```
+
 ## Abstract Types
 
 ```@docs
