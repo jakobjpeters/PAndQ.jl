@@ -469,7 +469,7 @@ const ⋁ = disjunction
 """
     mapfoldl(f, lio::LeftNeutralOperator, ps)
 
-Equivalent to `mapfoldl(f, lio, ps; init = only(left_neutrals(lio)))`.
+Equivalent to `mapfoldl(f, lio, ps, init = Bool(first(left_neutrals(lio))))`.
 
 See also [`LeftNeutralOperator`](@ref).
 
@@ -482,16 +482,16 @@ julia> @atomize mapfoldl(not, and, [p, q, r, s])
 ((¬p ∧ ¬q) ∧ ¬r) ∧ ¬s
 
 julia> foldl(and, [])
-tautology (generic function with 1 method)
+true
 ```
 """
 mapfoldl(f, lio::LeftNeutralOperator, ps) =
-    mapfoldl(f, lio, ps, init = only(left_neutrals(lio)))
+    mapfoldl(f, lio, ps, init = Bool(first(left_neutrals(lio))))
 
 """
     mapfoldr(f, rio::RightNeutralOperator, ps)
 
-Equivalent to `mapfoldr(f, rio, ps; init = only(right_neutrals(rio)))`.
+Equivalent to `mapfoldr(f, rio, ps, init = Bool(first(right_neutrals(rio))))`.
 
 See also [`RightNeutralOperator`](@ref).
 
@@ -504,11 +504,11 @@ julia> @atomize mapfoldr(not, and, [p, q, r, s])
 ¬p ∧ (¬q ∧ (¬r ∧ ¬s))
 
 julia> foldr(and, [])
-tautology (generic function with 1 method)
+true
 ```
 """
 mapfoldr(f, rio::RightNeutralOperator, ps) =
-    mapfoldr(f, rio, ps, init = only(right_neutrals(rio)))
+    mapfoldr(f, rio, ps, init = Bool(first(right_neutrals(rio))))
 
 # Utilities
 

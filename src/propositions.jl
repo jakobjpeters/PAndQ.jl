@@ -299,7 +299,7 @@ julia> @atomize PAndQ.nodevalue(¬p)
 not (generic function with 19 methods)
 
 julia> @atomize PAndQ.nodevalue(p ∧ q)
-and (generic function with 23 methods)
+and (generic function with 25 methods)
 ```
 """
 nodevalue(::Compound{LO}) where LO = LO.instance
@@ -342,9 +342,9 @@ julia> @atomize map(Tree ∘ ¬, p ∧ q)
 ¬p ∧ ¬q
 
 julia> @atomize map(p ∧ q) do atom
-    println(atom)
-    atom
-end
+           println(atom)
+           atom
+       end
 Variable(:p)
 Variable(:q)
 p ∧ q
@@ -548,7 +548,7 @@ julia> @atomize collect(operators(¬p))
 
 julia> @atomize collect(operators(¬p ∧ q))
 3-element Vector{Function}:
- and (generic function with 23 methods)
+ and (generic function with 25 methods)
  not (generic function with 19 methods)
  identity (generic function with 1 method)
 ```

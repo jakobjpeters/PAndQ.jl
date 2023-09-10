@@ -24,10 +24,10 @@ See also [`left_neutrals`](@ref) and [`right_neutrals`](@ref).
 # Examples
 ```jldoctest
 julia> PAndQ.neutral_operator(⊤)
-and (generic function with 23 methods)
+and (generic function with 25 methods)
 
 julia> PAndQ.neutral_operator(⊥)
-or (generic function with 19 methods)
+or (generic function with 21 methods)
 ```
 """
 neutral_operator(::typeof(⊤)) = ∧
@@ -54,7 +54,7 @@ of the given boolean operator.
 # Examples
 ```jldoctest
 julia> dual(and)
-or (generic function with 19 methods)
+or (generic function with 21 methods)
 
 julia> @atomize and(p, q) == not(dual(and)(not(p), not(q)))
 true
@@ -86,7 +86,7 @@ of the given boolean operator.
 # Examples
 ```jldoctest
 julia> converse(and)
-and (generic function with 23 methods)
+and (generic function with 25 methods)
 
 julia> @atomize and(p, q) == converse(and)(q, p)
 true
@@ -490,8 +490,14 @@ p ← q = ¬(p ↚ q)
 Bool(::typeof(tautology)) = true
 Bool(::typeof(contradiction)) = false
 ¬p::Bool = !p
-p::Bool ∧ q::Bool = p && q
-p::Bool ∨ q::Bool = p || q
+
+for (lo, bo) in (:∧ => :&&, :∨ => :||)
+    @eval begin
+        $lo(p::Bool, q::Bool) = $(Expr(bo, :p, :q))
+        $lo(p::Bool, q) = $(Expr(bo, :p, :q))
+        $lo(p, q::Bool) = $(Expr(bo, :q, :p))
+    end
+end
 
 ## Operators
 
@@ -501,10 +507,10 @@ eval_doubles(:not, (
 
 ## Propositions
 
-not(p::Atom) = Literal(¬, p)
-not(p::Literal{UO}) where UO = (¬UO.instance)(p.atom)
-not(p::Tree{LO}) where LO = (¬LO.instance)(p.nodes...)
-not(p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr =
+¬p::Atom = Literal(¬, p)
+(¬p::Literal{UO}) where UO = (¬UO.instance)(p.atom)
+(¬p::Tree{LO}) where LO = (¬LO.instance)(p.nodes...)
+(¬p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr =
     union_all_type(p)(dual(AO.instance), map(¬, only_field(p)))
 
 ::typeof(⊤) ∧ ::typeof(⊤) = ⊤
@@ -515,12 +521,14 @@ p::Proposition ∧ q::Proposition = Normal(∧, p) ∧ Normal(∧, q)
 
 for BO in uniontypes(BinaryOperator)
     bo = nameof(BO.instance)
-    @eval $bo(p) = Fix1($bo, p)
-    @eval $bo(p::Tree, q::Tree) = Tree($bo, p, q)
-    @eval $bo(p::Tree, q::Union{Atom, Literal}) = Tree($bo, p, Tree(q))
-    @eval $bo(p::Union{Atom, Literal}, q::Tree) = Tree($bo, Tree(p), q)
-    @eval $bo(p::Union{Atom, Literal}, q::Union{Atom, Literal}) =
-        $bo(Tree(p), Tree(q))
+    @eval begin
+        $bo(p) = Fix1($bo, p)
+        $bo(p::Tree, q::Tree) = Tree($bo, p, q)
+        $bo(p::Tree, q::Union{Atom, Literal}) = Tree($bo, p, Tree(q))
+        $bo(p::Union{Atom, Literal}, q::Tree) = Tree($bo, Tree(p), q)
+        $bo(p::Union{Atom, Literal}, q::Union{Atom, Literal}) =
+            $bo(Tree(p), Tree(q))
+    end
 end
 
 for AO in uniontypes(AndOr)
@@ -528,26 +536,27 @@ for AO in uniontypes(AndOr)
     dao = nameof(dual(AO.instance))
     DAO = typeof(dual(AO.instance))
 
-    @eval $ao(p::Clause{$DAO}, q::Clause{$DAO}) = Normal($ao, [p, q])
+    @eval begin
+        $ao(p::Clause{$DAO}, q::Clause{$DAO}) = Normal($ao, [p, q])
 
-    @eval $ao(p::Union{LiteralProposition, Clause{$AO}}, q::Clause{$DAO}) =
-        $ao(Normal($ao, p), q)
-    @eval $ao(p::Clause{$DAO}, q::Union{LiteralProposition, Clause{$AO}}) =
-        $ao(p, Normal($ao, q))
+        $ao(p::Union{LiteralProposition, Clause{$AO}}, q::Clause{$DAO}) =
+            $ao(Normal($ao, p), q)
+        $ao(p::Clause{$DAO}, q::Union{LiteralProposition, Clause{$AO}}) =
+            $ao(p, Normal($ao, q))
+
+        $ao(p::Normal, q::Normal) = $ao(Normal($ao, p), Normal($ao, q))
+        $ao(p::Clause, q::Normal) = $ao(Normal($ao, p), q)
+        $ao(p::Normal, q::Clause) = $ao(p, Normal($ao, q))
+    end
 
     for (left, right) in ((Clause, LiteralProposition), (Normal, Clause{DAO}))
-        @eval $ao(p::$left{$AO}, q::$right) = $left($ao, vcat(only_field(p), q))
-        @eval $ao(p::$right, q::$left{$AO}) = $left($ao, vcat(p, only_field(q)))
+        @eval begin
+            $ao(p::$left{$AO}, q::$right) = $left($ao, vcat(only_field(p), q))
+            $ao(p::$right, q::$left{$AO}) = $left($ao, vcat(p, only_field(q)))
+            $ao(p::$left{$AO}, q::$left{$AO}) =
+                $left($ao, vcat(only_field(p), only_field(q)))
+        end
     end
-
-    for CN in (Clause, Normal)
-        @eval $ao(p::$CN{$AO}, q::$CN{$AO}) =
-            $CN($ao, vcat(only_field(p), only_field(q)))
-    end
-
-    @eval $ao(p::Normal, q::Normal) = $ao(Normal($ao, p), Normal($ao, q))
-    @eval $ao(p::Clause, q::Normal) = $ao(Normal($ao, p), q)
-    @eval $ao(p::Normal, q::Clause) = $ao(p, Normal($ao, q))
 end
 
 # Constructors
