@@ -591,9 +591,8 @@ convert(::Type{Normal{AO}}, p::Clause{AO}) where AO <: AndOr =
     Normal(AO.instance, map(literal -> Clause(dual(AO.instance), literal), p.literals))
 convert(::Type{Normal{AO}}, p::Clause) where AO <: AndOr = Normal(AO.instance, [p])
 convert(::Type{Normal}, p::Proposition) = Normal(∧, p)
-convert(::Type{Normal{AO}}, p::Tree{LO}) where {AO, LO} = Normal(AO.instance, LO.instance(
-    map(node -> Normal(node), p.nodes)...
-))
+convert(::Type{Normal{AO}}, p::Tree{LO}) where {AO, LO} =
+    Normal(AO.instance, LO.instance(map(Normal, p.nodes)...))
 convert(::Type{Normal{AO}}, p::Normal{AO}) where AO <: AndOr = p
 convert(::Type{Normal{AO}}, p::Normal) where AO <: AndOr = Normal(AO.instance,
     vec(map(product(map(p.clauses) do clause
