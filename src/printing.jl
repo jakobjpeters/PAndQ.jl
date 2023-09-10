@@ -64,7 +64,6 @@ julia> @atomize TruthTable([p ∧ ¬p, p ⊻ q, ¬(p ∧ q) ∧ (p ∨ q)])
 """
 struct TruthTable
     header::Vector{Vector{Proposition}}
-    sub_header::Vector{Vector{Type}}
     body::Matrix{NullaryOperator}
 
     function TruthTable(ps)
@@ -98,7 +97,6 @@ struct TruthTable
         end
 
         header = Vector{Proposition}[]
-        sub_header = Vector{Type}[]
         body = Vector{NullaryOperator}[]
         for (_interpretations, group) in (
             truths_interpretations => grouped_truths,
@@ -108,12 +106,11 @@ struct TruthTable
             for interpretation in _interpretations
                 xs = get(group, interpretation, Proposition[])
                 push!(header, xs)
-                push!(sub_header, map(x -> getfield(Main, nameof(typeof(x))), xs))
                 push!(body, interpretation)
             end
         end
 
-        new(header, sub_header, reduce(hcat, body))
+        new(header, reduce(hcat, body))
     end
 end
 
@@ -367,7 +364,7 @@ function __print_truth_table(
         truth_table.header
     )
     if sub_header
-        header = (header, map(merge_string, truth_table.sub_header))
+        header = (header, map(p -> merge_string(map(union_all_type, p)), truth_table.header))
     end
 
     body = map(cell -> format_body(format, cell), truth_table.body)
