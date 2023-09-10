@@ -20,6 +20,10 @@ abstract type Proposition end
 
 A proposition with [no deeper propositional structure](https://en.wikipedia.org/wiki/Atomic_formula).
 
+!!! tip
+    Use [`@atomize`](@ref) and [`@variables`](@ref) for syntax sugar to
+    instantiate atoms inline and define variables, respectively.
+
 Subtype of [`Proposition`](@ref).
 Supertype of [`Constant`](@ref) and [`Variable`](@ref).
 """
@@ -57,10 +61,6 @@ An [atomic sentence](https://en.wikipedia.org/wiki/Atomic_sentence).
     Define pretty-printing for an instance of `Constant{T}` by overloading
     [`show(io::IO, ::MIME"text/plain", p::Constant{T})`](@ref show).
 
-!!! tip
-    Use [`@atoms`](@ref) and [`@atomize`](@ref) as shortcuts to
-    define constants or instantiate them inline, respectively.
-
 Subtype of [`Atom`](@ref).
 
 # Examples
@@ -80,10 +80,6 @@ end
     Variable <: Atom
 
 An [atomic formula](https://en.wikipedia.org/wiki/Atomic_formula).
-
-!!! tip
-    Use [`@atoms`](@ref) and [`@atomize`](@ref) as shortcuts to
-    define variables or instantiate them inline, respectively.
 
 Subtype of [`Atom`](@ref).
 
@@ -399,14 +395,6 @@ only_field(p::Clause) = p.literals
 only_field(p::Normal) = p.clauses
 
 """
-    symbol_value
-"""
-symbol_value(x::Symbol) = x, :($(Variable(x)))
-symbol_value(x) = isexpr(x, :(=)) ?
-    (first(x.args), :(Constant($(last(x.args))))) :
-    error("syntax should be `symbol = value` or `symbol`")
-
-"""
     atomize(x)
 
 If `x` is a symbol, return an expression that instantiates it as a
@@ -430,39 +418,15 @@ function atomize(x::Expr)
 end
 atomize(x) = x
 
+"""
+    symbol_value
+"""
+symbol_value(x::Symbol) = x, x
+symbol_value(x) = isexpr(x, :(=)) ?
+    (first(x.args), last(x.args)) :
+    error("each variable must have the syntax `symbol` or `symbol = value`")
+
 # Macros
-
-"""
-    @atoms(xs...)
-
-Instantiate and define [`Atom`](@ref)s as `const` and return a vector containing them.
-
-Expressions of the form `symbol = value` and `symbol` are defined as
-`const symbol = Constant(value)` and `const symbol = Variable(:symbol)`, respectively.
-
-See also [`Atom`](@ref) and [`Variable`](@ref).
-
-Examples
-```jldoctest
-julia> @atoms a = 1 p
-2-element Vector{Atom}:
- \$(1)
- p
-
-julia> a
-\$(1)
-
-julia> p
-p
-```
-"""
-macro atoms(xs...)
-    symbols_values = map(symbol_value, xs)
-    esc(quote
-        $(map(((symbol, value),) -> :(const $symbol = $value), symbols_values)...)
-        [$(map(first, symbols_values)...)]
-    end)
-end
 
 """
     @atomize(expression)
@@ -491,6 +455,38 @@ julia> @atomize \$1 ∧ \$(1 + 1)
 """
 macro atomize(expression)
     esc(:($(atomize(expression))))
+end
+
+"""
+    @variables(xs...)
+
+Define variables and return a vector containing them.
+
+Expressions of the form `symbol` and `symbol = value` are defined as
+`symbol = @atomize symbol` and `symbol = @atomize value`, respectively.
+
+See also [`@atomize`](@ref).
+
+Examples
+```jldoctest
+julia> @variables p q = ¬\$1
+2-element Vector{Proposition}:
+ p
+ ¬\$(1)
+
+julia> p
+p
+
+julia> q
+¬\$(1)
+```
+"""
+macro variables(xs...)
+    symbols_values = map(symbol_value, xs)
+    esc(quote
+        $(map(((symbol, value),) -> :($symbol = @atomize $value), symbols_values)...)
+        [$(map(first, symbols_values)...)]
+    end)
 end
 
 """

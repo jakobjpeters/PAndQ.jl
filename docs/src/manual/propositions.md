@@ -37,8 +37,8 @@ Normal
 ## Macros
 
 ```@docs
-@atoms
 @atomize
+@variables
 @p_str
 ```
 

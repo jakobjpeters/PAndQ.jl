@@ -27,7 +27,7 @@ julia> using PAndQ
 julia> ¬⊥
 tautology (generic function with 1 method)
 
-julia> @atoms p q
+julia> @variables p q
 2-element Vector{Variable}:
  p
  q
