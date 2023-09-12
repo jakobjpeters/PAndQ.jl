@@ -54,11 +54,6 @@ PAndQ.atomize
 ```@docs
 PAndQ.operator_to_symbol
 PAndQ.merge_string
-PAndQ.format_letter
-PAndQ.format_latex
-PAndQ.format_body
-PAndQ._newline
-PAndQ.print_string
 PAndQ.parenthesize
 ```
 

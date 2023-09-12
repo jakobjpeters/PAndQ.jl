@@ -324,33 +324,9 @@ printnode(io::IO, p::Compound; kwargs...) = print(io, operator_to_symbol(nodeval
 
 ## Utilities
 
-_map(P::Type{<:Tree{LO}}, children) where LO = P(LO.instance, children...)
-_map(P::Type{<:Union{Clause, Normal}}, lo, children) = P(lo, children)
-
-"""
-    map(f, ::Proposition)
-
-Apply `f` to each [`Atom`](@ref) in the [`Proposition`](@ref).
-
-# Examples
-```jldoctest
-julia> @atomize map(Tree ∘ ¬, p ∧ q)
-¬p ∧ ¬q
-
-julia> @atomize map(p ∧ q) do atom
-           println(atom)
-           atom
-       end
-Variable(:p)
-Variable(:q)
-p ∧ q
-```
-"""
-map(f, p::Atom) = f(p)
-map(f, p::Tree{LO}) where LO =
-    union_all_type(p)(LO.instance, map(child -> map(f, child), children(p))...)
-map(f, p::Union{Clause{AO}, Normal{AO}}) where AO =
-    union_all_type(p)(AO.instance, map(child -> map(f, child), children(p)))
+for T in (:Constant, :Variable, :Literal, :Tree, :Clause, :Normal)
+    @eval union_all_type(::$T) = $T
+end
 
 """
     union_all_type(::Proposition)
@@ -366,10 +342,7 @@ julia> @atomize PAndQ.union_all_type(p ∧ q)
 Tree
 ```
 """
-function union_all_type end
-for T in (:Constant, :Variable, :Literal, :Tree, :Clause, :Normal)
-    @eval union_all_type(::$T) = $T
-end
+union_all_type
 
 """
     only_field(::Proposition)
@@ -553,3 +526,31 @@ operators(p) = Iterators.filter(
     node -> !isa(node, Atom),
     nodevalues(PreOrderDFS(p))
 )
+
+_map(P::Type{<:Tree{LO}}, children) where LO = P(LO.instance, children...)
+_map(P::Type{<:Union{Clause, Normal}}, lo, children) = P(lo, children)
+
+"""
+    map(f, ::Proposition)
+
+Apply `f` to each [`Atom`](@ref) in the [`Proposition`](@ref).
+
+# Examples
+```jldoctest
+julia> @atomize map(Tree ∘ ¬, p ∧ q)
+¬p ∧ ¬q
+
+julia> @atomize map(p ∧ q) do atom
+           println(atom)
+           atom
+       end
+Variable(:p)
+Variable(:q)
+p ∧ q
+```
+"""
+map(f, p::Atom) = f(p)
+map(f, p::Tree{LO}) where LO =
+    union_all_type(p)(LO.instance, map(child -> map(f, child), children(p))...)
+map(f, p::Union{Clause{AO}, Normal{AO}}) where AO =
+    union_all_type(p)(AO.instance, map(child -> map(f, child), children(p)))

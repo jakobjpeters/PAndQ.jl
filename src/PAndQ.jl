@@ -42,13 +42,9 @@ include("printing.jl")
 export
     TruthTable,
     #= Base.show =#
-    #= AbstractTrees =# print_tree,
-    print_truth_table,
-    println_truth_table,
-    print_latex,
-    println_latex,
-    print_markdown,
-    println_markdown
+    formatter,
+    #= PrettyTables =# pretty_table,
+    #= AbstractTrees =# print_tree
 
 include("semantics.jl")
 

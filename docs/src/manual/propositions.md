@@ -47,4 +47,5 @@ Normal
 ```@docs
 atoms
 operators
+map
 ```

@@ -5,15 +5,17 @@ version = "0.1.0"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
-Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
 PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
-REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
+
+[weakdeps]
+Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
+Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
+
+[extensions]
+LatexifyExtension = "Latexify"
+MarkdownExtension = "Markdown"
 
 [compat]
 AbstractTrees = "0.4"
 PrettyTables = "2"
 julia = "1"
-
-[weakdeps]
-
-[extensions]

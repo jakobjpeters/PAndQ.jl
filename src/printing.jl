@@ -1,23 +1,10 @@
 
 import Base: show
+import PrettyTables: pretty_table, _pretty_table
+using Base.Docs: HTML
 using AbstractTrees: print_tree
-using PrettyTables: LatexCell, pretty_table
-using REPL: symbol_latex, symbols_latex
-using Markdown: MD, Table
+using PrettyTables: LatexCell
 
-#=
-    truth_table specification
-
-each row is an interpretation
-each column maps to proposition
-the first header is the `repr` of that proposition
-the second header is the type of that proposition
-logically equivalent propositions are put in the same column, seperated by a comma
-the order of the columns is determined first by type
-    1) truth, 2) atom, 3) any,
-    and then by the order it was entered/found
-truths only generate a single row, and no propositions
-=#
 """
     TruthTable(ps)
 
@@ -67,9 +54,6 @@ struct TruthTable
     body::Matrix{NullaryOperator}
 
     function TruthTable(ps)
-        # ToDo: write docstring - define behavior
-        # ToDo: write tests
-
         _atoms = union(map(atoms, ps)...)
         ps = union(_atoms, ps)
         _valuations = valuations(_atoms)
@@ -141,59 +125,12 @@ end
 """
     merge_string(cell)
 """
+merge_string(cell::LatexCell) = cell
 merge_string(cell) = join(Iterators.map(
     p -> sprint(
         (io, q) -> show(io, MIME"text/plain"(), q), p
     ), cell
 ), ", ")
-
-"""
-    format_letter(::NullaryOperator)
-
-# Examples
-```jldoctest
-julia> PAndQ.format_letter(tautology)
-:T
-
-julia> PAndQ.format_letter(contradiction)
-:F
-```
-"""
-format_letter(::typeof(⊤)) = :T
-format_letter(::typeof(⊥)) = :F
-
-"""
-    format_latex(x)
-"""
-format_latex(x) = LatexCell(print_latex(String, x))
-
-const _format_body = Dict(
-    :truth => operator_to_symbol,
-    :text => nameof,
-    :letter => format_letter,
-    :bool => Bool,
-    :bit =>  Int ∘ Bool,
-    :latex => format_latex ∘ operator_to_symbol
-)
-
-"""
-    format_body
-"""
-format_body(format, cell) = _format_body[format](cell)
-
-"""
-    _newline(::Bool)
-"""
-_newline(newline) = newline ? "\n" : ""
-
-"""
-    print_string
-"""
-function print_string(f, args...; kwargs...)
-    buffer = IOBuffer()
-    f(buffer, args...; kwargs...)
-    String(take!(buffer))
-end
 
 """
     parenthesize(::IO, x)
@@ -263,10 +200,14 @@ function show(io::IO, ::MIME"text/plain", p::Union{Clause{AO}, Normal{AO}}) wher
             " " * operator_to_symbol(ao) * " "
         )
 end
-show(io::IO, ::MIME"text/plain", truth_table::TruthTable) =
-    print_truth_table(io, truth_table)
-show(io::IO, ::MIME"text/latex", truth_table::TruthTable) =
-    print_latex(io, truth_table)
+
+"""
+    show(io::IO, ::MIME"text/plain", tt::TruthTable)
+
+Equivalent to [`pretty_table(io, tt; alignment = :l, newline_at_end = false)`](@ref pretty_table).
+"""
+show(io::IO, ::MIME"text/plain", tt::TruthTable) =
+    pretty_table(io, tt; alignment = :l, newline_at_end = false)
 
 """
     show(::IO, ::Proposition)
@@ -298,12 +239,126 @@ show(io::IO, p::CN) where {AO, CN <: Union{Clause{AO}, Normal{AO}}} = print(io,
     nameof(CN), "(", AO.instance, ", [", sprint((io, xs) -> join(io, xs, ", "), only_field(p)), "])"
 )
 
-# Works In Progress
+for (T, f) in (
+    NullaryOperator => operator_to_symbol,
+    String => nameof,
+    Char => v -> v == ⊤ ? :T : :F,
+    Bool => Bool,
+    Int => Int ∘ Bool
+)
+    @eval formatter(::Type{$T}) = (v, _, _) -> $f(v)
+end
 
 """
-    print_tree(::Proposition)
+    formatter(t::Type{<:Union{NullaryOperator, String, Char, Bool, Int}})
+
+| t               | formatter(t)(⊤, _, _) | formatter(t)(⊥, _, _) |
+| :-------------  | :-------------------- | :-------------------- |
+| NullaryOperator | "⊤"                   | "⊥"                   |
+| String          | :tautology            | :contradiction        |
+| Char            | :T                    | :F                    |
+| Bool            | true                  | false                 |
+| Int             | 1                     | 0                     |
+"""
+formatter
+
+____pretty_table(backend::Val{:latex}, io, body; vlines = :all, kwargs...) =
+    pretty_table(io, body; backend, vlines, kwargs...)
+____pretty_table(backend::Val{:text}, io, body; crop = :none, kwargs...) =
+    pretty_table(io, body; backend, crop, kwargs...)
+
+___pretty_table(
+    backend::Union{Val{:text}, Val{:latex}}, io, body;
+    body_hlines = collect(0:2:size(body, 1)), kwargs...
+) = ____pretty_table(backend, io, body; body_hlines, kwargs...)
+___pretty_table(backend::Val{:html}, io, body; kwargs...) =
+    pretty_table(io, body; backend, kwargs...)
+
+__pretty_table(backend, io, truth_table; formatters = formatter(NullaryOperator), kwargs...) =
+    ___pretty_table(backend, io, truth_table.body; header = (
+        map(merge_string, truth_table.header),
+        map(p -> merge_string(map(union_all_type, p)), truth_table.header)
+    ), formatters, kwargs...)
+
+_pretty_table(io::IO, p::Proposition; kwargs...) =
+    pretty_table(io, TruthTable((p,)); kwargs...)
+_pretty_table(io::IO, truth_table::TruthTable; kwargs...) =
+    pretty_table(io, truth_table; kwargs...)
+
+"""
+    pretty_table(
+        ::Union{IO, Type{Union{String, HTML}}} = stdout, ::Union{Proposition, TruthTable};
+        formatters = formatter(NullaryOperator), kwargs...
+    )
+
+See also [`PrettyTables.pretty_table`]
+(https://ronisbr.github.io/PrettyTables.jl/stable/lib/library/#PrettyTables.pretty_table-Tuple{Any})
+[`Proposition`](@ref), [`TruthTable`](@ref), and [`formatter`](@ref).
+
+# Examples
+```jldoctest
+julia> pretty_table(@atomize p ∧ q)
+┌──────────┬──────────┬───────┐
+│        p │        q │ p ∧ q │
+│ Variable │ Variable │  Tree │
+├──────────┼──────────┼───────┤
+│        ⊤ │        ⊤ │     ⊤ │
+│        ⊥ │        ⊤ │     ⊥ │
+├──────────┼──────────┼───────┤
+│        ⊤ │        ⊥ │     ⊥ │
+│        ⊥ │        ⊥ │     ⊥ │
+└──────────┴──────────┴───────┘
+
+julia> print(pretty_table(HTML, @atomize p ∧ q).content)
+<table>
+  <thead>
+    <tr class = "header">
+      <th style = "text-align: right;">p</th>
+      <th style = "text-align: right;">q</th>
+      <th style = "text-align: right;">p ∧ q</th>
+    </tr>
+    <tr class = "subheader headerLastRow">
+      <th style = "text-align: right;">Variable</th>
+      <th style = "text-align: right;">Variable</th>
+      <th style = "text-align: right;">Tree</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style = "text-align: right;">⊤</td>
+      <td style = "text-align: right;">⊤</td>
+      <td style = "text-align: right;">⊤</td>
+    </tr>
+    <tr>
+      <td style = "text-align: right;">⊥</td>
+      <td style = "text-align: right;">⊤</td>
+      <td style = "text-align: right;">⊥</td>
+    </tr>
+    <tr>
+      <td style = "text-align: right;">⊤</td>
+      <td style = "text-align: right;">⊥</td>
+      <td style = "text-align: right;">⊥</td>
+    </tr>
+    <tr>
+      <td style = "text-align: right;">⊥</td>
+      <td style = "text-align: right;">⊥</td>
+      <td style = "text-align: right;">⊥</td>
+    </tr>
+  </tbody>
+</table>
+```
+"""
+pretty_table(io::IO, truth_table::TruthTable; backend = Val(:text), kwargs...) =
+    __pretty_table(backend, io, truth_table; kwargs...)
+
+"""
+    print_tree(::Function, ::Function, ::IO, ::Proposition; kwargs...)
+    print_tree(::IO = stdout, ::Proposition; kwargs...)
 
 Prints a tree diagram of the given [`Proposition`](@ref).
+
+See also [`AbstractTrees.print_tree`]
+(https://github.com/JuliaCollections/AbstractTrees.jl/blob/master/src/printing.jl).
 
 ```jldoctest
 julia> @atomize r = p ∧ ¬q ⊻ s
@@ -341,131 +396,3 @@ julia> print_tree(Normal(r))
 ```
 """
 print_tree
-
-____print_truth_table(backend::Val{:latex}, io, body; vlines = :all, kwargs...) =
-    pretty_table(io, body; backend, vlines, kwargs...)
-____print_truth_table(backend::Val{:text}, io, body; crop = :none, newline, kwargs...) =
-    pretty_table(io, body; backend, crop, newline_at_end = newline, kwargs...)
-
-___print_truth_table(
-    backend::Union{Val{:text}, Val{:latex}}, io, body;
-    body_hlines = collect(0:2:size(body, 1)), kwargs...
-) = ____print_truth_table(backend, io, body; body_hlines, kwargs...)
-___print_truth_table(backend::Val{:html}, io, body; kwargs...) =
-    pretty_table(io, body; backend, kwargs...)
-
-function __print_truth_table(
-    backend, io, truth_table;
-    sub_header = true, numbered_rows = false, format = :truth, alignment = :l,
-    kwargs...
-)
-    header = map(
-        cell -> merge_string(format == :latex ? format_latex(cell) : cell),
-        truth_table.header
-    )
-    if sub_header
-        header = (header, map(p -> merge_string(map(union_all_type, p)), truth_table.header))
-    end
-
-    body = map(cell -> format_body(format, cell), truth_table.body)
-
-    if numbered_rows
-        header = sub_header ? (map(vcat, ["#", ""], header)...,) : vcat("#", header)
-        body = hcat(map(string, 1:size(body, 1)), body)
-    end
-
-    ___print_truth_table(backend, io, body; header, alignment, kwargs...)
-end
-
-_print_truth_table(backend::Val, io, truth_table; kwargs...) =
-    __print_truth_table(backend, io, truth_table; kwargs...)
-_print_truth_table(backend::Val{:latex}, io, truth_table; format = :latex, kwargs...) =
-    __print_truth_table(backend, io, truth_table; format, kwargs...)
-_print_truth_table(backend::Val{:text}, io, truth_table; newline = false, kwargs...) =
-    __print_truth_table(backend, io, truth_table; newline, kwargs...)
-
-"""
-    print_truth_table([io::Union{IO, String}], x, backend = :text, kwargs...)
-
-# Examples
-"""
-print_truth_table(io::IO, truth_table::TruthTable; backend = :text, kwargs...) =
-    _print_truth_table(Val(backend), io, truth_table; kwargs...)
-print_truth_table(io::IO, x; kwargs...) =
-    print_truth_table(io, TruthTable(x); kwargs...)
-print_truth_table(x; kwargs...) =
-    print_truth_table(stdout, x; kwargs...)
-
-"""
-    print_latex([io::Union{IO, String} = stdout], x, delimeter = "\\(" => "\\)")
-
-Return a string representation of `x` enclosed by `delimeter`,
-replacing each symbol with it's respective command.
-
-# Examples
-```jldoctest
-julia> @atomize s = print_latex(String, p ∧ q)
-"\\\\(p \\\\wedge q\\\\)"
-
-julia> println(s)
-\\(p \\wedge q\\)
-```
-"""
-function print_latex(io::IO, x::String; newline = false, delimeter = "\\(" => "\\)")
-    isempty(symbols_latex) && symbol_latex("")
-
-    latex = join((
-        first(delimeter),
-        rstrip(mapreduce(
-            c -> c == ' ' ? "" : get(symbols_latex, string(c), c) * " ",
-            *,
-            x
-        )),
-        last(delimeter)
-    ))
-
-    print(io, latex, _newline(newline))
-end
-print_latex(io::IO, x::TruthTable; kwargs...) =
-    print_truth_table(io, x; backend = :latex, kwargs...)
-print_latex(io::IO, x; kwargs...) = print_latex(io,
-    sprint((io, y) -> show(io, MIME"text/plain"(), y), x);
-kwargs...)
-print_latex(x; kwargs...) = print_latex(stdout, x; kwargs...)
-
-"""
-    print_markdown
-
-# Examples
-"""
-print_markdown(::Type{MD}, p) = MD(sprint((io, x) -> show(io, MIME"text/plain"(), x), p))
-print_markdown(::Type{MD}, truth_table::TruthTable; format = :truth, alignment = :l) = MD(Table(
-    [
-        map(merge_string, truth_table.header),
-        eachrow(map(no -> format_body(format, no), truth_table.body))...
-    ],
-    repeat([alignment], length(truth_table.header))
-))
-print_markdown(io::IO, x; newline = false, kwargs...) = print(io,
-    string(print_markdown(MD, x; kwargs...))[begin:end - 1],
-    _newline(newline)
-)
-print_markdown(x; kwargs...) = print_markdown(stdout, x; kwargs...)
-
-for f in (:latex, :truth_table, :markdown)
-    print_f, println_f = map(s -> Symbol("print", s, "_", f), ("", "ln"))
-
-    @eval $print_f(::Type{String}, args...; kwargs...) = print_string($print_f, args...; kwargs...)
-    @eval begin
-        print_f = $print_f
-        println_f = $(string(println_f))
-        """
-            $println_f(args...; kwargs...)
-
-        Equivalent to [`$print_f(args...; kwargs..., newline = true)`](@ref $print_f).
-
-        # Examples
-        """
-        $println_f(args...; kwargs...) = $print_f(args...; kwargs..., newline = true)
-    end
-end
