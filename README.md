@@ -6,7 +6,7 @@
 <div align="center">
 
 [![Documentation stable](https://img.shields.io/badge/Documentation-stable-blue.svg)](https://jakobjpeters.github.io/PAndQ.jl/stable/)
-[![Documentation dev](https://img.shields.io/badge/Documentation-dev-yellow.svg)](https://jakobjpeters.github.io/PAndQ.jl/dev/)
+[![Documentation dev](https://img.shields.io/badge/Documentation-dev-blue.svg)](https://jakobjpeters.github.io/PAndQ.jl/dev/)
 [![Codecov](https://codecov.io/gh/jakobjpeters/PAndQ.jl/branch/main/graph/badge.svg?token=XFWU66WSD7)](https://codecov.io/gh/jakobjpeters/PAndQ.jl)
 
 [![Documentation](https://github.com/jakobjpeters/PAndQ.jl/workflows/Documentation/badge.svg)](https://github.com/jakobjpeters/PAndQ.jl/actions/workflows/documentation.yml)
