@@ -36,6 +36,7 @@ export
     Constant, Variable, Literal, Tree, Clause, Normal,
     @atomize, @variables, @p_str,
     atoms, operators
+    #= Base.map =#
 
 include("printing.jl")
 

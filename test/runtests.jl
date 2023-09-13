@@ -5,16 +5,14 @@ using Markdown
 using Latexify
 using PAndQ
 
-@testset "`detect_ambiguities` and `detect_unbound_args`" begin
-    isempty(detect_ambiguities(PAndQ, recursive = true))
-    isempty(detect_unbound_args(PAndQ, recursive = true))
-end
+@testset "`detect_ambiguities` and `detect_unbound_args`" all(
+    detect -> isempty(detect(PAndQ)), (detect_ambiguities, detect_unbound_args)
+)
 
 setdocmeta!(
     PAndQ,
     :DocTestSetup,
     :(using PAndQ),
-    recursive = true
 )
 
 @testset "`doctest`" doctest(PAndQ)

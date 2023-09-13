@@ -185,8 +185,8 @@ valuations(p::Proposition) = valuations(atoms(p))
 """
     interpret(valuation, ::Proposition)
 
-Replaces each [`Atom`](@ref) `p` in the given
-[`Proposition`](@ref) with `valuation(p)`, then simplifies.
+Replace each [`Atom`](@ref) `p` in the given
+[`Proposition`](@ref) with `valuation(p)`, then simplify.
 
 Calling `p` with an incomplete mapping will partially interpret it.
 

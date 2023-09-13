@@ -13,7 +13,6 @@ setdocmeta!(
     PAndQ,
     :DocTestSetup,
     :(using PAndQ),
-    recursive = true,
 )
 
 makedocs(

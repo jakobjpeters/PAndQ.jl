@@ -292,7 +292,7 @@ _pretty_table(io::IO, truth_table::TruthTable; kwargs...) =
     )
 
 See also [`PrettyTables.pretty_table`]
-(https://ronisbr.github.io/PrettyTables.jl/stable/lib/library/#PrettyTables.pretty_table-Tuple{Any})
+(https://ronisbr.github.io/PrettyTables.jl/stable/lib/library/#PrettyTables.pretty_table-Tuple{Any}),
 [`Proposition`](@ref), [`TruthTable`](@ref), and [`formatter`](@ref).
 
 # Examples
