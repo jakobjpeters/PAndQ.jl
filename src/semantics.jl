@@ -1,6 +1,6 @@
 
-import Base: ==, convert, Bool, uniontypes
-using Base: Fix1, Iterators.product
+import Base: ==, convert, Bool
+using Base: Iterators.product, uniontypes
 
 # Internals
 
@@ -522,7 +522,7 @@ p::Proposition ∧ q::Proposition = Normal(∧, p) ∧ Normal(∧, q)
 for BO in uniontypes(BinaryOperator)
     bo = nameof(BO.instance)
     @eval begin
-        $bo(p) = Fix1($bo, p)
+        $bo(p) = q -> $bo(p, q)
         $bo(p::Tree, q::Tree) = Tree($bo, p, q)
         $bo(p::Tree, q::Union{Atom, Literal}) = Tree($bo, p, Tree(q))
         $bo(p::Union{Atom, Literal}, q::Tree) = Tree($bo, Tree(p), q)

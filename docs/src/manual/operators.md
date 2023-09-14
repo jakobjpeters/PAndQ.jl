@@ -60,6 +60,10 @@ not
 
 ## Binary Operators
 
+!!! tip
+    Each binary operator `bo` has been curried such that
+    `bo(p) = q -> bo(p, q)` and `bo(p)(q) == bo(p, q)`.
+
 ```@docs
 and
 nand

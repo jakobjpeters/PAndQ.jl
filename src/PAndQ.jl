@@ -1,5 +1,4 @@
 
-# TODO: module docstring?
 module PAndQ
 
 """
