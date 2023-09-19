@@ -14,19 +14,19 @@ Operator associativity determines how operators with the same precedence group t
 
 | Name                         | Symbol | Tab Completion   | Associativity | Precedence |
 |:-----------------------------|:-------|:-----------------|:--------------|:-----------|
-| [`tautology`](@ref)          | ⊤      | \\top            | none          | 0          |
-| [`contradiction`](@ref)      | ⊥      | \\bot            | none          | 0          |
-| [`not`](@ref)                | ¬      | \\neg            | right         | 0          |
-| [`and`](@ref)                | ∧      | \\wedge          | left          | 12         |
-| [`nand`](@ref)               | ⊼      | \\nand           | left          | 12         |
-| [`nor`](@ref)                | ⊽      | \\nor            | left          | 11         |
-| [`or`](@ref)                 | ∨      | \\vee            | left          | 11         |
-| [`xor`](@ref)                | ⊻      | \\xor            | left          | 11         |
-| [`xnor`](@ref)               | ↔      | \\leftrightarrow | right         | 4          |
-| [`imply`](@ref)              | →      | \\rightarrow     | right         | 4          |
-| [`not_imply`](@ref)          | ↛      | \\nrightarrow    | right         | 4          |
-| [`converse_imply`](@ref)     | ←      | \\leftarrow      | right         | 4          |
-| [`not_converse_imply`](@ref) | ↚      | \\nleftarrow     | right         | 4          |
+| [`tautology`](@ref)          | `⊤`    | \\top            | none          | 0          |
+| [`contradiction`](@ref)      | `⊥`    | \\bot            | none          | 0          |
+| [`not`](@ref)                | `¬`    | \\neg            | right         | 0          |
+| [`and`](@ref)                | `∧`    | \\wedge          | left          | 12         |
+| [`nand`](@ref)               | `⊼`    | \\nand           | left          | 12         |
+| [`nor`](@ref)                | `⊽`    | \\nor            | left          | 11         |
+| [`or`](@ref)                 | `∨`    | \\vee            | left          | 11         |
+| [`xor`](@ref)                | `⊻`    | \\xor            | left          | 11         |
+| [`xnor`](@ref)               | `↔`    | \\leftrightarrow | right         | 4          |
+| [`imply`](@ref)              | `→`    | \\rightarrow     | right         | 4          |
+| [`not_imply`](@ref)          | `↛`    | \\nrightarrow    | right         | 4          |
+| [`converse_imply`](@ref)     | `←`    | \\leftarrow      | right         | 4          |
+| [`not_converse_imply`](@ref) | `↚`    | \\nleftarrow     | right         | 4          |
 
 Every possible truth table can be constructed with the functionally complete set of operators `not` and `and`. For convenience, all sixteen of them have been prepared. There are ten binary operators, with the remaining six being expressed with truth values, individual propositions, and the unary [`not`](@ref) operator.
 
