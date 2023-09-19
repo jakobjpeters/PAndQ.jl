@@ -52,7 +52,7 @@ PAndQ.atomize
 ## Printing
 
 ```@docs
-PAndQ.operator_to_symbol
+PAndQ.symbol_of
 PAndQ.merge_string
 PAndQ.parenthesize
 ```

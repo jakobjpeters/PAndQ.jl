@@ -101,25 +101,25 @@ end
 # Internals
 
 """
-    operator_to_symbol(::LogicalOperator)
+    symbol_of(::LogicalOperator)
 
 Return the Unicode character that is an alias for the given [`LogicalOperator`](@ref).
 
 # Examples
 ```jldoctest
-julia> PAndQ.operator_to_symbol(⊤)
-"⊤"
+julia> PAndQ.symbol_of(⊤)
+:⊤
 
-julia> PAndQ.operator_to_symbol(¬)
-"¬"
+julia> PAndQ.symbol_of(¬)
+:¬
 
-julia> PAndQ.operator_to_symbol(∧)
-"∧"
+julia> PAndQ.symbol_of(∧)
+:∧
 ```
 """
-operator_to_symbol(::typeof(identity)) = ""
-for operator_symbol in (:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚)
-    @eval operator_to_symbol(::typeof($operator_symbol)) = $(string(operator_symbol))
+symbol_of(::typeof(identity)) = ""
+for lo in (:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚)
+    @eval symbol_of(::typeof($lo)) = $(QuoteNode(lo))
 end
 
 """
@@ -168,36 +168,36 @@ function show(io::IO, ::MIME"text/plain", p::Constant)
 end
 show(io::IO, ::MIME"text/plain", p::Variable) = print(io, p.symbol)
 function show(io::IO, ::MIME"text/plain", p::Literal{UO}) where UO
-    print(io, operator_to_symbol(UO.instance))
+    print(io, symbol_of(UO.instance))
     show(io, MIME"text/plain"(), p.atom)
 end
 show(io::IO, ::MIME"text/plain", p::Tree{NO}) where NO <: NullaryOperator =
-    print(io, operator_to_symbol(NO.instance))
+    print(io, symbol_of(NO.instance))
 show(io::IO, ::MIME"text/plain", p::Tree{typeof(identity)}) =
     show(io, MIME"text/plain"(), only(p.nodes))
 function show(io::IO, ::MIME"text/plain", p::Tree{N, <:Atom}) where N <: typeof(¬)
-    print(io, operator_to_symbol(N.instance))
+    print(io, symbol_of(N.instance))
     show(io, MIME"text/plain"(), only(p.nodes))
 end
 function show(io::IO, ::MIME"text/plain", p::Tree{N, <:Tree}) where N <: typeof(¬)
-    print(io, operator_to_symbol(N.instance), "(")
+    print(io, symbol_of(N.instance), "(")
     show(io, MIME"text/plain"(), only(p.nodes))
     print(io, ")")
 end
 function show(io::IO, ::MIME"text/plain", p::Tree{BO}) where BO <: BinaryOperator
     parenthesize(io, first(p.nodes))
-    print(io, " ", operator_to_symbol(BO.instance), " ")
+    print(io, " ", symbol_of(BO.instance), " ")
     parenthesize(io, last(p.nodes))
 end
 function show(io::IO, ::MIME"text/plain", p::Union{Clause{AO}, Normal{AO}}) where AO
     ao = AO.instance
     qs = only_field(p)
     isempty(qs) ?
-        print(io, operator_to_symbol(only(left_neutrals(ao)))) :
+        print(io, symbol_of(only(left_neutrals(ao)))) :
         join(
             io,
             Iterators.map(q -> sprint(parenthesize, q), qs),
-            " " * operator_to_symbol(ao) * " "
+            " $(symbol_of(ao)) "
         )
 end
 
@@ -240,9 +240,9 @@ show(io::IO, p::CN) where {AO, CN <: Union{Clause{AO}, Normal{AO}}} = print(io,
 )
 
 for (T, f) in (
-    NullaryOperator => operator_to_symbol,
-    String => nameof,
-    Char => v -> v == ⊤ ? :T : :F,
+    NullaryOperator => symbol_of,
+    String => string ∘ nameof,
+    Char => v -> v == ⊤ ? 'T' : 'F',
     Bool => Bool,
     Int => Int ∘ Bool
 )
@@ -254,9 +254,9 @@ end
 
 | t               | formatter(t)(⊤, _, _) | formatter(t)(⊥, _, _) |
 | :-------------  | :-------------------- | :-------------------- |
-| NullaryOperator | "⊤"                   | "⊥"                   |
-| String          | :tautology            | :contradiction        |
-| Char            | :T                    | :F                    |
+| NullaryOperator | :⊤                    | :⊥                    |
+| String          | "tautology"           | "contradiction"       |
+| Char            | 'T'                   | 'F'                   |
 | Bool            | true                  | false                 |
 | Int             | 1                     | 0                     |
 """

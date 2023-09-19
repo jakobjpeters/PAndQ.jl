@@ -3,11 +3,11 @@ module MarkdownExtension
 
 import PAndQ: pretty_table, __pretty_table
 using Markdown: Markdown, MD, Table
-using PAndQ: NullaryOperator, TruthTable, Proposition, merge_string, operator_to_symbol, formatter
+using PAndQ: NullaryOperator, TruthTable, Proposition, merge_string, symbol_of, formatter
 
 __pretty_table(
     ::Val{:markdown}, io, truth_table;
-    formatters = operator_to_symbol, alignment = :l
+    formatters = symbol_of, alignment = :l
 ) = print(io, MD(Table([
     map(merge_string, truth_table.header),
     eachrow(map(formatters, truth_table.body))...

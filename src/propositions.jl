@@ -320,7 +320,7 @@ julia> @atomize PAndQ.printnode(stdout, p ∧ q)
 """
 printnode(io::IO, p::Atom; kwargs...) = show(io, MIME"text/plain"(), p)
 printnode(io::IO, ::Compound{typeof(identity)}; kwargs...) = print(io, "I")
-printnode(io::IO, p::Compound; kwargs...) = print(io, operator_to_symbol(nodevalue(p)))
+printnode(io::IO, p::Compound; kwargs...) = print(io, symbol_of(nodevalue(p)))
 
 ## Utilities
 

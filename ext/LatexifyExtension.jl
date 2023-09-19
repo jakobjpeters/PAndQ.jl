@@ -7,10 +7,10 @@ import PrettyTables: pretty_table
 import PAndQ: __pretty_table, formatter
 using Latexify: @latexrecipe, Latexify
 using PrettyTables: LatexCell, LaTeXString
-using PAndQ: Proposition, LogicalOperator, TruthTable, operator_to_symbol, ___pretty_table, union_all_type, merge_string
+using PAndQ: Proposition, LogicalOperator, TruthTable, symbol_of, ___pretty_table, union_all_type, merge_string
 
 @latexrecipe f(p::Proposition) = return Symbol(sprint(show, MIME"text/plain"(), p))
-@latexrecipe f(lo::LogicalOperator) = return operator_to_symbol(lo)
+@latexrecipe f(lo::LogicalOperator) = return symbol_of(lo)
 
 formatter(::Type{LaTeXString}) = (v, _, _) -> latexify(v)
 
