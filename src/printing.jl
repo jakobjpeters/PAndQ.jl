@@ -241,24 +241,24 @@ show(io::IO, p::CN) where {AO, CN <: Union{Clause{AO}, Normal{AO}}} = print(io,
 
 for (T, f) in (
     NullaryOperator => symbol_of,
-    String => string ∘ nameof,
-    Char => v -> v == ⊤ ? 'T' : 'F',
+    String => nameof,
+    Char => v -> v == ⊤ ? "T" : "F",
     Bool => Bool,
     Int => Int ∘ Bool
 )
-    @eval formatter(::Type{$T}) = (v, _, _) -> $f(v)
+    @eval formatter(::Type{$T}) = (v, _, _) -> string($f(v))
 end
 
 """
-    formatter(t::Type{<:Union{NullaryOperator, String, Char, Bool, Int}})
+    formatter(t::Type{<:Union{PAndQ.NullaryOperator, String, Char, Bool, Int}})
 
-| t               | formatter(t)(⊤, _, _) | formatter(t)(⊥, _, _) |
-| :-------------  | :-------------------- | :-------------------- |
-| NullaryOperator | :⊤                    | :⊥                    |
-| String          | "tautology"           | "contradiction"       |
-| Char            | 'T'                   | 'F'                   |
-| Bool            | true                  | false                 |
-| Int             | 1                     | 0                     |
+| `t`                     | `formatter(t)(⊤, _, _)` | `formatter(t)(⊥, _, _)` |
+| :---------------------- | :---------------------- | :---------------------- |
+| `PAndQ.NullaryOperator` | `"⊤"`                   | `"⊥"`                   |
+| `String`                | `"tautology"`           | `"contradiction"`       |
+| `Char`                  | `"T"`                   | `"F"`                   |
+| `Bool`                  | `"true"`                | `"false"`               |
+| `Int`                   | `"1"`                   | `"0"`                   |
 """
 formatter
 
@@ -274,21 +274,21 @@ ___pretty_table(
 ___pretty_table(backend::Val{:html}, io, body; kwargs...) =
     pretty_table(io, body; backend, kwargs...)
 
-__pretty_table(backend, io, truth_table; formatters = formatter(NullaryOperator), kwargs...) =
-    ___pretty_table(backend, io, truth_table.body; header = (
-        map(merge_string, truth_table.header),
-        map(p -> merge_string(map(union_all_type, p)), truth_table.header)
+__pretty_table(backend, io, tt; formatters = formatter(NullaryOperator), kwargs...) =
+    ___pretty_table(backend, io, tt.body; header = (
+        map(merge_string, tt.header),
+        map(p -> merge_string(map(union_all_type, p)), tt.header)
     ), formatters, kwargs...)
 
 _pretty_table(io::IO, p::Proposition; kwargs...) =
     pretty_table(io, TruthTable((p,)); kwargs...)
-_pretty_table(io::IO, truth_table::TruthTable; kwargs...) =
-    pretty_table(io, truth_table; kwargs...)
+_pretty_table(io::IO, tt::TruthTable; kwargs...) =
+    pretty_table(io, tt; kwargs...)
 
 """
     pretty_table(
-        ::Union{IO, Type{Union{String, HTML}}} = stdout, ::Union{Proposition, TruthTable};
-        formatters = formatter(NullaryOperator), kwargs...
+        ::Union{IO, Type{Union{String, Docs.HTML}}} = stdout, ::Union{Proposition, TruthTable};
+        formatters = formatter(PAndQ.NullaryOperator), kwargs...
     )
 
 See also [`PrettyTables.pretty_table`]
@@ -309,7 +309,7 @@ julia> pretty_table(@atomize p ∧ q)
 │        ⊥ │        ⊥ │     ⊥ │
 └──────────┴──────────┴───────┘
 
-julia> print(pretty_table(HTML, @atomize p ∧ q).content)
+julia> print(pretty_table(Docs.HTML, @atomize p ∧ q).content)
 <table>
   <thead>
     <tr class = "header">
@@ -348,8 +348,8 @@ julia> print(pretty_table(HTML, @atomize p ∧ q).content)
 </table>
 ```
 """
-pretty_table(io::IO, truth_table::TruthTable; backend = Val(:text), kwargs...) =
-    __pretty_table(backend, io, truth_table; kwargs...)
+pretty_table(io::IO, tt::TruthTable; backend = Val(:text), kwargs...) =
+    __pretty_table(backend, io, tt; kwargs...)
 
 """
     print_tree(::Function, ::Function, ::IO, ::Proposition; kwargs...)

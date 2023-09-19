@@ -5,6 +5,6 @@
 TruthTable
 show
 formatter
-pretty_table
+pretty_table(::IO, ::TruthTable)
 print_tree
 ```

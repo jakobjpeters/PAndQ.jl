@@ -1,9 +1,12 @@
 
 using Documenter: DocMeta.setdocmeta!, makedocs, HTML, deploydocs
+using Base: get_extension
 using PAndQ
+using Markdown
+using Latexify
 
-const directory = (@__DIR__) * "/src/assets/"
-if !ispath(directory * "logo.svg")
+const directory = joinpath(@__DIR__, "src", "assets")
+if !ispath(joinpath(directory, "logo.svg"))
     mkpath(directory)
     include("logo.jl")
     make_logo(directory)
@@ -12,13 +15,30 @@ end
 setdocmeta!(
     PAndQ,
     :DocTestSetup,
-    :(using PAndQ),
+    :(using PAndQ)
 )
 
-makedocs(
-    sitename = "PAndQ.jl",
+const extensions = map(
+    extension -> extension[begin:end - 3],
+    cd(readdir, joinpath(@__DIR__, "..", "ext"))
+)
+const modules = [PAndQ; map(
+    extension -> get_extension(PAndQ, Symbol(extension)),
+extensions)]
+
+for (extension, _module) in zip(extensions, modules[2:end])
+    setdocmeta!(
+        _module,
+        :DocTestSetup,
+        :(using PAndQ, $(Symbol(extension[begin:end - 9])))
+    )
+end
+
+makedocs(;
+    modules,
+    strict = true,
     format = HTML(edit_link = "main"),
-    modules = [PAndQ],
+    sitename = "PAndQ.jl",
     pages = [
         "Home" => "index.md",
         "Tutorial" => "tutorial.md",
@@ -28,8 +48,7 @@ makedocs(
         ),
         "Extensions" => "extensions.md",
         "Internals" => "internals.md"
-    ],
-    strict = true
+    ]
 )
 
 deploydocs(
