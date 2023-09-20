@@ -41,8 +41,8 @@ julia> using PAndQ
 julia> ¬⊥
 tautology (generic function with 1 method)
 
-julia> @atoms p q
-2-element Vector{Atom{Symbol}}:
+julia> @variables p q
+2-element Vector{Variable}:
  p
  q
 
@@ -52,23 +52,23 @@ julia> r = ¬p
 julia> s = Clause(and, [p, ¬q])
 p ∧ ¬q
 
-julia> @p t = ((q ∧ r) ↔ a)(a => ⊤)
-(q) ∧ (¬p)
+julia> @atomize t = ((q ∧ r) ↔ a)(a => ⊤)
+q ∧ ¬p
 
 julia> u = s ∨ t
 (p ∧ ¬q) ∨ (q ∧ ¬p)
 
-julia> TruthTable(p ∧ ¬p, r, p ⊻ q, u)
-┌────────┬──────┬──────┬─────────┬────────────────────────────┐
-│ p ∧ ¬p │ p    │ q    │ ¬p      │ p ⊻ q, (p ∧ ¬q) ∨ (q ∧ ¬p) │
-│ Tree   │ Atom │ Atom │ Literal │ Tree, Normal               │
-├────────┼──────┼──────┼─────────┼────────────────────────────┤
-│ ⊥      │ ⊤    │ ⊤    │ ⊥       │ ⊥                          │
-│ ⊥      │ ⊥    │ ⊤    │ ⊤       │ ⊤                          │
-├────────┼──────┼──────┼─────────┼────────────────────────────┤
-│ ⊥      │ ⊤    │ ⊥    │ ⊥       │ ⊤                          │
-│ ⊥      │ ⊥    │ ⊥    │ ⊤       │ ⊥                          │
-└────────┴──────┴──────┴─────────┴────────────────────────────┘
+julia> TruthTable([p ∧ ¬p, r, p ⊻ q, u])
+┌────────┬──────────┬──────────┬─────────┬────────────────────────────┐
+│ p ∧ ¬p │ p        │ q        │ ¬p      │ p ⊻ q, (p ∧ ¬q) ∨ (q ∧ ¬p) │
+│ Tree   │ Variable │ Variable │ Literal │ Tree, Normal               │
+├────────┼──────────┼──────────┼─────────┼────────────────────────────┤
+│ ⊥      │ ⊤        │ ⊤        │ ⊥       │ ⊥                          │
+│ ⊥      │ ⊥        │ ⊤        │ ⊤       │ ⊤                          │
+├────────┼──────────┼──────────┼─────────┼────────────────────────────┤
+│ ⊥      │ ⊤        │ ⊥        │ ⊥       │ ⊤                          │
+│ ⊥      │ ⊥        │ ⊥        │ ⊤       │ ⊥                          │
+└────────┴──────────┴──────────┴─────────┴────────────────────────────┘
 ```
 
 ## Related Projects
@@ -100,12 +100,13 @@ Features such as a fast satisfiability algorithm, proofs, and other logics are s
 
 #### Wrappers
 
-- [Chuffed](https://github.com/JuliaConstraints/Chuffed.jl)
+- [Chuffed.jl](https://github.com/JuliaConstraints/Chuffed.jl)
 - [CPLEXCP.jl](https://github.com/JuliaConstraints/CPLEXCP.jl)
 - [JaCoP.jl](https://github.com/JuliaConstraints/JaCoP.jl)
 
 ### Wrappers
 
+- [Satifsiability.jl](https://github.com/elsoroka/Satisfiability.jl)
 - [Z3.jl](https://github.com/ahumenberger/Z3.jl)
 - [PicoSat.jl](https://github.com/sisl/PicoSAT.jl)
 - [BeeEncoder.jl](https://github.com/newptcai/BeeEncoder.jl)
