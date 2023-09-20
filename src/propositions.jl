@@ -284,7 +284,9 @@ julia> @atomize PAndQ.children(p ∧ q)
 """
 children(p::Atom) = ()
 children(p::Literal) = (p.atom,)
-children(p::Union{Tree, Clause, Normal}) = only_field(p)
+children(p::Tree) = p.nodes
+children(p::Clause) = p.literals
+children(p::Normal) = p.clauses
 
 """
     nodevalue(::Compound)
@@ -303,9 +305,6 @@ nodevalue(::Compound{LO}) where LO = LO.instance
 """
     printnode(::IO, ::Proposition; kwargs...)
 
-!!! note
-    Instances of [`Compound{typeof(identity)}`](@ref Compound) are represented as `I`.
-
 See also [`Proposition`](@ref).
 
 # Examples
@@ -319,10 +318,18 @@ julia> @atomize PAndQ.printnode(stdout, p ∧ q)
 ```
 """
 printnode(io::IO, p::Atom; kwargs...) = show(io, MIME"text/plain"(), p)
-printnode(io::IO, ::Compound{typeof(identity)}; kwargs...) = print(io, "I")
-printnode(io::IO, p::Compound; kwargs...) = print(io, symbol_of(nodevalue(p)))
+printnode(io::IO, p::Union{Literal, Tree}; kwargs...) = print(io, symbol_of(nodevalue(p)))
+printnode(io::IO, p::Union{Clause, Normal}; kwargs...) =
+    print(io, symbol_of((isempty(children(p)) ? only ∘ left_neutrals : identity)(nodevalue(p))))
 
 ## Utilities
+
+"""
+    child(x)
+
+Equivalent to [`only(children(x))`](@ref children)
+"""
+const child = only ∘ children
 
 for T in (:Constant, :Variable, :Literal, :Tree, :Clause, :Normal)
     @eval union_all_type(::$T) = $T
@@ -343,29 +350,6 @@ Tree
 ```
 """
 union_all_type
-
-"""
-    only_field(::Proposition)
-
-Return the only field of a [`Proposition`](@ref).
-
-# Examples
-```jldoctest
-julia> @atomize PAndQ.only_field(p)
-:p
-
-julia> @atomize PAndQ.only_field(p ∧ q)
-2-element Vector{Tree{typeof(identity), Variable}}:
- p
- q
-```
-"""
-only_field(p::Constant) = p.value
-only_field(p::Variable) = p.symbol
-only_field(p::Literal) = p.atom
-only_field(p::Tree) = p.nodes
-only_field(p::Clause) = p.literals
-only_field(p::Normal) = p.clauses
 
 """
     atomize(x)

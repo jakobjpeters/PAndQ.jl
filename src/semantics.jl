@@ -211,13 +211,13 @@ function interpret(valuation, p::Union{Clause{AO}, Normal{AO}}) where AO
     not_neutral = ¬neutral
     q = union_all_type(p)(AO.instance)
 
-    for r in only_field(p)
+    for r in children(p)
         s = interpret(valuation, r)
         s == not_neutral && return not_neutral
         q = AO.instance(q, s)
     end
 
-    isempty(only_field(q)) ? neutral : q
+    isempty(children(q)) ? neutral : q
 end
 
 """
@@ -511,7 +511,7 @@ eval_doubles(:not, (
 (¬p::Literal{UO}) where UO = (¬UO.instance)(p.atom)
 (¬p::Tree{LO}) where LO = (¬LO.instance)(p.nodes...)
 (¬p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr =
-    union_all_type(p)(dual(AO.instance), map(¬, only_field(p)))
+    union_all_type(p)(dual(AO.instance), map(¬, children(p)))
 
 ::typeof(⊤) ∧ ::typeof(⊤) = ⊤
 ::typeof(⊥) ∧ q::Union{NullaryOperator, Proposition} = ⊥ # domination law
@@ -551,10 +551,10 @@ for AO in uniontypes(AndOr)
 
     for (left, right) in ((Clause, LiteralProposition), (Normal, Clause{DAO}))
         @eval begin
-            $ao(p::$left{$AO}, q::$right) = $left($ao, vcat(only_field(p), q))
-            $ao(p::$right, q::$left{$AO}) = $left($ao, vcat(p, only_field(q)))
+            $ao(p::$left{$AO}, q::$right) = $left($ao, vcat(children(p), q))
+            $ao(p::$right, q::$left{$AO}) = $left($ao, vcat(p, children(q)))
             $ao(p::$left{$AO}, q::$left{$AO}) =
-                $left($ao, vcat(only_field(p), only_field(q)))
+                $left($ao, vcat(children(p), children(q)))
         end
     end
 end
@@ -580,10 +580,10 @@ end
 """
     convert(::Type{<:Proposition}, ::Union{NullaryOperator, Proposition})
 """
-convert(::Type{Atom}, p::Literal{typeof(identity)}) = p.atom
-convert(::Type{Atom}, p::Tree{typeof(identity), <:Atom}) = only(p.nodes)
+convert(::Type{Atom}, p::Union{Literal{I}, Tree{I, <:Atom}}) where I <: typeof(identity) =
+    child(p)
 convert(::Type{Literal}, p::Tree{UO, <:Atom}) where UO =
-    Literal(UO.instance(only(p.nodes)))
+    Literal(UO.instance(child(p)))
 convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
 convert(::Type{Tree}, p::Literal{UO}) where UO = Tree(UO.instance, p.atom)
 convert(::Type{Tree}, p::Clause{AO}) where AO = Tree(foldl(AO.instance, p.literals))

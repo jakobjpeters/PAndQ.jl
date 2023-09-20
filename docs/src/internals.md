@@ -43,8 +43,8 @@ PAndQ.printnode
 ### Utility
 
 ```@docs
+PAndQ.child
 PAndQ.union_all_type
-PAndQ.only_field
 PAndQ.symbol_value
 PAndQ.atomize
 ```
@@ -55,6 +55,8 @@ PAndQ.atomize
 PAndQ.symbol_of
 PAndQ.merge_string
 PAndQ.parenthesize
+PAndQ.print_node
+PAndQ.show_atom
 ```
 
 ## Semantics

@@ -1,8 +1,9 @@
 
-import Base: show
+import Base: show, Stateful
 import PrettyTables: pretty_table, _pretty_table
+import AbstractTrees: print_tree
 using Base.Docs: HTML
-using AbstractTrees: print_tree
+using AbstractTrees: print_child_key
 using PrettyTables: LatexCell
 
 """
@@ -117,7 +118,7 @@ julia> PAndQ.symbol_of(∧)
 :∧
 ```
 """
-symbol_of(::typeof(identity)) = ""
+symbol_of(::typeof(identity)) = Symbol("")
 for lo in (:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚)
     @eval symbol_of(::typeof($lo)) = $(QuoteNode(lo))
 end
@@ -126,21 +127,30 @@ end
     merge_string(cell)
 """
 merge_string(cell::LatexCell) = cell
-merge_string(cell) = join(Iterators.map(
-    p -> sprint(
-        (io, q) -> show(io, MIME"text/plain"(), q), p
-    ), cell
-), ", ")
+merge_string(cell) =
+    join(Iterators.map(p -> sprint(show, MIME"text/plain"(), p), cell), ", ")
 
 """
     parenthesize(::IO, x)
 """
-parenthesize(io::IO, x) = show(io, MIME"text/plain"(), x)
-function parenthesize(io::IO, x::Union{Clause, Tree{<:BinaryOperator}})
+parenthesize(io, x) = show(io, MIME"text/plain"(), x)
+function parenthesize(io::IO, x::Union{Clause, <:Tree{<:BinaryOperator}})
     print(io, "(")
     show(io, MIME"text/plain"(), x)
     print(io, ")")
 end
+
+"""
+    print_node(io, p)
+"""
+print_node(io, ::Compound{typeof(identity)}) = print(io, "I")
+print_node(io, p) = printnode(io, p)
+
+"""
+    show_atom
+"""
+show_atom(io, p::Constant) = show(io, p.value)
+show_atom(io, p::Variable) = show(io, p.symbol)
 
 # `show`
 
@@ -167,44 +177,35 @@ function show(io::IO, ::MIME"text/plain", p::Constant)
     print(io, ")")
 end
 show(io::IO, ::MIME"text/plain", p::Variable) = print(io, p.symbol)
-function show(io::IO, ::MIME"text/plain", p::Literal{UO}) where UO
-    print(io, symbol_of(UO.instance))
-    show(io, MIME"text/plain"(), p.atom)
+function show(io::IO, ::MIME"text/plain", p::Literal)
+    printnode(io, p)
+    printnode(io, p.atom)
 end
-show(io::IO, ::MIME"text/plain", p::Tree{NO}) where NO <: NullaryOperator =
-    print(io, symbol_of(NO.instance))
-show(io::IO, ::MIME"text/plain", p::Tree{typeof(identity)}) =
-    show(io, MIME"text/plain"(), only(p.nodes))
-function show(io::IO, ::MIME"text/plain", p::Tree{N, <:Atom}) where N <: typeof(¬)
-    print(io, symbol_of(N.instance))
-    show(io, MIME"text/plain"(), only(p.nodes))
+function show(io::IO, ::MIME"text/plain", p::Compound{<:UnaryOperator})
+    printnode(io, p)
+    parenthesize(io, child(p))
 end
-function show(io::IO, ::MIME"text/plain", p::Tree{N, <:Tree}) where N <: typeof(¬)
-    print(io, symbol_of(N.instance), "(")
-    show(io, MIME"text/plain"(), only(p.nodes))
-    print(io, ")")
-end
-function show(io::IO, ::MIME"text/plain", p::Tree{BO}) where BO <: BinaryOperator
-    parenthesize(io, first(p.nodes))
-    print(io, " ", symbol_of(BO.instance), " ")
-    parenthesize(io, last(p.nodes))
-end
-function show(io::IO, ::MIME"text/plain", p::Union{Clause{AO}, Normal{AO}}) where AO
-    ao = AO.instance
-    qs = only_field(p)
-    isempty(qs) ?
-        print(io, symbol_of(only(left_neutrals(ao)))) :
-        join(
-            io,
-            Iterators.map(q -> sprint(parenthesize, q), qs),
-            " $(symbol_of(ao)) "
-        )
+function show(io::IO, ::MIME"text/plain", p::Compound)
+    _children = Stateful(children(p))
+    isempty(_children) ?
+        printnode(io, p) :
+        for child in _children
+            parenthesize(io, child)
+            if !isempty(_children)
+                print(io, " ")
+                printnode(io, p)
+                print(io, " ")
+            end
+        end
 end
 
 """
-    show(io::IO, ::MIME"text/plain", tt::TruthTable)
+    show(::IO, ::MIME"text/plain", ::TruthTable)
 
-Equivalent to [`pretty_table(io, tt; alignment = :l, newline_at_end = false)`](@ref pretty_table).
+# Examples
+```julia
+julia> @atomize show(stdout, MIME"text/plain"(), TruthTable([p ∧ q]))
+```
 """
 show(io::IO, ::MIME"text/plain", tt::TruthTable) =
     pretty_table(io, tt; alignment = :l, newline_at_end = false)
@@ -225,19 +226,29 @@ p ∧ q
 """
 function show(io::IO, p::A) where A <: Atom
     print(io, nameof(A), "(")
-    show(io, only_field(p))
+    show_atom(io, p)
     print(io, ")")
 end
 show(io::IO, p::L) where {UO, L <: Literal{UO}} =
     print(io, nameof(L), "(", UO.instance, ", ", p.atom, ")")
-function show(io::IO, p::T) where {LO, T <: Tree{LO}}
-    print(io, nameof(T), "(", LO.instance)
-    !isempty(p.nodes) && print(io, ", ", sprint((io, node) -> join(io, node, ", "), p.nodes))
+function show(io::IO, p::C) where {LO, C <: Compound{LO}}
+    print(io, nameof(C), "(", LO.instance)
+
+    _children = Stateful(children(p))
+    if !isempty(_children)
+        print(io, ", ")
+        p isa Union{Clause, Normal} && print(io, "[")
+
+        for node in _children
+            show(io, node)
+            !isempty(_children) && print(io, ", ")
+        end
+
+        p isa Union{Clause, Normal} && print(io, "]")
+    end
+
     print(io, ")")
 end
-show(io::IO, p::CN) where {AO, CN <: Union{Clause{AO}, Normal{AO}}} = print(io,
-    nameof(CN), "(", AO.instance, ", [", sprint((io, xs) -> join(io, xs, ", "), only_field(p)), "])"
-)
 
 for (T, f) in (
     NullaryOperator => symbol_of,
@@ -352,19 +363,18 @@ pretty_table(io::IO, tt::TruthTable; backend = Val(:text), kwargs...) =
     __pretty_table(backend, io, tt; kwargs...)
 
 """
-    print_tree(::Function, ::Function, ::IO, ::Proposition; kwargs...)
     print_tree(::IO = stdout, ::Proposition; kwargs...)
 
 Prints a tree diagram of the given [`Proposition`](@ref).
+
+!!! note
+    Instances of [`Compound{typeof(identity)}`](@ref Compound) are represented as `I`.
 
 See also [`AbstractTrees.print_tree`]
 (https://github.com/JuliaCollections/AbstractTrees.jl/blob/master/src/printing.jl).
 
 ```jldoctest
-julia> @atomize r = p ∧ ¬q ⊻ s
-(p ∧ ¬q) ⊻ s
-
-julia> print_tree(r)
+julia> @atomize print_tree(p ∧ ¬q ⊻ s)
 ⊻
 ├─ ∧
 │  ├─ I
@@ -374,7 +384,7 @@ julia> print_tree(r)
 └─ I
    └─ s
 
-julia> print_tree(Normal(r))
+julia> @atomize print_tree(Normal(p ∧ ¬q ⊻ s))
 ∧
 ├─ ∨
 │  ├─ I
@@ -395,4 +405,5 @@ julia> print_tree(Normal(r))
       └─ s
 ```
 """
-print_tree
+print_tree(io::IO, p::Proposition; kwargs...) =
+    print_tree(print_node, print_child_key, io, p; kwargs...)
