@@ -202,19 +202,20 @@ q
 ```
 """
 interpret(valuation, p::Atom) = valuation(p)
-interpret(valuation, p::Literal{UO}) where UO =
-    UO.instance(interpret(valuation, p.atom))
-interpret(valuation, p::Tree{LO}) where LO =
-    LO.instance(map(node -> interpret(valuation, node), p.nodes)...)
-function interpret(valuation, p::Union{Clause{AO}, Normal{AO}}) where AO
-    neutral = only(left_neutrals(AO.instance))
+interpret(valuation, p::Literal) =
+    nodevalue(p)(interpret(valuation, p.atom))
+interpret(valuation, p::Tree) =
+    nodevalue(p)(map(node -> interpret(valuation, node), p.nodes)...)
+function interpret(valuation, p::Union{Clause, Normal})
+    _nodevalue = nodevalue(p)
+    neutral = only(left_neutrals(_nodevalue))
     not_neutral = ¬neutral
-    q = union_all_type(p)(AO.instance)
+    q = union_all_type(p)(_nodevalue)
 
     for r in children(p)
         s = interpret(valuation, r)
         s == not_neutral && return not_neutral
-        q = AO.instance(q, s)
+        q = _nodevalue(q, s)
     end
 
     isempty(children(q)) ? neutral : q
@@ -508,10 +509,10 @@ eval_doubles(:not, (
 ## Propositions
 
 ¬p::Atom = Literal(¬, p)
-(¬p::Literal{UO}) where UO = (¬UO.instance)(p.atom)
-(¬p::Tree{LO}) where LO = (¬LO.instance)(p.nodes...)
-(¬p::Union{Clause{AO}, Normal{AO}}) where AO <: AndOr =
-    union_all_type(p)(dual(AO.instance), map(¬, children(p)))
+(¬p::Literal) = (¬nodevalue(p))(p.atom)
+(¬p::Tree) = (¬nodevalue(p))(p.nodes...)
+(¬p::Union{Clause, Normal}) =
+    union_all_type(p)(dual(nodevalue(p)), map(¬, children(p)))
 
 ::typeof(⊤) ∧ ::typeof(⊤) = ⊤
 ::typeof(⊥) ∧ q::Union{NullaryOperator, Proposition} = ⊥ # domination law
@@ -582,26 +583,26 @@ end
 """
 convert(::Type{Atom}, p::Union{Literal{I}, Tree{I, <:Atom}}) where I <: typeof(identity) =
     child(p)
-convert(::Type{Literal}, p::Tree{UO, <:Atom}) where UO =
-    Literal(UO.instance(child(p)))
+convert(::Type{Literal}, p::Tree{<:UnaryOperator, <:Atom}) =
+    Literal(nodevalue(p)(child(p)))
 convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
-convert(::Type{Tree}, p::Literal{UO}) where UO = Tree(UO.instance, p.atom)
-convert(::Type{Tree}, p::Clause{AO}) where AO = Tree(foldl(AO.instance, p.literals))
-convert(::Type{Tree}, p::Normal{AO}) where AO = Tree(mapfoldl(Tree, AO.instance, p.clauses))
+convert(::Type{Tree}, p::Literal) = Tree(nodevalue(p), p.atom)
+convert(::Type{Tree}, p::Clause) = Tree(foldl(nodevalue(p), p.literals))
+convert(::Type{Tree}, p::Normal) = Tree(mapfoldl(Tree, nodevalue(p), p.clauses))
 convert(::Type{Clause}, p::LiteralProposition) = Clause(or, [p])
 convert(::Type{Clause{AO}}, p::LiteralProposition) where AO <: AndOr = Clause(AO.instance, [p])
 convert(::Type{Clause}, no::NullaryOperator) = Clause(neutral_operator(no))
 convert(::Type{Normal}, no::NullaryOperator) = Normal(neutral_operator(no))
-convert(::Type{Clause}, p::Tree{NO}) where NO <: NullaryOperator = Clause(NO.instance)
-convert(::Type{Normal}, p::Tree{NO}) where NO <: NullaryOperator = Normal(NO.instance)
-convert(::Type{Normal}, p::Clause{AO}) where AO <: AndOr = Normal(dual(AO.instance), [p])
+convert(::Type{Clause}, p::Tree{<:NullaryOperator}) = Clause(nodevalue(p))
+convert(::Type{Normal}, p::Tree{<:NullaryOperator}) = Normal(nodevalue(p))
+convert(::Type{Normal}, p::Clause) = Normal(dual(nodevalue(p)), [p])
 convert(::Type{Normal{AO}}, p::LiteralProposition) where AO <: AndOr = Normal(AO.instance, Clause(p))
 convert(::Type{Normal{AO}}, p::Clause{AO}) where AO <: AndOr =
     Normal(AO.instance, map(literal -> Clause(dual(AO.instance), literal), p.literals))
 convert(::Type{Normal{AO}}, p::Clause) where AO <: AndOr = Normal(AO.instance, [p])
 convert(::Type{Normal}, p::Proposition) = Normal(∧, p)
-convert(::Type{Normal{AO}}, p::Tree{LO}) where {AO, LO} =
-    Normal(AO.instance, LO.instance(map(Normal, p.nodes)...))
+convert(::Type{Normal{AO}}, p::Tree) where AO =
+    Normal(AO.instance, nodevalue(p)(map(Normal, p.nodes)...))
 convert(::Type{Normal{AO}}, p::Normal{AO}) where AO <: AndOr = p
 convert(::Type{Normal{AO}}, p::Normal) where AO <: AndOr = Normal(AO.instance,
     vec(map(product(map(p.clauses) do clause

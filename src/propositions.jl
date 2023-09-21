@@ -534,7 +534,7 @@ p ∧ q
 ```
 """
 map(f, p::Atom) = f(p)
-map(f, p::Tree{LO}) where LO =
-    union_all_type(p)(LO.instance, map(child -> map(f, child), children(p))...)
-map(f, p::Union{Clause{AO}, Normal{AO}}) where AO =
-    union_all_type(p)(AO.instance, map(child -> map(f, child), children(p)))
+map(f, p::Tree) =
+    union_all_type(p)(nodevalue(p), map(child -> map(f, child), children(p))...)
+map(f, p::Union{Clause, Normal}) =
+    union_all_type(p)(nodevalue(p), map(child -> map(f, child), children(p)))

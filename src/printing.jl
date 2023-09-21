@@ -229,10 +229,10 @@ function show(io::IO, p::A) where A <: Atom
     show_atom(io, p)
     print(io, ")")
 end
-show(io::IO, p::L) where {UO, L <: Literal{UO}} =
-    print(io, nameof(L), "(", UO.instance, ", ", p.atom, ")")
-function show(io::IO, p::C) where {LO, C <: Compound{LO}}
-    print(io, nameof(C), "(", LO.instance)
+show(io::IO, p::L) where L <: Literal =
+    print(io, nameof(L), "(", nodevalue(p), ", ", p.atom, ")")
+function show(io::IO, p::C) where C <: Compound
+    print(io, nameof(C), "(", nodevalue(p))
 
     _children = Stateful(children(p))
     if !isempty(_children)
