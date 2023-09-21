@@ -1,3 +1,4 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 Luxor = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"

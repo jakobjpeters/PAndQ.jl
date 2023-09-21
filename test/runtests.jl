@@ -20,7 +20,7 @@ using Latexify
     doctest(PAndQ)
 
     for extension in map(
-        extension -> extension[begin:end - 3],
+        extension -> chop(extension; tail = 3),
         cd(readdir, joinpath(@__DIR__, "..", "ext"))
     )
         _module = get_extension(PAndQ, Symbol(extension))
@@ -28,7 +28,7 @@ using Latexify
         setdocmeta!(
             _module,
             :DocTestSetup,
-            :(using PAndQ, $(Symbol(extension[begin:end - 9])))
+            :(using PAndQ, $(Symbol(chop(extension; tail = 9))))
         )
 
         doctest(_module)

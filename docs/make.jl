@@ -19,7 +19,7 @@ setdocmeta!(
 )
 
 const extensions = map(
-    extension -> extension[begin:end - 3],
+    extension -> chop(extension; tail = 3),
     cd(readdir, joinpath(@__DIR__, "..", "ext"))
 )
 const modules = [PAndQ; map(
@@ -30,13 +30,12 @@ for (extension, _module) in zip(extensions, modules[2:end])
     setdocmeta!(
         _module,
         :DocTestSetup,
-        :(using PAndQ, $(Symbol(extension[begin:end - 9])))
+        :(using PAndQ, $(Symbol(chop(extension; tail = 9))))
     )
 end
 
 makedocs(;
     modules,
-    strict = true,
     format = HTML(edit_link = "main"),
     sitename = "PAndQ.jl",
     pages = [
