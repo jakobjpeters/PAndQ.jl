@@ -208,7 +208,7 @@ julia> @atomize show(stdout, MIME"text/plain"(), TruthTable([p ∧ q]))
 ```
 """
 show(io::IO, ::MIME"text/plain", tt::TruthTable) =
-    pretty_table(io, tt; alignment = :l, newline_at_end = false)
+    pretty_table(io, tt; newline_at_end = false)
 
 """
     show(::IO, ::Proposition)
@@ -310,57 +310,57 @@ See also [`PrettyTables.pretty_table`]
 ```jldoctest
 julia> pretty_table(@atomize p ∧ q)
 ┌──────────┬──────────┬───────┐
-│        p │        q │ p ∧ q │
-│ Variable │ Variable │  Tree │
+│ p        │ q        │ p ∧ q │
+│ Variable │ Variable │ Tree  │
 ├──────────┼──────────┼───────┤
-│        ⊤ │        ⊤ │     ⊤ │
-│        ⊥ │        ⊤ │     ⊥ │
+│ ⊤        │ ⊤        │ ⊤     │
+│ ⊥        │ ⊤        │ ⊥     │
 ├──────────┼──────────┼───────┤
-│        ⊤ │        ⊥ │     ⊥ │
-│        ⊥ │        ⊥ │     ⊥ │
+│ ⊤        │ ⊥        │ ⊥     │
+│ ⊥        │ ⊥        │ ⊥     │
 └──────────┴──────────┴───────┘
 
 julia> print(pretty_table(Docs.HTML, @atomize p ∧ q).content)
 <table>
   <thead>
     <tr class = "header">
-      <th style = "text-align: right;">p</th>
-      <th style = "text-align: right;">q</th>
-      <th style = "text-align: right;">p ∧ q</th>
+      <th style = "text-align: left;">p</th>
+      <th style = "text-align: left;">q</th>
+      <th style = "text-align: left;">p ∧ q</th>
     </tr>
     <tr class = "subheader headerLastRow">
-      <th style = "text-align: right;">Variable</th>
-      <th style = "text-align: right;">Variable</th>
-      <th style = "text-align: right;">Tree</th>
+      <th style = "text-align: left;">Variable</th>
+      <th style = "text-align: left;">Variable</th>
+      <th style = "text-align: left;">Tree</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td style = "text-align: right;">⊤</td>
-      <td style = "text-align: right;">⊤</td>
-      <td style = "text-align: right;">⊤</td>
+      <td style = "text-align: left;">⊤</td>
+      <td style = "text-align: left;">⊤</td>
+      <td style = "text-align: left;">⊤</td>
     </tr>
     <tr>
-      <td style = "text-align: right;">⊥</td>
-      <td style = "text-align: right;">⊤</td>
-      <td style = "text-align: right;">⊥</td>
+      <td style = "text-align: left;">⊥</td>
+      <td style = "text-align: left;">⊤</td>
+      <td style = "text-align: left;">⊥</td>
     </tr>
     <tr>
-      <td style = "text-align: right;">⊤</td>
-      <td style = "text-align: right;">⊥</td>
-      <td style = "text-align: right;">⊥</td>
+      <td style = "text-align: left;">⊤</td>
+      <td style = "text-align: left;">⊥</td>
+      <td style = "text-align: left;">⊥</td>
     </tr>
     <tr>
-      <td style = "text-align: right;">⊥</td>
-      <td style = "text-align: right;">⊥</td>
-      <td style = "text-align: right;">⊥</td>
+      <td style = "text-align: left;">⊥</td>
+      <td style = "text-align: left;">⊥</td>
+      <td style = "text-align: left;">⊥</td>
     </tr>
   </tbody>
 </table>
 ```
 """
-pretty_table(io::IO, tt::TruthTable; backend = Val(:text), kwargs...) =
-    __pretty_table(backend, io, tt; kwargs...)
+pretty_table(io::IO, tt::TruthTable; backend = Val(:text), alignment = :l, kwargs...) =
+    __pretty_table(backend, io, tt; alignment, kwargs...)
 
 """
     print_tree(::IO = stdout, ::Proposition; kwargs...)

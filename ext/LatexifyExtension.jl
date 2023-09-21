@@ -39,7 +39,7 @@ Equivalent to [`LaTeXString(pretty_table(String, x; backend, kwargs...))`](@ref 
 # Examples
 ```jldoctest
 julia> pretty_table(Latexify.LaTeXString, @atomize p ∧ q)
-L"\\begin{tabular}{|r|r|r|}
+L"\\begin{tabular}{|l|l|l|}
   \\hline
   \\textbf{\$p\$} & \\textbf{\$q\$} & \\textbf{\$p \\wedge q\$} \\\\
   \\texttt{Variable} & \\texttt{Variable} & \\texttt{Tree} \\\\\\hline

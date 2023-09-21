@@ -8,7 +8,7 @@ using PAndQ: NullaryOperator, TruthTable, Proposition, merge_string, symbol_of, 
 
 __pretty_table(
     ::Val{:markdown}, io, tt;
-    formatters = string ∘ symbol_of, alignment = :l
+    formatters = string ∘ symbol_of, alignment
 ) = print(io, MD(Table([
     map(merge_string, tt.header),
     eachrow(map(formatters, tt.body))...
