@@ -39,7 +39,7 @@ julia> s = Clause(and, [p, ¬q])
 p ∧ ¬q
 
 julia> @atomize t = ((q ∧ r) ↔ a)(a => ⊤)
-q ∧ ¬p
+(q ∧ ¬p) ↔ ⊤
 
 julia> u = s ∨ t
 (p ∧ ¬q) ∨ (q ∧ ¬p)

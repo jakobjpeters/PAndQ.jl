@@ -117,11 +117,8 @@ See also [`UnaryOperator`](@ref), [`Atom`](@ref), and [`LiteralProposition`](@re
 
 # Examples
 ```jldoctest
-julia> @atomize r = ¬p
+julia> @atomize ¬p
 ¬p
-
-julia> ¬r
-p
 ```
 """
 struct Literal{UO <: UnaryOperator, A <: Atom} <: Compound{UO}
@@ -143,11 +140,11 @@ See also [`LogicalOperator`](@ref).
 
 # Examples
 ```jldoctest
-julia> @atomize r = p ⊻ q
+julia> @atomize p ⊻ q
 p ⊻ q
 
-julia> @atomize ¬r → s
-(p ↔ q) → s
+julia> @atomize ¬p → q
+¬p → q
 ```
 """
 struct Tree{LO <: LogicalOperator, P <: Proposition} <: Expressive{LO}
@@ -297,7 +294,7 @@ julia> @atomize PAndQ.nodevalue(¬p)
 not (generic function with 19 methods)
 
 julia> @atomize PAndQ.nodevalue(p ∧ q)
-and (generic function with 25 methods)
+and (generic function with 18 methods)
 ```
 """
 nodevalue(::Compound{LO}) where LO = LO.instance
@@ -501,7 +498,7 @@ julia> @atomize collect(operators(¬p))
 
 julia> @atomize collect(operators(¬p ∧ q))
 3-element Vector{Function}:
- and (generic function with 25 methods)
+ and (generic function with 18 methods)
  not (generic function with 19 methods)
  identity (generic function with 1 method)
 ```

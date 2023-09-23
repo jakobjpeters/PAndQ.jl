@@ -486,7 +486,7 @@ true
 ```
 """
 mapfoldl(f, lio::LeftNeutralOperator, ps) =
-    mapfoldl(f, lio, ps, init = Bool(first(left_neutrals(lio))))
+    mapfoldl(f, lio, ps, init = first(left_neutrals(lio))())
 
 """
     mapfoldr(f, rio::RightNeutralOperator, ps)
@@ -508,7 +508,7 @@ true
 ```
 """
 mapfoldr(f, rio::RightNeutralOperator, ps) =
-    mapfoldr(f, rio, ps, init = Bool(first(right_neutrals(rio))))
+    mapfoldr(f, rio, ps, init = first(right_neutrals(rio))())
 
 # Utilities
 

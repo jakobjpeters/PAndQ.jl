@@ -119,25 +119,25 @@ julia> collect(atoms(p ∧ q))
 We know that since these are propositions, they can be true or false. If you think that "Logic is fun", it would be invalid to assign it the valuation false. So the proposition `p` is true if you think that "Logic is fun" and is false otherwise. If we assign the value true to the proposition "Logic is fun", then we know that the validity of the proposition "Logic is fun and Julia is awesome" depends on whether or not "Julia is awesome". If "Julia is awesome" is assigned false, then the conjunction of the two propositions is false. Use the [`interpret`](@ref) function to assign meaning to atomic propositions and then simplify the proposition.
 
 ```jldoctest 1
-julia> interpret(a -> ⊥, ¬p)
-tautology (generic function with 1 method)
+julia> interpret(a -> false, ¬p)
+true
 
-julia> (p ∧ q)(p => ⊤, q => ⊥)
-contradiction (generic function with 1 method)
+julia> (p ∧ q)(p => true, q => false)
+false
 ```
 
 Assigning meaning to any number of atomic propositions is called a [`valuation`](@ref valuations). Since `p` can only be true or false, those are it's possible valuations. An [`interpretation`](@ref interpretations) is the truth value of propositions that is determined by a given valuation. Since `p` is atomic, its valuation and interpretation are the same. `¬p` doesn't depend on any other propositions, so it also has two possible valuations. However, the valuation and the interpretation are no longer the same. If `p` is assigned true, then `¬p` is determined to be false, and vice versa.
 
 ```jldoctest 1
 julia> collect(valuations(¬p))
-2-element Vector{Vector}:
- Pair{Variable, typeof(tautology)}[Variable(:p) => PAndQ.tautology]
- Pair{Variable, typeof(contradiction)}[Variable(:p) => PAndQ.contradiction]
+2-element Vector{Vector{Pair{Variable, Bool}}}:
+ [Variable(:p) => 1]
+ [Variable(:p) => 0]
 
 julia> collect(interpretations(¬p))
-2-element Vector{Function}:
- contradiction (generic function with 1 method)
- tautology (generic function with 1 method)
+2-element Vector{Bool}:
+ 0
+ 1
 ```
 
 Since `p ∧ q` contains two atomic propositions, there are four valuations: `p` is true and `q` is true, `p` is false and `q` is true, `p` is true and `q` is false, and `p` is false and `q` is false. Each additional atomic proposition in a proposition doubles the number of possible valuations. Mathematically, there are `2 ^ n` valuations where `n = length(unique!(collect(atoms(p))))`. Since each interpretation depends on a valuation, the number of valuations and interpretations are equal.
@@ -154,14 +154,14 @@ It is useful to find valuations that determine valid interpretations. This is ac
 
 ```jldoctest 1
 julia> collect(solve(p ∧ q))
-1-element Vector{Vector{Pair{Variable, typeof(tautology)}}}:
- [Variable(:p) => PAndQ.tautology, Variable(:q) => PAndQ.tautology]
+1-element Vector{Vector{Pair{Variable, Bool}}}:
+ [Variable(:p) => 1, Variable(:q) => 1]
 
 julia> collect(solve(¬(p ∧ q)))
-3-element Vector{Vector}:
- Pair{Variable}[Variable(:p) => PAndQ.contradiction, Variable(:q) => PAndQ.tautology]
- Pair{Variable}[Variable(:p) => PAndQ.tautology, Variable(:q) => PAndQ.contradiction]
- Pair{Variable, typeof(contradiction)}[Variable(:p) => PAndQ.contradiction, Variable(:q) => PAndQ.contradiction]
+3-element Vector{Vector{Pair{Variable, Bool}}}:
+ [Variable(:p) => 0, Variable(:q) => 1]
+ [Variable(:p) => 1, Variable(:q) => 0]
+ [Variable(:p) => 0, Variable(:q) => 0]
 ```
 
 A proposition [`is_satisfiable`](@ref) if there is at least one valid interpretation. A proposition [`is_falsifiable`](@ref) if there is at least one invalid interpretation. A proposition [`is_contingency`](@ref) if it is both satisfiable and falsifiable.
@@ -175,14 +175,14 @@ A proposition is a tautology if every possible interpretation is true. Likewise,
 
 ```jldoctest 1
 julia> collect(interpretations(p ∧ ¬p))
-2-element Vector{typeof(contradiction)}:
- contradiction (generic function with 1 method)
- contradiction (generic function with 1 method)
+2-element Vector{Bool}:
+ 0
+ 0
 
 julia> collect(interpretations(p ∨ ¬p))
-2-element Vector{typeof(tautology)}:
- tautology (generic function with 1 method)
- tautology (generic function with 1 method)
+2-element Vector{Bool}:
+ 1
+ 1
 
 julia> is_contradiction(p ∧ ¬p) && is_tautology(p ∨ ¬p)
 true

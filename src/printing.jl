@@ -38,21 +38,21 @@ julia> @atomize TruthTable([¬p])
 └──────────┴─────────┘
 
 julia> @atomize TruthTable([p ∧ ¬p, p ⊻ q, ¬(p ∧ q) ∧ (p ∨ q)])
-┌────────┬──────────┬──────────┬──────────────────────────┐
-│ p ∧ ¬p │ p        │ q        │ p ⊻ q, (p ⊼ q) ∧ (p ∨ q) │
-│ Tree   │ Variable │ Variable │ Tree, Tree               │
-├────────┼──────────┼──────────┼──────────────────────────┤
-│ ⊥      │ ⊤        │ ⊤        │ ⊥                        │
-│ ⊥      │ ⊥        │ ⊤        │ ⊤                        │
-├────────┼──────────┼──────────┼──────────────────────────┤
-│ ⊥      │ ⊤        │ ⊥        │ ⊤                        │
-│ ⊥      │ ⊥        │ ⊥        │ ⊥                        │
-└────────┴──────────┴──────────┴──────────────────────────┘
+┌────────┬──────────┬──────────┬───────────────────────────┐
+│ p ∧ ¬p │ p        │ q        │ p ⊻ q, ¬(p ∧ q) ∧ (p ∨ q) │
+│ Tree   │ Variable │ Variable │ Tree, Tree                │
+├────────┼──────────┼──────────┼───────────────────────────┤
+│ ⊥      │ ⊤        │ ⊤        │ ⊥                         │
+│ ⊥      │ ⊥        │ ⊤        │ ⊤                         │
+├────────┼──────────┼──────────┼───────────────────────────┤
+│ ⊥      │ ⊤        │ ⊥        │ ⊤                         │
+│ ⊥      │ ⊥        │ ⊥        │ ⊥                         │
+└────────┴──────────┴──────────┴───────────────────────────┘
 ```
 """
 struct TruthTable
     header::Vector{Vector{Proposition}}
-    body::Matrix{NullaryOperator}
+    body::Matrix{Bool}
 
     function TruthTable(ps)
         _atoms = union(map(atoms, ps)...)
@@ -61,14 +61,14 @@ struct TruthTable
         _interpretations = Iterators.map(p -> collect(interpretations(p, _valuations)), ps)
 
         truths_interpretations, atoms_interpretations, compounds_interpretations =
-            Vector{NullaryOperator}[], Vector{NullaryOperator}[], Vector{NullaryOperator}[]
+            Vector{Bool}[], Vector{Bool}[], Vector{Bool}[]
 
-        grouped_truths = Dict(map(no -> repeat([no], length(_valuations)) => Proposition[], (tautology, contradiction)))
+        grouped_truths = Dict(map(no -> repeat([no], length(_valuations)) => Proposition[], (true, false)))
         grouped_atoms = Dict(map(
             p -> collect(interpretations(p, _valuations)) => Proposition[],
             _atoms
         ))
-        grouped_compounds = Dict{Vector{NullaryOperator}, Vector{Proposition}}()
+        grouped_compounds = Dict{Vector{Bool}, Vector{Proposition}}()
 
         for (p, interpretation) in zip(ps, _interpretations)
             _union! = (key, group) -> begin
@@ -82,7 +82,7 @@ struct TruthTable
         end
 
         header = Vector{Proposition}[]
-        body = Vector{NullaryOperator}[]
+        body = Vector{Bool}[]
         for (_interpretations, group) in (
             truths_interpretations => grouped_truths,
             atoms_interpretations => grouped_atoms,
@@ -162,12 +162,10 @@ Represent the given [`Proposition`](@ref) as a [propositional formula]
 
 # Examples
 ```jldoctest
-julia> @atomize x = p ⊻ q;
-
-julia> show(stdout, MIME"text/plain"(), x)
+julia> @atomize show(stdout, MIME"text/plain"(), p ⊻ q)
 p ⊻ q
 
-julia> show(stdout, MIME"text/plain"(), Normal(x))
+julia> @atomize show(stdout, MIME"text/plain"(), Normal(p ⊻ q))
 (p ∨ q) ∧ (¬p ∨ ¬q)
 ```
 """
@@ -251,11 +249,11 @@ function show(io::IO, p::C) where C <: Compound
 end
 
 for (T, f) in (
-    NullaryOperator => symbol_of,
-    String => nameof,
+    NullaryOperator => v -> v ? "⊤" : "⊥",
+    String => v -> nameof(v ? ⊤ : ⊥),
     Char => v -> v == ⊤ ? "T" : "F",
-    Bool => Bool,
-    Int => Int ∘ Bool
+    Bool => identity,
+    Int => Int
 )
     @eval formatter(::Type{$T}) = (v, _, _) -> string($f(v))
 end

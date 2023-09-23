@@ -20,7 +20,7 @@ using PAndQ: Proposition, LogicalOperator, TruthTable, symbol_of, ___pretty_tabl
 | :--------------------- | :---------------------- | :---------------------- |
 | `Latexify.LaTeXString` | `"\$\\top\$"`           | `"\$\\bot\$"`           |
 """
-formatter(::Type{LaTeXString}) = (v, _, _) -> string(latexify(v))
+formatter(::Type{LaTeXString}) = (v, _, _) -> string(latexify(v ? "⊤" : "⊥"))
 
 __pretty_table(backend::Val{:latex}, io, tt; formatters = formatter(LaTeXString), kwargs...) =
     ___pretty_table(backend, io, tt.body; header = (

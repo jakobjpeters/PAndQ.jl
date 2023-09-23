@@ -62,7 +62,6 @@ PAndQ.show_atom
 ## Semantics
 
 ```@docs
-PAndQ.CallableObjectDocumentation
 PAndQ.neutral_operator
 PAndQ.eval_doubles
 ```

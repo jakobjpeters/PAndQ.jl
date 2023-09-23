@@ -5,16 +5,6 @@ using Base: Iterators.product, uniontypes
 # Internals
 
 """
-    CallableObjectDocumentation
-
-A dummy type to attach a docstring to a [callable object]
-(https://docs.julialang.org/en/v1/manual/methods/#Function-like-objects).
-
-See also this [Documenter.jl issue](https://github.com/JuliaDocs/Documenter.jl/issues/558)
-"""
-struct CallableObjectDocumentation end
-
-"""
     neutral_operator(::NullaryOperator)
 
 Return a subtype of [`AndOr`](@ref) that is the neutral element of the given [`NullaryOperator`](@ref).
@@ -24,10 +14,10 @@ See also [`left_neutrals`](@ref) and [`right_neutrals`](@ref).
 # Examples
 ```jldoctest
 julia> PAndQ.neutral_operator(⊤)
-and (generic function with 25 methods)
+and (generic function with 18 methods)
 
 julia> PAndQ.neutral_operator(⊥)
-or (generic function with 21 methods)
+or (generic function with 18 methods)
 ```
 """
 neutral_operator(::typeof(⊤)) = ∧
@@ -54,20 +44,20 @@ of the given boolean operator.
 # Examples
 ```jldoctest
 julia> dual(and)
-or (generic function with 21 methods)
+or (generic function with 18 methods)
 
 julia> @atomize and(p, q) == not(dual(and)(not(p), not(q)))
 true
 
 julia> dual(imply)
-not_converse_imply (generic function with 6 methods)
+not_converse_imply (generic function with 3 methods)
 
 julia> @atomize imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
 ```
 """
 dual(uo::UnaryOperator) = uo
-dual(lo::Union{NullaryOperator, union_typeof((⊻, ↔))}) = ¬lo
+dual(no::NullaryOperator) = ¬no
 eval_doubles(:dual, (
     (∧, ∨),
     (⊼, ⊽),
@@ -86,13 +76,13 @@ of the given boolean operator.
 # Examples
 ```jldoctest
 julia> converse(and)
-and (generic function with 25 methods)
+and (generic function with 18 methods)
 
 julia> @atomize and(p, q) == converse(and)(q, p)
 true
 
 julia> converse(imply)
-converse_imply (generic function with 6 methods)
+converse_imply (generic function with 3 methods)
 
 julia> @atomize imply(p, q) == converse(imply)(q, p)
 true
@@ -159,16 +149,16 @@ of [`Atom`](@ref)s.
 # Examples
 ```jldoctest
 julia> @atomize collect(valuations(p))
-2-element Vector{Vector}:
- Pair{Variable, typeof(tautology)}[Variable(:p) => PAndQ.tautology]
- Pair{Variable, typeof(contradiction)}[Variable(:p) => PAndQ.contradiction]
+2-element Vector{Vector{Pair{Variable, Bool}}}:
+ [Variable(:p) => 1]
+ [Variable(:p) => 0]
 
 julia> @atomize collect(valuations(p ∧ q))
-4-element Vector{Vector}:
- Pair{Variable, typeof(tautology)}[Variable(:p) => PAndQ.tautology, Variable(:q) => PAndQ.tautology]
- Pair{Variable}[Variable(:p) => PAndQ.contradiction, Variable(:q) => PAndQ.tautology]
- Pair{Variable}[Variable(:p) => PAndQ.tautology, Variable(:q) => PAndQ.contradiction]
- Pair{Variable, typeof(contradiction)}[Variable(:p) => PAndQ.contradiction, Variable(:q) => PAndQ.contradiction]
+4-element Vector{Vector{Pair{Variable, Bool}}}:
+ [Variable(:p) => 1, Variable(:q) => 1]
+ [Variable(:p) => 0, Variable(:q) => 1]
+ [Variable(:p) => 1, Variable(:q) => 0]
+ [Variable(:p) => 0, Variable(:q) => 0]
 ```
 """
 function valuations(atoms)
@@ -176,7 +166,7 @@ function valuations(atoms)
     n = length(unique_atoms)
 
     Iterators.map(i -> map(
-        (atom, digit) -> atom => Bool(digit) ? ⊥ : ⊤,
+        (atom, digit) -> atom => !Bool(digit),
         unique_atoms, digits(i, base = 2, pad = n)
     ), 0:BigInt(2) ^ n - 1)
 end
@@ -185,30 +175,37 @@ valuations(p::Proposition) = valuations(atoms(p))
 """
     interpret(valuation, ::Proposition)
 
-Replace each [`Atom`](@ref) `p` in the given
-[`Proposition`](@ref) with `valuation(p)`, then simplify.
+Substitute each [`Atom`](@ref) in the given
+[`Proposition`](@ref) with values from the `valuation`.
 
-Calling `p` with an incomplete mapping will partially interpret it.
+The `valuation` can be a [function]
+(https://docs.julialang.org/en/v1/manual/functions/)
+or [function-like object]
+(https://docs.julialang.org/en/v1/manual/methods/#Function-like-objects)
+with the signature `valuation(::Atom)::Union{Bool, NullaryOperator}`,
+a [`Dict`](https://docs.julialang.org/en/v1/base/collections/#Base.Dict),
+or an iterable that can construct a `Dict`.
+No substitution is performed if an [`Atom`](@ref) from the
+[`Proposition`](@ref) is not one of the dictionary's keys.
 
-See also [`tautology`](@ref) and [`contradiction`](@ref).
+See also [`NullaryOperator`](@ref).
 
 # Examples
 ```jldoctest
-julia> @atomize interpret(a -> ⊤, ¬p)
-contradiction (generic function with 1 method)
+julia> @atomize interpret(a -> true, ¬p)
+false
 
-julia> @atomize interpret(a -> get(Dict(p => ⊤), a, a), p ∧ q)
+julia> @atomize interpret(p => true, p ∧ q)
 q
 ```
 """
-interpret(valuation, p::Atom) = valuation(p)
-interpret(valuation, p::Literal) =
-    nodevalue(p)(interpret(valuation, p.atom))
-interpret(valuation, p::Tree) =
-    nodevalue(p)(map(node -> interpret(valuation, node), p.nodes)...)
-function interpret(valuation, p::Union{Clause, Normal})
+interpret(valuation::Function, p::Atom) = valuation(p)
+interpret(valuation::Function, p::Union{Literal, Tree}) =
+    nodevalue(p)(map(child -> interpret(valuation, child), children(p))...)
+interpret(valuation::Function, p::Tree{<:NullaryOperator}) = nodevalue(p)()
+function interpret(valuation::Function, p::Union{Clause, Normal})
     _nodevalue = nodevalue(p)
-    neutral = only(left_neutrals(_nodevalue))
+    neutral = only(left_neutrals(_nodevalue))()
     not_neutral = ¬neutral
     q = union_all_type(p)(_nodevalue)
 
@@ -220,30 +217,25 @@ function interpret(valuation, p::Union{Clause, Normal})
 
     isempty(children(q)) ? neutral : q
 end
+interpret(valuation::DataType, p) = interpret(a -> valuation(a), p)
+interpret(valuation::Dict, p) = interpret(a -> get(valuation, a, a), p)
+interpret(valuation, p) = interpret(Dict(valuation), p)
 
 """
-    (::Proposition)(valuation)
     (::Proposition)(valuation...)
 
-Equivalent to [`interpret(a -> get(Dict(valuation), a, a), p)`](@ref interpret).
-
-See also [`Proposition`](@ref).
+Equivalent to [`interpret(valuation, p)`](@ref interpret).
 
 # Examples
 ```jldoctest
-julia> @atomize (¬p)(p => ⊤)
-contradiction (generic function with 1 method)
+julia> @atomize ¬p(p => true)
+false
 
-julia> @atomize p = Clause(and, [q, r, s])
-q ∧ r ∧ s
-
-julia> @atomize p(q => ⊤, r => ⊤)
-s
+julia> @atomize (p ∧ q)(p => true)
+q
 ```
 """
-function interpret(::CallableObjectDocumentation) end
-(p::Proposition)(valuation::Dict) = interpret(a -> get(valuation, a, a), p)
-(p::Proposition)(valuation) = p(Dict(valuation))
+(p::Proposition)(valuation) = interpret(valuation, p)
 (p::Proposition)(valuation...) = p(valuation)
 
 """
@@ -255,17 +247,17 @@ Return an iterator of truth values given by [`interpret`](@ref)ing
 # Examples
 ```jldoctest
 julia> @atomize collect(interpretations(p))
-2-element Vector{Function}:
- tautology (generic function with 1 method)
- contradiction (generic function with 1 method)
+2-element Vector{Bool}:
+ 1
+ 0
 
-julia> @atomize collect(interpretations(p → q, [p => ⊤]))
-1-element Vector{Variable}:
- q
+julia> @atomize collect(interpretations(p ⊻ q, [p => true]))
+1-element Vector{Literal{typeof(not), Variable}}:
+ ¬q
 ```
 """
 interpretations(p, valuations = valuations(p)) =
-    Iterators.map(valuation -> p(valuation), valuations)
+    Iterators.map(valuation -> interpret(Dict(valuation), p), valuations)
 
 """
     solve(p)
@@ -278,16 +270,16 @@ See also [`interpret`](@ref) and [`tautology`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize collect(solve(p))
-1-element Vector{Vector{Pair{Variable, typeof(tautology)}}}:
- [Variable(:p) => PAndQ.tautology]
+1-element Vector{Vector{Pair{Variable, Bool}}}:
+ [Variable(:p) => 1]
 
 julia> @atomize collect(solve(p ⊻ q))
-2-element Vector{Vector{Pair{Variable}}}:
- [Variable(:p) => PAndQ.contradiction, Variable(:q) => PAndQ.tautology]
- [Variable(:p) => PAndQ.tautology, Variable(:q) => PAndQ.contradiction]
+2-element Vector{Vector{Pair{Variable, Bool}}}:
+ [Variable(:p) => 0, Variable(:q) => 1]
+ [Variable(:p) => 1, Variable(:q) => 0]
 ```
 """
-solve(p) = Iterators.filter(valuation -> p(valuation) == ⊤, valuations(p))
+solve(p) = Iterators.filter(valuation -> interpret(valuation, p), valuations(p))
 
 # Predicates
 
@@ -320,9 +312,14 @@ julia> @atomize ¬(p ⊻ q) === (p → q) ∧ (p ← q)
 false
 ```
 """
-==(p::Constant, q::Constant) = p.value == q.value
-==(p::Union{NullaryOperator, Proposition}, q::Union{NullaryOperator, Proposition}) =
-    is_tautology(p ↔ q)
+p::Constant == q::Constant = p.value == q.value
+p::Bool == q::NullaryOperator = p == q()
+p::NullaryOperator == q::Bool = q == p
+p::Bool == q::Proposition = p ? is_tautology(q) : is_contradiction(q)
+::typeof(⊤) == q::Proposition = is_tautology(q)
+::typeof(⊥) == q::Proposition = is_contradiction(q)
+p::Proposition == q::Proposition = is_tautology(p ↔ q)
+p::Proposition == q::Union{Bool, NullaryOperator} = q == p
 
 """
     is_tautology(p)
@@ -344,7 +341,7 @@ true
 is_tautology(::typeof(⊤)) = true
 is_tautology(::typeof(⊥)) = false
 is_tautology(::LiteralProposition) = false
-is_tautology(p) = all(isequal(⊤), interpretations(p))
+is_tautology(p) = all(isequal(true), interpretations(p))
 
 """
     is_contradiction(p)
@@ -474,22 +471,21 @@ is_falsifiable(p) = !is_tautology(p)
 
 ## Generic
 
-⊤() = ⊤
-⊥() = ⊥
+⊤() = true
+⊥() = false
 p ⊼ q = ¬(p ∧ q)
 p ⊽ q = ¬p ∧ ¬q
 p ∨ q = ¬(p ⊽ q)
 p ⊻ q = (p ∨ q) ∧ (p ⊼ q)
-p ↔ q = (p → q) ∧ (p ← q)
+p ↔ q = (p ∧ q) ∨ (p ⊽ q)
 p ↛ q = p ∧ ¬q
-p → q = ¬(p ↛ q)
+p → q = ¬p ∨ q
 p ↚ q = ¬p ∧ q
-p ← q = ¬(p ↚ q)
+p ← q = p ∨ ¬q
 
 ## Bool
 
-Bool(::typeof(tautology)) = true
-Bool(::typeof(contradiction)) = false
+Bool(no::NullaryOperator) = no()
 ¬p::Bool = !p
 
 for (lo, bo) in (:∧ => :&&, :∨ => :||)
@@ -509,27 +505,19 @@ eval_doubles(:not, (
 ## Propositions
 
 ¬p::Atom = Literal(¬, p)
-(¬p::Literal) = (¬nodevalue(p))(p.atom)
-(¬p::Tree) = (¬nodevalue(p))(p.nodes...)
-(¬p::Union{Clause, Normal}) =
-    union_all_type(p)(dual(nodevalue(p)), map(¬, children(p)))
+(¬p::Union{Literal, Tree}) = Tree(¬, Tree(p))
+(¬p::Clause) = Clause(dual(nodevalue(p)), map(
+    _child -> Literal(¬nodevalue(_child), child(_child)),
+children(p)))
+(¬p::Normal) = Normal(dual(nodevalue(p)), map(¬, children(p)))
 
-::typeof(⊤) ∧ ::typeof(⊤) = ⊤
-::typeof(⊥) ∧ q::Union{NullaryOperator, Proposition} = ⊥ # domination law
-::typeof(⊤) ∧ q::Union{NullaryOperator, Proposition} = q # identity law
-p::Proposition ∧ q::NullaryOperator = q ∧ p # commutative property
 p::Proposition ∧ q::Proposition = Normal(∧, p) ∧ Normal(∧, q)
 
 for BO in uniontypes(BinaryOperator)
     bo = nameof(BO.instance)
-    @eval begin
-        $bo(p) = q -> $bo(p, q)
-        $bo(p::Tree, q::Tree) = Tree($bo, p, q)
-        $bo(p::Tree, q::Union{Atom, Literal}) = Tree($bo, p, Tree(q))
-        $bo(p::Union{Atom, Literal}, q::Tree) = Tree($bo, Tree(p), q)
-        $bo(p::Union{Atom, Literal}, q::Union{Atom, Literal}) =
-            $bo(Tree(p), Tree(q))
-    end
+    @eval $bo(p) = q -> $bo(p, q)
+    @eval $bo(p::Union{NullaryOperator, Atom, Literal, Tree}, q::Union{NullaryOperator, Atom, Literal, Tree}) =
+        Tree($bo, Tree(p), Tree(q))
 end
 
 for AO in uniontypes(AndOr)
@@ -572,7 +560,7 @@ Normal(ao::AndOr, ps) = isempty(ps) ?
     Normal(ao, collect(map(p -> Clause(dual(ao), [p]), ps)))
 Normal(::AO, p::Proposition) where AO <: AndOr = convert(Normal{AO}, p)
 
-for P in (:Literal, :Tree, :Clause, :Normal)
+for P in (:Atom, :Literal, :Tree, :Clause, :Normal)
     @eval $P(p) = convert($P, p)
 end
 
@@ -581,14 +569,22 @@ end
 """
     convert(::Type{<:Proposition}, ::Union{NullaryOperator, Proposition})
 """
+convert(::Type{Bool}, no::NullaryOperator) = no()
 convert(::Type{Atom}, p::Union{Literal{I}, Tree{I, <:Atom}}) where I <: typeof(identity) =
     child(p)
 convert(::Type{Literal}, p::Tree{<:UnaryOperator, <:Atom}) =
-    Literal(nodevalue(p)(child(p)))
-convert(::Type{LT}, p::Atom) where LT <: Union{Literal, Tree} = LT(identity, p)
+    Literal(nodevalue(p), child(p))
+convert(::Type{Literal}, p::Atom) = Literal(identity, p)
+convert(::Type{Tree}, p::Atom) = Tree(identity, p)
 convert(::Type{Tree}, p::Literal) = Tree(nodevalue(p), p.atom)
-convert(::Type{Tree}, p::Clause) = Tree(foldl(nodevalue(p), p.literals))
-convert(::Type{Tree}, p::Normal) = Tree(mapfoldl(Tree, nodevalue(p), p.clauses))
+function convert(::Type{Tree}, p::Clause)
+    _nodevalue = nodevalue(p)
+    Tree(foldl(_nodevalue, p.literals; init = only(left_neutrals(_nodevalue))))
+end
+function convert(::Type{Tree}, p::Normal)
+    _nodevalue = nodevalue(p)
+    Tree(mapfoldl(Tree, _nodevalue, p.clauses; init = only(left_neutrals(_nodevalue))))
+end
 convert(::Type{Clause}, p::LiteralProposition) = Clause(or, [p])
 convert(::Type{Clause{AO}}, p::LiteralProposition) where AO <: AndOr = Clause(AO.instance, [p])
 convert(::Type{Clause}, no::NullaryOperator) = Clause(neutral_operator(no))

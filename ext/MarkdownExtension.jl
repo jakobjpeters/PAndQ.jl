@@ -8,16 +8,16 @@ using PAndQ: NullaryOperator, TruthTable, Proposition, merge_string, symbol_of, 
 
 __pretty_table(
     ::Val{:markdown}, io, tt;
-    formatters = string ∘ symbol_of, alignment
+    formatters = formatter(NullaryOperator), alignment
 ) = print(io, MD(Table([
     map(merge_string, tt.header),
-    eachrow(map(formatters, tt.body))...
+    eachrow(map(v -> formatters(v, 0, 0), tt.body))...
 ], repeat([alignment], length(tt.header)))))
 
 """
     pretty_table(
         ::Type{Markdown.MD}, ::Union{Proposition, TruthTable};
-        formatters = string ∘ PAndQ.symbol_of, alignment = :l
+        formatters = v -> v ? "⊤" : "⊥", alignment = :l
     )
 
 # Examples
