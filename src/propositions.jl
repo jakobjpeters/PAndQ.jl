@@ -443,24 +443,6 @@ macro variables(xs...)
     end)
 end
 
-"""
-    @p_str(x)
-
-# Examples
-```jldoctest
-julia> x = @p_str("p")
-p
-
-julia> p"[x ∧ q, Clause(and)]"
-2-element Vector{Compound{typeof(and)}}:
- p ∧ q
- ⊤
-```
-"""
-macro p_str(p)
-    esc(:(@atomize $(parse(p))))
-end
-
 # Utility
 
 """

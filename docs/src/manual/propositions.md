@@ -39,7 +39,6 @@ Normal
 ```@docs
 @atomize
 @variables
-@p_str
 ```
 
 ## Utilities
