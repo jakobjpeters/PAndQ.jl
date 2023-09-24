@@ -58,7 +58,7 @@ struct TruthTable
         _atoms = union(map(atoms, ps)...)
         ps = union(_atoms, ps)
         _valuations = valuations(_atoms)
-        _interpretations = Iterators.map(p -> collect(interpretations(p, _valuations)), ps)
+        _interpretations = Iterators.map(p -> vec(collect(interpretations(p, _valuations))), ps)
 
         truths_interpretations, atoms_interpretations, compounds_interpretations =
             Vector{Bool}[], Vector{Bool}[], Vector{Bool}[]

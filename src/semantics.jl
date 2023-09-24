@@ -154,21 +154,19 @@ julia> @atomize collect(valuations(p))
  [Variable(:p) => 0]
 
 julia> @atomize collect(valuations(p ∧ q))
-4-element Vector{Vector{Pair{Variable, Bool}}}:
- [Variable(:p) => 1, Variable(:q) => 1]
- [Variable(:p) => 0, Variable(:q) => 1]
- [Variable(:p) => 1, Variable(:q) => 0]
- [Variable(:p) => 0, Variable(:q) => 0]
+2×2 Matrix{Vector{Pair{Variable, Bool}}}:
+ [Variable(:p)=>1, Variable(:q)=>1]  [Variable(:p)=>1, Variable(:q)=>0]
+ [Variable(:p)=>0, Variable(:q)=>1]  [Variable(:p)=>0, Variable(:q)=>0]
 ```
 """
 function valuations(atoms)
     unique_atoms = unique(atoms)
     n = length(unique_atoms)
 
-    Iterators.map(i -> map(
-        (atom, digit) -> atom => !Bool(digit),
-        unique_atoms, digits(i, base = 2, pad = n)
-    ), 0:BigInt(2) ^ n - 1)
+    Iterators.map(
+        truths -> map(Pair, unique_atoms, truths),
+        Iterators.product(repeat([[true, false]], n)...)
+    )
 end
 valuations(p::Proposition) = valuations(atoms(p))
 
