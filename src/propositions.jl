@@ -438,7 +438,7 @@ julia> q
 macro variables(xs...)
     symbols_values = map(symbol_value, xs)
     esc(quote
-        $(map(((symbol, value),) -> :($symbol = @atomize $value), symbols_values)...)
+        $(map(((symbol, value),) -> :($symbol = $(atomize(value))), symbols_values)...)
         [$(map(first, symbols_values)...)]
     end)
 end

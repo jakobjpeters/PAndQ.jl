@@ -432,7 +432,7 @@ const AndOr = union_typeof((∧, ∨))
     conjunction(ps)
     ⋀(ps)
 
-Equivalent to `foldl(∧, ps; init = tautology)`.
+Equivalent to `foldl(∧, ps; init = true)`.
 
 `⋀` can be typed by `\\bigwedge<tab>`.
 
@@ -451,7 +451,7 @@ const ⋀ = conjunction
     disjunction(ps)
     ⋁(ps)
 
-Equivalent to `foldl(∨, ps; init = contradiction)`.
+Equivalent to `foldl(∨, ps; init = false)`.
 
 `⋁` can be typed by `\\bigvee<tab>`.
 
@@ -469,7 +469,7 @@ const ⋁ = disjunction
 """
     mapfoldl(f, lio::LeftNeutralOperator, ps)
 
-Equivalent to `mapfoldl(f, lio, ps, init = Bool(first(left_neutrals(lio))))`.
+Equivalent to `mapfoldl(f, lio, ps, init = first(left_neutrals(lio))())`.
 
 See also [`LeftNeutralOperator`](@ref).
 
@@ -491,7 +491,7 @@ mapfoldl(f, lio::LeftNeutralOperator, ps) =
 """
     mapfoldr(f, rio::RightNeutralOperator, ps)
 
-Equivalent to `mapfoldr(f, rio, ps, init = Bool(first(right_neutrals(rio))))`.
+Equivalent to `mapfoldr(f, rio, ps, init = first(right_neutrals(rio))())`.
 
 See also [`RightNeutralOperator`](@ref).
 
