@@ -490,9 +490,6 @@ operators(p) = Iterators.filter(
     nodevalues(PreOrderDFS(p))
 )
 
-_map(P::Type{<:Tree{LO}}, children) where LO = P(LO.instance, children...)
-_map(P::Type{<:Union{Clause, Normal}}, lo, children) = P(lo, children)
-
 """
     map(f, ::Proposition)
 
