@@ -17,77 +17,75 @@ julia&gt; @atomize TruthTable([¬p])
 └──────────┴─────────┘
 
 julia&gt; @atomize TruthTable([p ∧ ¬p, p ⊻ q, ¬(p ∧ q) ∧ (p ∨ q)])
-┌────────┬──────────┬──────────┬──────────────────────────┐
-│ p ∧ ¬p │ p        │ q        │ p ⊻ q, (p ⊼ q) ∧ (p ∨ q) │
-│ Tree   │ Variable │ Variable │ Tree, Tree               │
-├────────┼──────────┼──────────┼──────────────────────────┤
-│ ⊥      │ ⊤        │ ⊤        │ ⊥                        │
-│ ⊥      │ ⊥        │ ⊤        │ ⊤                        │
-├────────┼──────────┼──────────┼──────────────────────────┤
-│ ⊥      │ ⊤        │ ⊥        │ ⊤                        │
-│ ⊥      │ ⊥        │ ⊥        │ ⊥                        │
-└────────┴──────────┴──────────┴──────────────────────────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAndQ.jl/blob/f14dd963346edb61bfa6d19cbbe9a6417d2afdf3/src/printing.jl#L9-L52">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="Base.show" href="#Base.show"><code>Base.show</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">show(::IO, ::MIME&quot;text/plain&quot;, ::Proposition)</code></pre><p>Represent the given <a href="../propositions/#PAndQ.Proposition"><code>Proposition</code></a> as a <a href="https://en.wikipedia.org/wiki/Propositional_formula">propositional formula</a>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @atomize x = p ⊻ q;
-
-julia&gt; show(stdout, MIME&quot;text/plain&quot;(), x)
+┌────────┬──────────┬──────────┬───────────────────────────┐
+│ p ∧ ¬p │ p        │ q        │ p ⊻ q, ¬(p ∧ q) ∧ (p ∨ q) │
+│ Tree   │ Variable │ Variable │ Tree, Tree                │
+├────────┼──────────┼──────────┼───────────────────────────┤
+│ ⊥      │ ⊤        │ ⊤        │ ⊥                         │
+│ ⊥      │ ⊥        │ ⊤        │ ⊤                         │
+├────────┼──────────┼──────────┼───────────────────────────┤
+│ ⊥      │ ⊤        │ ⊥        │ ⊤                         │
+│ ⊥      │ ⊥        │ ⊥        │ ⊥                         │
+└────────┴──────────┴──────────┴───────────────────────────┘</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAndQ.jl/blob/b611c593a0e80778970e9f698c150d79c48d1c96/src/printing.jl#L9-L52">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="Base.show" href="#Base.show"><code>Base.show</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">show(::IO, ::MIME&quot;text/plain&quot;, ::Proposition)</code></pre><p>Represent the given <a href="../propositions/#PAndQ.Proposition"><code>Proposition</code></a> as a <a href="https://en.wikipedia.org/wiki/Propositional_formula">propositional formula</a>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @atomize show(stdout, MIME&quot;text/plain&quot;(), p ⊻ q)
 p ⊻ q
 
-julia&gt; show(stdout, MIME&quot;text/plain&quot;(), Normal(x))
-(p ∨ q) ∧ (¬p ∨ ¬q)</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAndQ.jl/blob/f14dd963346edb61bfa6d19cbbe9a6417d2afdf3/src/printing.jl#L157-L173">source</a></section><section><div><pre><code class="language-julia hljs">show(::IO, ::MIME&quot;text/plain&quot;, ::TruthTable)</code></pre><p><strong>Examples</strong></p><pre><code class="language-julia hljs">julia&gt; @atomize show(stdout, MIME&quot;text/plain&quot;(), TruthTable([p ∧ q]))</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAndQ.jl/blob/f14dd963346edb61bfa6d19cbbe9a6417d2afdf3/src/printing.jl#L202-L209">source</a></section><section><div><pre><code class="language-julia hljs">show(::IO, ::Proposition)</code></pre><p>Represent the given <a href="../propositions/#PAndQ.Proposition"><code>Proposition</code></a> expanded as valid Julia code.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @atomize s = sprint(show, p ∧ q)
+julia&gt; @atomize show(stdout, MIME&quot;text/plain&quot;(), Normal(p ⊻ q))
+(p ∨ q) ∧ (¬p ∨ ¬q)</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAndQ.jl/blob/b611c593a0e80778970e9f698c150d79c48d1c96/src/printing.jl#L157-L171">source</a></section><section><div><pre><code class="language-julia hljs">show(::IO, ::MIME&quot;text/plain&quot;, ::TruthTable)</code></pre><p><strong>Examples</strong></p><pre><code class="language-julia hljs">julia&gt; @atomize show(stdout, MIME&quot;text/plain&quot;(), TruthTable([p ∧ q]))</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAndQ.jl/blob/b611c593a0e80778970e9f698c150d79c48d1c96/src/printing.jl#L200-L207">source</a></section><section><div><pre><code class="language-julia hljs">show(::IO, ::Proposition)</code></pre><p>Represent the given <a href="../propositions/#PAndQ.Proposition"><code>Proposition</code></a> expanded as valid Julia code.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; @atomize s = sprint(show, p ∧ q)
 &quot;Tree(and, Tree(identity, Variable(:p)), Tree(identity, Variable(:q)))&quot;
 
 julia&gt; @eval $(Meta.parse(s))
-p ∧ q</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAndQ.jl/blob/f14dd963346edb61bfa6d19cbbe9a6417d2afdf3/src/printing.jl#L213-L226">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="PAndQ.formatter" href="#PAndQ.formatter"><code>PAndQ.formatter</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">formatter(t::Type{&lt;:Union{PAndQ.NullaryOperator, String, Char, Bool, Int}})</code></pre><table><tr><th style="text-align: left"><code>t</code></th><th style="text-align: left"><code>formatter(t)(⊤, _, _)</code></th><th style="text-align: left"><code>formatter(t)(⊥, _, _)</code></th></tr><tr><td style="text-align: left"><code>PAndQ.NullaryOperator</code></td><td style="text-align: left"><code>&quot;⊤&quot;</code></td><td style="text-align: left"><code>&quot;⊥&quot;</code></td></tr><tr><td style="text-align: left"><code>String</code></td><td style="text-align: left"><code>&quot;tautology&quot;</code></td><td style="text-align: left"><code>&quot;contradiction&quot;</code></td></tr><tr><td style="text-align: left"><code>Char</code></td><td style="text-align: left"><code>&quot;T&quot;</code></td><td style="text-align: left"><code>&quot;F&quot;</code></td></tr><tr><td style="text-align: left"><code>Bool</code></td><td style="text-align: left"><code>&quot;true&quot;</code></td><td style="text-align: left"><code>&quot;false&quot;</code></td></tr><tr><td style="text-align: left"><code>Int</code></td><td style="text-align: left"><code>&quot;1&quot;</code></td><td style="text-align: left"><code>&quot;0&quot;</code></td></tr></table></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAndQ.jl/blob/f14dd963346edb61bfa6d19cbbe9a6417d2afdf3/src/printing.jl#L263-L273">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="PrettyTables.pretty_table-Tuple{IO, TruthTable}" href="#PrettyTables.pretty_table-Tuple{IO, TruthTable}"><code>PrettyTables.pretty_table</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">pretty_table(
+p ∧ q</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAndQ.jl/blob/b611c593a0e80778970e9f698c150d79c48d1c96/src/printing.jl#L211-L224">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="PAndQ.formatter" href="#PAndQ.formatter"><code>PAndQ.formatter</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">formatter(t::Type{&lt;:Union{PAndQ.NullaryOperator, String, Char, Bool, Int}})</code></pre><table><tr><th style="text-align: left"><code>t</code></th><th style="text-align: left"><code>formatter(t)(⊤, _, _)</code></th><th style="text-align: left"><code>formatter(t)(⊥, _, _)</code></th></tr><tr><td style="text-align: left"><code>PAndQ.NullaryOperator</code></td><td style="text-align: left"><code>&quot;⊤&quot;</code></td><td style="text-align: left"><code>&quot;⊥&quot;</code></td></tr><tr><td style="text-align: left"><code>String</code></td><td style="text-align: left"><code>&quot;tautology&quot;</code></td><td style="text-align: left"><code>&quot;contradiction&quot;</code></td></tr><tr><td style="text-align: left"><code>Char</code></td><td style="text-align: left"><code>&quot;T&quot;</code></td><td style="text-align: left"><code>&quot;F&quot;</code></td></tr><tr><td style="text-align: left"><code>Bool</code></td><td style="text-align: left"><code>&quot;true&quot;</code></td><td style="text-align: left"><code>&quot;false&quot;</code></td></tr><tr><td style="text-align: left"><code>Int</code></td><td style="text-align: left"><code>&quot;1&quot;</code></td><td style="text-align: left"><code>&quot;0&quot;</code></td></tr></table></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAndQ.jl/blob/b611c593a0e80778970e9f698c150d79c48d1c96/src/printing.jl#L261-L271">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="PrettyTables.pretty_table-Tuple{IO, TruthTable}" href="#PrettyTables.pretty_table-Tuple{IO, TruthTable}"><code>PrettyTables.pretty_table</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">pretty_table(
     ::Union{IO, Type{Union{String, Docs.HTML}}} = stdout, ::Union{Proposition, TruthTable};
     formatters = formatter(PAndQ.NullaryOperator), kwargs...
 )</code></pre><p>See also <a href="https://ronisbr.github.io/PrettyTables.jl/stable/lib/library/#PrettyTables.pretty_table-Tuple{Any}"><code>PrettyTables.pretty_table</code></a>, <a href="../propositions/#PAndQ.Proposition"><code>Proposition</code></a>, <a href="#PAndQ.TruthTable"><code>TruthTable</code></a>, and <a href="#PAndQ.formatter"><code>formatter</code></a>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl hljs">julia&gt; pretty_table(@atomize p ∧ q)
 ┌──────────┬──────────┬───────┐
-│        p │        q │ p ∧ q │
-│ Variable │ Variable │  Tree │
+│ p        │ q        │ p ∧ q │
+│ Variable │ Variable │ Tree  │
 ├──────────┼──────────┼───────┤
-│        ⊤ │        ⊤ │     ⊤ │
-│        ⊥ │        ⊤ │     ⊥ │
+│ ⊤        │ ⊤        │ ⊤     │
+│ ⊥        │ ⊤        │ ⊥     │
 ├──────────┼──────────┼───────┤
-│        ⊤ │        ⊥ │     ⊥ │
-│        ⊥ │        ⊥ │     ⊥ │
+│ ⊤        │ ⊥        │ ⊥     │
+│ ⊥        │ ⊥        │ ⊥     │
 └──────────┴──────────┴───────┘
 
 julia&gt; print(pretty_table(Docs.HTML, @atomize p ∧ q).content)
 &lt;table&gt;
   &lt;thead&gt;
     &lt;tr class = &quot;header&quot;&gt;
-      &lt;th style = &quot;text-align: right;&quot;&gt;p&lt;/th&gt;
-      &lt;th style = &quot;text-align: right;&quot;&gt;q&lt;/th&gt;
-      &lt;th style = &quot;text-align: right;&quot;&gt;p ∧ q&lt;/th&gt;
+      &lt;th style = &quot;text-align: left;&quot;&gt;p&lt;/th&gt;
+      &lt;th style = &quot;text-align: left;&quot;&gt;q&lt;/th&gt;
+      &lt;th style = &quot;text-align: left;&quot;&gt;p ∧ q&lt;/th&gt;
     &lt;/tr&gt;
     &lt;tr class = &quot;subheader headerLastRow&quot;&gt;
-      &lt;th style = &quot;text-align: right;&quot;&gt;Variable&lt;/th&gt;
-      &lt;th style = &quot;text-align: right;&quot;&gt;Variable&lt;/th&gt;
-      &lt;th style = &quot;text-align: right;&quot;&gt;Tree&lt;/th&gt;
+      &lt;th style = &quot;text-align: left;&quot;&gt;Variable&lt;/th&gt;
+      &lt;th style = &quot;text-align: left;&quot;&gt;Variable&lt;/th&gt;
+      &lt;th style = &quot;text-align: left;&quot;&gt;Tree&lt;/th&gt;
     &lt;/tr&gt;
   &lt;/thead&gt;
   &lt;tbody&gt;
     &lt;tr&gt;
-      &lt;td style = &quot;text-align: right;&quot;&gt;⊤&lt;/td&gt;
-      &lt;td style = &quot;text-align: right;&quot;&gt;⊤&lt;/td&gt;
-      &lt;td style = &quot;text-align: right;&quot;&gt;⊤&lt;/td&gt;
+      &lt;td style = &quot;text-align: left;&quot;&gt;⊤&lt;/td&gt;
+      &lt;td style = &quot;text-align: left;&quot;&gt;⊤&lt;/td&gt;
+      &lt;td style = &quot;text-align: left;&quot;&gt;⊤&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td style = &quot;text-align: right;&quot;&gt;⊥&lt;/td&gt;
-      &lt;td style = &quot;text-align: right;&quot;&gt;⊤&lt;/td&gt;
-      &lt;td style = &quot;text-align: right;&quot;&gt;⊥&lt;/td&gt;
+      &lt;td style = &quot;text-align: left;&quot;&gt;⊥&lt;/td&gt;
+      &lt;td style = &quot;text-align: left;&quot;&gt;⊤&lt;/td&gt;
+      &lt;td style = &quot;text-align: left;&quot;&gt;⊥&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td style = &quot;text-align: right;&quot;&gt;⊤&lt;/td&gt;
-      &lt;td style = &quot;text-align: right;&quot;&gt;⊥&lt;/td&gt;
-      &lt;td style = &quot;text-align: right;&quot;&gt;⊥&lt;/td&gt;
+      &lt;td style = &quot;text-align: left;&quot;&gt;⊤&lt;/td&gt;
+      &lt;td style = &quot;text-align: left;&quot;&gt;⊥&lt;/td&gt;
+      &lt;td style = &quot;text-align: left;&quot;&gt;⊥&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-      &lt;td style = &quot;text-align: right;&quot;&gt;⊥&lt;/td&gt;
-      &lt;td style = &quot;text-align: right;&quot;&gt;⊥&lt;/td&gt;
-      &lt;td style = &quot;text-align: right;&quot;&gt;⊥&lt;/td&gt;
+      &lt;td style = &quot;text-align: left;&quot;&gt;⊥&lt;/td&gt;
+      &lt;td style = &quot;text-align: left;&quot;&gt;⊥&lt;/td&gt;
+      &lt;td style = &quot;text-align: left;&quot;&gt;⊥&lt;/td&gt;
     &lt;/tr&gt;
   &lt;/tbody&gt;
-&lt;/table&gt;</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAndQ.jl/blob/f14dd963346edb61bfa6d19cbbe9a6417d2afdf3/src/printing.jl#L299-L361">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="AbstractTrees.print_tree" href="#AbstractTrees.print_tree"><code>AbstractTrees.print_tree</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">print_tree(::IO = stdout, ::Proposition; kwargs...)</code></pre><p>Prints a tree diagram of the given <a href="../propositions/#PAndQ.Proposition"><code>Proposition</code></a>.</p><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>Instances of <a href="../propositions/#PAndQ.Compound"><code>Compound{typeof(identity)}</code></a> are represented as <code>I</code>.</p></div></div><p>See also <a href="https://github.com/JuliaCollections/AbstractTrees.jl/blob/master/src/printing.jl"><code>AbstractTrees.print_tree</code></a>.</p><pre><code class="language-julia-repl hljs">julia&gt; @atomize print_tree(p ∧ ¬q ⊻ s)
+&lt;/table&gt;</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAndQ.jl/blob/b611c593a0e80778970e9f698c150d79c48d1c96/src/printing.jl#L297-L359">source</a></section></article><article class="docstring"><header><a class="docstring-article-toggle-button fa-solid fa-chevron-down" href="javascript:;" title="Collapse docstring"></a><a class="docstring-binding" id="AbstractTrees.print_tree" href="#AbstractTrees.print_tree"><code>AbstractTrees.print_tree</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">print_tree(::IO = stdout, ::Proposition; kwargs...)</code></pre><p>Prints a tree diagram of the given <a href="../propositions/#PAndQ.Proposition"><code>Proposition</code></a>.</p><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>Instances of <a href="../propositions/#PAndQ.Compound"><code>Compound{typeof(identity)}</code></a> are represented as <code>I</code>.</p></div></div><p>See also <a href="https://github.com/JuliaCollections/AbstractTrees.jl/blob/master/src/printing.jl"><code>AbstractTrees.print_tree</code></a>.</p><pre><code class="language-julia-repl hljs">julia&gt; @atomize print_tree(p ∧ ¬q ⊻ s)
 ⊻
 ├─ ∧
 │  ├─ I
@@ -115,4 +113,4 @@ julia&gt; @atomize print_tree(Normal(p ∧ ¬q ⊻ s))
    ├─ I
    │  └─ q
    └─ ¬
-      └─ s</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAndQ.jl/blob/f14dd963346edb61bfa6d19cbbe9a6417d2afdf3/src/printing.jl#L365-L407">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../propositions/">« Propositions</a><a class="docs-footer-nextpage" href="../semantics/">Semantics »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.0.1 on <span class="colophon-date" title="Thursday 21 September 2023 01:38">Thursday 21 September 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+      └─ s</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/jakobjpeters/PAndQ.jl/blob/b611c593a0e80778970e9f698c150d79c48d1c96/src/printing.jl#L363-L405">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../propositions/">« Propositions</a><a class="docs-footer-nextpage" href="../semantics/">Semantics »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.0.1 on <span class="colophon-date" title="Monday 25 September 2023 23:17">Monday 25 September 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
