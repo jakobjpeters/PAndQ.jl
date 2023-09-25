@@ -1,6 +1,8 @@
 
 module PAndQ
 
+using PrecompileTools: @compile_workload
+
 """
     union_typeof
 """
@@ -57,5 +59,36 @@ export
     is_truth, is_contingency,
     is_satisfiable, is_falsifiable
     #= Base.convert =#
+
+@compile_workload let
+    @variables p q
+
+    ps = [Tree(⊤), Tree(⊥), p, ¬p, map(BO -> BO.instance(p, q), uniontypes(BinaryOperator))...]
+    qs = [ps..., conjunction(ps), disjunction(ps)]
+
+    pretty_table(String, TruthTable(qs))
+
+    for r in qs
+        r(p => true)
+        r(p => ⊤)
+        r(p => ⊥)
+
+        for iterator in map(f -> f(r), (atoms, operators, solve))
+            collect(iterator)
+        end
+
+        for f in (
+            is_tautology, is_contradiction,
+            is_truth, is_contingency,
+            is_satisfiable, is_falsifiable
+        )
+            f(r)
+        end
+
+        for args in ((show,), (show, MIME"text/plain"()), (pretty_table,), (print_tree,))
+            sprint(args..., r)
+        end
+    end
+end
 
 end # module
