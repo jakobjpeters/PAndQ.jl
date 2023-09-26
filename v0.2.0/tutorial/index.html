@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · PAndQ.jl</title><meta name="title" content="Tutorial · PAndQ.jl"/><meta property="og:title" content="Tutorial · PAndQ.jl"/><meta property="twitter:title" content="Tutorial · PAndQ.jl"/><meta name="description" content="Documentation for PAndQ.jl."/><meta property="og:description" content="Documentation for PAndQ.jl."/><meta property="twitter:description" content="Documentation for PAndQ.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.svg" alt="PAndQ.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">PAndQ.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li class="is-active"><a class="tocitem" href>Tutorial</a><ul class="internal"><li><a class="tocitem" href="#Truth-Values"><span>Truth Values</span></a></li><li><a class="tocitem" href="#tutorial_operators"><span>Operators</span></a></li><li><a class="tocitem" href="#Propositions"><span>Propositions</span></a></li><li><a class="tocitem" href="#Semantics"><span>Semantics</span></a></li><li><a class="tocitem" href="#Printing"><span>Printing</span></a></li></ul></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="../manual/operators/">Operators</a></li><li><a class="tocitem" href="../manual/propositions/">Propositions</a></li><li><a class="tocitem" href="../manual/printing/">Printing</a></li><li><a class="tocitem" href="../manual/semantics/">Semantics</a></li></ul></li><li><a class="tocitem" href="../extensions/">Extensions</a></li><li><a class="tocitem" href="../internals/">Internals</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/jakobjpeters/PAndQ.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/jakobjpeters/PAndQ.jl/blob/main/docs/src/tutorial.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Tutorial"><a class="docs-heading-anchor" href="#Tutorial">Tutorial</a><a id="Tutorial-1"></a><a class="docs-heading-anchor-permalink" href="#Tutorial" title="Permalink"></a></h1><h2 id="Truth-Values"><a class="docs-heading-anchor" href="#Truth-Values">Truth Values</a><a id="Truth-Values-1"></a><a class="docs-heading-anchor-permalink" href="#Truth-Values" title="Permalink"></a></h2><p>A truth value is logic&#39;s version of a boolean <code>true</code> or <code>false</code>. These concepts can also be represented as a <code>1</code> or a <code>0</code>. Similarly, we use <a href="../manual/operators/#PAndQ.tautology"><code>tautology</code></a> and <a href="../manual/operators/#PAndQ.contradiction"><code>contradiction</code></a>. These are commonly represented with the symbols <code>⊤</code> and <code>⊥</code>. These truth values have additional meaning, which will be discussed further on.</p><h2 id="tutorial_operators"><a class="docs-heading-anchor" href="#tutorial_operators">Operators</a><a id="tutorial_operators-1"></a><a class="docs-heading-anchor-permalink" href="#tutorial_operators" title="Permalink"></a></h2><p>Just like with boolean values, we can perform operations on truth values. Both <code>!</code> and the symbol <code>¬</code> represent the unary operator <code>not</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; !true == false # boolean negation
+true
+
+julia&gt; ¬⊤ == ⊥ # logical negation
+true</code></pre><p>There are several operators that accept multiple arguments. Both <code>&amp;&amp;</code> and the symbol <code>∧</code> represent the binary operator <a href="../manual/operators/#PAndQ.and"><code>and</code></a>. Both <code>||</code> and the symbol <code>∨</code> represent the binary operator <a href="../manual/operators/#PAndQ.or"><code>or</code></a>.</p><pre><code class="language-julia-repl hljs">julia&gt; true &amp;&amp; false == false # boolean and
+true
+
+julia&gt; true || false == true # boolean or
+true
+
+julia&gt; ⊤ ∧ ⊥ == ⊥ # logical and
+true
+
+julia&gt; ⊤ ∨ ⊥ == ⊤ # logical or
+true</code></pre><p>There are several more operators, which will be discussed later. Use the <a href="../manual/operators/#PAndQ.arity"><code>arity</code></a> function to determine the number of arguments for an operator.</p><pre><code class="language-julia-repl hljs">julia&gt; arity(contradiction)
+0
+
+julia&gt; arity(not)
+1
+
+julia&gt; arity(and)
+2</code></pre><h2 id="Propositions"><a class="docs-heading-anchor" href="#Propositions">Propositions</a><a id="Propositions-1"></a><a class="docs-heading-anchor-permalink" href="#Propositions" title="Permalink"></a></h2><p>A <a href="../manual/propositions/#PAndQ.Proposition"><code>Proposition</code></a> is a statement that can be either true or false. For example, &quot;Logic is fun&quot; is a proposition because it may be true for you but false for someone else. This proposition has a known value, so it is a <a href="../manual/propositions/#PAndQ.Constant"><code>Constant</code></a>. Note that the proposition exists independently of whether it is known to be true or false.</p><pre><code class="language-julia-repl hljs">julia&gt; p = Constant(&quot;Logic is fun&quot;)
+$(&quot;Logic is fun&quot;)
+
+julia&gt; q = Constant(&quot;Julia is awesome&quot;)
+$(&quot;Julia is awesome&quot;)</code></pre><p>We can also perform operations on propositions. In a written form, we can negate the above proposition by saying &quot;Logic is not fun&quot;. We could combine two propositions using another operator, such as &quot;Logic is fun and Julia is awesome&quot;.</p><pre><code class="language-julia-repl hljs">julia&gt; ¬p
+¬$(&quot;Logic is fun&quot;)
+
+julia&gt; p ∧ q
+$(&quot;Logic is fun&quot;) ∧ $(&quot;Julia is awesome&quot;)</code></pre><p>In mathematics, it&#39;s useful to replace individual numbers with a symbolic <a href="../manual/propositions/#PAndQ.Variable"><code>Variable</code></a> that can represent an unknown value. Since these atoms are for demonstration and represent an unknown value, we will do the same with our propositions <code>p</code> and <code>q</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; p = Variable(:p)
+p
+
+julia&gt; q = Variable(:q)
+q
+
+julia&gt; ¬p
+¬p
+
+julia&gt; p ∧ q
+p ∧ q</code></pre><p>Propositions that do not contain any structure are called <a href="../manual/propositions/#PAndQ.Atom"><code>Atom</code></a>ic. <code>Constant</code>s and <code>Variable</code>s are <a href="../manual/propositions/#PAndQ.Atom"><code>Atom</code></a>ic propositions. <a href="../manual/propositions/#PAndQ.Compound"><code>Compound</code></a> propositions are formed by connecting atomic propositions with logical operators. A <a href="../manual/propositions/#PAndQ.Literal"><code>Literal</code></a> is a proposition that is either an atom or its negation. Since propositions can be nested arbitrarily, a <a href="../manual/propositions/#PAndQ.Tree"><code>Tree</code></a> structure can be used to represent them.</p><pre><code class="language-julia-repl hljs">julia&gt; p isa Atom
+true
+
+julia&gt; ¬p isa Literal &amp;&amp; ¬p isa Compound
+true
+
+julia&gt; p ∧ q isa Tree &amp;&amp; p ∧ q isa Compound
+true</code></pre><p>The function <a href="../manual/propositions/#PAndQ.atoms"><code>atoms</code></a> returns an iterator of each <code>Atom</code> in a proposition.</p><pre><code class="language-julia-repl hljs">julia&gt; collect(atoms(¬p))
+1-element Vector{Variable}:
+ p
+
+julia&gt; collect(atoms(p ∧ q))
+2-element Vector{Variable}:
+ p
+ q</code></pre><h2 id="Semantics"><a class="docs-heading-anchor" href="#Semantics">Semantics</a><a id="Semantics-1"></a><a class="docs-heading-anchor-permalink" href="#Semantics" title="Permalink"></a></h2><p>We know that since these are propositions, they can be true or false. If you think that &quot;Logic is fun&quot;, it would be invalid to assign it the valuation false. So the proposition <code>p</code> is true if you think that &quot;Logic is fun&quot; and is false otherwise. If we assign the value true to the proposition &quot;Logic is fun&quot;, then we know that the validity of the proposition &quot;Logic is fun and Julia is awesome&quot; depends on whether or not &quot;Julia is awesome&quot;. If &quot;Julia is awesome&quot; is assigned false, then the conjunction of the two propositions is false. Use the <a href="../manual/semantics/#PAndQ.interpret"><code>interpret</code></a> function to assign meaning to atomic propositions and then simplify the proposition.</p><pre><code class="language-julia-repl hljs">julia&gt; interpret(a -&gt; false, ¬p)
+true
+
+julia&gt; (p ∧ q)(p =&gt; true, q =&gt; false)
+false</code></pre><p>Assigning meaning to any number of atomic propositions is called a <a href="../manual/semantics/#PAndQ.valuations"><code>valuation</code></a>. Since <code>p</code> can only be true or false, those are it&#39;s possible valuations. An <a href="../manual/semantics/#PAndQ.interpretations"><code>interpretation</code></a> is the truth value of propositions that is determined by a given valuation. Since <code>p</code> is atomic, its valuation and interpretation are the same. <code>¬p</code> doesn&#39;t depend on any other propositions, so it also has two possible valuations. However, the valuation and the interpretation are no longer the same. If <code>p</code> is assigned true, then <code>¬p</code> is determined to be false, and vice versa.</p><pre><code class="language-julia-repl hljs">julia&gt; collect(valuations(¬p))
+2-element Vector{Vector{Pair{Variable, Bool}}}:
+ [Variable(:p) =&gt; 1]
+ [Variable(:p) =&gt; 0]
+
+julia&gt; collect(interpretations(¬p))
+2-element Vector{Bool}:
+ 0
+ 1</code></pre><p>Since <code>p ∧ q</code> contains two atomic propositions, there are four valuations: <code>p</code> is true and <code>q</code> is true, <code>p</code> is false and <code>q</code> is true, <code>p</code> is true and <code>q</code> is false, and <code>p</code> is false and <code>q</code> is false. Each additional atomic proposition in a proposition doubles the number of possible valuations. Mathematically, there are <code>2 ^ n</code> valuations where <code>n = length(unique!(collect(atoms(p))))</code>. Since each interpretation depends on a valuation, the number of valuations and interpretations are equal.</p><pre><code class="language-julia-repl hljs">julia&gt; n = length(unique!(collect(atoms(p ∧ q))))
+2
+
+julia&gt; length(valuations(p ∧ q)) == length(interpretations(p ∧ q)) == 2 ^ n == 4
+true</code></pre><p>It is useful to find valuations that determine valid interpretations. This is accomplished with the <a href="../manual/semantics/#PAndQ.solve"><code>solve</code></a> function. The proposition <code>p ∧ q</code> is determined to be true with the valuation that both <code>p</code> and <code>q</code> are true. Each of the other three possible valuations are invalid.</p><pre><code class="language-julia-repl hljs">julia&gt; collect(solve(p ∧ q))
+1-element Vector{Vector{Pair{Variable, Bool}}}:
+ [Variable(:p) =&gt; 1, Variable(:q) =&gt; 1]
+
+julia&gt; collect(solve(¬(p ∧ q)))
+3-element Vector{Vector{Pair{Variable, Bool}}}:
+ [Variable(:p) =&gt; 0, Variable(:q) =&gt; 1]
+ [Variable(:p) =&gt; 1, Variable(:q) =&gt; 0]
+ [Variable(:p) =&gt; 0, Variable(:q) =&gt; 0]</code></pre><p>A proposition <a href="../manual/semantics/#PAndQ.is_satisfiable"><code>is_satisfiable</code></a> if there is at least one valid interpretation. A proposition <a href="../manual/semantics/#PAndQ.is_falsifiable"><code>is_falsifiable</code></a> if there is at least one invalid interpretation. A proposition <a href="../manual/semantics/#PAndQ.is_contingency"><code>is_contingency</code></a> if it is both satisfiable and falsifiable.</p><pre><code class="language-julia-repl hljs">julia&gt; is_satisfiable(p ∧ q) &amp;&amp; is_falsifiable(p ∧ q) &amp;&amp; is_contingency(p ∧ q)
+true</code></pre><p>A proposition is a tautology if every possible interpretation is true. Likewise, a proposition is a contradiction if every possible interpretation is false. For example, <code>p ∧ ¬p</code> is always interpreted as false because either <code>p</code> or <code>¬p</code> must be false. <code>p ∨ ¬p</code> is always interpreted as true because either <code>p</code> or <code>¬p</code> must be true. Use the functions <a href="../manual/semantics/#PAndQ.is_tautology"><code>is_tautology</code></a>, <a href="../manual/semantics/#PAndQ.is_contradiction"><code>is_contradiction</code></a>, and <a href="../manual/semantics/#PAndQ.is_truth"><code>is_truth</code></a> to check whether a proposition is logically equivalent to a truth value.</p><pre><code class="language-julia-repl hljs">julia&gt; collect(interpretations(p ∧ ¬p))
+2-element Vector{Bool}:
+ 0
+ 0
+
+julia&gt; collect(interpretations(p ∨ ¬p))
+2-element Vector{Bool}:
+ 1
+ 1
+
+julia&gt; is_contradiction(p ∧ ¬p) &amp;&amp; is_tautology(p ∨ ¬p)
+true
+
+julia&gt; is_truth(p ∧ ¬p) &amp;&amp; is_truth(p ∨ ¬p)
+true</code></pre><p>Two propositions are logically equivalent if their interpretation is equivalent for every possible valuation. For example, the propositions <code>¬(¬p ∧ ¬q)</code> and <code>p ∨ q</code> are logically equivalent. In fact, the <code>or</code> operator is implemented this way. Use <a href="../manual/semantics/#Base.:=="><code>==</code></a> to test that two propositions are logically equivalent.</p><pre><code class="language-julia-repl hljs">julia&gt; ¬(¬p ∧ ¬q) == p ∨ q
+true
+
+julia&gt; ¬(¬p ∧ ¬q) === p ∨ q
+false</code></pre><h2 id="Printing"><a class="docs-heading-anchor" href="#Printing">Printing</a><a id="Printing-1"></a><a class="docs-heading-anchor-permalink" href="#Printing" title="Permalink"></a></h2><p>It would also be helpful to enumerate each valuation and interpretation in a visual format. This is accomplished by creating a <a href="../manual/printing/#PAndQ.TruthTable"><code>TruthTable</code></a>. A truth table is a table where each column in the header identifies a proposition, and each row contains an interpretation (including the valuation of atomic propositions). To demonstrate these, we will use the <a href="../manual/operators/#Base.xor"><code>xor</code></a> operator, represented by the symbol <code>⊻</code>. Try to understand the meaning of this operator as it is interpreted with different valuations.</p><pre><code class="language-julia-repl hljs">julia&gt; TruthTable([p ⊻ q])
+┌──────────┬──────────┬───────┐
+│ p        │ q        │ p ⊻ q │
+│ Variable │ Variable │ Tree  │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊤        │ ⊥     │
+│ ⊥        │ ⊤        │ ⊤     │
+├──────────┼──────────┼───────┤
+│ ⊤        │ ⊥        │ ⊤     │
+│ ⊥        │ ⊥        │ ⊥     │
+└──────────┴──────────┴───────┘</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../manual/operators/">Operators »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.0.1 on <span class="colophon-date" title="Tuesday 26 September 2023 01:50">Tuesday 26 September 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
