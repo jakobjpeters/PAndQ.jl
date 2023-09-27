@@ -143,7 +143,7 @@ end
 """
     print_node(io, p)
 """
-print_node(io, ::Compound{typeof(identity)}) = print(io, "I")
+print_node(io, ::Compound{typeof(identity)}) = print(io, "𝒾")
 print_node(io, p) = printnode(io, p)
 
 """
@@ -366,7 +366,7 @@ pretty_table(io::IO, tt::TruthTable; backend = Val(:text), alignment = :l, kwarg
 Prints a tree diagram of the given [`Proposition`](@ref).
 
 !!! note
-    Instances of [`Compound{typeof(identity)}`](@ref Compound) are represented as `I`.
+    Instances of [`Compound{typeof(identity)}`](@ref Compound) are represented as `𝒾`.
 
 See also [`AbstractTrees.print_tree`]
 (https://github.com/JuliaCollections/AbstractTrees.jl/blob/master/src/printing.jl).
@@ -375,29 +375,29 @@ See also [`AbstractTrees.print_tree`]
 julia> @atomize print_tree(p ∧ ¬q ⊻ s)
 ⊻
 ├─ ∧
-│  ├─ I
+│  ├─ 𝒾
 │  │  └─ p
 │  └─ ¬
 │     └─ q
-└─ I
+└─ 𝒾
    └─ s
 
 julia> @atomize print_tree(Normal(p ∧ ¬q ⊻ s))
 ∧
 ├─ ∨
-│  ├─ I
+│  ├─ 𝒾
 │  │  └─ p
-│  └─ I
+│  └─ 𝒾
 │     └─ s
 ├─ ∨
 │  ├─ ¬
 │  │  └─ q
-│  └─ I
+│  └─ 𝒾
 │     └─ s
 └─ ∨
    ├─ ¬
    │  └─ p
-   ├─ I
+   ├─ 𝒾
    │  └─ q
    └─ ¬
       └─ s
