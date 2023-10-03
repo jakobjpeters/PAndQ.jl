@@ -45,6 +45,7 @@ PAndQ.atomize
 ## Printing
 
 ```@docs
+PAndQ.alias_of
 PAndQ.symbol_of
 PAndQ.merge_string
 PAndQ.parenthesize

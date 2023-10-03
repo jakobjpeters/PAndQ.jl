@@ -21,7 +21,7 @@ julia> ¬⊤ == ⊥ # logical negation
 true
 ```
 
-There are several operators that accept multiple arguments. Both `&&` and the symbol `∧` represent the binary operator [`and`](@ref). Both `||` and the symbol `∨` represent the binary operator [`or`](@ref).
+There are several operators that accept multiple arguments. Both `&&` and the symbol `∧` represent the binary operator [`and`](@ref &). Both `||` and the symbol `∨` represent the binary operator [`or`](@ref |).
 
 ```jldoctest
 julia> true && false == false # boolean and

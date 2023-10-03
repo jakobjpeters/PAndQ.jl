@@ -102,6 +102,14 @@ end
 # Internals
 
 """
+    alias_of(::LogicalOperator)
+"""
+alias_of(lo::LogicalOperator) = nameof(lo)
+for lo in (:not, :and, :or)
+    @eval alias_of(::typeof($lo)) = $(QuoteNode(lo))
+end
+
+"""
     symbol_of(::LogicalOperator)
 
 Return the Unicode character that is an alias for the given [`LogicalOperator`](@ref).
@@ -228,9 +236,9 @@ function show(io::IO, p::A) where A <: Atom
     print(io, ")")
 end
 show(io::IO, p::L) where L <: Literal =
-    print(io, nameof(L), "(", nodevalue(p), ", ", p.atom, ")")
+    print(io, nameof(L), "(", alias_of(nodevalue(p)), ", ", p.atom, ")")
 function show(io::IO, p::C) where C <: Compound
-    print(io, nameof(C), "(", nodevalue(p))
+    print(io, nameof(C), "(", alias_of(nodevalue(p)))
 
     _children = Stateful(children(p))
     if !isempty(_children)
@@ -250,7 +258,7 @@ end
 
 for (T, f) in (
     NullaryOperator => v -> v ? "⊤" : "⊥",
-    String => v -> nameof(v ? ⊤ : ⊥),
+    String => v -> alias_of(v ? ⊤ : ⊥),
     Char => v -> v == ⊤ ? "T" : "F",
     Bool => identity,
     Int => Int

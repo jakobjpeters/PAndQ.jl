@@ -16,11 +16,11 @@ Operator associativity determines how operators with the same precedence group t
 |:-----------------------------|:-------|:-----------------|:--------------|:-----------|
 | [`tautology`](@ref)          | `⊤`    | \\top            | none          | 0          |
 | [`contradiction`](@ref)      | `⊥`    | \\bot            | none          | 0          |
-| [`not`](@ref)                | `¬`    | \\neg            | right         | 0          |
-| [`and`](@ref)                | `∧`    | \\wedge          | left          | 12         |
+| [`not`](@ref !)              | `¬`    | \\neg            | right         | 0          |
+| [`and`](@ref &)              | `∧`    | \\wedge          | left          | 12         |
 | [`nand`](@ref)               | `⊼`    | \\nand           | left          | 12         |
 | [`nor`](@ref)                | `⊽`    | \\nor            | left          | 11         |
-| [`or`](@ref)                 | `∨`    | \\vee            | left          | 11         |
+| [`or`](@ref |)               | `∨`    | \\vee            | left          | 11         |
 | [`xor`](@ref)                | `⊻`    | \\xor            | left          | 11         |
 | [`xnor`](@ref)               | `↔`    | \\leftrightarrow | right         | 4          |
 | [`imply`](@ref)              | `→`    | \\rightarrow     | right         | 4          |
@@ -39,7 +39,7 @@ contradiction
 
 ```@docs
 identity
-not
+Base.:!
 ```
 
 ## Binary Operators
@@ -49,10 +49,10 @@ not
     `bo(p) = q -> bo(p, q)` and `bo(p)(q) == bo(p, q)`.
 
 ```@docs
-and
+&
 nand
 nor
-or
+|
 xor
 xnor
 imply
@@ -66,8 +66,6 @@ not_converse_imply
 ```@docs
 conjunction
 disjunction
-mapfoldl
-mapfoldr
 ```
 
 ## Utilities

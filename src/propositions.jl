@@ -266,10 +266,10 @@ children(p::Normal) = p.clauses
 # Examples
 ```jldoctest
 julia> @atomize PAndQ.nodevalue(¬p)
-not (generic function with 19 methods)
+! (generic function with 20 methods)
 
 julia> @atomize PAndQ.nodevalue(p ∧ q)
-and (generic function with 18 methods)
+& (generic function with 34 methods)
 ```
 """
 nodevalue(::Compound{LO}) where LO = LO.instance
@@ -450,13 +450,13 @@ Return an iterator of each [`LogicalOperator`](@ref) contained in `p`.
 # Examples
 ```jldoctest
 julia> @atomize collect(operators(¬p))
-1-element Vector{typeof(not)}:
- not (generic function with 19 methods)
+1-element Vector{typeof(!)}:
+ ! (generic function with 20 methods)
 
 julia> @atomize collect(operators(¬p ∧ q))
 3-element Vector{Function}:
- and (generic function with 18 methods)
- not (generic function with 19 methods)
+ & (generic function with 34 methods)
+ ! (generic function with 20 methods)
  identity (generic function with 1 method)
 ```
 """

@@ -14,10 +14,10 @@ See also [`left_neutrals`](@ref) and [`right_neutrals`](@ref).
 # Examples
 ```jldoctest
 julia> PAndQ.neutral_operator(⊤)
-and (generic function with 18 methods)
+& (generic function with 34 methods)
 
 julia> PAndQ.neutral_operator(⊥)
-or (generic function with 18 methods)
+| (generic function with 34 methods)
 ```
 """
 neutral_operator(::typeof(⊤)) = ∧
@@ -44,7 +44,7 @@ of the given boolean operator.
 # Examples
 ```jldoctest
 julia> dual(and)
-or (generic function with 18 methods)
+| (generic function with 34 methods)
 
 julia> @atomize and(p, q) == not(dual(and)(not(p), not(q)))
 true
@@ -76,7 +76,7 @@ of the given boolean operator.
 # Examples
 ```jldoctest
 julia> converse(and)
-and (generic function with 18 methods)
+& (generic function with 34 methods)
 
 julia> @atomize and(p, q) == converse(and)(q, p)
 true
@@ -250,7 +250,7 @@ julia> @atomize collect(interpretations(p))
  0
 
 julia> @atomize collect(interpretations(p ⊻ q, [p => true]))
-1-element Vector{Literal{typeof(not), Variable}}:
+1-element Vector{Literal{typeof(!), Variable}}:
  ¬q
 ```
 """
@@ -312,12 +312,12 @@ false
 """
 p::Constant == q::Constant = p.value == q.value
 p::Bool == q::NullaryOperator = p == q()
-p::NullaryOperator == q::Bool = q == p
 p::Bool == q::Proposition = p ? is_tautology(q) : is_contradiction(q)
+p::Union{NullaryOperator, Proposition} == q::Bool = q == p
 ::typeof(⊤) == q::Proposition = is_tautology(q)
 ::typeof(⊥) == q::Proposition = is_contradiction(q)
 p::Proposition == q::Proposition = is_tautology(p ↔ q)
-p::Proposition == q::Union{Bool, NullaryOperator} = q == p
+p::Proposition == q::NullaryOperator = q == p
 
 """
     is_tautology(p)
@@ -470,33 +470,40 @@ is_falsifiable(p) = !is_tautology(p)
 
 ⊤() = true
 ⊥() = false
-p ⊼ q = ¬(p ∧ q)
-p ⊽ q = ¬p ∧ ¬q
-p ∨ q = ¬(p ⊽ q)
-p ⊻ q = (p ∨ q) ∧ (p ⊼ q)
-p ↔ q = (p ∧ q) ∨ (p ⊽ q)
-p ↛ q = p ∧ ¬q
-p → q = ¬p ∨ q
-p ↚ q = ¬p ∧ q
-p ← q = p ∨ ¬q
+
+p::Bool ∧ q::Union{NullaryOperator, Proposition} = p && q
+p::Union{NullaryOperator, Proposition} ∧ q::Bool = q ∧ p
+
+for (left, right) in (
+    :⊼ => :(¬(p ∧ q)),
+    :⊽ => :(¬p ∧ ¬q),
+    :∨ => :(¬(p ⊽ q)),
+    :⊻ => :((p ∨ q) ∧ (p ⊼ q)),
+)
+    @eval $left(p::Union{NullaryOperator, Proposition}, q::Bool) = $left(q, p)
+    @eval $left(p::Union{Bool, NullaryOperator, Proposition}, q::Union{NullaryOperator, Proposition}) =
+        $right
+end
+
+for (left, right) in (
+    :↔ => :((p ∧ q) ∨ (p ⊽ q)),
+    :↛ => :(p ∧ ¬q),
+    :→ => :(¬p ∨ q),
+    :↚ => :(¬p ∧ q),
+    :← => :(p ∨ ¬q)
+)
+    @eval $left(p::Union{Bool, NullaryOperator, Proposition}, q::Union{Bool, NullaryOperator, Proposition}) =
+        $right
+end
 
 ## Bool
 
-Bool(no::NullaryOperator) = no()
-¬p::Bool = !p
-
-for (lo, bo) in (:∧ => :&&, :∨ => :||)
-    @eval begin
-        $lo(p::Bool, q::Bool) = $(Expr(bo, :p, :q))
-        $lo(p::Bool, q) = $(Expr(bo, :p, :q))
-        $lo(p, q::Bool) = $(Expr(bo, :q, :p))
-    end
-end
+Bool(no::NullaryOperator) = convert(Bool, no)
 
 ## Operators
 
 eval_doubles(:not, (
-    (⊤, ⊥), (identity, ¬), (∧, ⊼), (∨, ⊽), (⊻, ↔), (→, ↛), (←, ↚)
+    (⊤, ⊥), (∧, ⊼), (∨, ⊽), (⊻, ↔), (→, ↛), (←, ↚)
 ))
 
 ## Propositions
@@ -512,7 +519,7 @@ p::Proposition ∧ q::Proposition = Normal(∧, p) ∧ Normal(∧, q)
 
 for BO in uniontypes(BinaryOperator)
     bo = nameof(BO.instance)
-    @eval $bo(p) = q -> $bo(p, q)
+    @eval $bo(p::Union{NullaryOperator, Proposition}) = q -> $bo(p, q)
     @eval $bo(p::Union{NullaryOperator, Atom, Literal, Tree}, q::Union{NullaryOperator, Atom, Literal, Tree}) =
         Tree($bo, Tree(p), Tree(q))
 end
@@ -546,6 +553,11 @@ for AO in uniontypes(AndOr)
 end
 
 # Constructors
+
+for T in (:Literal, :Tree)
+    @eval $T(::ComposedFunction{typeof(¬), typeof(identity)}, p) = $T(¬, p)
+    @eval $T(::ComposedFunction{typeof(¬), typeof(¬)}, p) = $T(identity, p)
+end
 
 Clause(ao::AndOr, ps) = isempty(ps) ?
     Clause(ao) :

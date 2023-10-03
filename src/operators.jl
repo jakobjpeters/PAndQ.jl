@@ -1,5 +1,5 @@
 
-import Base: nand, ⊼, nor, ⊽, xor, ⊻, mapfoldl, mapfoldr
+import Base: !, &, nand, nor, xor, |, ⊻, ⊼, ⊽
 
 # Nullary Operators
 
@@ -88,8 +88,8 @@ julia> @atomize TruthTable([¬p])
 └──────────┴─────────┘
 ```
 """
-function not end
-const ¬ = not
+!
+const ¬ = const not = !
 
 # Binary Operators
 
@@ -116,8 +116,8 @@ julia> @atomize TruthTable([p ∧ q])
 └──────────┴──────────┴───────┘
 ```
 """
-function and end
-const ∧ = and
+&
+const ∧ = const and = &
 
 """
     nand(p, q)
@@ -192,8 +192,8 @@ julia> @atomize TruthTable([p ∨ q])
 └──────────┴──────────┴───────┘
 ```
 """
-function or end
-const ∨ = or
+|
+const ∨ = const or = |
 
 """
     xor(p, q)
@@ -422,7 +422,7 @@ const RightNeutralOperator = Union{
 """
     AndOr
 
-The `Union` of [`and`](@ref) and [`or`](@ref).
+The `Union` of [`and`](@ref &) and [`or`](@ref |).
 """
 const AndOr = union_typeof((∧, ∨))
 
@@ -436,7 +436,7 @@ Equivalent to `foldl(∧, ps; init = true)`.
 
 `⋀` can be typed by `\\bigwedge<tab>`.
 
-See also [`and`](@ref) and [`tautology`](@ref).
+See also [`and`](@ref &) and [`tautology`](@ref).
 
 # Examples
 ```jldoctest
@@ -444,7 +444,7 @@ julia> @atomize ⋀([p, q, r, s])
 ((p ∧ q) ∧ r) ∧ s
 ```
 """
-conjunction(ps) = foldl(∧, ps)
+conjunction(ps) = foldl(∧, ps; init = true)
 const ⋀ = conjunction
 
 """
@@ -455,60 +455,16 @@ Equivalent to `foldl(∨, ps; init = false)`.
 
 `⋁` can be typed by `\\bigvee<tab>`.
 
-See also [`or`](@ref) and [`contradiction`](@ref).
+See also [`or`](@ref |) and [`contradiction`](@ref).
 
 # Examples
 ```jldoctest
 julia> @atomize ⋁([p, q, r, s])
-((p ∨ q) ∨ r) ∨ s
+((¬¬p ∨ q) ∨ r) ∨ s
 ```
 """
-disjunction(ps) = foldl(∨, ps)
+disjunction(ps) = foldl(∨, ps; init = false)
 const ⋁ = disjunction
-
-"""
-    mapfoldl(f, lio::LeftNeutralOperator, ps)
-
-Equivalent to `mapfoldl(f, lio, ps, init = first(left_neutrals(lio))())`.
-
-See also [`LeftNeutralOperator`](@ref).
-
-!!! tip
-    This also works with `foldl(lio, ps)`.
-
-# Examples
-```jldoctest
-julia> @atomize mapfoldl(not, and, [p, q, r, s])
-((¬p ∧ ¬q) ∧ ¬r) ∧ ¬s
-
-julia> foldl(and, [])
-true
-```
-"""
-mapfoldl(f, lio::LeftNeutralOperator, ps) =
-    mapfoldl(f, lio, ps, init = first(left_neutrals(lio))())
-
-"""
-    mapfoldr(f, rio::RightNeutralOperator, ps)
-
-Equivalent to `mapfoldr(f, rio, ps, init = first(right_neutrals(rio))())`.
-
-See also [`RightNeutralOperator`](@ref).
-
-!!! tip
-    This also works with `foldr(rio, ps)`.
-
-# Examples
-```jldoctest
-julia> @atomize mapfoldr(not, and, [p, q, r, s])
-¬p ∧ (¬q ∧ (¬r ∧ ¬s))
-
-julia> foldr(and, [])
-true
-```
-"""
-mapfoldr(f, rio::RightNeutralOperator, ps) =
-    mapfoldr(f, rio, ps, init = first(right_neutrals(rio))())
 
 # Utilities
 
