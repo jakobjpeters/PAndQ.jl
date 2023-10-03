@@ -105,8 +105,13 @@ end
     alias_of(::LogicalOperator)
 """
 alias_of(lo::LogicalOperator) = nameof(lo)
+
 for lo in (:not, :and, :or)
     @eval alias_of(::typeof($lo)) = $(QuoteNode(lo))
+end
+
+for lo in (:⊤, :⊥, :𝒾, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚)
+    @eval symbol_of(::typeof($lo)) = $(QuoteNode(lo))
 end
 
 """
@@ -126,10 +131,7 @@ julia> PAndQ.symbol_of(∧)
 :∧
 ```
 """
-symbol_of(::typeof(identity)) = Symbol("")
-for lo in (:⊤, :⊥, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚)
-    @eval symbol_of(::typeof($lo)) = $(QuoteNode(lo))
-end
+symbol_of
 
 """
     merge_string(cell)
@@ -139,19 +141,19 @@ merge_string(cell) =
     join(Iterators.map(p -> sprint(show, MIME"text/plain"(), p), cell), ", ")
 
 """
-    parenthesize(::IO, x)
+    parenthesize(::IO, p)
 """
-parenthesize(io, x) = show(io, MIME"text/plain"(), x)
-function parenthesize(io::IO, x::Union{Clause, <:Tree{<:BinaryOperator}})
+parenthesize(io, p) = show(io, MIME"text/plain"(), p)
+function parenthesize(io, p::Union{Clause, <:Tree{<:BinaryOperator}})
     print(io, "(")
-    show(io, MIME"text/plain"(), x)
+    show(io, MIME"text/plain"(), p)
     print(io, ")")
 end
 
 """
     print_node(io, p)
 """
-print_node(io, ::Compound{typeof(identity)}) = print(io, "𝒾")
+print_node(io, ::Compound{typeof(identity)}) = nothing
 print_node(io, p) = printnode(io, p)
 
 """
@@ -184,11 +186,11 @@ function show(io::IO, ::MIME"text/plain", p::Constant)
 end
 show(io::IO, ::MIME"text/plain", p::Variable) = print(io, p.symbol)
 function show(io::IO, ::MIME"text/plain", p::Literal)
-    printnode(io, p)
+    print_node(io, p)
     printnode(io, p.atom)
 end
 function show(io::IO, ::MIME"text/plain", p::Compound{<:UnaryOperator})
-    printnode(io, p)
+    print_node(io, p)
     parenthesize(io, child(p))
 end
 function show(io::IO, ::MIME"text/plain", p::Compound)
@@ -260,7 +262,7 @@ for (T, f) in (
     NullaryOperator => v -> v ? "⊤" : "⊥",
     String => v -> alias_of(v ? ⊤ : ⊥),
     Char => v -> v == ⊤ ? "T" : "F",
-    Bool => identity,
+    Bool => 𝒾,
     Int => Int
 )
     @eval formatter(::Type{$T}) = (v, _, _) -> string($f(v))
@@ -373,9 +375,6 @@ pretty_table(io::IO, tt::TruthTable; backend = Val(:text), alignment = :l, kwarg
 
 Prints a tree diagram of the given [`Proposition`](@ref).
 
-!!! note
-    Instances of [`Compound{typeof(identity)}`](@ref Compound) are represented as `𝒾`.
-
 See also [`AbstractTrees.print_tree`]
 (https://github.com/JuliaCollections/AbstractTrees.jl/blob/master/src/printing.jl).
 
@@ -411,5 +410,4 @@ julia> @atomize print_tree(Normal(p ∧ ¬q ⊻ s))
       └─ s
 ```
 """
-print_tree(io::IO, p::Proposition; kwargs...) =
-    print_tree(print_node, print_child_key, io, p; kwargs...)
+print_tree

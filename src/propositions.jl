@@ -292,7 +292,7 @@ julia> @atomize PAndQ.printnode(stdout, p ∧ q)
 printnode(io::IO, p::Atom; kwargs...) = show(io, MIME"text/plain"(), p)
 printnode(io::IO, p::Union{Literal, Tree}; kwargs...) = print(io, symbol_of(nodevalue(p)))
 printnode(io::IO, p::Union{Clause, Normal}; kwargs...) =
-    print(io, symbol_of((isempty(children(p)) ? only ∘ left_neutrals : identity)(nodevalue(p))))
+    print(io, symbol_of((isempty(children(p)) ? only ∘ left_neutrals : 𝒾)(nodevalue(p))))
 
 ## Utilities
 

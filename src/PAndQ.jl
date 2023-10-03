@@ -13,7 +13,7 @@ include("operators.jl")
 export
     tautology, ⊤,
     contradiction, ⊥,
-    #= Base.identity =#
+    #= Base.identity =# 𝒾,
     not, ¬,
     and, ∧,
     #= Base.nand, Base.:⊼ =#

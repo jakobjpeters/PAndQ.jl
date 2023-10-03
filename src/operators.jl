@@ -51,12 +51,13 @@ const ⊥ = contradiction
 
 """
     identity(p)
+    𝒾(p)
 
 Logical [identity](https://en.wikipedia.org/wiki/Law_of_identity) operator.
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable([identity(p)])
+julia> @atomize TruthTable([𝒾(p)])
 ┌──────────┐
 │ p        │
 │ Variable │
@@ -67,6 +68,7 @@ julia> @atomize TruthTable([identity(p)])
 ```
 """
 identity
+const 𝒾 = identity
 
 """
     not(p)
@@ -367,7 +369,7 @@ const NullaryOperator = union_typeof((⊤, ⊥))
 
 The `Union` of [`LogicalOperator`](@ref)s that take one argument.
 """
-const UnaryOperator = union_typeof((identity, ¬))
+const UnaryOperator = union_typeof((𝒾, ¬))
 
 """
     BinaryOperator
