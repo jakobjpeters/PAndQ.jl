@@ -153,7 +153,7 @@ end
 """
     print_node(io, p)
 """
-print_node(io, ::Compound{typeof(identity)}) = nothing
+print_node(io, ::Compound{typeof(𝒾)}) = nothing
 print_node(io, p) = printnode(io, p)
 
 """

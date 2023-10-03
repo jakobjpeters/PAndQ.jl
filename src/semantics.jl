@@ -555,8 +555,8 @@ end
 # Constructors
 
 for T in (:Literal, :Tree)
-    @eval $T(::ComposedFunction{typeof(¬), typeof(identity)}, p) = $T(¬, p)
-    @eval $T(::ComposedFunction{typeof(¬), typeof(¬)}, p) = $T(identity, p)
+    @eval $T(::ComposedFunction{typeof(¬), typeof(𝒾)}, p) = $T(¬, p)
+    @eval $T(::ComposedFunction{typeof(¬), typeof(¬)}, p) = $T(𝒾, p)
 end
 
 Clause(ao::AndOr, ps) = isempty(ps) ?
@@ -579,12 +579,12 @@ end
     convert(::Type{<:Proposition}, ::Union{NullaryOperator, Proposition})
 """
 convert(::Type{Bool}, no::NullaryOperator) = no()
-convert(::Type{Atom}, p::Union{Literal{I}, Tree{I, <:Atom}}) where I <: typeof(identity) =
+convert(::Type{Atom}, p::Union{Literal{I}, Tree{I, <:Atom}}) where I <: typeof(𝒾) =
     child(p)
 convert(::Type{Literal}, p::Tree{<:UnaryOperator, <:Atom}) =
     Literal(nodevalue(p), child(p))
-convert(::Type{Literal}, p::Atom) = Literal(identity, p)
-convert(::Type{Tree}, p::Atom) = Tree(identity, p)
+convert(::Type{Literal}, p::Atom) = Literal(𝒾, p)
+convert(::Type{Tree}, p::Atom) = Tree(𝒾, p)
 convert(::Type{Tree}, p::Literal) = Tree(nodevalue(p), p.atom)
 function convert(::Type{Tree}, p::Clause)
     _nodevalue = nodevalue(p)
