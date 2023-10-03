@@ -485,6 +485,7 @@ p ∧ q
 ```
 """
 map(f, p::Atom) = f(p)
+map(f, p::Literal) = Literal(nodevalue(p), f(child(p)))
 map(f, p::Tree) =
     union_all_type(p)(nodevalue(p), map(child -> map(f, child), children(p))...)
 map(f, p::Union{Clause, Normal}) =
