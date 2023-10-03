@@ -218,7 +218,7 @@ Represent the given [`Proposition`](@ref) expanded as valid Julia code.
 julia> @atomize s = sprint(show, p ∧ q)
 "Tree(and, Tree(identity, Variable(:p)), Tree(identity, Variable(:q)))"
 
-julia> @eval \$(Meta.parse(s))
+julia> eval(Meta.parse(s))
 p ∧ q
 ```
 """
