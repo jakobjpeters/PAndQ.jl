@@ -107,13 +107,13 @@ end
 """
     Literal{UO <: UnaryOperator, A <: Atom} <: Compound{UO}
     Literal(::UO, ::A)
-    Literal(::LiteralProposition)
+    Literal(::Union{Atom, Literal})
 
 A proposition represented by [an atomic formula or its negation]
 (https://en.wikipedia.org/wiki/Literal_(mathematical_logic)).
 
 Subtype of [`Compound`](@ref).
-See also [`UnaryOperator`](@ref), [`Atom`](@ref), and [`LiteralProposition`](@ref).
+See also [`UnaryOperator`](@ref) and [`Atom`](@ref).
 
 # Examples
 ```jldoctest
@@ -164,7 +164,7 @@ end
     Clause{AO <: AndOr, L <: Literal} <: Compound{AO}
     Clause(::AO, ps = Literal[])
     Clause(::AO, p::Proposition)
-    Clause(::Union{NullaryOperator, LiteralProposition})
+    Clause(::Union{NullaryOperator, Atom, Literal})
 
 A proposition represented as either a [conjunction or disjunction of literals]
 (https://en.wikipedia.org/wiki/Clause_(logic)).
@@ -174,8 +174,7 @@ A proposition represented as either a [conjunction or disjunction of literals]
     neutral element of it's binary operator.
 
 Subtype of [`Compound`](@ref).
-See also [`AndOr`](@ref), [`Literal`](@ref),
-[`NullaryOperator`](@ref), and [`LiteralProposition`](@ref).
+See also [`AndOr`](@ref), [`Literal`](@ref), and [`NullaryOperator`](@ref).
 
 # Examples
 ```jldoctest
@@ -233,30 +232,6 @@ struct Normal{AO <: AndOr, C <: Clause} <: Expressive{AO}
 end
 
 # Internals
-
-## Union Types
-
-"""
-    AtomicProposition
-
-A [`Proposition`](@ref) that is known by its type to be logically equivalent to an [`Atom`](@ref).
-"""
-const AtomicProposition = Union{
-    Atom,
-    Literal{typeof(identity)},
-    Tree{typeof(identity), <:Atom}
-}
-
-"""
-    LiteralProposition
-
-A [`Proposition`](@ref) that is known by its type to be logically equivalent to a [`Literal`](@ref).
-"""
-const LiteralProposition = Union{
-    AtomicProposition,
-    Literal{typeof(not)},
-    Tree{typeof(not), <:Atom}
-}
 
 ## AbstractTrees.jl
 

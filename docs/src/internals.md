@@ -25,13 +25,6 @@ PAndQ.AndOr
 
 ## Propositions
 
-### Union Types
-
-```@docs
-PAndQ.AtomicProposition
-PAndQ.LiteralProposition
-```
-
 ### AbstractTrees.jl
 
 ```@docs

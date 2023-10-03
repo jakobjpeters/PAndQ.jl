@@ -337,8 +337,7 @@ true
 ```
 """
 is_tautology(::typeof(⊤)) = true
-is_tautology(::typeof(⊥)) = false
-is_tautology(::LiteralProposition) = false
+is_tautology(::Union{typeof(⊥), Atom, Literal}) = false
 is_tautology(p) = all(isequal(true), interpretations(p))
 
 """
@@ -384,7 +383,7 @@ false
 ```
 """
 is_truth(::NullaryOperator) = true
-is_truth(::LiteralProposition) = false
+is_truth(::Union{Atom, Literal}) = false
 is_truth(p) = allequal(interpretations(p))
 
 """
@@ -526,9 +525,9 @@ for AO in uniontypes(AndOr)
     @eval begin
         $ao(p::Clause{$DAO}, q::Clause{$DAO}) = Normal($ao, [p, q])
 
-        $ao(p::Union{LiteralProposition, Clause{$AO}}, q::Clause{$DAO}) =
+        $ao(p::Union{Atom, Literal, Clause{$AO}}, q::Clause{$DAO}) =
             $ao(Normal($ao, p), q)
-        $ao(p::Clause{$DAO}, q::Union{LiteralProposition, Clause{$AO}}) =
+        $ao(p::Clause{$DAO}, q::Union{Atom, Literal, Clause{$AO}}) =
             $ao(p, Normal($ao, q))
 
         $ao(p::Normal, q::Normal) = $ao(Normal($ao, p), Normal($ao, q))
@@ -536,7 +535,7 @@ for AO in uniontypes(AndOr)
         $ao(p::Normal, q::Clause) = $ao(p, Normal($ao, q))
     end
 
-    for (left, right) in ((Clause, LiteralProposition), (Normal, Clause{DAO}))
+    for (left, right) in ((Clause, Union{Atom, Literal}), (Normal, Clause{DAO}))
         @eval begin
             $ao(p::$left{$AO}, q::$right) = $left($ao, vcat(children(p), q))
             $ao(p::$right, q::$left{$AO}) = $left($ao, vcat(p, children(q)))
@@ -583,14 +582,14 @@ function convert(::Type{Tree}, p::Normal)
     _nodevalue = nodevalue(p)
     Tree(mapfoldl(Tree, _nodevalue, p.clauses; init = only(left_neutrals(_nodevalue))))
 end
-convert(::Type{Clause}, p::LiteralProposition) = Clause(or, [p])
-convert(::Type{Clause{AO}}, p::LiteralProposition) where AO <: AndOr = Clause(AO.instance, [p])
+convert(::Type{Clause}, p::Union{Atom, Literal}) = Clause(or, [p])
+convert(::Type{Clause{AO}}, p::Union{Atom, Literal}) where AO <: AndOr = Clause(AO.instance, [p])
 convert(::Type{Clause}, no::NullaryOperator) = Clause(neutral_operator(no))
 convert(::Type{Normal}, no::NullaryOperator) = Normal(neutral_operator(no))
 convert(::Type{Clause}, p::Tree{<:NullaryOperator}) = Clause(nodevalue(p))
 convert(::Type{Normal}, p::Tree{<:NullaryOperator}) = Normal(nodevalue(p))
 convert(::Type{Normal}, p::Clause) = Normal(dual(nodevalue(p)), [p])
-convert(::Type{Normal{AO}}, p::LiteralProposition) where AO <: AndOr = Normal(AO.instance, Clause(p))
+convert(::Type{Normal{AO}}, p::Union{Atom, Literal}) where AO <: AndOr = Normal(AO.instance, Clause(p))
 convert(::Type{Normal{AO}}, p::Clause{AO}) where AO <: AndOr =
     Normal(AO.instance, map(literal -> Clause(dual(AO.instance), literal), p.literals))
 convert(::Type{Normal{AO}}, p::Clause) where AO <: AndOr = Normal(AO.instance, [p])
