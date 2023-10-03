@@ -2,9 +2,8 @@
 import Base: show, Stateful
 import PrettyTables: pretty_table, _pretty_table
 import AbstractTrees: print_tree
-using Base.Docs: HTML
+using Base: Docs.HTML
 using AbstractTrees: print_child_key
-using PrettyTables: LatexCell
 
 """
     TruthTable(ps)
@@ -21,37 +20,34 @@ See also [`tautology`](@ref) and [`contradiction`](@ref).
 # Examples
 ```jldoctest
 julia> TruthTable([Tree(⊤)])
-┌──────┐
-│ ⊤    │
-│ Tree │
-├──────┤
-│ ⊤    │
-└──────┘
+┌───┐
+│ ⊤ │
+├───┤
+│ ⊤ │
+└───┘
 
 julia> @atomize TruthTable([¬p])
-┌──────────┬─────────┐
-│ p        │ ¬p      │
-│ Variable │ Literal │
-├──────────┼─────────┤
-│ ⊤        │ ⊥       │
-│ ⊥        │ ⊤       │
-└──────────┴─────────┘
+┌───┬────┐
+│ p │ ¬p │
+├───┼────┤
+│ ⊤ │ ⊥  │
+│ ⊥ │ ⊤  │
+└───┴────┘
 
 julia> @atomize TruthTable([p ∧ ¬p, p ⊻ q, ¬(p ∧ q) ∧ (p ∨ q)])
-┌────────┬──────────┬──────────┬───────────────────────────┐
-│ p ∧ ¬p │ p        │ q        │ p ⊻ q, ¬(p ∧ q) ∧ (p ∨ q) │
-│ Tree   │ Variable │ Variable │ Tree, Tree                │
-├────────┼──────────┼──────────┼───────────────────────────┤
-│ ⊥      │ ⊤        │ ⊤        │ ⊥                         │
-│ ⊥      │ ⊥        │ ⊤        │ ⊤                         │
-├────────┼──────────┼──────────┼───────────────────────────┤
-│ ⊥      │ ⊤        │ ⊥        │ ⊤                         │
-│ ⊥      │ ⊥        │ ⊥        │ ⊥                         │
-└────────┴──────────┴──────────┴───────────────────────────┘
+┌────────┬───┬───┬───────────────────────────┐
+│ p ∧ ¬p │ p │ q │ p ⊻ q, ¬(p ∧ q) ∧ (p ∨ q) │
+├────────┼───┼───┼───────────────────────────┤
+│ ⊥      │ ⊤ │ ⊤ │ ⊥                         │
+│ ⊥      │ ⊥ │ ⊤ │ ⊤                         │
+├────────┼───┼───┼───────────────────────────┤
+│ ⊥      │ ⊤ │ ⊥ │ ⊤                         │
+│ ⊥      │ ⊥ │ ⊥ │ ⊥                         │
+└────────┴───┴───┴───────────────────────────┘
 ```
 """
 struct TruthTable
-    header::Vector{Vector{Proposition}}
+    header::Vector{String}
     body::Matrix{Bool}
 
     function TruthTable(ps)
@@ -81,7 +77,7 @@ struct TruthTable
             end
         end
 
-        header = Vector{Proposition}[]
+        header = String[]
         body = Vector{Bool}[]
         for (_interpretations, group) in (
             truths_interpretations => grouped_truths,
@@ -90,7 +86,7 @@ struct TruthTable
         )
             for interpretation in _interpretations
                 xs = get(group, interpretation, Proposition[])
-                push!(header, xs)
+                push!(header, join(unique!(map(x -> sprint(show, MIME"text/plain"(), x), xs)), ", "))
                 push!(body, interpretation)
             end
         end
@@ -132,13 +128,6 @@ julia> PAndQ.symbol_of(∧)
 ```
 """
 symbol_of
-
-"""
-    merge_string(cell)
-"""
-merge_string(cell::LatexCell) = cell
-merge_string(cell) =
-    join(Iterators.map(p -> sprint(show, MIME"text/plain"(), p), cell), ", ")
 
 """
     parenthesize(::IO, p)
@@ -294,10 +283,7 @@ ___pretty_table(backend::Val{:html}, io, body; kwargs...) =
     pretty_table(io, body; backend, kwargs...)
 
 __pretty_table(backend, io, tt; formatters = formatter(NullaryOperator), kwargs...) =
-    ___pretty_table(backend, io, tt.body; header = (
-        map(merge_string, tt.header),
-        map(p -> merge_string(map(union_all_type, p)), tt.header)
-    ), formatters, kwargs...)
+    ___pretty_table(backend, io, tt.body; header = tt.header, formatters, kwargs...)
 
 _pretty_table(io::IO, p::Proposition; kwargs...) =
     pretty_table(io, TruthTable((p,)); kwargs...)
@@ -317,29 +303,23 @@ See also [`PrettyTables.pretty_table`]
 # Examples
 ```jldoctest
 julia> pretty_table(@atomize p ∧ q)
-┌──────────┬──────────┬───────┐
-│ p        │ q        │ p ∧ q │
-│ Variable │ Variable │ Tree  │
-├──────────┼──────────┼───────┤
-│ ⊤        │ ⊤        │ ⊤     │
-│ ⊥        │ ⊤        │ ⊥     │
-├──────────┼──────────┼───────┤
-│ ⊤        │ ⊥        │ ⊥     │
-│ ⊥        │ ⊥        │ ⊥     │
-└──────────┴──────────┴───────┘
+┌───┬───┬───────┐
+│ p │ q │ p ∧ q │
+├───┼───┼───────┤
+│ ⊤ │ ⊤ │ ⊤     │
+│ ⊥ │ ⊤ │ ⊥     │
+├───┼───┼───────┤
+│ ⊤ │ ⊥ │ ⊥     │
+│ ⊥ │ ⊥ │ ⊥     │
+└───┴───┴───────┘
 
 julia> print(pretty_table(Docs.HTML, @atomize p ∧ q).content)
 <table>
   <thead>
-    <tr class = "header">
+    <tr class = "header headerLastRow">
       <th style = "text-align: left;">p</th>
       <th style = "text-align: left;">q</th>
       <th style = "text-align: left;">p ∧ q</th>
-    </tr>
-    <tr class = "subheader headerLastRow">
-      <th style = "text-align: left;">Variable</th>
-      <th style = "text-align: left;">Variable</th>
-      <th style = "text-align: left;">Tree</th>
     </tr>
   </thead>
   <tbody>

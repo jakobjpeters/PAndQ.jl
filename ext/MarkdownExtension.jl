@@ -4,15 +4,15 @@ module MarkdownExtension
 import Base: show
 import PAndQ: pretty_table, __pretty_table
 using Markdown: Markdown, MD, Table
-using PAndQ: NullaryOperator, TruthTable, Proposition, merge_string, symbol_of, formatter
+using PAndQ: NullaryOperator, TruthTable, Proposition, symbol_of, formatter
 
 __pretty_table(
     ::Val{:markdown}, io, tt;
     formatters = formatter(NullaryOperator), alignment
-) = print(io, MD(Table([
-    map(merge_string, tt.header),
-    eachrow(map(v -> formatters(v, 0, 0), tt.body))...
-], repeat([alignment], length(tt.header)))))
+) = print(io, MD(Table(
+    [tt.header, eachrow(map(v -> formatters(v, 0, 0), tt.body))...],
+    repeat([alignment], length(tt.header))
+)))
 
 """
     pretty_table(

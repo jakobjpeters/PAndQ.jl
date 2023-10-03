@@ -45,7 +45,6 @@ PAndQ.atomize
 ```@docs
 PAndQ.alias_of
 PAndQ.symbol_of
-PAndQ.merge_string
 PAndQ.parenthesize
 PAndQ.print_node
 PAndQ.show_atom
