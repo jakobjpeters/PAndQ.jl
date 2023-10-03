@@ -402,26 +402,6 @@ The `Union` of [`LogicalOperator`](@ref)s with the [associative property]
 const AssociativeOperator = union_typeof((∧, ∨, ⊻, ↔))
 
 """
-    LeftNeutralOperator
-
-The `Union` of [`LogicalOperator`](@ref)s that have one or more [`left_neutrals`](@ref).
-"""
-const LeftNeutralOperator = Union{
-    AssociativeOperator,
-    union_typeof((→, ↚))
-}
-
-"""
-    RightNeutralOperator
-
-The `Union` of [`LogicalOperator`](@ref)s that have one or more [`right_neutrals`](@ref).
-"""
-const RightNeutralOperator = Union{
-    AssociativeOperator,
-    union_typeof((↛, ←))
-}
-
-"""
     AndOr
 
 The `Union` of [`and`](@ref &) and [`or`](@ref |).
