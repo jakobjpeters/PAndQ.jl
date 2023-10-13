@@ -46,13 +46,13 @@ of the given boolean operator.
 julia> dual(and)
 | (generic function with 34 methods)
 
-julia> @atomize and(p, q) == not(dual(and)(not(p), not(q)))
+julia> @atomize p ∧ q == ¬dual(∧)(¬p, ¬q)
 true
 
-julia> dual(imply)
+julia> dual(→)
 not_converse_imply (generic function with 3 methods)
 
-julia> @atomize imply(p, q) == not(dual(imply)(not(p), not(q)))
+julia> @atomize (p → q) == ¬dual(→)(¬p, ¬q)
 true
 ```
 """
@@ -75,16 +75,16 @@ of the given boolean operator.
 
 # Examples
 ```jldoctest
-julia> converse(and)
+julia> converse(∧)
 & (generic function with 34 methods)
 
-julia> @atomize and(p, q) == converse(and)(q, p)
+julia> @atomize p ∧ q == converse(∧)(q, p)
 true
 
-julia> converse(imply)
+julia> converse(→)
 converse_imply (generic function with 3 methods)
 
-julia> @atomize imply(p, q) == converse(imply)(q, p)
+julia> @atomize (p → q) == converse(→)(q, p)
 true
 ```
 """
@@ -95,45 +95,50 @@ eval_doubles(:converse, ((→, ←), (↛, ↚)))
     left_neutrals(::LogicalOperator)
 
 Return the corresponding left identity elements of the operator.
-The identity elements can be [`tautology`](@ref), [`contradiction`](@ref), neither (empty set), or both.
+The identity elements can be neither, either, or both of
+[`tautology`](@ref) and [`contradiction`](@ref).
 
 # Examples
 ```jldoctest
-julia> left_neutrals(or)
-Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+julia> left_neutrals(∨)
+Set{typeof(contradiction)} with 1 element:
   PAndQ.contradiction
 
-julia> left_neutrals(imply)
-Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+julia> left_neutrals(→)
+Set{typeof(tautology)} with 1 element:
   PAndQ.tautology
 
-julia> left_neutrals(nor)
+julia> left_neutrals(⊽)
 Set{Union{typeof(contradiction), typeof(tautology)}}()
 ```
 """
-left_neutrals(::union_typeof((∧, ↔, →))) = Set{NullaryOperator}((⊤,))
-left_neutrals(::union_typeof((∨, ⊻, ↚))) = Set{NullaryOperator}((⊥,))
+left_neutrals(::union_typeof((∧, ↔, →))) = Set((⊤,))
+left_neutrals(::union_typeof((∨, ⊻, ↚))) = Set((⊥,))
 left_neutrals(::LogicalOperator) = Set{NullaryOperator}()
 
 """
     right_neutrals(::LogicalOperator)
 
 Return the corresponding right identity elements of the operator.
-The identity elements can be [`tautology`](@ref), [`contradiction`](@ref), neither (empty set), or both.
+The identity elements can be neither, either, or both of
+[`tautology`](@ref) and [`contradiction`](@ref).
 
 # Examples
 ```jldoctest
-julia> right_neutrals(or)
-Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+julia> right_neutrals(∨)
+Set{typeof(contradiction)} with 1 element:
   PAndQ.contradiction
 
-julia> right_neutrals(converse_imply)
-Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+julia> right_neutrals(←)
+Set{typeof(tautology)} with 1 element:
   PAndQ.tautology
+
+julia> left_neutrals(⊽)
+Set{Union{typeof(contradiction), typeof(tautology)}}()
 ```
 """
-right_neutrals(::union_typeof((∧, ↔, ←))) = Set{NullaryOperator}((⊤,))
-right_neutrals(::union_typeof((∨, ⊻, ↛))) = Set{NullaryOperator}((⊥,))
+right_neutrals(::union_typeof((∧, ↔, ←))) = Set((⊤,))
+right_neutrals(::union_typeof((∨, ⊻, ↛))) = Set((⊥,))
 right_neutrals(::LogicalOperator) = Set{NullaryOperator}()
 
 # Truths
@@ -146,15 +151,17 @@ Return an iterator of every possible [valuation]
 (https://en.wikipedia.org/wiki/Valuation_(logic))
 of [`Atom`](@ref)s.
 
+See also [`Proposition`](@ref).
+
 # Examples
 ```jldoctest
 julia> @atomize collect(valuations(p))
-2-element Vector{Vector{Pair{Variable, Bool}}}:
- [Variable(:p) => 1]
- [Variable(:p) => 0]
+2-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
+ [PAndQ.Variable(:p) => 1]
+ [PAndQ.Variable(:p) => 0]
 
 julia> @atomize collect(valuations(p ∧ q))
-2×2 Matrix{Vector{Pair{Variable, Bool}}}:
+2×2 Matrix{Vector{Pair{PAndQ.Variable, Bool}}}:
  [Variable(:p)=>1, Variable(:q)=>1]  [Variable(:p)=>1, Variable(:q)=>0]
  [Variable(:p)=>0, Variable(:q)=>1]  [Variable(:p)=>0, Variable(:q)=>0]
 ```
@@ -190,7 +197,7 @@ See also [`NullaryOperator`](@ref).
 
 # Examples
 ```jldoctest
-julia> @atomize interpret(a -> true, ¬p)
+julia> @atomize interpret(p -> true, ¬p)
 false
 
 julia> @atomize interpret(p => true, p ∧ q)
@@ -250,7 +257,7 @@ julia> @atomize collect(interpretations(p))
  0
 
 julia> @atomize collect(interpretations(p ⊻ q, [p => true]))
-1-element Vector{Literal{typeof(!), Variable}}:
+1-element Vector{PAndQ.Literal{typeof(!), PAndQ.Variable}}:
  ¬q
 ```
 """
@@ -260,7 +267,7 @@ interpretations(p, valuations = valuations(p)) =
 """
     solve(p)
 
-Return a vector containing all [`interpretations`](@ref) such that
+Return a vector containing all [`valuations`](@ref) such that
 `interpret(p, valuation) == ⊤`.
 
 See also [`interpret`](@ref) and [`tautology`](@ref).
@@ -268,13 +275,13 @@ See also [`interpret`](@ref) and [`tautology`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize collect(solve(p))
-1-element Vector{Vector{Pair{Variable, Bool}}}:
- [Variable(:p) => 1]
+1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
+ [PAndQ.Variable(:p) => 1]
 
 julia> @atomize collect(solve(p ⊻ q))
-2-element Vector{Vector{Pair{Variable, Bool}}}:
- [Variable(:p) => 0, Variable(:q) => 1]
- [Variable(:p) => 1, Variable(:q) => 0]
+2-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
+ [PAndQ.Variable(:p) => 0, PAndQ.Variable(:q) => 1]
+ [PAndQ.Variable(:p) => 1, PAndQ.Variable(:q) => 0]
 ```
 """
 solve(p) = Iterators.filter(valuation -> interpret(valuation, p), valuations(p))
@@ -282,7 +289,7 @@ solve(p) = Iterators.filter(valuation -> interpret(valuation, p), valuations(p))
 # Predicates
 
 """
-    ==(::Union{NullaryOperator, Proposition}, ::Union{NullaryOperator, Proposition})
+    ==(::Union{Bool, NullaryOperator, Proposition}, ::Union{Bool, NullaryOperator, Proposition})
     p == q
 
 Returns a boolean indicating whether `p` and `q` are [logically equivalent]
@@ -294,7 +301,6 @@ Returns a boolean indicating whether `p` and `q` are [logically equivalent]
     The `≡` symbol is sometimes used to represent logical equivalence.
     However, Julia uses `≡` as an alias for the builtin function `===`
     which cannot have methods added to it.
-    Use `==` and `===` to test for equivalence and identity, respectively.
 
 See also [`NullaryOperator`](@ref) and [`Proposition`](@ref).
 
@@ -452,7 +458,7 @@ See also [`Proposition`](@ref).
 julia> is_falsifiable(⊥)
 true
 
-julia> @atomize is_falsifiable(¬(p ∧ ¬p))
+julia> @atomize is_falsifiable(p ∨ ¬p)
 false
 
 julia> @atomize is_falsifiable(p)

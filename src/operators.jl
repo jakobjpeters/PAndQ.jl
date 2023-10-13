@@ -13,7 +13,7 @@ Logical [true](https://en.wikipedia.org/wiki/Tautology_(logic)) operator.
 
 # Examples
 ```jldoctest
-julia> TruthTable([Tree(⊤)])
+julia> TruthTable([PAndQ.Tree(⊤)])
 ┌───┐
 │ ⊤ │
 ├───┤
@@ -34,7 +34,7 @@ Logical [false](https://en.wikipedia.org/wiki/Contradiction) operator.
 
 # Examples
 ```jldoctest
-julia> TruthTable([Tree(⊥)])
+julia> TruthTable([PAndQ.Tree(⊥)])
 ┌───┐
 │ ⊥ │
 ├───┤
@@ -217,8 +217,8 @@ xor
     xnor(p, q)
     p ↔ q
 
-Logical [exclusive non-disjunction](https://en.wikipedia.org/wiki/XNOR_gate)
-and [biconditional](https://en.wikipedia.org/wiki/Logical_biconditional) operator.
+Logical [exclusive non-disjunction]
+(https://en.wikipedia.org/wiki/Logical_biconditional) operator.
 
 `↔` can be typed by `\\leftrightarrow<tab>`.
 
@@ -346,35 +346,35 @@ const ← = converse_imply
 """
     NullaryOperator
 
-The `Union` of [`LogicalOperator`](@ref)s that take zero arguments.
+The `Union` of logical [operators](@ref nullary_operators) that take zero arguments.
 """
 const NullaryOperator = union_typeof((⊤, ⊥))
 
 """
     UnaryOperator
 
-The `Union` of [`LogicalOperator`](@ref)s that take one argument.
+The `Union` of logical [unary operators](@ref unary_operators).
 """
 const UnaryOperator = union_typeof((𝒾, ¬))
 
 """
     BinaryOperator
 
-The `Union` of [`LogicalOperator`](@ref)s that take two arguments.
+The `Union` of logical [binary operators](@ref binary_operators).
 """
 const BinaryOperator = union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔, →, ↛, ←, ↚))
 
 """
     LogicalOperator
 
-The `Union` of [logical operators](@ref operators_operators).
+The `Union` of logical [operators](@ref operators_operators).
 """
 const LogicalOperator = Union{NullaryOperator, UnaryOperator, BinaryOperator}
 
 """
     CommutativeOperator
 
-The `Union` of [`LogicalOperator`](@ref)s with the [commutative property]
+The `Union` of logical [operators](@ref operators_operators) with the [commutative property]
 (https://en.wikipedia.org/wiki/Commutative_property).
 """
 const CommutativeOperator = union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔))
@@ -382,7 +382,7 @@ const CommutativeOperator = union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔))
 """
     AssociativeOperator
 
-The `Union` of [`LogicalOperator`](@ref)s with the [associative property]
+The `Union` of logical [operators](@ref operators_operators) with the [associative property]
 (https://en.wikipedia.org/wiki/Associative_property).
 """
 const AssociativeOperator = union_typeof((∧, ∨, ⊻, ↔))
@@ -404,7 +404,7 @@ Equivalent to `foldl(∧, ps; init = true)`.
 
 `⋀` can be typed by `\\bigwedge<tab>`.
 
-See also [`and`](@ref &) and [`tautology`](@ref).
+See also [`and`](@ref &).
 
 # Examples
 ```jldoctest
@@ -423,7 +423,7 @@ Equivalent to `foldl(∨, ps; init = false)`.
 
 `⋁` can be typed by `\\bigvee<tab>`.
 
-See also [`or`](@ref |) and [`contradiction`](@ref).
+See also [`or`](@ref |).
 
 # Examples
 ```jldoctest
@@ -437,10 +437,10 @@ const ⋁ = disjunction
 # Utilities
 
 """
-    arity(::LogicalOperator)
+    arity(lo)
 
 Return the [arity](https://en.wikipedia.org/wiki/Arity)
-of the given [`LogicalOperator`](@ref).
+of the given logical [operator](@ref operators_operators).
 
 # Examples
 ```jldoctest

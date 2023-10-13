@@ -4,12 +4,16 @@ import AbstractTrees: children, nodevalue, printnode
 using Base.Meta: isexpr, parse
 using AbstractTrees: childtype, Leaves, nodevalues, PreOrderDFS
 
-# Abstract Types
+# Internals
+
+## Types
+
+### Abstract
 
 """
     Proposition
 
-The set of [well-formed logical formulae](https://en.wikipedia.org/wiki/Well-formed_formula).
+A logical [proposition](https://en.wikipedia.org/wiki/Proposition).
 
 Supertype of [`Atom`](@ref) and [`Compound`](@ref).
 """
@@ -20,10 +24,6 @@ abstract type Proposition end
 
 A proposition with [no deeper propositional structure](https://en.wikipedia.org/wiki/Atomic_formula).
 
-!!! tip
-    Use [`@atomize`](@ref) and [`@variables`](@ref) for syntax sugar to
-    instantiate atoms inline and define variables, respectively.
-
 Subtype of [`Proposition`](@ref).
 Supertype of [`Constant`](@ref) and [`Variable`](@ref).
 """
@@ -32,7 +32,7 @@ abstract type Atom <: Proposition end
 """
     Compound{LO} <: Proposition
 
-A proposition composed from connecting [`Atom`](@ref)ic propositions with [`LogicalOperator`](@ref)s.
+A proposition composed from connecting atomic propositions with logical operators.
 
 Subtype of [`Proposition`](@ref).
 Supertype of [`Literal`](@ref), [`Clause`](@ref), and [`Expressive`](@ref).
@@ -49,26 +49,22 @@ Supertype of [`Tree`](@ref) and [`Normal`](@ref).
 """
 abstract type Expressive{LO} <: Compound{LO} end
 
-# Concrete Types
+# Atoms
 
 """
     Constant{T} <: Atom
-    Constant(::T)
+    Constant(value::T)
 
 An [atomic sentence](https://en.wikipedia.org/wiki/Atomic_sentence).
-
-!!! tip
-    Define pretty-printing for an instance of `Constant{T}` by overloading
-    [`show(io::IO, ::MIME"text/plain", p::Constant{T})`](@ref show).
 
 Subtype of [`Atom`](@ref).
 
 # Examples
 ```jldoctest
-julia> Constant(1)
+julia> PAndQ.Constant(1)
 \$(1)
 
-julia> Constant("Logic is fun")
+julia> PAndQ.Constant("Logic is fun")
 \$("Logic is fun")
 ```
 """
@@ -85,10 +81,10 @@ Subtype of [`Atom`](@ref).
 
 # Examples
 ```jldoctest
-julia> Variable(:p)
+julia> PAndQ.Variable(:p)
 p
 
-julia> Variable(:q)
+julia> PAndQ.Variable(:q)
 q
 ```
 """
@@ -104,6 +100,12 @@ struct Variable <: Atom
     end
 end
 
+# Internal
+
+## Types
+
+### Concrete
+
 """
     Literal{UO <: UnaryOperator, A <: Atom} <: Compound{UO}
     Literal(::UO, ::A)
@@ -117,7 +119,10 @@ See also [`UnaryOperator`](@ref) and [`Atom`](@ref).
 
 # Examples
 ```jldoctest
-julia> @atomize ¬p
+julia> @atomize PAndQ.Literal(𝒾, p)
+p
+
+julia> @atomize PAndQ.Literal(¬, p)
 ¬p
 ```
 """
@@ -140,11 +145,14 @@ See also [`LogicalOperator`](@ref).
 
 # Examples
 ```jldoctest
-julia> @atomize p ⊻ q
-p ⊻ q
+julia> PAndQ.Tree(⊤)
+⊤
 
-julia> @atomize ¬p → q
-¬p → q
+julia> @atomize PAndQ.Tree(¬, p)
+¬p
+
+julia> @atomize PAndQ.Tree(and, PAndQ.Tree(p), PAndQ.Tree(q))
+p ∧ q
 ```
 """
 struct Tree{LO <: LogicalOperator, P <: Proposition} <: Expressive{LO}
@@ -155,7 +163,7 @@ struct Tree{LO <: LogicalOperator, P <: Proposition} <: Expressive{LO}
     function Tree(lo::LO, nodes::Tree...) where LO <: LogicalOperator
         _arity, _length = arity(lo), length(nodes)
         _arity != _length &&
-            error("`arity($lo) == $_arity`, but `$_length` arguments were given")
+            error("`arity($lo) == $_arity`, but `$_length` argument$(_length == 1 ? " was" : "s were") given")
         new{LO, eltype(nodes)}(collect(nodes))
     end
 end
@@ -170,7 +178,7 @@ A proposition represented as either a [conjunction or disjunction of literals]
 (https://en.wikipedia.org/wiki/Clause_(logic)).
 
 !!! info
-    An empty clause is logically equivalent to the
+    An empty `Clause` is [logically equivalent](@ref ==) to the
     neutral element of it's binary operator.
 
 Subtype of [`Compound`](@ref).
@@ -178,13 +186,13 @@ See also [`AndOr`](@ref), [`Literal`](@ref), and [`NullaryOperator`](@ref).
 
 # Examples
 ```jldoctest
-julia> Clause(and)
+julia> PAndQ.Clause(∧)
 ⊤
 
-julia> @atomize Clause(p)
+julia> @atomize PAndQ.Clause(p)
 p
 
-julia> @atomize Clause(or, [¬p, q])
+julia> @atomize PAndQ.Clause(∨, [¬p, q])
 ¬p ∨ q
 ```
 """
@@ -206,7 +214,7 @@ A proposition represented in [conjunctive](https://en.wikipedia.org/wiki/Conjunc
 or [disjunctive](https://en.wikipedia.org/wiki/Disjunctive_normal_form) normal form.
 
 !!! info
-    An empty normal form is logically equivalent to the
+    An empty `Normal` is [logically equivalent](@ref ==) to the
     neutral element of it's binary operator.
 
 Subtype of [`Expressive`](@ref).
@@ -215,11 +223,11 @@ See also [`AndOr`](@ref), [`Clause`](@ref),
 
 # Examples
 ```jldoctest
-julia> @atomize s = Normal(and, [Clause(or, [p, q]), Clause(or, ¬r)])
-(p ∨ q) ∧ (¬r)
+julia> PAndQ.Normal(⊤)
+⊤
 
-julia> ¬s
-(¬p ∧ ¬q) ∨ (r)
+julia> @atomize PAndQ.Normal(∧, p ⊻ q)
+(p ∨ q) ∧ (¬p ∨ ¬q)
 ```
 """
 struct Normal{AO <: AndOr, C <: Clause} <: Expressive{AO}
@@ -230,8 +238,6 @@ struct Normal{AO <: AndOr, C <: Clause} <: Expressive{AO}
     Normal(::O, clauses::Vector{C} = Clause{typeof(and)}[]) where {O <: typeof(or), C <: Clause{typeof(and)}} =
         new{O, C}(union(clauses))
 end
-
-# Internals
 
 ## AbstractTrees.jl
 
@@ -246,10 +252,10 @@ julia> @atomize PAndQ.children(p)
 ()
 
 julia> @atomize PAndQ.children(¬p)
-(Variable(:p),)
+(PAndQ.Variable(:p),)
 
 julia> @atomize PAndQ.children(p ∧ q)
-2-element Vector{Tree{typeof(identity), Variable}}:
+2-element Vector{PAndQ.Tree{typeof(identity), PAndQ.Variable}}:
  p
  q
 ```
@@ -262,6 +268,8 @@ children(p::Normal) = p.clauses
 
 """
     nodevalue(::Compound)
+
+See also [`Compound`](@ref).
 
 # Examples
 ```jldoctest
@@ -299,7 +307,9 @@ printnode(io::IO, p::Union{Clause, Normal}; kwargs...) =
 """
     child(x)
 
-Equivalent to [`only(children(x))`](@ref children)
+Equivalent to `only(children(x))`
+
+See also [`children`](@ref)
 """
 const child = only ∘ children
 
@@ -315,10 +325,10 @@ Return the `UnionAll` type of a [`Proposition`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize PAndQ.union_all_type(p)
-Variable
+PAndQ.Variable
 
 julia> @atomize PAndQ.union_all_type(p ∧ q)
-Tree
+PAndQ.Tree
 ```
 """
 union_all_type
@@ -335,7 +345,14 @@ Otherise, return x.
 atomize(x::Symbol) = :((@isdefined $x) ? $x : $(Variable(x)))
 function atomize(x::Expr)
     if length(x.args) == 0 x
-    elseif isexpr(x, :$); :(Constant($(only(x.args))))
+    elseif isexpr(x, :$);
+        value = only(x.args)
+        :(
+            if (@isdefined PAndQ) PAndQ.Constant($value)
+            elseif (@isdefined Constant) Constant($value)
+            else error("Either `PAndQ` or `PAndQ.Constant` must be loaded")
+            end
+        )
     elseif isexpr(x, (:kw, :<:))
         Expr(x.head, x.args[1], atomize(x.args[2]))
     elseif isexpr(x, (:struct, :where)) x # TODO
@@ -360,12 +377,13 @@ symbol_value(x) = isexpr(x, :(=)) ?
 """
     @atomize(expression)
 
-Instantiate undefined variables and interpolated values inline as [`Atom`](@ref)s.
+Instantiate undefined symbols as [`Variable`](@ref)s
+and interpolated values as [`Constant`](@ref)s inline.
 
 !!! warning
     This macro attempts to ignore symbols that are being assigned a value.
     For example, `@atomize f(; x = p) = x ∧ q` should be equivalent to
-    `@atomize f(; x = Atom(:p)) = x ∧ Atom(:q)`.
+    `@atomize f(; x = PAndQ.Atom(:p)) = x ∧ PAndQ.Atom(:q)`.
     However, this feature is in-progress and only works in some cases.
     The implementation is cautious to skip the parts
     of the expression that it cannot yet handle.
@@ -399,7 +417,7 @@ See also [`@atomize`](@ref).
 Examples
 ```jldoctest
 julia> @variables p q = ¬\$1
-2-element Vector{Proposition}:
+2-element Vector{PAndQ.Proposition}:
  p
  ¬\$(1)
 
@@ -425,17 +443,15 @@ end
 
 Return an iterator of each [`Atom`](@ref) of type `T` contained in `p`.
 
-See also [`Constant`](@ref) and [`Variable`](@ref).
-
 # Examples
 ```jldoctest
 julia> @atomize collect(atoms(p ∧ q))
-2-element Vector{Variable}:
+2-element Vector{PAndQ.Variable}:
  p
  q
 
-julia> @atomize collect(atoms(p ∧ q ∨ \$1 ∧ \$2, Constant))
-2-element Vector{Constant{Int64}}:
+julia> @atomize collect(atoms(p ∧ q ∨ \$1 ∧ \$2, PAndQ.Constant))
+2-element Vector{PAndQ.Constant{Int64}}:
  \$(1)
  \$(2)
 ```
@@ -443,9 +459,10 @@ julia> @atomize collect(atoms(p ∧ q ∨ \$1 ∧ \$2, Constant))
 atoms(p, T = Atom) = Iterators.filter(leaf -> leaf isa T, Leaves(p))
 
 """
-    operators(p)
+    operators(::Proposition)
 
-Return an iterator of each [`LogicalOperator`](@ref) contained in `p`.
+Return an iterator of each logical [operator](@ref operators_operators)
+contained in the given [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -468,19 +485,19 @@ operators(p) = Iterators.filter(
 """
     map(f, ::Proposition)
 
-Apply `f` to each [`Atom`](@ref) in the [`Proposition`](@ref).
+Apply `f` to each [`Atom`](@ref) in the given [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> @atomize map(Tree ∘ ¬, p ∧ q)
+julia> @atomize map(PAndQ.Tree ∘ ¬, p ∧ q)
 ¬p ∧ ¬q
 
 julia> @atomize map(p ∧ q) do atom
            println(atom)
            atom
        end
-Variable(:p)
-Variable(:q)
+PAndQ.Variable(:p)
+PAndQ.Variable(:q)
 p ∧ q
 ```
 """

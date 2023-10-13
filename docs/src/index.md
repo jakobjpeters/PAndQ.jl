@@ -49,29 +49,32 @@ julia> using PAndQ
 ## Showcase
 
 ```jldoctest
-julia> ¬⊥
-tautology (generic function with 1 method)
+julia> ¬⊥()
+true
+
+julia> @atomize p ∧ q → $1
+(p ∧ q) → $(1)
 
 julia> @variables p q
-2-element Vector{Variable}:
+2-element Vector{PAndQ.Variable}:
  p
  q
 
 julia> r = ¬p
 ¬p
 
-julia> s = Clause(and, [p, ¬q])
-p ∧ ¬q
+julia> r(p => true)
+false
 
-julia> @atomize t = ((q ∧ r) ↔ a)(a => ⊤)
-(q ∧ ¬p) ↔ ⊤
+julia> s = (p ∨ q) ∧ (r ∨ ¬q)
+(p ∨ q) ∧ (¬p ∨ ¬q)
 
-julia> u = s ∨ t
-(p ∧ ¬q) ∨ (q ∧ ¬p)
+julia> s(p => true, q => false)
+true
 
-julia> TruthTable([p ∧ ¬p, r, p ⊻ q, u])
+julia> TruthTable([p ∧ ¬p, r, p ⊻ q, s])
 ┌────────┬───┬───┬────┬────────────────────────────┐
-│ p ∧ ¬p │ p │ q │ ¬p │ p ⊻ q, (p ∧ ¬q) ∨ (q ∧ ¬p) │
+│ p ∧ ¬p │ p │ q │ ¬p │ p ⊻ q, (p ∨ q) ∧ (¬p ∨ ¬q) │
 ├────────┼───┼───┼────┼────────────────────────────┤
 │ ⊥      │ ⊤ │ ⊤ │ ⊥  │ ⊥                          │
 │ ⊥      │ ⊥ │ ⊤ │ ⊤  │ ⊤                          │

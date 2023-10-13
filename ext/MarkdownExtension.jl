@@ -17,7 +17,7 @@ __pretty_table(
 """
     pretty_table(
         ::Type{Markdown.MD}, ::Union{Proposition, TruthTable};
-        formatters = v -> v ? "⊤" : "⊥", alignment = :l
+        formatters = formatter(NullaryOperator), alignment = :l
     )
 
 # Examples

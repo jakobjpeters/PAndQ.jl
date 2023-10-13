@@ -2,7 +2,7 @@
 # Semantics
 
 !!! warning
-    The algorithm to solve propositions currently has a naive implementation with a runtime of [`O(2 ^ n)`](https://en.wikipedia.org/wiki/Big_O_notation) where `n = length(unique(atoms(p)))`.
+    The algorithm to solve propositions currently has a naive implementation with a runtime of [`O(2 ^ n)`](https://en.wikipedia.org/wiki/Big_O_notation) where [`n = length(unique(atoms(p)))`](@ref atoms).
 
 ## Properties
 

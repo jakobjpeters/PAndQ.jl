@@ -21,7 +21,7 @@ julia> ¬⊤ == ⊥ # logical negation
 true
 ```
 
-There are several operators that accept multiple arguments. Both `&&` and the symbol `∧` represent the binary operator [`and`](@ref &). Both `||` and the symbol `∨` represent the binary operator [`or`](@ref |).
+There are several operators that accept multiple arguments. Both `&` and the symbol `∧` represent the binary operator [`and`](@ref &). Both `|` and the symbol `∨` represent the binary operator [`or`](@ref |).
 
 ```jldoctest
 julia> true && false == false # boolean and
@@ -52,13 +52,13 @@ julia> arity(and)
 
 ## Propositions
 
-A [`Proposition`](@ref) is a statement that can be either true or false. For example, "Logic is fun" is a proposition because it may be true for you but false for someone else. This proposition has a known value, so it is a [`Constant`](@ref). Note that the proposition exists independently of whether it is known to be true or false.
+A [`Proposition`](@ref PAndQ.Proposition) is a statement that can be either true or false. For example, "Logic is fun" is a proposition because it may be true for you but false for someone else. This proposition has a known value, so it is a [`Constant`](@ref PAndQ.Constant). Note that the proposition exists independently of whether it is known to be true or false.
 
 ```jldoctest 1
-julia> p = Constant("Logic is fun")
+julia> p = PAndQ.Constant("Logic is fun")
 $("Logic is fun")
 
-julia> q = Constant("Julia is awesome")
+julia> q = PAndQ.Constant("Julia is awesome")
 $("Julia is awesome")
 ```
 
@@ -72,13 +72,13 @@ julia> p ∧ q
 $("Logic is fun") ∧ $("Julia is awesome")
 ```
 
-In mathematics, it's useful to replace individual numbers with a symbolic [`Variable`](@ref) that can represent an unknown value. Since these atoms are for demonstration and represent an unknown value, we will do the same with our propositions `p` and `q`.
+In mathematics, it's useful to replace individual numbers with a symbolic [`Variable`](@ref PAndQ.Variable) that can represent an unknown value. Since these atoms are for demonstration and represent an unknown value, we will do the same with our propositions `p` and `q`.
 
 ```jldoctest 1
-julia> p = Variable(:p)
+julia> p = PAndQ.Variable(:p)
 p
 
-julia> q = Variable(:q)
+julia> q = PAndQ.Variable(:q)
 q
 
 julia> ¬p
@@ -88,16 +88,16 @@ julia> p ∧ q
 p ∧ q
 ```
 
-Propositions that do not contain any structure are called [`Atom`](@ref)ic. `Constant`s and `Variable`s are [`Atom`](@ref)ic propositions. [`Compound`](@ref) propositions are formed by connecting atomic propositions with logical operators. A [`Literal`](@ref) is a proposition that is either an atom or its negation. Since propositions can be nested arbitrarily, a [`Tree`](@ref) structure can be used to represent them.
+Propositions that do not contain any structure are called [`atomic`](@ref PAndQ.Atom). Constants and Variables are atomic propositions. [`Compound`](@ref PAndQ.Compound) propositions are formed by connecting atomic propositions with logical operators. A [`Literal`](@ref PAndQ.Literal) is a proposition that is either an atom or its negation.
 
 ```jldoctest 1
-julia> p isa Atom
+julia> p isa PAndQ.Atom
 true
 
-julia> ¬p isa Literal && ¬p isa Compound
+julia> ¬p isa PAndQ.Literal && ¬p isa PAndQ.Compound
 true
 
-julia> p ∧ q isa Tree && p ∧ q isa Compound
+julia> p ∧ q isa PAndQ.Tree && p ∧ q isa PAndQ.Compound
 true
 ```
 
@@ -105,11 +105,11 @@ The function [`atoms`](@ref) returns an iterator of each `Atom` in a proposition
 
 ```jldoctest 1
 julia> collect(atoms(¬p))
-1-element Vector{Variable}:
+1-element Vector{PAndQ.Variable}:
  p
 
 julia> collect(atoms(p ∧ q))
-2-element Vector{Variable}:
+2-element Vector{PAndQ.Variable}:
  p
  q
 ```
@@ -130,9 +130,9 @@ Assigning meaning to any number of atomic propositions is called a [`valuation`]
 
 ```jldoctest 1
 julia> collect(valuations(¬p))
-2-element Vector{Vector{Pair{Variable, Bool}}}:
- [Variable(:p) => 1]
- [Variable(:p) => 0]
+2-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
+ [PAndQ.Variable(:p) => 1]
+ [PAndQ.Variable(:p) => 0]
 
 julia> collect(interpretations(¬p))
 2-element Vector{Bool}:
@@ -154,14 +154,14 @@ It is useful to find valuations that determine valid interpretations. This is ac
 
 ```jldoctest 1
 julia> collect(solve(p ∧ q))
-1-element Vector{Vector{Pair{Variable, Bool}}}:
- [Variable(:p) => 1, Variable(:q) => 1]
+1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
+ [PAndQ.Variable(:p) => 1, PAndQ.Variable(:q) => 1]
 
 julia> collect(solve(¬(p ∧ q)))
-3-element Vector{Vector{Pair{Variable, Bool}}}:
- [Variable(:p) => 0, Variable(:q) => 1]
- [Variable(:p) => 1, Variable(:q) => 0]
- [Variable(:p) => 0, Variable(:q) => 0]
+3-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
+ [PAndQ.Variable(:p) => 0, PAndQ.Variable(:q) => 1]
+ [PAndQ.Variable(:p) => 1, PAndQ.Variable(:q) => 0]
+ [PAndQ.Variable(:p) => 0, PAndQ.Variable(:q) => 0]
 ```
 
 A proposition [`is_satisfiable`](@ref) if there is at least one valid interpretation. A proposition [`is_falsifiable`](@ref) if there is at least one invalid interpretation. A proposition [`is_contingency`](@ref) if it is both satisfiable and falsifiable.

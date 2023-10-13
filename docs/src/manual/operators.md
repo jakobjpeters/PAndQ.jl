@@ -21,7 +21,7 @@ Operator associativity determines how operators with the same precedence group t
 | [`and`](@ref &)              | `∧`    | \\wedge          | left          | 12         |
 | [`nand`](@ref)               | `⊼`    | \\nand           | left          | 12         |
 | [`nor`](@ref)                | `⊽`    | \\nor            | left          | 11         |
-| [`or`](@ref |)               | `∨`    | \\vee            | left          | 11         |
+| [`or`](@ref \|)              | `∨`    | \\vee            | left          | 11         |
 | [`xor`](@ref)                | `⊻`    | \\xor            | left          | 11         |
 | [`xnor`](@ref)               | `↔`    | \\leftrightarrow | right         | 4          |
 | [`imply`](@ref)              | `→`    | \\rightarrow     | right         | 4          |
@@ -29,25 +29,25 @@ Operator associativity determines how operators with the same precedence group t
 | [`converse_imply`](@ref)     | `←`    | \\leftarrow      | right         | 4          |
 | [`not_converse_imply`](@ref) | `↚`    | \\nleftarrow     | right         | 4          |
 
-## Nullary Operators
+## [Nullary Operators](@id nullary_operators)
 
 ```@docs
 tautology
 contradiction
 ```
 
-## Unary Operators
+## [Unary Operators](@id unary_operators)
 
 ```@docs
 identity
 !
 ```
 
-## Binary Operators
+## [Binary Operators](@id binary_operators)
 
 !!! tip
-    Each binary operator `bo` has been curried such that
-    `bo(p) = q -> bo(p, q)` and `bo(p)(q) == bo(p, q)`.
+    Each binary operator `bo` has been [curried](https://en.wikipedia.org/wiki/Currying)
+    such that `bo(p) = q -> bo(p, q)` and `bo(p)(q) == bo(p, q)`.
 
 ```@docs
 &

@@ -2,24 +2,23 @@
 import Base: show, Stateful
 import PrettyTables: pretty_table, _pretty_table
 import AbstractTrees: print_tree
-using Base: Docs.HTML
+using Base: Docs.HTML, show_type_name
 using AbstractTrees: print_child_key
 
 """
     TruthTable(ps)
 
 Construct a [truth table](https://en.wikipedia.org/wiki/Truth_table)
-for the given [`Proposition`](@ref)s and [`LogicalOperator`](@ref)s.
+for the given [`Proposition`](@ref)s.
 
 The `header` is a vector containing vectors of logically equivalent propositions.
-The `sub_header` corresponds to the `header`, but contains each proposition's `UnionAll` type.
 The `body` is a matrix where the rows contain [`interpretations`](@ref) of each proposition in the given column.
 
 See also [`tautology`](@ref) and [`contradiction`](@ref).
 
 # Examples
 ```jldoctest
-julia> TruthTable([Tree(⊤)])
+julia> TruthTable([PAndQ.Tree(⊤)])
 ┌───┐
 │ ⊤ │
 ├───┤
@@ -99,6 +98,8 @@ end
 
 """
     alias_of(::LogicalOperator)
+
+Return the written name of the given [`LogicalOperator`](@ref).
 """
 alias_of(lo::LogicalOperator) = nameof(lo)
 
@@ -113,7 +114,7 @@ end
 """
     symbol_of(::LogicalOperator)
 
-Return the Unicode character that is an alias for the given [`LogicalOperator`](@ref).
+Return the Unicode symbol of the given [`LogicalOperator`](@ref).
 
 # Examples
 ```jldoctest
@@ -164,7 +165,7 @@ Represent the given [`Proposition`](@ref) as a [propositional formula]
 julia> @atomize show(stdout, MIME"text/plain"(), p ⊻ q)
 p ⊻ q
 
-julia> @atomize show(stdout, MIME"text/plain"(), Normal(p ⊻ q))
+julia> @atomize show(stdout, MIME"text/plain"(), PAndQ.Normal(p ⊻ q))
 (p ∨ q) ∧ (¬p ∨ ¬q)
 ```
 """
@@ -202,6 +203,15 @@ end
 # Examples
 ```julia
 julia> @atomize show(stdout, MIME"text/plain"(), TruthTable([p ∧ q]))
+┌───┬───┬───────┐
+│ p │ q │ p ∧ q │
+├───┼───┼───────┤
+│ ⊤ │ ⊤ │ ⊤     │
+│ ⊥ │ ⊤ │ ⊥     │
+├───┼───┼───────┤
+│ ⊤ │ ⊥ │ ⊥     │
+│ ⊥ │ ⊥ │ ⊥     │
+└───┴───┴───────┘
 ```
 """
 show(io::IO, ::MIME"text/plain", tt::TruthTable) =
@@ -215,21 +225,25 @@ Represent the given [`Proposition`](@ref) expanded as valid Julia code.
 # Examples
 ```jldoctest
 julia> @atomize s = sprint(show, p ∧ q)
-"Tree(and, Tree(identity, Variable(:p)), Tree(identity, Variable(:q)))"
+"PAndQ.Tree(and, PAndQ.Tree(identity, PAndQ.Variable(:p)), PAndQ.Tree(identity, PAndQ.Variable(:q)))"
 
 julia> eval(Meta.parse(s))
 p ∧ q
 ```
 """
 function show(io::IO, p::A) where A <: Atom
-    print(io, nameof(A), "(")
+    show_type_name(io, A.name)
+    print(io, "(")
     show_atom(io, p)
     print(io, ")")
 end
-show(io::IO, p::L) where L <: Literal =
-    print(io, nameof(L), "(", alias_of(nodevalue(p)), ", ", p.atom, ")")
+function show(io::IO, p::L) where L <: Literal
+    show_type_name(io, L.name)
+    print(io, "(", alias_of(nodevalue(p)), ", ", p.atom, ")")
+end
 function show(io::IO, p::C) where C <: Compound
-    print(io, nameof(C), "(", alias_of(nodevalue(p)))
+    show_type_name(io, C.name)
+    print(io, "(", alias_of(nodevalue(p)))
 
     _children = Stateful(children(p))
     if !isempty(_children)
@@ -258,7 +272,9 @@ for (T, f) in (
 end
 
 """
-    formatter(t::Type{<:Union{PAndQ.NullaryOperator, String, Char, Bool, Int}})
+    formatter(t::Type{<:Union{NullaryOperator, String, Char, Bool, Int}})
+
+See also [`NullaryOperator`](@ref).
 
 | `t`                     | `formatter(t)(⊤, _, _)` | `formatter(t)(⊥, _, _)` |
 | :---------------------- | :---------------------- | :---------------------- |
@@ -293,7 +309,7 @@ _pretty_table(io::IO, tt::TruthTable; kwargs...) =
 """
     pretty_table(
         ::Union{IO, Type{Union{String, Docs.HTML}}} = stdout, ::Union{Proposition, TruthTable};
-        formatters = formatter(PAndQ.NullaryOperator), kwargs...
+        formatters = formatter(NullaryOperator), kwargs...
     )
 
 See also [`PrettyTables.pretty_table`]
@@ -369,7 +385,7 @@ julia> @atomize print_tree(p ∧ ¬q ⊻ s)
 └─ 𝒾
    └─ s
 
-julia> @atomize print_tree(Normal(p ∧ ¬q ⊻ s))
+julia> @atomize print_tree(PAndQ.Normal(p ∧ ¬q ⊻ s))
 ∧
 ├─ ∨
 │  ├─ 𝒾

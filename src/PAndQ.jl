@@ -33,8 +33,6 @@ export
 include("propositions.jl")
 
 export
-    Proposition, Atom, Compound, Expressive,
-    Constant, Variable, Literal, Tree, Clause, Normal,
     @atomize, @variables,
     atoms, operators
     #= Base.map =#

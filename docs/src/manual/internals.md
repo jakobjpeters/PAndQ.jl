@@ -23,6 +23,38 @@ PAndQ.AndOr
 
 ## Propositions
 
+### Types
+
+```@example
+import AbstractTrees: children # hide
+using AbstractTrees: print_tree # hide
+using InteractiveUtils: subtypes # hide
+using PAndQ: Proposition # hide
+
+children(x::Type) = subtypes(x) # hide
+print_tree(Proposition) # hide
+```
+
+#### Abstract
+
+```@docs
+PAndQ.Proposition
+PAndQ.Atom
+PAndQ.Compound
+PAndQ.Expressive
+```
+
+#### Concrete
+
+```@docs
+PAndQ.Constant
+PAndQ.Variable
+PAndQ.Literal
+PAndQ.Tree
+PAndQ.Clause
+PAndQ.Normal
+```
+
 ### AbstractTrees.jl
 
 ```@docs
