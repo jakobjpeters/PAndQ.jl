@@ -23,7 +23,32 @@
 
 If you like propositional logic, then you've come to the right place!
 
-P∧Q has an intuitive interface that enables you to manipulate logical expressions symbolically. Propositions have multiple representations which can be easily converted and extended. Several utilities have been provided for convenience, visualization, and solving propositions.
+PAndQ.jl is a [computer algebra system](https://en.wikipedia.org/wiki/Computer_algebra_system) for propositional logic.
+
+### Features
+
+- Syntax and pretty-printing identical to symbolic propositional logic
+- Normalization
+- Logical equivalence checking
+- Boolean satisfiability solving
+    - Partial interpretation
+- Convert propositions to LaTeX
+- Truth tables
+    - Plain text, HTML, Markdown, and LaTeX output
+- Tree diagrams
+
+#### Planned
+
+- Canonical normal form
+- Fast solver backends
+- Graph plotting
+- Substitution
+- Proofs
+- Generate Propositions
+- Modal logic
+- First order logic
+- Lambda calculus
+- Electronic circuits
 
 ## Installation
 
@@ -38,91 +63,90 @@ julia> using PAndQ
 ## Showcase
 
 ```julia
-julia> ¬⊥
-tautology (generic function with 1 method)
+julia> ¬⊥()
+true
+
+julia> @atomize p ∧ q → $1
+(p ∧ q) → $(1)
 
 julia> @variables p q
-2-element Vector{Variable}:
+2-element Vector{PAndQ.Variable}:
  p
  q
 
 julia> r = ¬p
 ¬p
 
-julia> s = Clause(and, [p, ¬q])
-p ∧ ¬q
+julia> r(p => true)
+false
 
-julia> @atomize t = ((q ∧ r) ↔ a)(a => ⊤)
-(q ∧ ¬p) ↔ ⊤
+julia> s = (p ∨ q) ∧ (r ∨ ¬q)
+(p ∨ q) ∧ (¬p ∨ ¬q)
 
-julia> u = s ∨ t
-(p ∧ ¬q) ∨ (q ∧ ¬p)
+julia> s(p => true, q => false)
+true
 
-julia> TruthTable([p ∧ ¬p, r, p ⊻ q, u])
-┌────────┬──────────┬──────────┬─────────┬────────────────────────────┐
-│ p ∧ ¬p │ p        │ q        │ ¬p      │ p ⊻ q, (p ∧ ¬q) ∨ (q ∧ ¬p) │
-│ Tree   │ Variable │ Variable │ Literal │ Tree, Normal               │
-├────────┼──────────┼──────────┼─────────┼────────────────────────────┤
-│ ⊥      │ ⊤        │ ⊤        │ ⊥       │ ⊥                          │
-│ ⊥      │ ⊥        │ ⊤        │ ⊤       │ ⊤                          │
-├────────┼──────────┼──────────┼─────────┼────────────────────────────┤
-│ ⊥      │ ⊤        │ ⊥        │ ⊥       │ ⊤                          │
-│ ⊥      │ ⊥        │ ⊥        │ ⊤       │ ⊥                          │
-└────────┴──────────┴──────────┴─────────┴────────────────────────────┘
+julia> TruthTable([p ∧ ¬p, r, p ⊻ q, s])
+┌────────┬───┬───┬────┬────────────────────────────┐
+│ p ∧ ¬p │ p │ q │ ¬p │ p ⊻ q, (p ∨ q) ∧ (¬p ∨ ¬q) │
+├────────┼───┼───┼────┼────────────────────────────┤
+│ ⊥      │ ⊤ │ ⊤ │ ⊥  │ ⊥                          │
+│ ⊥      │ ⊥ │ ⊤ │ ⊤  │ ⊤                          │
+├────────┼───┼───┼────┼────────────────────────────┤
+│ ⊥      │ ⊤ │ ⊥ │ ⊥  │ ⊤                          │
+│ ⊥      │ ⊥ │ ⊥ │ ⊤  │ ⊥                          │
+└────────┴───┴───┴────┴────────────────────────────┘
 ```
 
-## Related Projects
+## Related Packages
 
-`PAndQ.jl` is currently best suited for learning and visualizing propositional logic. The user interface is well-documented and has numerous quality of life features that make it easy to create, manipulate, and query about propositions. Further, propositions can be converted, visualized, and output in several different forms.
-
-Features such as a fast satisfiability algorithm, proofs, and other logics are still in development. In the meantime, check out the these excellent projects.
-
-### Top Picks
+### Logic
 
 - [Julog.jl](https://github.com/ztangent/Julog.jl)
+    - Implements a Prolog-like logic programming language for propositional and first-order logic
 - [LogicCircuits.jl](https://github.com/Juice-jl/LogicCircuits.jl)
+    - Implements propositional logic with support for SIMD and CUDA
 - [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl)
-- [FirstOrderLogic.jl](https://github.com/roberthoenig/FirstOrderLogic.jl)
-- [ModalDecisionTrees.jl](https://github.com/aclai-lab/ModalDecisionTrees.jl)
+    - Implements propositional and modal logic
+    - Incomplete documentation
+- [TruthTables.jl](https://github.com/eliascarv/TruthTables.jl)
+    - Implements a macro that prints a truth table
+    - PAndQ.jl implements a superset of the features in this package
+- [MathematicalPredicates.jl](https://github.com/JuliaReach/MathematicalPredicates.jl)
+    - Implements propositional logic
+    - PAndQ.jl and Julog.jl implement a superset of the features in this package
+
+#### Wrappers
+
+- [Satifsiability.jl](https://github.com/elsoroka/Satisfiability.jl)
+    - An interface to satisfiability modulo theory solvers
+    - Solvers must be installed on the user's system
+- [PicoSat.jl](https://github.com/sisl/PicoSAT.jl)
+    - An interface to the [PicoSAT](https://fmv.jku.at/picosat/) solver using PicoSAT_jll.jl
+- [Z3.jl](https://github.com/ahumenberger/Z3.jl)
+    - An interface to the [Z3 Theorem Prover](https://github.com/Z3Prover/z3) using z3_jll.jl
+
+##### Binaries
+
+These packages are generated by [BinaryBuilder.jl](https://github.com/JuliaPackaging/BinaryBuilder.jl).
+
+- [PicoSAT_jll.jl](https://github.com/JuliaBinaryWrappers/PicoSAT_jll.jl)
+- [z3_jll.jl](https://github.com/JuliaBinaryWrappers/z3_jll.jl)
 
 ### Computer Algebra Systems
 
 - [Symbolics.jl](https://github.com/JuliaSymbolics/Symbolics.jl)
-- [Metatheory.jl](https://github.com/JuliaSymbolics/Metatheory.jl)
-- [Rewrite.jl](https://github.com/HarrisonGrodin/Rewrite.jl)
-- [Simplify.jl](https://github.com/HarrisonGrodin/Simplify.jl)
 - [SymbolicUtils.jl](https://github.com/JuliaSymbolics/SymbolicUtils.jl)
+- [Metatheory.jl](https://github.com/JuliaSymbolics/Metatheory.jl)
 
-### Constraint Solvers
+### Constraints
 
-- [ConstraintSolver.jl](https://github.com/Wikunia/ConstraintSolver.jl)
 - [JuMP.jl](https://github.com/jump-dev/JuMP.jl)
+- [ConstraintSolver.jl](https://github.com/Wikunia/ConstraintSolver.jl)
 
 #### Wrappers
 
 - [Chuffed.jl](https://github.com/JuliaConstraints/Chuffed.jl)
 - [CPLEXCP.jl](https://github.com/JuliaConstraints/CPLEXCP.jl)
-- [JaCoP.jl](https://github.com/JuliaConstraints/JaCoP.jl)
-
-### Wrappers
-
-- [Satifsiability.jl](https://github.com/elsoroka/Satisfiability.jl)
-- [Z3.jl](https://github.com/ahumenberger/Z3.jl)
-- [PicoSat.jl](https://github.com/sisl/PicoSAT.jl)
 - [BeeEncoder.jl](https://github.com/newptcai/BeeEncoder.jl)
-- [SatisfiabilityInterface.jl](https://github.com/dpsanders/SatisfiabilityInterface.jl)
-
-### Honorable Mentions
-
-- [TruthTables.jl](https://github.com/eliascarv/TruthTables.jl)
-- [SimpleSATSolver.jl](https://github.com/dpsanders/SimpleSATSolver.jl)
-- [PropositionalLogic.jl](https://github.com/mossr/PropositionalLogic.jl)
-- [MathematicalPredicates.jl](https://github.com/JuliaReach/MathematicalPredicates.jl)
-- [combinators](https://git.devin.gay/devin/combinators)
-
-#### Kanren
-
-- [MuKanren.jl](https://github.com/latticetower/MuKanren.jl)
-- [LilKanren.jl](https://github.com/habemus-papadum/LilKanren.jl)
-- [MiniKanren](https://github.com/RAbraham/MiniKanren)
-- [Yet Another MicroKanren in Julia](https://www.philipzucker.com/yet-another-microkanren-in-julia/)
+    - 3+ years since last update
