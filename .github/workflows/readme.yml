@@ -26,6 +26,5 @@ jobs:
       - run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add .
-          git diff --quiet || git commit -m "Regenerate \`README.md\`"
+          git diff --quiet || (git . && git commit -m "Regenerate \`README.md\`")
           git push
