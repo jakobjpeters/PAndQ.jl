@@ -370,7 +370,7 @@ atomize(x) = x
 symbol_value(x::Symbol) = x, x
 symbol_value(x) = isexpr(x, :(=)) ?
     (first(x.args), last(x.args)) :
-    error("each variable must have the syntax `symbol` or `symbol = value`")
+    error("Each atom must have the syntax `symbol` or `symbol = value`")
 
 # Macros
 
@@ -405,18 +405,18 @@ macro atomize(expression)
 end
 
 """
-    @variables(xs...)
+    @atoms(xs...)
 
-Define variables and return a vector containing them.
+Define atoms and return a vector containing them.
 
 Expressions of the form `symbol` and `symbol = value` are defined as
-`symbol = @atomize symbol` and `symbol = @atomize value`, respectively.
+`@atomize symbol = symbol` and `@atomize symbol = value`, respectively.
 
 See also [`@atomize`](@ref).
 
 Examples
 ```jldoctest
-julia> @variables p q = ¬\$1
+julia> @atoms p q = ¬\$1
 2-element Vector{PAndQ.Proposition}:
  p
  ¬\$(1)
@@ -428,7 +428,7 @@ julia> q
 ¬\$(1)
 ```
 """
-macro variables(xs...)
+macro atoms(xs...)
     symbols_values = map(symbol_value, xs)
     esc(quote
         $(map(((symbol, value),) -> :($symbol = $(atomize(value))), symbols_values)...)

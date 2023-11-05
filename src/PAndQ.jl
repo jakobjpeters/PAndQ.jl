@@ -33,7 +33,7 @@ export
 include("propositions.jl")
 
 export
-    @atomize, @variables,
+    @atomize, @atoms,
     atoms, operators
     #= Base.map =#
 
@@ -60,7 +60,7 @@ export
     #= Base.convert =#
 
 @compile_workload let
-    @variables p q
+    @atoms p q
 
     ps = [Tree(⊤), Tree(⊥), p, ¬p, map(BO -> BO.instance(p, q), uniontypes(BinaryOperator))...]
     qs = [ps..., conjunction(ps), disjunction(ps)]

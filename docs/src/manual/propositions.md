@@ -5,7 +5,7 @@
 
 ```@docs
 @atomize
-@variables
+@atoms
 ```
 
 ## Utilities
