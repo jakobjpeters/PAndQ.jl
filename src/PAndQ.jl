@@ -49,13 +49,14 @@ export
 include("semantics.jl")
 
 export
-    dual, converse,
-    left_neutrals, right_neutrals,
     valuations, interpret, interpretations, solve,
+    is_commutative, is_associative,
     ==,
     is_tautology, is_contradiction,
     is_truth, is_contingency,
-    is_satisfiable, is_falsifiable
+    is_satisfiable, is_falsifiable,
+    dual, converse,
+    left_neutrals, right_neutrals
     #= Base.convert =#
 
 @compile_workload let

@@ -372,22 +372,6 @@ The `Union` of logical [operators](@ref operators_operators).
 const LogicalOperator = Union{NullaryOperator, UnaryOperator, BinaryOperator}
 
 """
-    CommutativeOperator
-
-The `Union` of logical [operators](@ref operators_operators) with the [commutative property]
-(https://en.wikipedia.org/wiki/Commutative_property).
-"""
-const CommutativeOperator = union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔))
-
-"""
-    AssociativeOperator
-
-The `Union` of logical [operators](@ref operators_operators) with the [associative property]
-(https://en.wikipedia.org/wiki/Associative_property).
-"""
-const AssociativeOperator = union_typeof((∧, ∨, ⊻, ↔))
-
-"""
     AndOr
 
 The `Union` of [`and`](@ref) and [`or`](@ref).

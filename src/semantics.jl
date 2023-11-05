@@ -32,115 +32,6 @@ eval_doubles(f, doubles) = for double in doubles
     end
 end
 
-# Properties
-
-"""
-    dual(::LogicalOperator)
-
-Returns the [`LogicalOperator`](@ref) that is the
-[dual](https://en.wikipedia.org/wiki/Boolean_algebra#Duality_principle)
-of the given boolean operator.
-
-# Examples
-```jldoctest
-julia> dual(and)
-or (generic function with 18 methods)
-
-julia> @atomize p ∧ q == ¬dual(∧)(¬p, ¬q)
-true
-
-julia> dual(→)
-not_converse_imply (generic function with 3 methods)
-
-julia> @atomize (p → q) == ¬dual(→)(¬p, ¬q)
-true
-```
-"""
-dual(uo::UnaryOperator) = uo
-dual(no::NullaryOperator) = ¬no
-eval_doubles(:dual, (
-    (∧, ∨),
-    (⊼, ⊽),
-    (⊻, ↔),
-    (→, ↚),
-    (↛, ←)
-))
-
-"""
-    converse(::LogicalOperator)
-
-Returns the [`LogicalOperator`](@ref) that is the
-[converse](https://en.wikipedia.org/wiki/Converse_(logic))
-of the given boolean operator.
-
-# Examples
-```jldoctest
-julia> converse(∧)
-and (generic function with 18 methods)
-
-julia> @atomize p ∧ q == converse(∧)(q, p)
-true
-
-julia> converse(→)
-converse_imply (generic function with 3 methods)
-
-julia> @atomize (p → q) == converse(→)(q, p)
-true
-```
-"""
-converse(co::CommutativeOperator) = co
-eval_doubles(:converse, ((→, ←), (↛, ↚)))
-
-"""
-    left_neutrals(::LogicalOperator)
-
-Return the corresponding left identity elements of the operator.
-The identity elements can be neither, either, or both of
-[`tautology`](@ref) and [`contradiction`](@ref).
-
-# Examples
-```jldoctest
-julia> left_neutrals(∨)
-Set{typeof(contradiction)} with 1 element:
-  PAndQ.contradiction
-
-julia> left_neutrals(→)
-Set{typeof(tautology)} with 1 element:
-  PAndQ.tautology
-
-julia> left_neutrals(⊽)
-Set{Union{typeof(contradiction), typeof(tautology)}}()
-```
-"""
-left_neutrals(::union_typeof((∧, ↔, →))) = Set((⊤,))
-left_neutrals(::union_typeof((∨, ⊻, ↚))) = Set((⊥,))
-left_neutrals(::LogicalOperator) = Set{NullaryOperator}()
-
-"""
-    right_neutrals(::LogicalOperator)
-
-Return the corresponding right identity elements of the operator.
-The identity elements can be neither, either, or both of
-[`tautology`](@ref) and [`contradiction`](@ref).
-
-# Examples
-```jldoctest
-julia> right_neutrals(∨)
-Set{typeof(contradiction)} with 1 element:
-  PAndQ.contradiction
-
-julia> right_neutrals(←)
-Set{typeof(tautology)} with 1 element:
-  PAndQ.tautology
-
-julia> left_neutrals(⊽)
-Set{Union{typeof(contradiction), typeof(tautology)}}()
-```
-"""
-right_neutrals(::union_typeof((∧, ↔, ←))) = Set((⊤,))
-right_neutrals(::union_typeof((∨, ⊻, ↛))) = Set((⊥,))
-right_neutrals(::LogicalOperator) = Set{NullaryOperator}()
-
 # Truths
 
 """
@@ -287,6 +178,18 @@ julia> @atomize collect(solve(p ⊻ q))
 solve(p) = Iterators.filter(valuation -> interpret(valuation, p), valuations(p))
 
 # Predicates
+
+"""
+    is_commutative(::BinaryOperator)
+"""
+is_commutative(::union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔))) = true
+is_commutative(::BinaryOperator) = false
+
+"""
+    is_associative(::BinaryOperator)
+"""
+is_associative(::union_typeof((∧, ∨, ⊻, ↔))) = true
+is_associative(::BinaryOperator) = false
 
 """
     ==(::Union{Bool, NullaryOperator, Proposition}, ::Union{Bool, NullaryOperator, Proposition})
@@ -469,6 +372,110 @@ true
 ```
 """
 is_falsifiable(p) = !is_tautology(p)
+
+# Properties
+
+"""
+    dual(::LogicalOperator)
+
+Returns the [`LogicalOperator`](@ref) that is the
+[dual](https://en.wikipedia.org/wiki/Boolean_algebra#Duality_principle)
+of the given boolean operator.
+
+# Examples
+```jldoctest
+julia> dual(and)
+or (generic function with 18 methods)
+
+julia> @atomize and(p, q) == not(dual(and)(not(p), not(q)))
+true
+
+julia> dual(imply)
+not_converse_imply (generic function with 3 methods)
+
+julia> @atomize imply(p, q) == not(dual(imply)(not(p), not(q)))
+true
+```
+"""
+dual(uo::UnaryOperator) = uo
+dual(no::NullaryOperator) = ¬no
+eval_doubles(:dual, (
+    (∧, ∨),
+    (⊼, ⊽),
+    (⊻, ↔),
+    (→, ↚),
+    (↛, ←)
+))
+
+"""
+    converse(::LogicalOperator)
+
+Returns the [`LogicalOperator`](@ref) that is the
+[converse](https://en.wikipedia.org/wiki/Converse_(logic))
+of the given boolean operator.
+
+# Examples
+```jldoctest
+julia> converse(and)
+and (generic function with 18 methods)
+
+julia> @atomize and(p, q) == converse(and)(q, p)
+true
+
+julia> converse(imply)
+converse_imply (generic function with 3 methods)
+
+julia> @atomize imply(p, q) == converse(imply)(q, p)
+true
+```
+"""
+converse(co::Union{filter(LO -> is_commutative(LO.instance), uniontypes(BinaryOperator))...}) = co
+eval_doubles(:converse, ((→, ←), (↛, ↚)))
+
+"""
+    left_neutrals(::LogicalOperator)
+
+Return the corresponding left identity elements of the operator.
+The identity elements can be [`tautology`](@ref), [`contradiction`](@ref), neither (empty set), or both.
+
+# Examples
+```jldoctest
+julia> left_neutrals(or)
+Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+  PAndQ.contradiction
+
+julia> left_neutrals(imply)
+Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+  PAndQ.tautology
+
+julia> left_neutrals(nor)
+Set{Union{typeof(contradiction), typeof(tautology)}}()
+```
+"""
+left_neutrals(::union_typeof((∧, ↔, →))) = Set{NullaryOperator}((⊤,))
+left_neutrals(::union_typeof((∨, ⊻, ↚))) = Set{NullaryOperator}((⊥,))
+left_neutrals(::LogicalOperator) = Set{NullaryOperator}()
+
+"""
+    right_neutrals(::LogicalOperator)
+
+Return the corresponding right identity elements of the operator.
+The identity elements can be [`tautology`](@ref), [`contradiction`](@ref), neither (empty set), or both.
+
+# Examples
+```jldoctest
+julia> right_neutrals(or)
+Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+  PAndQ.contradiction
+
+julia> right_neutrals(converse_imply)
+Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+  PAndQ.tautology
+```
+"""
+right_neutrals(::union_typeof((∧, ↔, ←))) = Set{NullaryOperator}((⊤,))
+right_neutrals(::union_typeof((∨, ⊻, ↛))) = Set{NullaryOperator}((⊥,))
+right_neutrals(::LogicalOperator) = Set{NullaryOperator}()
 
 # Operators
 

@@ -16,8 +16,6 @@ PAndQ.NullaryOperator
 PAndQ.UnaryOperator
 PAndQ.BinaryOperator
 PAndQ.LogicalOperator
-PAndQ.CommutativeOperator
-PAndQ.AssociativeOperator
 PAndQ.AndOr
 ```
 
