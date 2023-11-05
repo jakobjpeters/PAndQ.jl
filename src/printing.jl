@@ -85,7 +85,7 @@ struct TruthTable
         )
             for interpretation in _interpretations
                 xs = get(group, interpretation, Proposition[])
-                push!(header, join(unique!(map(x -> sprint(show, MIME"text/plain"(), x), xs)), ", "))
+                push!(header, join(unique!(map(x -> repr("text/plain", x), xs)), ", "))
                 push!(body, interpretation)
             end
         end
@@ -147,7 +147,7 @@ print_node(io, ::Compound{typeof(𝒾)}) = nothing
 print_node(io, p) = printnode(io, p)
 
 """
-    show_atom
+    show_atom(io, ::Atom)
 """
 show_atom(io, p::Constant) = show(io, p.value)
 show_atom(io, p::Variable) = show(io, p.symbol)
@@ -160,6 +160,8 @@ show_atom(io, p::Variable) = show(io, p.symbol)
 Represent the given [`Proposition`](@ref) as a [propositional formula]
 (https://en.wikipedia.org/wiki/Propositional_formula).
 
+The value of a [`Constant`](@ref) is shown with `compact => true` in its `IOContext`.
+
 # Examples
 ```jldoctest
 julia> @atomize show(stdout, MIME"text/plain"(), p ⊻ q)
@@ -171,7 +173,7 @@ julia> @atomize show(stdout, MIME"text/plain"(), PAndQ.Normal(p ⊻ q))
 """
 function show(io::IO, ::MIME"text/plain", p::Constant)
     print(io, "\$(")
-    show(io, p.value)
+    show_atom(IOContext(io, :compact => true), p)
     print(io, ")")
 end
 show(io::IO, ::MIME"text/plain", p::Variable) = print(io, p.symbol)
@@ -224,10 +226,10 @@ Represent the given [`Proposition`](@ref) expanded as valid Julia code.
 
 # Examples
 ```jldoctest
-julia> @atomize s = sprint(show, p ∧ q)
+julia> @atomize repr(p ∧ q)
 "PAndQ.Tree(and, PAndQ.Tree(identity, PAndQ.Variable(:p)), PAndQ.Tree(identity, PAndQ.Variable(:q)))"
 
-julia> eval(Meta.parse(s))
+julia> @atomize eval(Meta.parse(repr(p ∧ q)))
 p ∧ q
 ```
 """
