@@ -274,10 +274,10 @@ See also [`Compound`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize PAndQ.nodevalue(¬p)
-! (generic function with 20 methods)
+not (generic function with 19 methods)
 
 julia> @atomize PAndQ.nodevalue(p ∧ q)
-& (generic function with 34 methods)
+and (generic function with 18 methods)
 ```
 """
 nodevalue(::Compound{LO}) where LO = LO.instance
@@ -467,13 +467,13 @@ contained in the given [`Proposition`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize collect(operators(¬p))
-1-element Vector{typeof(!)}:
- ! (generic function with 20 methods)
+1-element Vector{typeof(not)}:
+ not (generic function with 19 methods)
 
 julia> @atomize collect(operators(¬p ∧ q))
 3-element Vector{Function}:
- & (generic function with 34 methods)
- ! (generic function with 20 methods)
+ and (generic function with 18 methods)
+ not (generic function with 19 methods)
  identity (generic function with 1 method)
 ```
 """

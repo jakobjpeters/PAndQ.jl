@@ -30,7 +30,7 @@ PAndQ.jl is a [computer algebra system](https://en.wikipedia.org/wiki/Computer_a
 - Graph plotting
 - Substitution
 - Proofs
-- Generate Propositions
+- Generate propositions
 - Modal logic
 - First order logic
 - Lambda calculus

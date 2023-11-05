@@ -5,6 +5,8 @@ DocTestSetup = :(using PAndQ)
 
 # [Operators](@id operators_operators)
 
+Operators accept values of type `Bool`, [`PAndQ.NullaryOperator`](@ref), and [`PAndQ.Proposition`](@ref).
+
 Typing symbols with tab completion is performed by typing `\`, followed by the given characters, and then the `[TAB]` key. For example, `⊤` is typed with `\top[TAB]`. See also Julia's documentation on [Tab Completion](https://docs.julialang.org/en/v1/stdlib/REPL/#Tab-completion) and [Unicode Input](https://docs.julialang.org/en/v1/manual/unicode-input/).
 
 Operator associativity determines how operators with the same precedence group their operands. For example, `∧` is left associative. Therefore, `p ∧ q ∧ r` is equivalent to `(p ∧ q) ∧ r`. Operator precedence determines how expressions with distinct operators are grouped together. Higher precedence operators will group their operands before lower precedence operators. For example, `∧` has a higher precedence than `∨`. Therefore, `p ∨ q ∧ r` is equivalent to `p ∨ (q ∧ r)`, even though both operators are left associative. See also Julia's documentation on [Operator Precedence and Associativity](https://docs.julialang.org/en/v1/manual/mathematical-operations/#Operator-Precedence-and-Associativity).
@@ -17,11 +19,11 @@ Operator associativity determines how operators with the same precedence group t
 | [`tautology`](@ref)          | `⊤`    | \\top            | none          | 0          |
 | [`contradiction`](@ref)      | `⊥`    | \\bot            | none          | 0          |
 | [`identity`](@ref)           | `𝒾`    | \\scri           | none          | 0          |
-| [`not`](@ref !)              | `¬`    | \\neg            | right         | 0          |
-| [`and`](@ref &)              | `∧`    | \\wedge          | left          | 12         |
+| [`not`](@ref)                | `¬`    | \\neg            | right         | 0          |
+| [`and`](@ref)                | `∧`    | \\wedge          | left          | 12         |
 | [`nand`](@ref)               | `⊼`    | \\nand           | left          | 12         |
 | [`nor`](@ref)                | `⊽`    | \\nor            | left          | 11         |
-| [`or`](@ref \|)              | `∨`    | \\vee            | left          | 11         |
+| [`or`](@ref)                 | `∨`    | \\vee            | left          | 11         |
 | [`xor`](@ref)                | `⊻`    | \\xor            | left          | 11         |
 | [`xnor`](@ref)               | `↔`    | \\leftrightarrow | right         | 4          |
 | [`imply`](@ref)              | `→`    | \\rightarrow     | right         | 4          |
@@ -40,20 +42,20 @@ contradiction
 
 ```@docs
 identity
-!
+not
 ```
 
 ## [Binary Operators](@id binary_operators)
 
 !!! tip
     Each binary operator `bo` has been [curried](https://en.wikipedia.org/wiki/Currying)
-    such that `bo(p) = q -> bo(p, q)` and `bo(p)(q) == bo(p, q)`.
+    such that `bo(p) = Base.Fix2(bo, p)` and `bo(p)(q) == bo(p, q)`.
 
 ```@docs
-&
+and
 nand
 nor
-|
+or
 xor
 xnor
 imply

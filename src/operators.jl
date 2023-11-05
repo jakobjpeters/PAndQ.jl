@@ -1,5 +1,5 @@
 
-import Base: !, &, nand, nor, xor, |, ⊻, ⊼, ⊽
+import Base: nand, nor, xor, ⊻, ⊼, ⊽
 
 # Nullary Operators
 
@@ -86,8 +86,8 @@ julia> @atomize TruthTable([¬p])
 └───┴────┘
 ```
 """
-!
-const ¬ = const not = !
+function not end
+const ¬ = not
 
 # Binary Operators
 
@@ -113,8 +113,8 @@ julia> @atomize TruthTable([p ∧ q])
 └───┴───┴───────┘
 ```
 """
-&
-const ∧ = const and = &
+function and end
+const ∧ = and
 
 """
     nand(p, q)
@@ -186,8 +186,8 @@ julia> @atomize TruthTable([p ∨ q])
 └───┴───┴───────┘
 ```
 """
-|
-const ∨ = const or = |
+function or end
+const ∨ = or
 
 """
     xor(p, q)
@@ -390,7 +390,7 @@ const AssociativeOperator = union_typeof((∧, ∨, ⊻, ↔))
 """
     AndOr
 
-The `Union` of [`and`](@ref &) and [`or`](@ref |).
+The `Union` of [`and`](@ref) and [`or`](@ref).
 """
 const AndOr = union_typeof((∧, ∨))
 
@@ -404,7 +404,7 @@ Equivalent to `foldl(∧, ps; init = true)`.
 
 `⋀` can be typed by `\\bigwedge<tab>`.
 
-See also [`and`](@ref &).
+See also [`and`](@ref).
 
 # Examples
 ```jldoctest
@@ -423,12 +423,12 @@ Equivalent to `foldl(∨, ps; init = false)`.
 
 `⋁` can be typed by `\\bigvee<tab>`.
 
-See also [`or`](@ref |).
+See also [`or`](@ref).
 
 # Examples
 ```jldoctest
 julia> @atomize ⋁([p, q, r, s])
-((¬¬p ∨ q) ∨ r) ∨ s
+((p ∨ q) ∨ r) ∨ s
 ```
 """
 disjunction(ps) = foldl(∨, ps; init = false)
