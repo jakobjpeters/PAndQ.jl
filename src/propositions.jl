@@ -383,7 +383,7 @@ and interpolated values as [`Constant`](@ref)s inline.
 !!! warning
     This macro attempts to ignore symbols that are being assigned a value.
     For example, `@atomize f(; x = p) = x ∧ q` should be equivalent to
-    `@atomize f(; x = PAndQ.Atom(:p)) = x ∧ PAndQ.Atom(:q)`.
+    `f(; x = @atomize p)) = x ∧ @atomize q`.
     However, this feature is in-progress and only works in some cases.
     The implementation is cautious to skip the parts
     of the expression that it cannot yet handle.
@@ -405,36 +405,32 @@ macro atomize(expression)
 end
 
 """
-    @atoms(xs...)
+    @variables(ps...)
 
-Define atoms and return a vector containing them.
+Define variables and return a vector containing them.
 
-Expressions of the form `symbol` and `symbol = value` are defined as
-`@atomize symbol = symbol` and `@atomize symbol = value`, respectively.
+Each symbol `p` is defined as `@atomize p = p`
 
 See also [`@atomize`](@ref).
 
 Examples
 ```jldoctest
-julia> @atoms p q = ¬\$1
-2-element Vector{PAndQ.Proposition}:
+julia> @variables p q
+2-element Vector{PAndQ.Variable}:
  p
- ¬\$(1)
+ q
 
 julia> p
 p
 
 julia> q
-¬\$(1)
+q
 ```
 """
-macro atoms(xs...)
-    symbols_values = map(symbol_value, xs)
-    esc(quote
-        $(map(((symbol, value),) -> :($symbol = $(atomize(value))), symbols_values)...)
-        [$(map(first, symbols_values)...)]
-    end)
-end
+macro variables(ps...) esc(quote
+    $(map(p -> :(@atomize $p = $p), ps)...)
+    [$(ps...)]
+end) end
 
 # Utility
 

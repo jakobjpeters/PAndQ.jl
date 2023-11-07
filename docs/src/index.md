@@ -55,7 +55,7 @@ true
 julia> @atomize p ∧ q → $1
 (p ∧ q) → $(1)
 
-julia> @atoms p q
+julia> @variables p q
 2-element Vector{PAndQ.Variable}:
  p
  q
