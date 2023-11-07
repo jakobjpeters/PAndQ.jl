@@ -439,9 +439,9 @@ end
 # Utility
 
 """
-    atoms(p, T = Atom)
+    atoms(p)
 
-Return an iterator of each [`Atom`](@ref) of type `T` contained in `p`.
+Return an iterator of each [`Atom`](@ref) contained in `p`.
 
 # Examples
 ```jldoctest
@@ -449,14 +449,9 @@ julia> @atomize collect(atoms(p ∧ q))
 2-element Vector{PAndQ.Variable}:
  p
  q
-
-julia> @atomize collect(atoms(p ∧ q ∨ \$1 ∧ \$2, PAndQ.Constant))
-2-element Vector{PAndQ.Constant{Int64}}:
- \$(1)
- \$(2)
 ```
 """
-atoms(p, T = Atom) = Iterators.filter(leaf -> leaf isa T, Leaves(p))
+atoms(p) = Iterators.filter(leaf -> leaf isa Atom, Leaves(p))
 
 """
     operators(::Proposition)
@@ -477,10 +472,7 @@ julia> @atomize collect(operators(¬p ∧ q))
  identity (generic function with 1 method)
 ```
 """
-operators(p) = Iterators.filter(
-    node -> !isa(node, Atom),
-    nodevalues(PreOrderDFS(p))
-)
+operators(p) = Iterators.filter(node -> !isa(node, Atom), nodevalues(PreOrderDFS(p)))
 
 """
     map(f, ::Proposition)
