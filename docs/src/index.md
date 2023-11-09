@@ -94,7 +94,6 @@ julia> TruthTable([p ∧ ¬p, r, p ⊻ q, s])
     - Implements propositional logic with support for SIMD and CUDA
 - [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl)
     - Implements propositional and modal logic
-    - Incomplete documentation
 - [TruthTables.jl](https://github.com/eliascarv/TruthTables.jl)
     - Implements a macro that prints a truth table
     - PAndQ.jl implements a superset of the features in this package
