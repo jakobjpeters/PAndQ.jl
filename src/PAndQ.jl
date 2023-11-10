@@ -59,7 +59,7 @@ export
     left_neutrals, right_neutrals
     #= Base.convert =#
 
-@compile_workload let
+__init__() = @compile_workload begin
     @variables p q
 
     ps = [Tree(⊤), Tree(⊥), p, ¬p, map(BO -> BO.instance(p, q), uniontypes(BinaryOperator))...]
