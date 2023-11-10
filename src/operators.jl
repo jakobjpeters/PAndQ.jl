@@ -339,46 +339,7 @@ julia> @atomize TruthTable([p ← q])
 function converse_imply end
 const ← = converse_imply
 
-# Internals
-
-## Union Types
-
-"""
-    NullaryOperator
-
-The `Union` of [Nullary Operators](@ref nullary_operators).
-"""
-const NullaryOperator = union_typeof((⊤, ⊥))
-
-"""
-    UnaryOperator
-
-The `Union` of [Unary Operators](@ref unary_operators).
-"""
-const UnaryOperator = union_typeof((𝒾, ¬))
-
-"""
-    BinaryOperator
-
-The `Union` of [Binary Operators](@ref binary_operators).
-"""
-const BinaryOperator = union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔, →, ↛, ←, ↚))
-
-"""
-    Operator
-
-The `Union` of [Operators](@ref operators_operators).
-"""
-const Operator = Union{NullaryOperator, UnaryOperator, BinaryOperator}
-
-"""
-    AndOr
-
-The `Union` of [`and`](@ref) and [`or`](@ref).
-"""
-const AndOr = union_typeof((∧, ∨))
-
-# Reductions
+# Nary Operators
 
 """
     conjunction(ps)
@@ -418,6 +379,52 @@ julia> @atomize ⋁((p, q, r, s))
 disjunction(ps) = foldl(∨, ps; init = ⊥)
 const ⋁ = disjunction
 
+# Internals
+
+## Union Types
+
+"""
+    NullaryOperator
+
+The `Union` of [Nullary Operators](@ref nullary_operators).
+"""
+const NullaryOperator = union_typeof((⊤, ⊥))
+
+"""
+    UnaryOperator
+
+The `Union` of [Unary Operators](@ref unary_operators).
+"""
+const UnaryOperator = union_typeof((𝒾, ¬))
+
+"""
+    BinaryOperator
+
+The `Union` of [Binary Operators](@ref binary_operators).
+"""
+const BinaryOperator = union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔, →, ↛, ←, ↚))
+
+"""
+    NaryOperator
+
+The `Union` of [Nary Operators](@ref nary_operators).
+"""
+const NaryOperator = union_typeof((⋀, ⋁))
+
+"""
+    Operator
+
+The `Union` of [Operators](@ref operators_operators).
+"""
+const Operator = Union{NullaryOperator, UnaryOperator, BinaryOperator, NullaryOperator}
+
+"""
+    AndOr
+
+The `Union` of [`and`](@ref) and [`or`](@ref).
+"""
+const AndOr = union_typeof((∧, ∨))
+
 # Utilities
 
 """
@@ -436,8 +443,12 @@ julia> arity(not)
 
 julia> arity(and)
 2
+
+julia> arity(conjunction)
+Inf
 ```
 """
 arity(::NullaryOperator) = 0
 arity(::UnaryOperator) = 1
 arity(::BinaryOperator) = 2
+arity(::NaryOperator) = Inf

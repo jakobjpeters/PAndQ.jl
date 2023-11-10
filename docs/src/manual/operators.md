@@ -32,6 +32,8 @@ Operator associativity determines how operators with the same precedence group t
 | [`not_imply`](@ref)          | `↛`    | \\nrightarrow    | right         | 4          |
 | [`converse_imply`](@ref)     | `←`    | \\leftarrow      | right         | 4          |
 | [`not_converse_imply`](@ref) | `↚`    | \\nleftarrow     | right         | 4          |
+| [`conjunction`](@ref)        | `⋀`    | \\bigwedge       | none         | 0          |
+| [`disjunction`](@ref)        | `⋁`    | \\bigvee         | none         | 0          |
 
 ## [Nullary Operators](@id nullary_operators)
 
@@ -66,7 +68,7 @@ converse_imply
 not_converse_imply
 ```
 
-## Reductions
+## [Nary Operators](@id nary_operators)
 
 ```@docs
 conjunction

@@ -15,6 +15,7 @@ PAndQ.union_typeof
 PAndQ.NullaryOperator
 PAndQ.UnaryOperator
 PAndQ.BinaryOperator
+PAndQ.NaryOperator
 PAndQ.Operator
 PAndQ.AndOr
 ```
