@@ -9,11 +9,11 @@ import Base: nand, nor, xor, ⊻, ⊼, ⊽
 
 Logical [true](https://en.wikipedia.org/wiki/Tautology_(logic)) operator.
 
-`⊤` can be typed by `\\top<tab>`.
+`⊤` can be typed by `\\top[TAB]`.
 
 # Examples
 ```jldoctest
-julia> TruthTable([PAndQ.Tree(⊤)])
+julia> TruthTable([⊤])
 ┌───┐
 │ ⊤ │
 ├───┤
@@ -30,11 +30,11 @@ const ⊤ = tautology
 
 Logical [false](https://en.wikipedia.org/wiki/Contradiction) operator.
 
-`⊥` can be typed by `\\bot<tab>`.
+`⊥` can be typed by `\\bot[TAB]`.
 
 # Examples
 ```jldoctest
-julia> TruthTable([PAndQ.Tree(⊥)])
+julia> TruthTable([⊥])
 ┌───┐
 │ ⊥ │
 ├───┤
@@ -73,7 +73,7 @@ const 𝒾 = identity
 
 Logical [negation](https://en.wikipedia.org/wiki/Negation) operator.
 
-`¬` can be typed by `\\neg<tab>`.
+`¬` can be typed by `\\neg[TAB]`.
 
 # Examples
 ```jldoctest
@@ -97,7 +97,7 @@ const ¬ = not
 
 Logical [conjunction](https://en.wikipedia.org/wiki/Logical_conjunction) operator.
 
-`∧` can be typed by `\\wedge<tab>`.
+`∧` can be typed by `\\wedge[TAB]`.
 
 # Examples
 ```jldoctest
@@ -122,7 +122,7 @@ const ∧ = and
 
 Logical [non-conjunction](https://en.wikipedia.org/wiki/Sheffer_stroke) operator.
 
-`⊼` can be typed by `\\nand<tab>`.
+`⊼` can be typed by `\\nand[TAB]`.
 
 # Examples
 ```jldoctest
@@ -146,7 +146,7 @@ nand
 
 Logical [non-disjunction](https://en.wikipedia.org/wiki/Logical_NOR) operator.
 
-`⊽` can be typed by `\\nor<tab>`.
+`⊽` can be typed by `\\nor[TAB]`.
 
 # Examples
 ```jldoctest
@@ -170,7 +170,7 @@ nor
 
 Logical [disjunction](https://en.wikipedia.org/wiki/Logical_disjunction) operator.
 
-`∨` can be typed by `\\vee<tab>`.
+`∨` can be typed by `\\vee[TAB]`.
 
 # Examples
 ```jldoctest
@@ -195,7 +195,7 @@ const ∨ = or
 
 Logical [exclusive disjunction](https://en.wikipedia.org/wiki/Exclusive_or) operator.
 
-`⊻` can be typed by `\\xor<tab>`.
+`⊻` can be typed by `\\xor[TAB]`.
 
 # Examples
 ```jldoctest
@@ -220,7 +220,7 @@ xor
 Logical [exclusive non-disjunction]
 (https://en.wikipedia.org/wiki/Logical_biconditional) operator.
 
-`↔` can be typed by `\\leftrightarrow<tab>`.
+`↔` can be typed by `\\leftrightarrow[TAB]`.
 
 # Examples
 ```jldoctest
@@ -245,7 +245,7 @@ const ↔ = xnor
 
 Logical [non-implication](https://en.wikipedia.org/wiki/Material_nonimplication) operator.
 
-`↛` can be typed by `\\nrightarrow<tab>`.
+`↛` can be typed by `\\nrightarrow[TAB]`.
 
 # Examples
 ```jldoctest
@@ -270,7 +270,7 @@ const ↛ = not_imply
 
 Logical [implication](https://en.wikipedia.org/wiki/Material_conditional) operator.
 
-`→` can be typed by `\\rightarrow<tab>`.
+`→` can be typed by `\\rightarrow[TAB]`.
 
 # Examples
 ```jldoctest
@@ -295,7 +295,7 @@ const → = imply
 
 Logical [converse non-implication](https://en.wikipedia.org/wiki/Converse_nonimplication) operator.
 
-`↚` can be typed by `\\nleftarrow<tab>`.
+`↚` can be typed by `\\nleftarrow[TAB]`.
 
 # Examples
 ```jldoctest
@@ -320,7 +320,7 @@ const ↚ = not_converse_imply
 
 Logical [converse implication](https://en.wikipedia.org/wiki/Converse_(logic)#Implicational_converse) operator.
 
-`←` can be typed by `\\leftarrow<tab>`.
+`←` can be typed by `\\leftarrow[TAB]`.
 
 # Examples
 ```jldoctest
@@ -346,30 +346,30 @@ const ← = converse_imply
 """
     NullaryOperator
 
-The `Union` of logical [operators](@ref nullary_operators) that take zero arguments.
+The `Union` of [Nullary Operators](@ref nullary_operators).
 """
 const NullaryOperator = union_typeof((⊤, ⊥))
 
 """
     UnaryOperator
 
-The `Union` of logical [unary operators](@ref unary_operators).
+The `Union` of [Unary Operators](@ref unary_operators).
 """
 const UnaryOperator = union_typeof((𝒾, ¬))
 
 """
     BinaryOperator
 
-The `Union` of logical [binary operators](@ref binary_operators).
+The `Union` of [Binary Operators](@ref binary_operators).
 """
 const BinaryOperator = union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔, →, ↛, ←, ↚))
 
 """
-    LogicalOperator
+    Operator
 
-The `Union` of logical [operators](@ref operators_operators).
+The `Union` of [Operators](@ref operators_operators).
 """
-const LogicalOperator = Union{NullaryOperator, UnaryOperator, BinaryOperator}
+const Operator = Union{NullaryOperator, UnaryOperator, BinaryOperator}
 
 """
     AndOr
@@ -384,47 +384,47 @@ const AndOr = union_typeof((∧, ∨))
     conjunction(ps)
     ⋀(ps)
 
-Equivalent to `foldl(∧, ps; init = true)`.
+Equivalent to `foldl(∧, ps; init = ⊤)`.
 
-`⋀` can be typed by `\\bigwedge<tab>`.
+`⋀` can be typed by `\\bigwedge[TAB]`.
 
-See also [`and`](@ref).
+See also [`and`](@ref) and [`tautology`](@ref).
 
 # Examples
 ```jldoctest
-julia> @atomize ⋀([p, q, r, s])
-((p ∧ q) ∧ r) ∧ s
+julia> @atomize ⋀((p, q, r, s))
+(((⊤ ∧ p) ∧ q) ∧ r) ∧ s
 ```
 """
-conjunction(ps) = foldl(∧, ps; init = true)
+conjunction(ps) = foldl(∧, ps; init = ⊤)
 const ⋀ = conjunction
 
 """
     disjunction(ps)
     ⋁(ps)
 
-Equivalent to `foldl(∨, ps; init = false)`.
+Equivalent to `foldl(∨, ps; init = ⊥)`.
 
-`⋁` can be typed by `\\bigvee<tab>`.
+`⋁` can be typed by `\\bigvee[TAB]`.
 
-See also [`or`](@ref).
+See also [`or`](@ref) and [`contradiction`](@ref).
 
 # Examples
 ```jldoctest
-julia> @atomize ⋁([p, q, r, s])
-((p ∨ q) ∨ r) ∨ s
+julia> @atomize ⋁((p, q, r, s))
+(((⊥ ∨ p) ∨ q) ∨ r) ∨ s
 ```
 """
-disjunction(ps) = foldl(∨, ps; init = false)
+disjunction(ps) = foldl(∨, ps; init = ⊥)
 const ⋁ = disjunction
 
 # Utilities
 
 """
-    arity(lo)
+    arity(::Operator)
 
 Return the [arity](https://en.wikipedia.org/wiki/Arity)
-of the given logical [operator](@ref operators_operators).
+of the given [operator](@ref operators_operators).
 
 # Examples
 ```jldoctest

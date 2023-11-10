@@ -4,7 +4,7 @@ module PAndQ
 using PrecompileTools: @compile_workload
 
 """
-    union_typeof
+    union_typeof(xs)
 """
 union_typeof(xs) = Union{map(typeof, xs)...}
 
@@ -13,13 +13,10 @@ include("operators.jl")
 export
     tautology, ⊤,
     contradiction, ⊥,
-    #= Base.identity =# 𝒾,
+    𝒾,
     not, ¬,
     and, ∧,
-    #= Base.nand, Base.:⊼ =#
-    #= Base.nor, Base.:⊽ =#
     or, ∨,
-    #= Base.xor, Base.:⊻ =#
     xnor, ↔,
     imply, →,
     not_imply, ↛,
@@ -27,7 +24,6 @@ export
     not_converse_imply, ↚,
     conjunction, ⋀,
     disjunction, ⋁,
-    #= Base.mapfoldl, Base.mapfoldr =#
     arity
 
 include("propositions.jl")
@@ -35,16 +31,14 @@ include("propositions.jl")
 export
     @atomize, @variables,
     atoms, operators
-    #= Base.map =#
 
 include("printing.jl")
 
 export
     TruthTable,
-    #= Base.show =#
     formatter,
-    #= PrettyTables =# pretty_table,
-    #= AbstractTrees =# print_tree
+    pretty_table,
+    print_tree
 
 include("semantics.jl")
 
@@ -57,18 +51,16 @@ export
     is_satisfiable, is_falsifiable,
     dual, converse,
     left_neutrals, right_neutrals
-    #= Base.convert =#
 
 __init__() = @compile_workload begin
     @variables p q
 
-    ps = [Tree(⊤), Tree(⊥), p, ¬p, map(BO -> BO.instance(p, q), uniontypes(BinaryOperator))...]
-    qs = [ps..., conjunction(ps), disjunction(ps)]
+    ps = (⊤, ⊥, p, ¬p, map(BO -> BO.instance(p, q), uniontypes(BinaryOperator))...)
+    qs = (ps..., conjunction(ps), disjunction(ps))
 
     pretty_table(String, TruthTable(qs))
 
     for r in qs
-        r(p => true)
         r(p => ⊤)
         r(p => ⊥)
 

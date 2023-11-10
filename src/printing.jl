@@ -14,11 +14,11 @@ for the given [`Proposition`](@ref)s.
 The `header` is a vector containing vectors of logically equivalent propositions.
 The `body` is a matrix where the rows contain [`interpretations`](@ref) of each proposition in the given column.
 
-See also [`tautology`](@ref) and [`contradiction`](@ref).
+See also [Nullary Operators](@ref nullary_operators).
 
 # Examples
 ```jldoctest
-julia> TruthTable([PAndQ.Tree(⊤)])
+julia> TruthTable([⊤])
 ┌───┐
 │ ⊤ │
 ├───┤
@@ -50,17 +50,17 @@ struct TruthTable
     body::Matrix{Bool}
 
     function TruthTable(ps)
-        _atoms = union(map(atoms, ps)...)
+        _atoms = unique(Iterators.flatmap(atoms, ps))
         ps = union(_atoms, ps)
         _valuations = valuations(_atoms)
-        _interpretations = Iterators.map(p -> vec(collect(interpretations(p, _valuations))), ps)
+        _interpretations = Iterators.map(p -> vec(collect(interpretations(_valuations, p))), ps)
 
         truths_interpretations, atoms_interpretations, compounds_interpretations =
             Vector{Bool}[], Vector{Bool}[], Vector{Bool}[]
 
-        grouped_truths = Dict(map(no -> repeat([no], length(_valuations)) => Proposition[], (true, false)))
+        grouped_truths = Dict(map(truth -> repeat([truth], length(_valuations)) => Proposition[], (true, false)))
         grouped_atoms = Dict(map(
-            p -> collect(interpretations(p, _valuations)) => Proposition[],
+            p -> collect(interpretations(_valuations, p)) => Proposition[],
             _atoms
         ))
         grouped_compounds = Dict{Vector{Bool}, Vector{Proposition}}()
@@ -70,6 +70,7 @@ struct TruthTable
                 union!(key, [interpretation])
                 union!(get!(group, interpretation, Proposition[]), [p])
             end
+
             if interpretation in keys(grouped_truths) _union!(truths_interpretations, grouped_truths)
             elseif interpretation in keys(grouped_atoms) _union!(atoms_interpretations, grouped_atoms)
             else _union!(compounds_interpretations, grouped_compounds)
@@ -96,25 +97,14 @@ end
 
 # Internals
 
-"""
-    alias_of(::LogicalOperator)
-
-Return the written name of the given [`LogicalOperator`](@ref).
-"""
-alias_of(lo::LogicalOperator) = nameof(lo)
-
-for lo in (:not, :and, :or)
-    @eval alias_of(::typeof($lo)) = $(QuoteNode(lo))
-end
-
-for lo in (:⊤, :⊥, :𝒾, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚)
-    @eval symbol_of(::typeof($lo)) = $(QuoteNode(lo))
+for o in (:⊤, :⊥, :𝒾, :¬, :∧, :⊼, :⊽, :∨, :⊻, :↔, :→, :↛, :←, :↚)
+    @eval symbol_of(::typeof($o)) = $(QuoteNode(o))
 end
 
 """
-    symbol_of(::LogicalOperator)
+    symbol_of(::Operator)
 
-Return the Unicode symbol of the given [`LogicalOperator`](@ref).
+Return the Unicode symbol of the given [`Operator`](@ref).
 
 # Examples
 ```jldoctest
@@ -148,6 +138,8 @@ print_node(io, p) = printnode(io, p)
 
 """
     show_atom(io, ::Atom)
+
+See also [`Atom`](@ref).
 """
 show_atom(io, p::Constant) = show(io, p.value)
 show_atom(io, p::Variable) = show(io, p.symbol)
@@ -202,6 +194,8 @@ end
 """
     show(::IO, ::MIME"text/plain", ::TruthTable)
 
+See also [`TruthTable`](@ref).
+
 # Examples
 ```julia
 julia> @atomize show(stdout, MIME"text/plain"(), TruthTable([p ∧ q]))
@@ -222,7 +216,7 @@ show(io::IO, ::MIME"text/plain", tt::TruthTable) =
 """
     show(::IO, ::Proposition)
 
-Represent the given [`Proposition`](@ref) expanded as valid Julia code.
+Show the given [`Proposition`](@ref) in it's internal representation.
 
 # Examples
 ```jldoctest
@@ -241,11 +235,11 @@ function show(io::IO, p::A) where A <: Atom
 end
 function show(io::IO, p::L) where L <: Literal
     show_type_name(io, L.name)
-    print(io, "(", alias_of(nodevalue(p)), ", ", p.atom, ")")
+    print(io, "(", nameof(nodevalue(p)), ", ", p.atom, ")")
 end
 function show(io::IO, p::C) where C <: Compound
     show_type_name(io, C.name)
-    print(io, "(", alias_of(nodevalue(p)))
+    print(io, "(", nameof(nodevalue(p)))
 
     _children = Stateful(children(p))
     if !isempty(_children)
@@ -265,7 +259,7 @@ end
 
 for (T, f) in (
     NullaryOperator => v -> v ? "⊤" : "⊥",
-    String => v -> alias_of(v ? ⊤ : ⊥),
+    String => v -> nameof(v ? ⊤ : ⊥),
     Char => v -> v == ⊤ ? "T" : "F",
     Bool => 𝒾,
     Int => Int
@@ -276,15 +270,15 @@ end
 """
     formatter(t::Type{<:Union{NullaryOperator, String, Char, Bool, Int}})
 
-See also [`NullaryOperator`](@ref).
+See also [Nullary Operators](@ref nullary_operators).
 
-| `t`                     | `formatter(t)(⊤, _, _)` | `formatter(t)(⊥, _, _)` |
-| :---------------------- | :---------------------- | :---------------------- |
-| `PAndQ.NullaryOperator` | `"⊤"`                   | `"⊥"`                   |
-| `String`                | `"tautology"`           | `"contradiction"`       |
-| `Char`                  | `"T"`                   | `"F"`                   |
-| `Bool`                  | `"true"`                | `"false"`               |
-| `Int`                   | `"1"`                   | `"0"`                   |
+| `t`               | `formatter(t)(⊤, _, _)` | `formatter(t)(⊥, _, _)` |
+| :---------------- | :---------------------- | :---------------------- |
+| `NullaryOperator` | `"⊤"`                   | `"⊥"`                   |
+| `String`          | `"tautology"`           | `"contradiction"`       |
+| `Char`            | `"T"`                   | `"F"`                   |
+| `Bool`            | `"true"`                | `"false"`               |
+| `Int`             | `"1"`                   | `"0"`                   |
 """
 formatter
 
@@ -303,6 +297,7 @@ ___pretty_table(backend::Val{:html}, io, body; kwargs...) =
 __pretty_table(backend, io, tt; formatters = formatter(NullaryOperator), kwargs...) =
     ___pretty_table(backend, io, tt.body; header = tt.header, formatters, kwargs...)
 
+_pretty_table(io::IO, no::NullaryOperator; kwargs...) = pretty_table(io, Tree(no); kwargs...)
 _pretty_table(io::IO, p::Proposition; kwargs...) =
     pretty_table(io, TruthTable((p,)); kwargs...)
 _pretty_table(io::IO, tt::TruthTable; kwargs...) =
@@ -310,13 +305,13 @@ _pretty_table(io::IO, tt::TruthTable; kwargs...) =
 
 """
     pretty_table(
-        ::Union{IO, Type{Union{String, Docs.HTML}}} = stdout, ::Union{Proposition, TruthTable};
+        ::Union{IO, Type{Union{String, Docs.HTML}}} = stdout, ::Union{NullaryOperator, Proposition, TruthTable};
         formatters = formatter(NullaryOperator), kwargs...
     )
 
-See also [`PrettyTables.pretty_table`]
-(https://ronisbr.github.io/PrettyTables.jl/stable/lib/library/#PrettyTables.pretty_table-Tuple{Any}),
-[`Proposition`](@ref), [`TruthTable`](@ref), and [`formatter`](@ref).
+See also [Nullary Operators](@ref nullary_operators), [`Proposition`](@ref),
+[`TruthTable`](@ref), [`formatter`](@ref), and [`PrettyTables.pretty_table`]
+(https://ronisbr.github.io/PrettyTables.jl/stable/lib/library/#PrettyTables.pretty_table-Tuple{Any}).
 
 # Examples
 ```jldoctest

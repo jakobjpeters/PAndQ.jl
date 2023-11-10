@@ -49,8 +49,8 @@ julia> using PAndQ
 ## Showcase
 
 ```jldoctest
-julia> ¬⊥()
-true
+julia> ¬⊤
+contradiction (generic function with 2 methods)
 
 julia> @atomize p ∧ q → $1
 (p ∧ q) → $(1)
@@ -69,8 +69,8 @@ false
 julia> s = (p ∨ q) ∧ (r ∨ ¬q)
 (p ∨ q) ∧ (¬p ∨ ¬q)
 
-julia> s(p => true, q => false)
-true
+julia> s(p => ⊤, q => ⊥)
+(⊤ ∨ ⊥) ∧ (⊥ ∨ ⊤)
 
 julia> TruthTable([p ∧ ¬p, r, p ⊻ q, s])
 ┌────────┬───┬───┬────┬────────────────────────────┐

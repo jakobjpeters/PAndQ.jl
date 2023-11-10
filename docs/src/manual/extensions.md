@@ -11,7 +11,8 @@ pretty_table(::Type{Markdown.MD}, ::TruthTable)
 
 !!! tip
     A [`@latexrecipe`](https://korsbo.github.io/Latexify.jl/stable/tutorials/recipes/)
-    has been defined for [`LogicalOperator`](@ref PAndQ.LogicalOperator), [`Proposition`](@ref PAndQ.Proposition), and [`TruthTable`](@ref).
+    has been defined for [Operators](@ref operators_operators),
+    [`Proposition`](@ref PAndQ.Proposition), and [`TruthTable`](@ref).
 
 ```@docs
 formatter(::Type{Latexify.LaTeXString})

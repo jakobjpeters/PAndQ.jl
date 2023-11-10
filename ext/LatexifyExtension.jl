@@ -3,14 +3,13 @@ module LatexifyExtension
 
 import Base: show
 import Latexify: latexify
-import PrettyTables: pretty_table
-import PAndQ: __pretty_table, formatter
+import PAndQ: pretty_table, __pretty_table, formatter
 using Latexify: @latexrecipe, Latexify
 using PrettyTables: LatexCell, LaTeXString
-using PAndQ: Proposition, LogicalOperator, TruthTable, symbol_of, ___pretty_table, union_all_type
+using PAndQ: Proposition, Operator, TruthTable, symbol_of, ___pretty_table, strip_type
 
-@latexrecipe f(lo::LogicalOperator) = return symbol_of(lo)
-@latexrecipe f(p::Proposition) = return Symbol(sprint(show, MIME"text/plain"(), p))
+@latexrecipe f(o::Operator) = return symbol_of(o)
+@latexrecipe f(p::Proposition) = return Symbol(repr(MIME"text/plain"(), p))
 @latexrecipe f(tt::TruthTable) = return pretty_table(LaTeXString, tt)
 
 """
@@ -27,11 +26,13 @@ __pretty_table(backend::Val{:latex}, io, tt; formatters = formatter(LaTeXString)
 
 """
     pretty_table(
-        ::LaTexify.LaTexString, x::Union{Proposition, TruthTable};
+        ::Latexify.LaTexString, x::Union{Proposition, TruthTable};
         backend = Val(:latex), kwargs...
     )
 
-Equivalent to [`LaTeXString(pretty_table(String, x; backend, kwargs...))`](@ref pretty_table).
+Equivalent to [`Latexify.LaTeXString(pretty_table(String, x; backend, kwargs...))`](@ref pretty_table).
+
+See also [`Proposition`](@ref) and [`TruthTable`](@ref).
 
 # Examples
 ```jldoctest

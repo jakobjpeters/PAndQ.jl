@@ -1,8 +1,7 @@
 
 module MarkdownExtension
 
-import Base: show
-import PAndQ: pretty_table, __pretty_table
+import PAndQ: show, pretty_table, __pretty_table
 using Markdown: Markdown, MD, Table
 using PAndQ: NullaryOperator, TruthTable, Proposition, symbol_of, formatter
 
@@ -19,6 +18,9 @@ __pretty_table(
         ::Type{Markdown.MD}, ::Union{Proposition, TruthTable};
         formatters = formatter(NullaryOperator), alignment = :l
     )
+
+See also [Nullary Operators](@ref nullary_operators),
+[`Proposition`](@ref), [`TruthTable`](@ref), and [`formatter`](@ref).
 
 # Examples
 ```jldoctest

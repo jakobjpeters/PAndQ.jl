@@ -15,7 +15,7 @@ PAndQ.union_typeof
 PAndQ.NullaryOperator
 PAndQ.UnaryOperator
 PAndQ.BinaryOperator
-PAndQ.LogicalOperator
+PAndQ.Operator
 PAndQ.AndOr
 ```
 
@@ -59,21 +59,20 @@ PAndQ.Normal
 PAndQ.children
 PAndQ.nodevalue
 PAndQ.printnode
+PAndQ.NodeType
+PAndQ.nodetype
 ```
 
 ### Utility
 
 ```@docs
 PAndQ.child
-PAndQ.union_all_type
-PAndQ.symbol_value
 PAndQ.atomize
 ```
 
 ## Printing
 
 ```@docs
-PAndQ.alias_of
 PAndQ.symbol_of
 PAndQ.parenthesize
 PAndQ.print_node
@@ -83,6 +82,8 @@ PAndQ.show_atom
 ## Semantics
 
 ```@docs
+PAndQ.process_valuations
 PAndQ.neutral_operator
 PAndQ.eval_doubles
+convert(::Type{PAndQ.Atom}, p::Union{PAndQ.Literal{typeof(𝒾)}, PAndQ.Tree{typeof(𝒾), <:PAndQ.Atom}})
 ```

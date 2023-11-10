@@ -1,6 +1,6 @@
 
 import Base: map
-import AbstractTrees: children, nodevalue, printnode
+import AbstractTrees: children, nodevalue, printnode, NodeType, nodetype, HasNodeType
 using Base.Meta: isexpr, parse
 using AbstractTrees: childtype, Leaves, nodevalues, PreOrderDFS
 
@@ -13,7 +13,7 @@ using AbstractTrees: childtype, Leaves, nodevalues, PreOrderDFS
 """
     Proposition
 
-A logical [proposition](https://en.wikipedia.org/wiki/Proposition).
+A [proposition](https://en.wikipedia.org/wiki/Proposition).
 
 Supertype of [`Atom`](@ref) and [`Compound`](@ref).
 """
@@ -30,24 +30,25 @@ Supertype of [`Constant`](@ref) and [`Variable`](@ref).
 abstract type Atom <: Proposition end
 
 """
-    Compound{LO} <: Proposition
+    Compound{O} <: Proposition
 
-A proposition composed from connecting atomic propositions with logical operators.
+A proposition composed from connecting atomic propositions
+with an [`Operator`](@ref).
 
 Subtype of [`Proposition`](@ref).
 Supertype of [`Literal`](@ref), [`Clause`](@ref), and [`Expressive`](@ref).
 """
-abstract type Compound{LO} <: Proposition end
+abstract type Compound{O} <: Proposition end
 
 """
-    Expressive{LO} <: Compound{LO}
+    Expressive{O} <: Compound{O}
 
 A proposition that is [expressively complete](https://en.wikipedia.org/wiki/Completeness_(logic)).
 
 Subtype of [`Compound`](@ref).
 Supertype of [`Tree`](@ref) and [`Normal`](@ref).
 """
-abstract type Expressive{LO} <: Compound{LO} end
+abstract type Expressive{O} <: Compound{O} end
 
 # Atoms
 
@@ -133,15 +134,16 @@ struct Literal{UO <: UnaryOperator, A <: Atom} <: Compound{UO}
 end
 
 """
-    Tree{LO <: LogicalOperator, AT <: Union{Atom, Tree}} <: Expressive{LO}
+    Tree{O <: Operator, AT <: Union{Atom, Tree}, N} <: Expressive{O}
     Tree(::NullaryOperator, ::Atom)
-    Tree(::LogicalOperator, ::Tree...)
+    Tree(::Operator, ::Tree...)
     Tree(::Proposition)
 
-A proposition represented by an [abstract syntax tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree).
+A [`Proposition`](@ref) represented by an [abstract syntax tree]
+(https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 
 Subtype of [`Expressive`](@ref).
-See also [`LogicalOperator`](@ref).
+See also [`Atom`](@ref), [`NullaryOperator`](@ref), and [`Operator`](@ref).
 
 # Examples
 ```jldoctest
@@ -155,16 +157,15 @@ julia> @atomize PAndQ.Tree(and, PAndQ.Tree(p), PAndQ.Tree(q))
 p ∧ q
 ```
 """
-struct Tree{LO <: LogicalOperator, P <: Proposition} <: Expressive{LO}
-    nodes::Vector{P}
+struct Tree{O <: Operator, P <: Proposition, N} <: Expressive{O}
+    nodes::NTuple{N, P}
 
-    Tree(::NO) where NO <: NullaryOperator = new{NO, Tree}([])
-    Tree(::UO, node::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, A}([node])
-    function Tree(lo::LO, nodes::Tree...) where LO <: LogicalOperator
-        _arity, _length = arity(lo), length(nodes)
+    Tree(::UO, node::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, A, 1}((node,))
+    function Tree(o::O, nodes...) where O <: Operator
+        _arity, _length = arity(o), length(nodes)
         _arity != _length &&
-            error("`arity($lo) == $_arity`, but `$_length` argument$(_length == 1 ? " was" : "s were") given")
-        new{LO, eltype(nodes)}(collect(nodes))
+            error("`arity($o) == $_arity`, but `$_length` argument$(_length == 1 ? " was" : "s were") given")
+        new{O, eltype(nodes), _arity}(nodes)
     end
 end
 
@@ -182,7 +183,7 @@ A proposition represented as either a [conjunction or disjunction of literals]
     neutral element of it's binary operator.
 
 Subtype of [`Compound`](@ref).
-See also [`AndOr`](@ref), [`Literal`](@ref), and [`NullaryOperator`](@ref).
+See also [`Atom`](@ref), [`Literal`](@ref), [`AndOr`](@ref), and [`NullaryOperator`](@ref).
 
 # Examples
 ```jldoctest
@@ -210,16 +211,16 @@ end
     Normal(::AO, ::Proposition)
     Normal(::Union{NullaryOperator, Proposition})
 
-A proposition represented in [conjunctive](https://en.wikipedia.org/wiki/Conjunctive_normal_form)
-or [disjunctive](https://en.wikipedia.org/wiki/Disjunctive_normal_form) normal form.
+A [`Proposition`](@ref) represented in [conjunctive]
+(https://en.wikipedia.org/wiki/Conjunctive_normal_form) or [disjunctive]
+(https://en.wikipedia.org/wiki/Disjunctive_normal_form) normal form.
 
 !!! info
     An empty `Normal` is [logically equivalent](@ref ==) to the
     neutral element of it's binary operator.
 
 Subtype of [`Expressive`](@ref).
-See also [`AndOr`](@ref), [`Clause`](@ref),
-[`NullaryOperator`](@ref), and [`Proposition`](@ref).
+See also [`Clause`](@ref), [`AndOr`](@ref), and [`NullaryOperator`](@ref).
 
 # Examples
 ```jldoctest
@@ -255,19 +256,18 @@ julia> @atomize PAndQ.children(¬p)
 (PAndQ.Variable(:p),)
 
 julia> @atomize PAndQ.children(p ∧ q)
-2-element Vector{PAndQ.Tree{typeof(identity), PAndQ.Variable}}:
- p
- q
+(PAndQ.Tree(identity, PAndQ.Variable(:p)), PAndQ.Tree(identity, PAndQ.Variable(:q)))
 ```
 """
-children(p::Atom) = ()
 children(p::Literal) = (p.atom,)
 children(p::Tree) = p.nodes
 children(p::Clause) = p.literals
 children(p::Normal) = p.clauses
 
 """
-    nodevalue(::Compound)
+    nodevalue(::Compound{O})
+
+Return `O.instance`.
 
 See also [`Compound`](@ref).
 
@@ -277,13 +277,13 @@ julia> @atomize PAndQ.nodevalue(¬p)
 not (generic function with 19 methods)
 
 julia> @atomize PAndQ.nodevalue(p ∧ q)
-and (generic function with 18 methods)
+and (generic function with 17 methods)
 ```
 """
-nodevalue(::Compound{LO}) where LO = LO.instance
+nodevalue(::Compound{O}) where O = O.instance
 
 """
-    printnode(::IO, ::Proposition; kwargs...)
+    printnode(::IO, ::Union{NullaryOperator, Proposition}; kwargs...)
 
 See also [`Proposition`](@ref).
 
@@ -297,41 +297,37 @@ julia> @atomize PAndQ.printnode(stdout, p ∧ q)
 ∧
 ```
 """
+printnode(io::IO, no::NullaryOperator; kwargs...) = print(io, symbol_of(no))
 printnode(io::IO, p::Atom; kwargs...) = show(io, MIME"text/plain"(), p)
 printnode(io::IO, p::Union{Literal, Tree}; kwargs...) = print(io, symbol_of(nodevalue(p)))
 printnode(io::IO, p::Union{Clause, Normal}; kwargs...) =
     print(io, symbol_of((isempty(children(p)) ? only ∘ left_neutrals : 𝒾)(nodevalue(p))))
+
+"""
+    NodeType(::Type{<:Atom})
+
+See also [`Atom`](@ref).
+"""
+NodeType(::Type{<:Atom}) = HasNodeType()
+
+"""
+    nodetype(::Type{<:Atom})
+
+See also [`Atom`](@ref).
+"""
+nodetype(::Type{A}) where A <: Atom = A
+
 
 ## Utilities
 
 """
     child(x)
 
-Equivalent to `only(children(x))`
+Equivalent to `only ∘ children`
 
 See also [`children`](@ref)
 """
 const child = only ∘ children
-
-for T in (:Constant, :Variable, :Literal, :Tree, :Clause, :Normal)
-    @eval union_all_type(::$T) = $T
-end
-
-"""
-    union_all_type(::Proposition)
-
-Return the `UnionAll` type of a [`Proposition`](@ref).
-
-# Examples
-```jldoctest
-julia> @atomize PAndQ.union_all_type(p)
-PAndQ.Variable
-
-julia> @atomize PAndQ.union_all_type(p ∧ q)
-PAndQ.Tree
-```
-"""
-union_all_type
 
 """
     atomize(x)
@@ -345,7 +341,7 @@ Otherise, return x.
 atomize(x::Symbol) = :((@isdefined $x) ? $x : $(Variable(x)))
 function atomize(x::Expr)
     if length(x.args) == 0 x
-    elseif isexpr(x, :$);
+    elseif isexpr(x, :$)
         value = only(x.args)
         :(
             if (@isdefined PAndQ) PAndQ.Constant($value)
@@ -353,8 +349,7 @@ function atomize(x::Expr)
             else error("Either `PAndQ` or `PAndQ.Constant` must be loaded")
             end
         )
-    elseif isexpr(x, (:kw, :<:))
-        Expr(x.head, x.args[1], atomize(x.args[2]))
+    elseif isexpr(x, (:kw, :<:)) Expr(x.head, x.args[1], atomize(x.args[2]))
     elseif isexpr(x, (:struct, :where)) x # TODO
     else Expr(x.head, # TODO
         isexpr(x, (:(=), :->, :function)) ? x.args[1] : atomize(x.args[1]),
@@ -363,14 +358,6 @@ function atomize(x::Expr)
     end
 end
 atomize(x) = x
-
-"""
-    symbol_value
-"""
-symbol_value(x::Symbol) = x, x
-symbol_value(x) = isexpr(x, :(=)) ?
-    (first(x.args), last(x.args)) :
-    error("Each atom must have the syntax `symbol` or `symbol = value`")
 
 # Macros
 
@@ -407,11 +394,9 @@ end
 """
     @variables(ps...)
 
-Define variables and return a vector containing them.
+Define [`Variable`](@ref)s and return a vector containing them.
 
-Each symbol `p` is defined as `@atomize p = p`
-
-See also [`@atomize`](@ref).
+Each symbol `p` is defined as [`p = @atomize p`](@ref @atomize).
 
 Examples
 ```jldoctest
@@ -428,7 +413,7 @@ q
 ```
 """
 macro variables(ps...) esc(quote
-    $(map(p -> :(@atomize $p = $p), ps)...)
+    $(map(p -> :($p = @atomize $p), ps)...)
     [$(ps...)]
 end) end
 
@@ -450,10 +435,10 @@ julia> @atomize collect(atoms(p ∧ q))
 atoms(p) = Iterators.filter(leaf -> leaf isa Atom, Leaves(p))
 
 """
-    operators(::Proposition)
+    operators(p)
 
-Return an iterator of each logical [operator](@ref operators_operators)
-contained in the given [`Proposition`](@ref).
+Return an iterator of each [operator]
+(@ref operators_operators) contained in `p`.
 
 # Examples
 ```jldoctest
@@ -463,22 +448,26 @@ julia> @atomize collect(operators(¬p))
 
 julia> @atomize collect(operators(¬p ∧ q))
 3-element Vector{Function}:
- and (generic function with 18 methods)
+ and (generic function with 17 methods)
  not (generic function with 19 methods)
  identity (generic function with 1 method)
 ```
 """
 operators(p) = Iterators.filter(node -> !isa(node, Atom), nodevalues(PreOrderDFS(p)))
 
-"""
-    map(f, ::Proposition)
+_map(g, f, p) = g(nodevalue(p))(map(child -> map(f, child), children(p)))
 
-Apply `f` to each [`Atom`](@ref) in the given [`Proposition`](@ref).
+"""
+    map(f, ::Union{NullaryOperator, Proposition})
+
+Apply `f` to each [`Atom`](@ref) in the given argument.
+
+See also [Nullary Operators](@ref nullary_operators) and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> @atomize map(PAndQ.Tree ∘ ¬, p ∧ q)
-¬p ∧ ¬q
+julia> @atomize map(p -> \$(p.value + 1), \$1 ∧ \$2)
+\$(2) ∧ \$(3)
 
 julia> @atomize map(p ∧ q) do atom
            println(atom)
@@ -490,8 +479,5 @@ p ∧ q
 ```
 """
 map(f, p::Atom) = f(p)
-map(f, p::Literal) = Literal(nodevalue(p), f(child(p)))
-map(f, p::Tree) =
-    union_all_type(p)(nodevalue(p), map(child -> map(f, child), children(p))...)
-map(f, p::Union{Clause, Normal}) =
-    union_all_type(p)(nodevalue(p), map(child -> map(f, child), children(p)))
+map(f, p::Union{NullaryOperator, Literal, Tree}) = _map(splat, f, p)
+map(f, p::Union{Clause, Normal}) = _map(identity, f, p)
