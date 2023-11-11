@@ -30,7 +30,7 @@ include("propositions.jl")
 
 export
     @atomize, @variables,
-    atoms, operators
+    atoms, operators, value
 
 include("printing.jl")
 

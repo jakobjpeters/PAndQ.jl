@@ -1,6 +1,7 @@
 
 import Base: map
 import AbstractTrees: children, nodevalue, printnode, NodeType, nodetype, HasNodeType
+using Base: Iterators.Stateful
 using Base.Meta: isexpr, parse
 using AbstractTrees: childtype, Leaves, nodevalues, PreOrderDFS
 
@@ -481,3 +482,25 @@ p ∧ q
 map(f, p::Atom) = f(p)
 map(f, p::Union{NullaryOperator, Literal, Tree}) = _map(splat, f, p)
 map(f, p::Union{Clause, Normal}) = _map(identity, f, p)
+
+"""
+    value(::Proposition)
+
+Unwrap the value of a [`Constant`](@ref).
+
+The [`Proposition`](@ref) must be logically equivalent to a [`Constant`](@ref).
+
+# Examples
+```jldoctest
+julia> @atomize value(\$1)
+1
+```
+"""
+function value(p)
+    _atoms = Stateful(atoms(p))
+    atom = first(_atoms)
+    !isempty(_atoms) && error("the `Proposition` must contain only one `Atom`")
+    p != atom && error("The `Proposition` must be logically equivalent to its `Atom`")
+    !isa(atom, Constant) && error("the `Atom` must be a `Constant`")
+    atom.value
+end
