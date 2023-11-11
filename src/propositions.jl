@@ -342,12 +342,21 @@ Otherise, return x.
 atomize(x::Symbol) = :((@isdefined $x) ? $x : $(Variable(x)))
 function atomize(x::Expr)
     if length(x.args) == 0 x
+    elseif isexpr(x, :call)
+        f = first(x.args)
+        :(
+            try $(Expr(x.head, map(atomize, x.args)...))
+            catch exception exception isa ArgumentError && !(@isdefined $f) ?
+                error("did you mean to `@atomize $($(QuoteNode(f)))`?") :
+                rethrow()
+            end
+        )
     elseif isexpr(x, :$)
         value = only(x.args)
         :(
             if (@isdefined PAndQ) PAndQ.Constant($value)
             elseif (@isdefined Constant) Constant($value)
-            else error("Either `PAndQ` or `PAndQ.Constant` must be loaded")
+            else error("either `PAndQ` or `PAndQ.Constant` must be loaded")
             end
         )
     elseif isexpr(x, (:kw, :<:)) Expr(x.head, x.args[1], atomize(x.args[2]))
