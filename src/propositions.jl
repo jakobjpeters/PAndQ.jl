@@ -33,8 +33,8 @@ abstract type Atom <: Proposition end
 """
     Compound{O} <: Proposition
 
-A proposition composed from connecting atomic propositions
-with an [`Operator`](@ref).
+A proposition composed from connecting [`Atom`](@ref)s
+with one or more [`Operator`](@ref)s.
 
 Subtype of [`Proposition`](@ref).
 Supertype of [`Literal`](@ref), [`Clause`](@ref), and [`Expressive`](@ref).
@@ -55,7 +55,7 @@ abstract type Expressive{O} <: Compound{O} end
 
 """
     Constant{T} <: Atom
-    Constant(value::T)
+    Constant(::T)
 
 An [atomic sentence](https://en.wikipedia.org/wiki/Atomic_sentence).
 
@@ -362,7 +362,7 @@ function atomize(x::Expr)
     elseif isexpr(x, (:kw, :<:)) Expr(x.head, x.args[1], atomize(x.args[2]))
     elseif isexpr(x, (:struct, :where)) x # TODO
     else Expr(x.head, # TODO
-        isexpr(x, (:(=), :->, :function)) ? x.args[1] : atomize(x.args[1]),
+        (isexpr(x, (:(=), :->, :function)) ? 𝒾 : atomize)(x.args[1]),
         map(atomize, x.args[2:end])...
     )
     end
@@ -490,7 +490,7 @@ p ∧ q
 """
 map(f, p::Atom) = f(p)
 map(f, p::Union{NullaryOperator, Literal, Tree}) = _map(splat, f, p)
-map(f, p::Union{Clause, Normal}) = _map(identity, f, p)
+map(f, p::Union{Clause, Normal}) = _map(𝒾, f, p)
 
 """
     value(::Proposition)

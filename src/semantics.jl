@@ -111,7 +111,7 @@ julia> @atomize interpret(p => ⊤, p ∧ q)
 ⊤ ∧ q
 ```
 """
-interpret(valuation::Function, p) = _interpret(p, valuation, identity)
+interpret(valuation::Function, p) = _interpret(p, valuation, 𝒾)
 interpret(valuation::Dict, p) = interpret(a -> get(valuation, a, a), p)
 interpret(valuation, p) = interpret(Dict(valuation), p)
 
