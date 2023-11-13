@@ -342,15 +342,6 @@ Otherise, return x.
 atomize(x::Symbol) = :((@isdefined $x) ? $x : $(Variable(x)))
 function atomize(x::Expr)
     if length(x.args) == 0 x
-    elseif isexpr(x, :call)
-        f = first(x.args)
-        :(
-            try $(Expr(x.head, map(atomize, x.args)...))
-            catch exception exception isa ArgumentError && !(@isdefined $f) ?
-                error("did you mean to `@atomize $($(QuoteNode(f)))`?") :
-                rethrow()
-            end
-        )
     elseif isexpr(x, :$)
         value = only(x.args)
         :(

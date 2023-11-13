@@ -6,7 +6,7 @@ import Latexify: latexify
 import PAndQ: pretty_table, __pretty_table, formatter
 using Latexify: @latexrecipe, Latexify
 using PrettyTables: LatexCell, LaTeXString
-using PAndQ: Proposition, Operator, TruthTable, symbol_of, ___pretty_table, strip_type
+using PAndQ: Proposition, Operator, TruthTable, symbol_of, ___pretty_table
 
 @latexrecipe f(o::Operator) = return symbol_of(o)
 @latexrecipe f(p::Proposition) = return Symbol(repr(MIME"text/plain"(), p))
