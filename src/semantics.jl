@@ -61,7 +61,7 @@ julia> @atomize collect(valuations(p))
  [PAndQ.Variable(:p) => 0]
 ```
 """
-valuations(n::Integer) = Iterators.product(repeat([[true, false]], n)...)
+valuations(n::Integer) = Iterators.product(Iterators.repeated([true, false], n)...)
 valuations(no::NullaryOperator) = valuations(0)
 valuations(p::Proposition) = valuations(unique(atoms(p)))
 valuations(atoms) = Iterators.map(valuation -> map(Pair, atoms, valuation), valuations(length(atoms)))
