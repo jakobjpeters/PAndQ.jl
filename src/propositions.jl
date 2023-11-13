@@ -354,8 +354,8 @@ function atomize(x::Expr)
     elseif isexpr(x, :$)
         value = only(x.args)
         :(
-            if (@isdefined PAndQ) PAndQ.Constant($value)
-            elseif (@isdefined Constant) Constant($value)
+            if @isdefined PAndQ; PAndQ.Constant($value)
+            elseif @isdefined Constant; Constant($value)
             else error("either `PAndQ` or `PAndQ.Constant` must be loaded")
             end
         )
