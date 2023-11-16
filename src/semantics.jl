@@ -160,7 +160,7 @@ interpretations(p) = interpretations(valuations(p), p)
     solve(p)
 
 Return a vector containing all [`valuations`](@ref) such that
-`interpret(p, valuation) == ⊤`.
+`interpret(valuation, p) == ⊤`.
 
 See also [`interpret`](@ref) and [`tautology`](@ref).
 

@@ -365,8 +365,10 @@ atomize(x) = x
 """
     @atomize(expression)
 
-Instantiate undefined symbols as [`Variable`](@ref)s
-and interpolated values as [`Constant`](@ref)s inline.
+Instantiate [`Constant`](@ref)s and [`Variable`](@ref)s inline.
+
+Constants are instantiated with the `\$` interpolation syntax.
+Variables are instantiated with previously undefined symbols.
 
 !!! warning
     This macro attempts to ignore symbols that are being assigned a value.
@@ -397,7 +399,7 @@ end
 
 Define [`Variable`](@ref)s and return a vector containing them.
 
-Each symbol `p` is defined as [`p = @atomize p`](@ref @atomize).
+Each symbol `p` is defined as `p = PAndQ.Variable(:p)`.
 
 Examples
 ```jldoctest
@@ -414,7 +416,7 @@ q
 ```
 """
 macro variables(ps...) esc(quote
-    $(map(p -> :($p = @atomize $p), ps)...)
+    $(map(p -> :($p = $(Variable(p))), ps)...)
     [$(ps...)]
 end) end
 

@@ -12,7 +12,7 @@ _pretty_table(::Val{:markdown}, io, tt; formatters =
 
 """
     pretty_table(
-        ::Type{Markdown.MD}, ::Union{Proposition, TruthTable};
+        ::Type{Markdown.MD}, ::Union{NullaryOperator, Proposition, TruthTable};
         formatters = formatter(NullaryOperator), alignment = :l
     )
 
