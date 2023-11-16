@@ -226,8 +226,8 @@ false
 ```
 """
 p::Constant == q::Constant = p.value == q.value
-p::Union{Bool, NullaryOperator} == q::Union{NullaryOperator, Proposition} =
-    Bool(p) ↔ is_tautology(q)
+p::Bool == q::Proposition = p ↔ is_tautology(q)
+p::NullaryOperator == q::Proposition = Bool(p) == q
 p::Proposition == q::Union{Bool, NullaryOperator} = q == p
 p::Proposition == q::Proposition = is_tautology(p ↔ q)
 
