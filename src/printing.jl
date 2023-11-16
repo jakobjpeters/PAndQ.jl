@@ -1,6 +1,6 @@
 
 import Base: show, Stateful
-import PrettyTables: pretty_table, _pretty_table
+import PrettyTables: pretty_table
 import AbstractTrees: print_tree
 using Base: Docs.HTML, show_type_name
 using AbstractTrees: print_child_key
@@ -282,26 +282,20 @@ See also [Nullary Operators](@ref nullary_operators).
 """
 formatter
 
-____pretty_table(backend::Val{:latex}, io, body; vlines = :all, kwargs...) =
+___pretty_table(backend::Val{:latex}, io, body; vlines = :all, kwargs...) =
     pretty_table(io, body; backend, vlines, kwargs...)
-____pretty_table(backend::Val{:text}, io, body; crop = :none, kwargs...) =
+___pretty_table(backend::Val{:text}, io, body; crop = :none, kwargs...) =
     pretty_table(io, body; backend, crop, kwargs...)
 
-___pretty_table(
+__pretty_table(
     backend::Union{Val{:text}, Val{:latex}}, io, body;
     body_hlines = collect(0:2:size(body, 1)), kwargs...
-) = ____pretty_table(backend, io, body; body_hlines, kwargs...)
-___pretty_table(backend::Val{:html}, io, body; kwargs...) =
+) = ___pretty_table(backend, io, body; body_hlines, kwargs...)
+__pretty_table(backend::Val{:html}, io, body; kwargs...) =
     pretty_table(io, body; backend, kwargs...)
 
-__pretty_table(backend, io, tt; formatters = formatter(NullaryOperator), kwargs...) =
-    ___pretty_table(backend, io, tt.body; header = tt.header, formatters, kwargs...)
-
-_pretty_table(io::IO, no::NullaryOperator; kwargs...) = pretty_table(io, Tree(no); kwargs...)
-_pretty_table(io::IO, p::Proposition; kwargs...) =
-    pretty_table(io, TruthTable((p,)); kwargs...)
-_pretty_table(io::IO, tt::TruthTable; kwargs...) =
-    pretty_table(io, tt; kwargs...)
+_pretty_table(backend, io, tt; formatters = formatter(NullaryOperator), kwargs...) =
+    __pretty_table(backend, io, tt.body; header = tt.header, formatters, kwargs...)
 
 """
     pretty_table(
@@ -361,7 +355,9 @@ julia> print(pretty_table(Docs.HTML, @atomize p ∧ q).content)
 ```
 """
 pretty_table(io::IO, tt::TruthTable; backend = Val(:text), alignment = :l, kwargs...) =
-    __pretty_table(backend, io, tt; alignment, kwargs...)
+    _pretty_table(backend, io, tt; alignment, kwargs...)
+pretty_table(io::IO, p::Union{NullaryOperator, Proposition}; kwargs...) =
+    pretty_table(io, TruthTable((p,)); kwargs...)
 
 """
     print_tree(::IO = stdout, ::Proposition; kwargs...)

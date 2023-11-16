@@ -1,17 +1,14 @@
 
 module MarkdownExtension
 
-import PAndQ: show, pretty_table, __pretty_table
+import PAndQ: show, pretty_table, _pretty_table
 using Markdown: Markdown, MD, Table
 using PAndQ: NullaryOperator, TruthTable, Proposition, symbol_of, formatter
 
-__pretty_table(
-    ::Val{:markdown}, io, tt;
-    formatters = formatter(NullaryOperator), alignment
-) = print(io, MD(Table(
-    [tt.header, eachrow(map(v -> formatters(v, 0, 0), tt.body))...],
-    repeat([alignment], length(tt.header))
-)))
+_pretty_table(::Val{:markdown}, io, tt; formatters =
+    formatter(NullaryOperator), alignment) = print(io, MD(Table(
+        [tt.header, eachrow(map(v -> formatters(v, 0, 0), tt.body))...],
+    repeat([alignment], length(tt.header)))))
 
 """
     pretty_table(
@@ -41,9 +38,7 @@ julia> @atomize print(pretty_table(String, p ∧ q; backend = Val(:markdown)))
 | ⊥   | ⊥   | ⊥     |
 ```
 """
-pretty_table(::Type{MD}, tt::TruthTable; backend = Val(:markdown), kwargs...) =
-    Markdown.parse(pretty_table(String, tt; backend, kwargs...))
-pretty_table(::Type{MD}, p::Proposition; kwargs...) =
-    pretty_table(MD, TruthTable((p,)); kwargs...)
+pretty_table(::Type{MD}, x::Union{NullaryOperator, Proposition, TruthTable}; backend = Val(:markdown), kwargs...) =
+    Markdown.parse(pretty_table(String, x; backend, kwargs...))
 
 end # module

@@ -19,5 +19,5 @@ MarkdownExtension = "Markdown"
 [compat]
 AbstractTrees = "0.4"
 PrecompileTools = "1"
-PrettyTables = "2"
+PrettyTables = "2.3"
 julia = "1"

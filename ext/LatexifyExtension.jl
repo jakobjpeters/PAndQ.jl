@@ -3,10 +3,10 @@ module LatexifyExtension
 
 import Base: show
 import Latexify: latexify
-import PAndQ: pretty_table, __pretty_table, formatter
+import PAndQ: pretty_table, _pretty_table, formatter
 using Latexify: @latexrecipe, Latexify
 using PrettyTables: LatexCell, LaTeXString
-using PAndQ: Proposition, Operator, TruthTable, symbol_of, ___pretty_table
+using PAndQ: Proposition, Operator, NullaryOperator, TruthTable, symbol_of, __pretty_table
 
 @latexrecipe f(o::Operator) = return symbol_of(o)
 @latexrecipe f(p::Proposition) = return Symbol(repr(MIME"text/plain"(), p))
@@ -21,8 +21,8 @@ using PAndQ: Proposition, Operator, TruthTable, symbol_of, ___pretty_table
 """
 formatter(::Type{LaTeXString}) = (v, _, _) -> string(latexify(v ? "⊤" : "⊥"))
 
-__pretty_table(backend::Val{:latex}, io, tt; formatters = formatter(LaTeXString), kwargs...) =
-    ___pretty_table(backend, io, tt.body; header = map(latexify ∘ Symbol, tt.header), formatters, kwargs...)
+_pretty_table(backend::Val{:latex}, io, tt; formatters = formatter(LaTeXString), kwargs...) =
+    __pretty_table(backend, io, tt.body; header = map(latexify ∘ Symbol, tt.header), formatters, kwargs...)
 
 """
     pretty_table(
@@ -48,7 +48,7 @@ L"\\begin{tabular}{|l|l|l|}
 "
 ```
 """
-pretty_table(::Type{LaTeXString}, x::Union{Proposition, TruthTable}; backend = Val(:latex), kwargs...) =
+pretty_table(::Type{LaTeXString}, x::Union{NullaryOperator, Proposition, TruthTable}; backend = Val(:latex), kwargs...) =
     LaTeXString(pretty_table(String, x; backend, kwargs...))
 
 end # module
