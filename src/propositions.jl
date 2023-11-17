@@ -234,7 +234,7 @@ julia> @atomize PAndQ.children(¬p)
 (PAndQ.Variable(:p),)
 
 julia> @atomize PAndQ.children(p ∧ q)
-(PAndQ.Tree(identity, PAndQ.Variable(:p)), PAndQ.Tree(identity, PAndQ.Variable(:q)))
+(PAndQ.Variable(:p), PAndQ.Variable(:q))
 ```
 """
 children(p::Tree) = p.nodes

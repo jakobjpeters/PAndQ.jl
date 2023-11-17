@@ -2,10 +2,13 @@
 import Base: show, Stateful
 import PrettyTables: pretty_table
 import AbstractTrees: print_tree
-using Base: Docs.HTML, show_type_name
+using Base.Docs: HTML
 using AbstractTrees: print_child_key
 
+
+
 """
+    TruthTable(::Vector{String}, ::Matrix{Bool})
     TruthTable(ps)
 
 Construct a [truth table](https://en.wikipedia.org/wiki/Truth_table)
@@ -48,51 +51,51 @@ julia> @atomize TruthTable([p ∧ ¬p, p ⊻ q, ¬(p ∧ q) ∧ (p ∨ q)])
 struct TruthTable
     header::Vector{String}
     body::Matrix{Bool}
+end
 
-    function TruthTable(ps)
-        _atoms = unique(Iterators.flatmap(atoms, ps))
-        ps = union(_atoms, ps)
-        _valuations = valuations(_atoms)
-        _interpretations = Iterators.map(p -> vec(map(valuation -> _interpret(p, a -> Dict(valuation)[a], Bool), _valuations)), ps)
+function TruthTable(ps)
+    _atoms = unique(Iterators.flatmap(atoms, ps))
+    ps = union(_atoms, ps)
+    _valuations = valuations(_atoms)
+    _interpretations = Iterators.map(p -> vec(map(valuation -> _interpret(p, a -> Dict(valuation)[a], Bool), _valuations)), ps)
 
-        truths_interpretations, atoms_interpretations, compounds_interpretations =
-            Vector{Bool}[], Vector{Bool}[], Vector{Bool}[]
+    truths_interpretations, atoms_interpretations, compounds_interpretations =
+        Vector{Bool}[], Vector{Bool}[], Vector{Bool}[]
 
-        grouped_truths = Dict(map(truth -> repeat([truth], length(_valuations)) => Proposition[], (true, false)))
-        grouped_atoms = Dict(map(
-            p -> map(Bool, interpretations(_valuations, p)) => Proposition[],
-            _atoms
-        ))
-        grouped_compounds = Dict{Vector{Bool}, Vector{Proposition}}()
+    grouped_truths = Dict(map(truth -> repeat([truth], length(_valuations)) => Proposition[], (true, false)))
+    grouped_atoms = Dict(map(
+        p -> map(Bool, interpretations(_valuations, p)) => Proposition[],
+        _atoms
+    ))
+    grouped_compounds = Dict{Vector{Bool}, Vector{Proposition}}()
 
-        for (p, interpretation) in zip(ps, _interpretations)
-            _union! = (key, group) -> begin
-                union!(key, [interpretation])
-                union!(get!(group, interpretation, Proposition[]), [p])
-            end
-
-            if interpretation in keys(grouped_truths) _union!(truths_interpretations, grouped_truths)
-            elseif interpretation in keys(grouped_atoms) _union!(atoms_interpretations, grouped_atoms)
-            else _union!(compounds_interpretations, grouped_compounds)
-            end
+    for (p, interpretation) in zip(ps, _interpretations)
+        _union! = (key, group) -> begin
+            union!(key, [interpretation])
+            union!(get!(group, interpretation, Proposition[]), [p])
         end
 
-        header = String[]
-        body = Vector{Bool}[]
-        for (_interpretations, group) in (
-            truths_interpretations => grouped_truths,
-            atoms_interpretations => grouped_atoms,
-            compounds_interpretations => grouped_compounds
-        )
-            for interpretation in _interpretations
-                xs = get(group, interpretation, Proposition[])
-                push!(header, join(unique!(map(x -> repr("text/plain", x), xs)), ", "))
-                push!(body, interpretation)
-            end
+        if interpretation in keys(grouped_truths) _union!(truths_interpretations, grouped_truths)
+        elseif interpretation in keys(grouped_atoms) _union!(atoms_interpretations, grouped_atoms)
+        else _union!(compounds_interpretations, grouped_compounds)
         end
-
-        new(header, reduce(hcat, body))
     end
+
+    header = String[]
+    body = Vector{Bool}[]
+    for (_interpretations, group) in (
+        truths_interpretations => grouped_truths,
+        atoms_interpretations => grouped_atoms,
+        compounds_interpretations => grouped_compounds
+    )
+        for interpretation in _interpretations
+            xs = get(group, interpretation, Proposition[])
+            push!(header, join(unique!(map(x -> repr("text/plain", x), xs)), ", "))
+            push!(body, interpretation)
+        end
+    end
+
+    TruthTable(header, reduce(hcat, body))
 end
 
 # Internals
@@ -137,12 +140,29 @@ print_node(io, ::Compound{typeof(𝒾)}) = nothing
 print_node(io, p) = printnode(io, p)
 
 """
-    show_atom(io, ::Atom)
+    show_atom(::IO, ::Atom)
 
 See also [`Atom`](@ref).
 """
-show_atom(io, p::Constant) = show(io, p.value)
-show_atom(io, p::Variable) = show(io, p.symbol)
+function show_atom(io, p::Constant)
+    _io = IOContext(io, :compact => get(io, :compact, true))
+    if get(io, :verbose, false) show(_io, p.value)
+    else
+        print(_io, "\$(")
+        show(_io, p.value)
+        print(_io, ")")
+    end
+end
+show_atom(io, p::Variable) = (get(io, :verbose, false) ? show : print)(io, p.symbol)
+
+for P in (:Constant, :Variable, :Tree, :Clause, :Normal)
+    @eval base_type(::$P) = $P
+end
+
+"""
+    base_type(::Proposition)
+"""
+base_type
 
 # `show`
 
@@ -152,7 +172,8 @@ show_atom(io, p::Variable) = show(io, p.symbol)
 Represent the given [`Proposition`](@ref) as a [propositional formula]
 (https://en.wikipedia.org/wiki/Propositional_formula).
 
-The value of a [`Constant`](@ref) is shown with `compact => true` in its `IOContext`.
+The value of a [`Constant`](@ref) is shown with
+`IOContext(io, :compact => get(io, :compact, true))`.
 
 # Examples
 ```jldoctest
@@ -163,12 +184,13 @@ julia> @atomize show(stdout, MIME"text/plain"(), PAndQ.Normal(p ⊻ q))
 (p ∨ q) ∧ (¬p ∨ ¬q)
 ```
 """
-function show(io::IO, ::MIME"text/plain", p::Constant)
-    print(io, "\$(")
-    show_atom(IOContext(io, :compact => true), p)
-    print(io, ")")
-end
-show(io::IO, ::MIME"text/plain", p::Variable) = print(io, p.symbol)
+show(io::IO, ::MIME"text/plain", p::Atom) =
+    if get(io, :verbose, false)
+        print(io, base_type(p), "(")
+        show_atom(io, p)
+        print(io, ")")
+    else show_atom(io, p)
+    end
 function show(io::IO, ::MIME"text/plain", p::Compound{<:UnaryOperator})
     print_node(io, p)
     parenthesize(io, child(p))
@@ -212,42 +234,18 @@ show(io::IO, ::MIME"text/plain", tt::TruthTable) =
 """
     show(::IO, ::Proposition)
 
-Show the given [`Proposition`](@ref) in it's internal representation.
+Show the given [`Proposition`](@ref) with verbose [`Atom`](@ref)s.
 
 # Examples
 ```jldoctest
-julia> @atomize repr(p ∧ q)
-"PAndQ.Tree(and, PAndQ.Tree(identity, PAndQ.Variable(:p)), PAndQ.Tree(identity, PAndQ.Variable(:q)))"
+julia> @atomize show(stdout, p ∧ q)
+PAndQ.Variable(:p) ∧ PAndQ.Variable(:q)
 
-julia> @atomize eval(Meta.parse(repr(p ∧ q)))
+julia> PAndQ.Variable(:p) ∧ PAndQ.Variable(:q)
 p ∧ q
 ```
 """
-function show(io::IO, p::A) where A <: Atom
-    show_type_name(io, A.name)
-    print(io, "(")
-    show_atom(io, p)
-    print(io, ")")
-end
-function show(io::IO, p::C) where C <: Compound
-    show_type_name(io, C.name)
-    print(io, "(", nameof(nodevalue(p)))
-
-    _children = Stateful(children(p))
-    if !isempty(_children)
-        print(io, ", ")
-        p isa Union{Clause, Normal} && print(io, "[")
-
-        for node in _children
-            show(io, node)
-            !isempty(_children) && print(io, ", ")
-        end
-
-        p isa Union{Clause, Normal} && print(io, "]")
-    end
-
-    print(io, ")")
-end
+show(io::IO, p::Proposition) = show(IOContext(io, :verbose => true), MIME"text/plain"(), p)
 
 for (T, f) in (
     NullaryOperator => v -> v ? "⊤" : "⊥",
@@ -301,7 +299,7 @@ See also [Nullary Operators](@ref nullary_operators), [`Proposition`](@ref),
 
 # Examples
 ```jldoctest
-julia> pretty_table(@atomize p ∧ q)
+julia> @atomize pretty_table(p ∧ q)
 ┌───┬───┬───────┐
 │ p │ q │ p ∧ q │
 ├───┼───┼───────┤
