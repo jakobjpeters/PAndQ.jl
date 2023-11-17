@@ -53,14 +53,14 @@ struct TruthTable
         _atoms = unique(Iterators.flatmap(atoms, ps))
         ps = union(_atoms, ps)
         _valuations = valuations(_atoms)
-        _interpretations = Iterators.map(p -> vec(collect(interpretations(_valuations, p))), ps)
+        _interpretations = Iterators.map(p -> vec(map(valuation -> _interpret(p, a -> Dict(valuation)[a], Bool), _valuations)), ps)
 
         truths_interpretations, atoms_interpretations, compounds_interpretations =
             Vector{Bool}[], Vector{Bool}[], Vector{Bool}[]
 
         grouped_truths = Dict(map(truth -> repeat([truth], length(_valuations)) => Proposition[], (true, false)))
         grouped_atoms = Dict(map(
-            p -> collect(interpretations(_valuations, p)) => Proposition[],
+            p -> map(Bool, interpretations(_valuations, p)) => Proposition[],
             _atoms
         ))
         grouped_compounds = Dict{Vector{Bool}, Vector{Proposition}}()

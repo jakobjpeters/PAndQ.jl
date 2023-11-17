@@ -251,7 +251,7 @@ See also [`Compound`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize PAndQ.nodevalue(¬p)
-not (generic function with 19 methods)
+not (generic function with 6 methods)
 
 julia> @atomize PAndQ.nodevalue(p ∧ q)
 and (generic function with 17 methods)
@@ -423,12 +423,12 @@ Return an iterator of each [operator]
 ```jldoctest
 julia> @atomize collect(operators(¬p))
 1-element Vector{typeof(not)}:
- not (generic function with 19 methods)
+ not (generic function with 6 methods)
 
 julia> @atomize collect(operators(¬p ∧ q))
 3-element Vector{Function}:
  and (generic function with 17 methods)
- not (generic function with 19 methods)
+ not (generic function with 6 methods)
  identity (generic function with 1 method)
 ```
 """

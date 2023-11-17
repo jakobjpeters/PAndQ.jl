@@ -5,9 +5,7 @@ DocTestSetup = :(using PAndQ)
 
 # [Operators](@id operators_operators)
 
-Operators accept `Bool`s,
-[Nullary Operators](@ref nullary_operators), and [`Proposition`](@ref PAndQ.Proposition)s.
-The [`not`](@ref) operator also accepts an operator argument.
+Operators accept `Bool`s, [Nullary Operators](@ref nullary_operators), and [`Proposition`](@ref PAndQ.Proposition)s. Operations on symbolic expressions are not simplified.
 
 Typing symbols with tab completion is performed by typing `\`, followed by the given characters, and then the `[TAB]` key. For example, `⊤` is typed with `\top[TAB]`. See also [Tab Completion](https://docs.julialang.org/en/v1/stdlib/REPL/#Tab-completion) and [Unicode Input](https://docs.julialang.org/en/v1/manual/unicode-input/).
 
@@ -53,7 +51,7 @@ not
 
 !!! tip
     Each binary operator `bo` has been [curried](https://en.wikipedia.org/wiki/Currying)
-    such that `bo(p) = Base.Fix2(bo, p)` and `bo(p)(q) == bo(p, q)`.
+    such that `bo(p) = Base.Fix2(bo, p)` and `bo(p)(q) == bo(q, p)`.
 
 ```@docs
 and

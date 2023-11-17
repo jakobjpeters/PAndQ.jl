@@ -8,7 +8,9 @@ using Base: Iterators.product, uniontypes
     process_valuations(valuations, p, f)
 """
 process_valuations(valuations, p, f) =
-    f(valuation -> _interpret(p, a -> Dict(valuation)[a], Bool), valuations)
+    f(valuation -> interpret(valuation, p), valuations)
+process_valuations(p, f) =
+    f(valuation -> _interpret(p, a -> Dict(valuation)[a], Bool), valuations(p))
 
 """
     neutral_operator(::NullaryOperator)
@@ -40,8 +42,8 @@ end
 # Truths
 
 """
-    valuations(::Union{Integer, NullaryOperator, Proposition})
-    valation(atoms)
+    valuation(atoms)
+    valuations(::Union{NullaryOperator, Proposition})
 
 Return an iterator of every possible [valuation]
 (https://en.wikipedia.org/wiki/Valuation_(logic)).
@@ -50,21 +52,28 @@ See also [Nullary Operators](@ref nullary_operators) and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> collect(valuations(2))
-2×2 Matrix{Tuple{Bool, Bool}}:
- (1, 1)  (1, 0)
- (0, 1)  (0, 0)
+julia> collect(valuations(⊤))
+0-dimensional Array{Vector{Union{}}, 0}:
+[]
 
 julia> @atomize collect(valuations(p))
 2-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
  [PAndQ.Variable(:p) => 1]
  [PAndQ.Variable(:p) => 0]
+
+julia> @atomize collect(valuations(p ∧ q))
+2×2 Matrix{Vector{Pair{PAndQ.Variable, Bool}}}:
+ [Variable(:p)=>1, Variable(:q)=>1]  [Variable(:p)=>1, Variable(:q)=>0]
+ [Variable(:p)=>0, Variable(:q)=>1]  [Variable(:p)=>0, Variable(:q)=>0]
 ```
 """
-valuations(n::Integer) = Iterators.product(Iterators.repeated([true, false], n)...)
-valuations(no::NullaryOperator) = valuations(0)
-valuations(p::Proposition) = valuations(unique(atoms(p)))
-valuations(atoms) = Iterators.map(valuation -> map(Pair, atoms, valuation), valuations(length(atoms)))
+function valuations(atoms)
+    unique_atoms = unique(atoms)
+    Iterators.map(valuation -> map(Pair, unique_atoms, valuation),
+        Iterators.product(Iterators.repeated([true, false], length(unique_atoms))...)
+    )
+end
+    valuations(p::Union{NullaryOperator, Proposition}) = valuations(collect(atoms(p)))
 
 _interpret(no::NullaryOperator, valuation, convert) = convert(no)
 _interpret(p::Atom, valuation, convert) = valuation(p)
@@ -116,21 +125,20 @@ interpret(valuation::Dict, p) = interpret(a -> get(valuation, a, a), p)
 interpret(valuation, p) = interpret(Dict(valuation), p)
 
 """
-    (::Proposition)(valuation...)
+    (::Proposition)(valuation)
 
 Equivalent to [`interpret(valuation, p)`](@ref interpret).
 
 # Examples
 ```jldoctest
-julia> @atomize ¬p(p => ⊤)
-contradiction (generic function with 2 methods)
+julia> @atomize ¬p([p => ⊤])
+¬⊤
 
-julia> @atomize (p ∧ q)(p => ⊤)
+julia> @atomize (p ∧ q)([p => ⊤])
 ⊤ ∧ q
 ```
 """
 (p::Proposition)(valuation) = interpret(valuation, p)
-(p::Proposition)(valuation...) = p(valuation)
 
 """
     interpretations(valuations, p)
@@ -141,19 +149,23 @@ Return an iterator of truth values given by [`interpret`](@ref)ing
 
 # Examples
 ```jldoctest
+julia> collect(interpretations(⊤))
+0-dimensional Array{Bool, 0}:
+1
+
 julia> @atomize collect(interpretations(p))
 2-element Vector{Bool}:
  1
  0
 
-julia> @atomize collect(interpretations(p ⊻ q))
+julia> @atomize collect(interpretations(p ∧ q))
 2×2 Matrix{Bool}:
- 0  1
  1  0
+ 0  0
 ```
 """
 interpretations(valuations, p) = process_valuations(valuations, p, Iterators.map)
-interpretations(p) = interpretations(valuations(p), p)
+interpretations(p) = process_valuations(p, Iterators.map)
 
 """
     solve(valuations, p)
@@ -166,18 +178,21 @@ See also [`interpret`](@ref) and [`tautology`](@ref).
 
 # Examples
 ```jldoctest
+julia> collect(solve(⊤))
+1-element Vector{Vector{Union{}}}:
+ []
+
 julia> @atomize collect(solve(p))
 1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
  [PAndQ.Variable(:p) => 1]
 
-julia> @atomize collect(solve(p ⊻ q))
-2-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
- [PAndQ.Variable(:p) => 0, PAndQ.Variable(:q) => 1]
- [PAndQ.Variable(:p) => 1, PAndQ.Variable(:q) => 0]
+julia> @atomize collect(solve(p ∧ q))
+1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
+ [PAndQ.Variable(:p) => 1, PAndQ.Variable(:q) => 1]
 ```
 """
 solve(valuations, p) = process_valuations(valuations, p, Iterators.filter)
-solve(p) = solve(valuations(p), p)
+solve(p) = process_valuations(p, Iterators.filter)
 
 # Predicates
 
@@ -446,19 +461,19 @@ left neutral elements of the given [operator](@ref operators_operators).
 # Examples
 ```jldoctest
 julia> left_neutrals(or)
-Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+Set{typeof(contradiction)} with 1 element:
   PAndQ.contradiction
 
 julia> left_neutrals(imply)
-Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+Set{typeof(tautology)} with 1 element:
   PAndQ.tautology
 
 julia> left_neutrals(nor)
 Set{Union{typeof(contradiction), typeof(tautology)}}()
 ```
 """
-left_neutrals(::union_typeof((∧, ↔, →))) = Set{NullaryOperator}((⊤,))
-left_neutrals(::union_typeof((∨, ⊻, ↚))) = Set{NullaryOperator}((⊥,))
+left_neutrals(::union_typeof((∧, ↔, →))) = Set((⊤,))
+left_neutrals(::union_typeof((∨, ⊻, ↚))) = Set((⊥,))
 left_neutrals(::Operator) = Set{NullaryOperator}()
 
 """
@@ -470,16 +485,19 @@ right neutral elements of the given [operator](@ref operators_operators).
 # Examples
 ```jldoctest
 julia> right_neutrals(or)
-Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+Set{typeof(contradiction)} with 1 element:
   PAndQ.contradiction
 
 julia> right_neutrals(converse_imply)
-Set{Union{typeof(contradiction), typeof(tautology)}} with 1 element:
+Set{typeof(tautology)} with 1 element:
   PAndQ.tautology
+
+julia> left_neutrals(nor)
+Set{Union{typeof(contradiction), typeof(tautology)}}()
 ```
 """
-right_neutrals(::union_typeof((∧, ↔, ←))) = Set{NullaryOperator}((⊤,))
-right_neutrals(::union_typeof((∨, ⊻, ↛))) = Set{NullaryOperator}((⊥,))
+right_neutrals(::union_typeof((∧, ↔, ←))) = Set((⊤,))
+right_neutrals(::union_typeof((∨, ⊻, ↛))) = Set((⊥,))
 right_neutrals(::Operator) = Set{NullaryOperator}()
 
 # Operators
@@ -501,14 +519,18 @@ p::Bool ∨ q::NullaryOperator = q ∨ p
 
 ## Operators
 
+### NullaryOperators
+
 for no in (:⊤, :⊥)
+    @eval $no() = $no
     @eval $no(valuation) = interpret(valuation, $no)
-    @eval $no(valuation...) = $no(valuation)
 end
 
-eval_doubles(:¬, (
-    (⊤, ⊥), (¬, 𝒾), (∧, ⊼), (∨, ⊽), (⊻, ↔), (→, ↛), (←, ↚)
-))
+### Unary Operators
+
+¬p::NullaryOperator = ¬Tree(p)
+
+### Binary Operators
 
 p::Union{NullaryOperator, Proposition} ∨ q::Union{NullaryOperator, Proposition} = ¬(p ⊽ q)
 
@@ -539,7 +561,7 @@ end
 ¬p::Atom = Literal(¬, p)
 (¬p::Tree) = Tree(¬, p)
 (¬p::Clause) = Clause(dual(nodevalue(p)), map(
-    _child -> Literal(¬nodevalue(_child), child(_child)),
+    _child -> Literal(nodevalue(_child) == 𝒾 ? (¬) : 𝒾, child(_child)),
 children(p)))
 (¬p::Normal) = Normal(dual(nodevalue(p)), map(¬, children(p)))
 
