@@ -63,8 +63,8 @@ julia> using PAndQ
 ## Showcase
 
 ```julia
-julia> ¬⊥()
-true
+julia> ¬⊤
+¬⊤
 
 julia> @atomize p ∧ q → $1
 (p ∧ q) → $(1)
@@ -83,8 +83,8 @@ false
 julia> s = (p ∨ q) ∧ (r ∨ ¬q)
 (p ∨ q) ∧ (¬p ∨ ¬q)
 
-julia> s(p => true, q => false)
-true
+julia> s([p => ⊤, q => ⊥])
+(⊤ ∨ ⊥) ∧ (¬⊤ ∨ ¬⊥)
 
 julia> TruthTable([p ∧ ¬p, r, p ⊻ q, s])
 ┌────────┬───┬───┬────┬────────────────────────────┐
@@ -113,7 +113,7 @@ julia> TruthTable([p ∧ ¬p, r, p ⊻ q, s])
     - PAndQ.jl implements a superset of the features in this package
 - [MathematicalPredicates.jl](https://github.com/JuliaReach/MathematicalPredicates.jl)
     - Implements propositional logic
-    - PAndQ.jl and Julog.jl implement a superset of the features in this package
+    - PAndQ.jl, Julog.jl, and SoleLogics.jl implement a superset of the features in this package
 
 #### Wrappers
 
