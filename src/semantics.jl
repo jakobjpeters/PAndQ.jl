@@ -616,6 +616,7 @@ convert(::Type{Atom}, p::Union{Literal{typeof(𝒾)}, Tree{typeof(𝒾), <:Atom}
 convert(::Type{Literal}, p::Tree{<:UnaryOperator, <:Atom}) =
     Literal(nodevalue(p), child(p))
 convert(::Type{Literal}, p::Atom) = Literal(𝒾, p)
+convert(::Type{Tree}, p::NullaryOperator) = Tree(p)
 convert(::Type{Tree}, p::Atom) = Tree(𝒾, p)
 convert(::Type{Tree}, p::Literal) = Tree(nodevalue(p), p.atom)
 function convert(::Type{Tree}, p::Clause)
