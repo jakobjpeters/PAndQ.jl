@@ -169,10 +169,6 @@ function show(io::IO, ::MIME"text/plain", p::Constant)
     print(io, ")")
 end
 show(io::IO, ::MIME"text/plain", p::Variable) = print(io, p.symbol)
-function show(io::IO, ::MIME"text/plain", p::Literal)
-    print_node(io, p)
-    printnode(io, p.atom)
-end
 function show(io::IO, ::MIME"text/plain", p::Compound{<:UnaryOperator})
     print_node(io, p)
     parenthesize(io, child(p))
@@ -232,10 +228,6 @@ function show(io::IO, p::A) where A <: Atom
     print(io, "(")
     show_atom(io, p)
     print(io, ")")
-end
-function show(io::IO, p::L) where L <: Literal
-    show_type_name(io, L.name)
-    print(io, "(", nameof(nodevalue(p)), ", ", p.atom, ")")
 end
 function show(io::IO, p::C) where C <: Compound
     show_type_name(io, C.name)

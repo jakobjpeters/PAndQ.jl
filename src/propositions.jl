@@ -37,21 +37,11 @@ A proposition composed from connecting [`Atom`](@ref)s
 with one or more [`Operator`](@ref)s.
 
 Subtype of [`Proposition`](@ref).
-Supertype of [`Literal`](@ref), [`Clause`](@ref), and [`Expressive`](@ref).
+Supertype of [`Tree`](@ref), [`Clause`](@ref), and [`Normal`](@ref).
 """
 abstract type Compound{O} <: Proposition end
 
-"""
-    Expressive{O} <: Compound{O}
-
-A proposition that is [expressively complete](https://en.wikipedia.org/wiki/Completeness_(logic)).
-
-Subtype of [`Compound`](@ref).
-Supertype of [`Tree`](@ref) and [`Normal`](@ref).
-"""
-abstract type Expressive{O} <: Compound{O} end
-
-# Atoms
+### Concrete
 
 """
     Constant{T} <: Atom
@@ -102,40 +92,8 @@ struct Variable <: Atom
     end
 end
 
-# Internal
-
-## Types
-
-### Concrete
-
 """
-    Literal{UO <: UnaryOperator, A <: Atom} <: Compound{UO}
-    Literal(::UO, ::A)
-    Literal(::Union{Atom, Literal})
-
-A proposition represented by [an atomic formula or its negation]
-(https://en.wikipedia.org/wiki/Literal_(mathematical_logic)).
-
-Subtype of [`Compound`](@ref).
-See also [`UnaryOperator`](@ref) and [`Atom`](@ref).
-
-# Examples
-```jldoctest
-julia> @atomize PAndQ.Literal(𝒾, p)
-p
-
-julia> @atomize PAndQ.Literal(¬, p)
-¬p
-```
-"""
-struct Literal{UO <: UnaryOperator, A <: Atom} <: Compound{UO}
-    atom::A
-
-    Literal(::UO, atom::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, A}(atom)
-end
-
-"""
-    Tree{O <: Operator, AT <: Union{Atom, Tree}, N} <: Expressive{O}
+    Tree{O <: Operator, AT <: Union{Atom, Tree}, N} <: Compound{O}
     Tree(::NullaryOperator, ::Atom)
     Tree(::Operator, ::Tree...)
     Tree(::Proposition)
@@ -143,7 +101,7 @@ end
 A [`Proposition`](@ref) represented by an [abstract syntax tree]
 (https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 
-Subtype of [`Expressive`](@ref).
+Subtype of [`Compound`](@ref).
 See also [`Atom`](@ref), [`NullaryOperator`](@ref), and [`Operator`](@ref).
 
 # Examples
@@ -158,7 +116,7 @@ julia> @atomize PAndQ.Tree(and, PAndQ.Tree(p), PAndQ.Tree(q))
 p ∧ q
 ```
 """
-struct Tree{O <: Operator, P <: Proposition, N} <: Expressive{O}
+struct Tree{O <: Operator, P <: Proposition, N} <: Compound{O}
     nodes::NTuple{N, P}
 
     Tree(::UO, node::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, A, 1}((node,))
@@ -169,6 +127,25 @@ struct Tree{O <: Operator, P <: Proposition, N} <: Expressive{O}
         new{O, eltype(nodes), _arity}(nodes)
     end
 end
+
+"""
+    Literal <: Tree{<:UnaryOperator, <:Atom, 1}
+
+A proposition represented by [an atomic formula or its negation]
+(https://en.wikipedia.org/wiki/Literal_(mathematical_logic)).
+
+See also [`UnaryOperator`](@ref), [`Atom`](@ref), and [`Tree`](@ref).
+
+# Examples
+```jldoctest
+julia> @atomize PAndQ.Literal(𝒾, p)
+p
+
+julia> @atomize PAndQ.Literal(¬, p)
+¬p
+```
+"""
+const Literal = Tree{<:Operator, <:Atom, 1}
 
 """
     Clause{AO <: AndOr, L <: Literal} <: Compound{AO}
@@ -206,7 +183,7 @@ struct Clause{AO <: AndOr, L <: Literal} <: Compound{AO}
 end
 
 """
-    Normal{AO <: AndOr, C <: Clause} <: Expressive{AO}
+    Normal{AO <: AndOr, C <: Clause} <: Compound{AO}
     Normal(::typeof(and), ps = Clause{typeof(or)}[])
     Normal(::typeof(or), ps = Clause{typeof(and)}[])
     Normal(::AO, ::Proposition)
@@ -220,7 +197,7 @@ A [`Proposition`](@ref) represented in [conjunctive]
     An empty `Normal` is [logically equivalent](@ref ==) to the
     neutral element of it's binary operator.
 
-Subtype of [`Expressive`](@ref).
+Subtype of [`Compound`](@ref).
 See also [`Clause`](@ref), [`AndOr`](@ref), and [`NullaryOperator`](@ref).
 
 # Examples
@@ -232,7 +209,7 @@ julia> @atomize PAndQ.Normal(∧, p ⊻ q)
 (p ∨ q) ∧ (¬p ∨ ¬q)
 ```
 """
-struct Normal{AO <: AndOr, C <: Clause} <: Expressive{AO}
+struct Normal{AO <: AndOr, C <: Clause} <: Compound{AO}
     clauses::Vector{C}
 
     Normal(::A, clauses::Vector{C} = Clause{typeof(or)}[]) where {A <: typeof(and), C <: Clause{typeof(or)}} =
@@ -260,7 +237,6 @@ julia> @atomize PAndQ.children(p ∧ q)
 (PAndQ.Tree(identity, PAndQ.Variable(:p)), PAndQ.Tree(identity, PAndQ.Variable(:q)))
 ```
 """
-children(p::Literal) = (p.atom,)
 children(p::Tree) = p.nodes
 children(p::Clause) = p.literals
 children(p::Normal) = p.clauses
@@ -300,7 +276,7 @@ julia> @atomize PAndQ.printnode(stdout, p ∧ q)
 """
 printnode(io::IO, no::NullaryOperator; kwargs...) = print(io, symbol_of(no))
 printnode(io::IO, p::Atom; kwargs...) = show(io, MIME"text/plain"(), p)
-printnode(io::IO, p::Union{Literal, Tree}; kwargs...) = print(io, symbol_of(nodevalue(p)))
+printnode(io::IO, p::Tree; kwargs...) = print(io, symbol_of(nodevalue(p)))
 printnode(io::IO, p::Union{Clause, Normal}; kwargs...) =
     print(io, symbol_of((isempty(children(p)) ? only ∘ left_neutrals : 𝒾)(nodevalue(p))))
 
@@ -482,7 +458,7 @@ p ∧ q
 ```
 """
 map(f, p::Atom) = f(p)
-map(f, p::Union{NullaryOperator, Literal, Tree}) = _map(splat, f, p)
+map(f, p::Union{NullaryOperator, Tree}) = _map(splat, f, p)
 map(f, p::Union{Clause, Normal}) = _map(𝒾, f, p)
 
 """

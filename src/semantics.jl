@@ -68,7 +68,7 @@ valuations(atoms) = Iterators.map(valuation -> map(Pair, atoms, valuation), valu
 
 _interpret(no::NullaryOperator, valuation, convert) = convert(no)
 _interpret(p::Atom, valuation, convert) = valuation(p)
-_interpret(p::Union{Literal, Tree}, valuation, convert) =
+_interpret(p::Tree, valuation, convert) =
     nodevalue(p)(map(child -> _interpret(child, valuation, convert), children(p))...)
 _interpret(p::Tree{<:NullaryOperator}, valuation, convert) = convert(nodevalue(p))
 function _interpret(p::Union{Clause, Normal}, valuation, convert)
@@ -537,7 +537,7 @@ end
 ## Propositions
 
 ¬p::Atom = Literal(¬, p)
-(¬p::Union{Literal, Tree}) = Tree(¬, Tree(p))
+(¬p::Tree) = Tree(¬, p)
 (¬p::Clause) = Clause(dual(nodevalue(p)), map(
     _child -> Literal(¬nodevalue(_child), child(_child)),
 children(p)))
@@ -548,7 +548,7 @@ p::Proposition ∧ q::Proposition = Normal(∧, p) ∧ Normal(∧, q)
 for BO in uniontypes(BinaryOperator)
     bo = nameof(BO.instance)
     @eval $bo(p::Union{NullaryOperator, Proposition}) = Fix2($bo, p)
-    @eval $bo(p::Union{NullaryOperator, Atom, Literal, Tree}, q::Union{NullaryOperator, Atom, Literal, Tree}) =
+    @eval $bo(p::Union{NullaryOperator, Atom, Tree}, q::Union{NullaryOperator, Atom, Tree}) =
         Tree($bo, Tree(p), Tree(q))
 end
 
@@ -581,6 +581,8 @@ for AO in uniontypes(AndOr)
 end
 
 # Constructors
+
+Literal(uo::UnaryOperator, p::Atom) = Tree(uo, p)
 
 Clause(ao::AndOr, ps) = isempty(ps) ?
     Clause(ao) :
@@ -618,7 +620,6 @@ convert(::Type{Literal}, p::Tree{<:UnaryOperator, <:Atom}) =
 convert(::Type{Literal}, p::Atom) = Literal(𝒾, p)
 convert(::Type{Tree}, p::NullaryOperator) = Tree(p)
 convert(::Type{Tree}, p::Atom) = Tree(𝒾, p)
-convert(::Type{Tree}, p::Literal) = Tree(nodevalue(p), p.atom)
 function convert(::Type{Tree}, p::Clause)
     _nodevalue = nodevalue(p)
     Tree(foldl(_nodevalue, p.literals; init = only(left_neutrals(_nodevalue))))

@@ -40,7 +40,6 @@ print_tree(Proposition) # hide
 PAndQ.Proposition
 PAndQ.Atom
 PAndQ.Compound
-PAndQ.Expressive
 ```
 
 #### Concrete
@@ -48,8 +47,8 @@ PAndQ.Expressive
 ```@docs
 PAndQ.Constant
 PAndQ.Variable
-PAndQ.Literal
 PAndQ.Tree
+PAndQ.Literal
 PAndQ.Clause
 PAndQ.Normal
 ```
@@ -86,5 +85,5 @@ PAndQ.show_atom
 PAndQ.process_valuations
 PAndQ.neutral_operator
 PAndQ.eval_doubles
-convert(::Type{PAndQ.Atom}, p::Union{PAndQ.Literal{typeof(𝒾)}, PAndQ.Tree{typeof(𝒾), <:PAndQ.Atom}})
+convert(::Type{PAndQ.Atom}, ::Union{PAndQ.Literal{typeof(𝒾)}, PAndQ.Tree{typeof(𝒾), <:PAndQ.Atom}})
 ```
