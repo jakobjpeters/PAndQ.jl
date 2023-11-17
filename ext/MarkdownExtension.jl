@@ -12,8 +12,10 @@ _pretty_table(::Val{:markdown}, io, tt; formatters =
 
 """
     pretty_table(
-        ::Type{Markdown.MD}, ::Union{NullaryOperator, Proposition, TruthTable};
-        formatters = formatter(NullaryOperator), alignment = :l
+        ::Type{Markdown.MD},
+        ::Union{NullaryOperator, Proposition, TruthTable};
+        formatters = formatter(NullaryOperator),
+        alignment = :l
     )
 
 See also [Nullary Operators](@ref nullary_operators),

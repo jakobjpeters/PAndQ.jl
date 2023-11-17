@@ -32,14 +32,6 @@ export
     @atomize, @variables,
     atoms, operators, value
 
-include("printing.jl")
-
-export
-    TruthTable,
-    formatter,
-    pretty_table,
-    print_tree
-
 include("semantics.jl")
 
 export
@@ -51,6 +43,14 @@ export
     is_satisfiable, is_falsifiable,
     dual, converse,
     left_neutrals, right_neutrals
+
+include("printing.jl")
+
+export
+    TruthTable,
+    formatter,
+    pretty_table,
+    print_tree
 
 __init__() = @compile_workload begin
     @variables p q

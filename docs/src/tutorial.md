@@ -5,64 +5,56 @@ DocTestSetup = :(using PAndQ)
 
 # Tutorial
 
-## Truth Values
-
-A truth value is logic's version of a boolean `true` or `false`. These concepts can also be represented as a `1` or a `0`. Similarly, we use [`tautology`](@ref) and [`contradiction`](@ref). These are commonly represented with the symbols `⊤` and `⊥`. These truth values have additional meaning, which will be discussed further on.
+This page demonstrates the basic functionality of this package. For additional features and documentation, see the Manual.
 
 ## [Operators](@id tutorial_operators)
 
-Just like with boolean values, we can perform operations on truth values. Both `!` and the symbol `¬` represent the unary operator `not`.
+[Operators](@ref operators_operators) are functions represented by a symbol that return a symbolic expression.
+
+The operators [`tautology`](@ref) and [`contradiction`](@ref) are similar to the boolean values `true` and `false`, respectively. These operators are represented with the symbols `⊤` and `⊥` and return themselves when called.
 
 ```jldoctest
-julia> !true == false # boolean negation
-true
+julia> ⊤()
+tautology (generic function with 2 methods)
 
-julia> ¬⊤ == ⊥ # logical negation
-true
+julia> ⊥()
+contradiction (generic function with 2 methods)
 ```
 
-There are several operators that accept multiple arguments. Both `&` and the symbol `∧` represent the binary operator [`and`](@ref). Both `|` and the symbol `∨` represent the binary operator [`or`](@ref).
+The symbols `!` and `¬` both represent the unary operator [`not`](@ref). The symbols `&` and `∧` represent the binary operator [`and`](@ref).
 
 ```jldoctest
-julia> true && false == false # boolean and
-true
+julia> !true
+false
 
-julia> true || false == true # boolean or
-true
+julia> true & false
+false
 
-julia> ⊤ ∧ ⊥ == ⊥ # logical and
-true
+julia> ¬⊤
+¬⊤
 
-julia> ⊤ ∨ ⊥ == ⊤ # logical or
-true
-```
-
-There are several more operators, which will be discussed later. Use the [`arity`](@ref) function to determine the number of arguments for an operator.
-
-```jldoctest
-julia> arity(contradiction)
-0
-
-julia> arity(not)
-1
-
-julia> arity(and)
-2
+julia> ⊤ ∧ ⊥
+⊤ ∧ ⊥
 ```
 
 ## Propositions
 
-A [`Proposition`](@ref PAndQ.Proposition) is a statement that can be either true or false. For example, "Logic is fun" is a proposition because it may be true for you but false for someone else. This proposition has a known value, so it is a [`Constant`](@ref PAndQ.Constant). Note that the proposition exists independently of whether it is known to be true or false.
+A proposition is a statement that can be either true or false. For example, "Logic is fun". This proposition has a known value, so it is a constant. Note that the proposition exists independently of whether it is known to be true or false. Constants can be instantiated inline with the [`@atomize`](@ref) macro and unwrapped with the [`value`](@ref) function.
 
 ```jldoctest 1
-julia> p = PAndQ.Constant("Logic is fun")
+julia> p = @atomize $"Logic is fun"
 $("Logic is fun")
 
-julia> q = PAndQ.Constant("Julia is awesome")
+julia> q = @atomize $"Julia is awesome"
 $("Julia is awesome")
+
+julia> map(value, [p, q])
+2-element Vector{String}:
+ "Logic is fun"
+ "Julia is awesome"
 ```
 
-We can also perform operations on propositions. In a written form, we can negate the above proposition by saying "Logic is not fun". We could combine two propositions using another operator, such as "Logic is fun and Julia is awesome".
+A proposition can be negated, such as "Logic is not fun". Propositions can be connected, such as "Logic is fun and Julia is awesome".
 
 ```jldoctest 1
 julia> ¬p
@@ -72,14 +64,13 @@ julia> p ∧ q
 $("Logic is fun") ∧ $("Julia is awesome")
 ```
 
-In mathematics, it's useful to replace individual numbers with a symbolic [`Variable`](@ref PAndQ.Variable) that can represent an unknown value. Since these atoms are for demonstration and represent an unknown value, we will do the same with our propositions `p` and `q`.
+Variables represent a proposition with an arbitrary value. Use the `@atomize` macro to instantiate them inline or the [`@variables`](@ref) macro to define multiple variables at once.
 
 ```jldoctest 1
-julia> p = PAndQ.Variable(:p)
-p
-
-julia> q = PAndQ.Variable(:q)
-q
+julia> @variables p q
+2-element Vector{PAndQ.Variable}:
+ p
+ q
 
 julia> ¬p
 ¬p
@@ -88,132 +79,54 @@ julia> p ∧ q
 p ∧ q
 ```
 
-Propositions that do not contain any structure are called [`atomic`](@ref PAndQ.Atom). Constants and Variables are atomic propositions. [`Compound`](@ref PAndQ.Compound) propositions are formed by connecting atomic propositions with logical operators. A [`Literal`](@ref PAndQ.Literal) is a proposition that is either an atom or its negation.
+The `tautology` and `contradiction` operators can interoperate with both booleans and propositions. However, booleans and propositions cannot interoperate.
 
-```jldoctest 1
-julia> p isa PAndQ.Atom
+```julia
+julia> Bool(⊤)
 true
 
-julia> ¬p isa PAndQ.Literal && ¬p isa PAndQ.Compound
+julia> true ∧ ⊤
 true
 
-julia> p ∧ q isa PAndQ.Tree && p ∧ q isa PAndQ.Compound
-true
-```
-
-The function [`atoms`](@ref) returns an iterator of each `Atom` in a proposition.
-
-```jldoctest 1
-julia> collect(atoms(¬p))
-1-element Vector{PAndQ.Variable}:
- p
-
-julia> collect(atoms(p ∧ q))
-2-element Vector{PAndQ.Variable}:
- p
- q
+julia> ⊤ ∧ p
+⊤ ∧ p
 ```
 
 ## Semantics
 
-We know that since these are propositions, they can be true or false. If you think that "Logic is fun", it would be invalid to assign it the valuation false. So the proposition `p` is true if you think that "Logic is fun" and is false otherwise. If we assign the value true to the proposition "Logic is fun", then we know that the validity of the proposition "Logic is fun and Julia is awesome" depends on whether or not "Julia is awesome". If "Julia is awesome" is assigned false, then the conjunction of the two propositions is false. Use the [`interpret`](@ref) function to assign meaning to atomic propositions and then simplify the proposition.
+Constants and variables are atomic propositions. Operators construct compound propositions from one or more atomic propositions. Each atom in a proposition can be assigned the valuation true or false. This results in an interpretation, which determines the truth value of the overall proposition. For example, assigning the valuation `true` to the atomic proposition "Logic is fun" determines that the compound proposition "Logic is not fun" is interpreted as `false`. Use the [`interpret`](@ref) function to assign truth values to atomic propositions.
 
 ```jldoctest 1
-julia> interpret(a -> false, ¬p)
-true
+julia> interpret(p => ⊤, p ∧ q)
+⊤ ∧ q
 
-julia> (p ∧ q)(p => true, q => false)
-false
+julia> (p ∧ q)([p => ⊤, q => ⊥])
+⊤ ∧ ⊥
 ```
 
-Assigning meaning to any number of atomic propositions is called a [`valuation`](@ref valuations). Since `p` can only be true or false, those are it's possible valuations. An [`interpretation`](@ref interpretations) is the truth value of propositions that is determined by a given valuation. Since `p` is atomic, its valuation and interpretation are the same. `¬p` doesn't depend on any other propositions, so it also has two possible valuations. However, the valuation and the interpretation are no longer the same. If `p` is assigned true, then `¬p` is determined to be false, and vice versa.
+Two propositions are logically equivalent if their interpretation is equivalent for every possible valuation. Use [`==`](@ref) to check if two propositions are logically equivalent.
 
 ```jldoctest 1
-julia> collect(valuations(¬p))
-2-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
- [PAndQ.Variable(:p) => 1]
- [PAndQ.Variable(:p) => 0]
-
-julia> collect(interpretations(¬p))
-2-element Vector{Bool}:
- 0
- 1
-```
-
-Since `p ∧ q` contains two atomic propositions, there are four valuations: `p` is true and `q` is true, `p` is false and `q` is true, `p` is true and `q` is false, and `p` is false and `q` is false. Each additional atomic proposition in a proposition doubles the number of possible valuations. Mathematically, there are `2 ^ n` valuations where `n = length(unique!(collect(atoms(p))))`. Since each interpretation depends on a valuation, the number of valuations and interpretations are equal.
-
-```jldoctest 1
-julia> n = length(unique!(collect(atoms(p ∧ q))))
-2
-
-julia> length(valuations(p ∧ q)) == length(interpretations(p ∧ q)) == 2 ^ n == 4
-true
-```
-
-It is useful to find valuations that determine valid interpretations. This is accomplished with the [`solve`](@ref) function. The proposition `p ∧ q` is determined to be true with the valuation that both `p` and `q` are true. Each of the other three possible valuations are invalid.
-
-```jldoctest 1
-julia> collect(solve(p ∧ q))
-1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
- [PAndQ.Variable(:p) => 1, PAndQ.Variable(:q) => 1]
-
-julia> collect(solve(¬(p ∧ q)))
-3-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
- [PAndQ.Variable(:p) => 0, PAndQ.Variable(:q) => 1]
- [PAndQ.Variable(:p) => 1, PAndQ.Variable(:q) => 0]
- [PAndQ.Variable(:p) => 0, PAndQ.Variable(:q) => 0]
-```
-
-A proposition [`is_satisfiable`](@ref) if there is at least one valid interpretation. A proposition [`is_falsifiable`](@ref) if there is at least one invalid interpretation. A proposition [`is_contingency`](@ref) if it is both satisfiable and falsifiable.
-
-```jldoctest 1
-julia> is_satisfiable(p ∧ q) && is_falsifiable(p ∧ q) && is_contingency(p ∧ q)
-true
-```
-
-A proposition is a tautology if every possible interpretation is true. Likewise, a proposition is a contradiction if every possible interpretation is false. For example, `p ∧ ¬p` is always interpreted as false because either `p` or `¬p` must be false. `p ∨ ¬p` is always interpreted as true because either `p` or `¬p` must be true. Use the functions [`is_tautology`](@ref), [`is_contradiction`](@ref), and [`is_truth`](@ref) to check whether a proposition is logically equivalent to a truth value.
-
-```jldoctest 1
-julia> collect(interpretations(p ∧ ¬p))
-2-element Vector{Bool}:
- 0
- 0
-
-julia> collect(interpretations(p ∨ ¬p))
-2-element Vector{Bool}:
- 1
- 1
-
-julia> is_contradiction(p ∧ ¬p) && is_tautology(p ∨ ¬p)
+julia> p ∧ ¬p == ⊥
 true
 
-julia> is_truth(p ∧ ¬p) && is_truth(p ∨ ¬p)
-true
-```
-
-Two propositions are logically equivalent if their interpretation is equivalent for every possible valuation. For example, the propositions `¬(¬p ∧ ¬q)` and `p ∨ q` are logically equivalent. In fact, the `or` operator is implemented this way. Use [`==`](@ref) to test that two propositions are logically equivalent.
-
-```jldoctest 1
-julia> ¬(¬p ∧ ¬q) == p ∨ q
-true
-
-julia> ¬(¬p ∧ ¬q) === p ∨ q
+julia> p ∧ ¬p === ⊥
 false
 ```
 
 ## Printing
 
-It would also be helpful to enumerate each valuation and interpretation in a visual format. This is accomplished by creating a [`TruthTable`](@ref). A truth table is a table where each column in the header identifies a proposition, and each row contains an interpretation (including the valuation of atomic propositions). To demonstrate these, we will use the [`xor`](@ref) operator, represented by the symbol `⊻`. Try to understand the meaning of this operator as it is interpreted with different valuations.
+[`TruthTable`](@ref)s are used to enumerate the interpretations of propositions. The header contains propositions and the atoms composing them. Each column corresponds to the truth values of the proposition in the header. Each row represents an interpretation.
 
 ```jldoctest 1
-julia> TruthTable([p ⊻ q])
-┌───┬───┬───────┐
-│ p │ q │ p ⊻ q │
-├───┼───┼───────┤
-│ ⊤ │ ⊤ │ ⊥     │
-│ ⊥ │ ⊤ │ ⊤     │
-├───┼───┼───────┤
-│ ⊤ │ ⊥ │ ⊤     │
-│ ⊥ │ ⊥ │ ⊥     │
-└───┴───┴───────┘
+julia> TruthTable([⊤, ¬p, p ∧ q])
+┌───┬───┬───┬────┬───────┐
+│ ⊤ │ p │ q │ ¬p │ p ∧ q │
+├───┼───┼───┼────┼───────┤
+│ ⊤ │ ⊤ │ ⊤ │ ⊥  │ ⊤     │
+│ ⊤ │ ⊥ │ ⊤ │ ⊤  │ ⊥     │
+├───┼───┼───┼────┼───────┤
+│ ⊤ │ ⊤ │ ⊥ │ ⊥  │ ⊥     │
+│ ⊤ │ ⊥ │ ⊥ │ ⊤  │ ⊥     │
+└───┴───┴───┴────┴───────┘
 ```

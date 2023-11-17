@@ -13,11 +13,27 @@ using PAndQ: Proposition, Operator, NullaryOperator, TruthTable, symbol_of, __pr
 @latexrecipe f(tt::TruthTable) = return pretty_table(LaTeXString, tt)
 
 """
-    formatter(t::Type{Latexify.LaTeXString})
+    formatter(::Latexify.LaTeXString)
 
-| `t`                    | `formatter(t)(⊤, _, _)` | `formatter(t)(⊥, _, _)` |
-| :--------------------- | :---------------------- | :---------------------- |
-| `Latexify.LaTeXString` | `"\$\\top\$"`           | `"\$\\bot\$"`           |
+# Examples
+```jldoctest
+julia> formatter(Latexify.LaTeXString)(true, nothing, nothing)
+L"\$\\top\$"
+
+julia> formatter(Latexify.LaTeXString)(false, nothing, nothing)
+L"\$\\bot\$"
+
+julia> @atomize pretty_table(p ∧ q; formatters = formatter(Latexify.LaTeXString))
+┌─────────┬─────────┬─────────┐
+│ p       │ q       │ p ∧ q   │
+├─────────┼─────────┼─────────┤
+│ \$\\\\top\$ │ \$\\\\top\$ │ \$\\\\top\$ │
+│ \$\\\\bot\$ │ \$\\\\top\$ │ \$\\\\bot\$ │
+├─────────┼─────────┼─────────┤
+│ \$\\\\top\$ │ \$\\\\bot\$ │ \$\\\\bot\$ │
+│ \$\\\\bot\$ │ \$\\\\bot\$ │ \$\\\\bot\$ │
+└─────────┴─────────┴─────────┘
+```
 """
 formatter(::Type{LaTeXString}) = (v, _, _) -> string(latexify(v ? "⊤" : "⊥"))
 
@@ -26,8 +42,10 @@ _pretty_table(backend::Val{:latex}, io, tt; formatters = formatter(LaTeXString),
 
 """
     pretty_table(
-        ::Latexify.LaTexString, x::Union{Proposition, TruthTable};
-        backend = Val(:latex), kwargs...
+        ::Latexify.LaTexString,
+        x::Union{Proposition, TruthTable};
+        backend = Val(:latex),
+        kwargs...
     )
 
 Equivalent to [`Latexify.LaTeXString(pretty_table(String, x; backend, kwargs...))`](@ref pretty_table).

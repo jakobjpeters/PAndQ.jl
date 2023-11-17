@@ -249,7 +249,7 @@ show(io::IO, p::Proposition) = show(IOContext(io, :verbose => true), MIME"text/p
 
 for (T, f) in (
     NullaryOperator => v -> v ? "⊤" : "⊥",
-    String => v -> nameof(v ? ⊤ : ⊥),
+    String => v -> nameof(v ? "tautology" : "contradiction"),
     Char => v -> v == ⊤ ? "T" : "F",
     Bool => 𝒾,
     Int => Int
@@ -258,17 +258,33 @@ for (T, f) in (
 end
 
 """
-    formatter(t::Type{<:Union{NullaryOperator, String, Char, Bool, Int}})
+    formatter(type)
+
+Use as the `formatters` keyword argument in [`pretty_table`](@ref).
+
+| `type`            | `formatter(type)(true, _, _)` | `formatter(type)(false, _, _)` |
+| :---------------- | :---------------------------- | :----------------------------- |
+| `NullaryOperator` | `"⊤"`                         | `"⊥"`                          |
+| `String`          | `"tautology"`                 | `"contradiction"`              |
+| `Char`            | `"T"`                         | `"F"`                          |
+| `Bool`            | `"true"`                      | `"false"`                      |
+| `Int`             | `"1"`                         | `"0"`                          |
 
 See also [Nullary Operators](@ref nullary_operators).
 
-| `t`               | `formatter(t)(⊤, _, _)` | `formatter(t)(⊥, _, _)` |
-| :---------------- | :---------------------- | :---------------------- |
-| `NullaryOperator` | `"⊤"`                   | `"⊥"`                   |
-| `String`          | `"tautology"`           | `"contradiction"`       |
-| `Char`            | `"T"`                   | `"F"`                   |
-| `Bool`            | `"true"`                | `"false"`               |
-| `Int`             | `"1"`                   | `"0"`                   |
+# Examples
+```jldoctest
+julia> @atomize pretty_table(p ∧ q; formatters = formatter(Int))
+┌───┬───┬───────┐
+│ p │ q │ p ∧ q │
+├───┼───┼───────┤
+│ 1 │ 1 │ 1     │
+│ 0 │ 1 │ 0     │
+├───┼───┼───────┤
+│ 1 │ 0 │ 0     │
+│ 0 │ 0 │ 0     │
+└───┴───┴───────┘
+```
 """
 formatter
 
@@ -289,8 +305,10 @@ _pretty_table(backend, io, tt; formatters = formatter(NullaryOperator), kwargs..
 
 """
     pretty_table(
-        ::Union{IO, Type{Union{String, Docs.HTML}}} = stdout, ::Union{NullaryOperator, Proposition, TruthTable};
-        formatters = formatter(NullaryOperator), kwargs...
+        ::Union{IO, Type{<:Union{String, Docs.HTML}}} = stdout,
+        ::Union{NullaryOperator, Proposition, TruthTable};
+        formatters = formatter(NullaryOperator),
+        kwargs...
     )
 
 See also [Nullary Operators](@ref nullary_operators), [`Proposition`](@ref),

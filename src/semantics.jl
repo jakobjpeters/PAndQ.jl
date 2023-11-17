@@ -635,8 +635,7 @@ convert(::Type{Bool}, ::typeof(⊥)) = false
 
 See also [`NullaryOperator`](@ref) and [`Proposition`](@ref).
 """
-convert(::Type{Atom}, p::Union{Literal{typeof(𝒾)}, Tree{typeof(𝒾), <:Atom}}) =
-    child(p)
+convert(::Type{Atom}, p::Literal) = child(p)
 convert(::Type{Literal}, p::Tree{<:UnaryOperator, <:Atom}) =
     Literal(nodevalue(p), child(p))
 convert(::Type{Literal}, p::Atom) = Literal(𝒾, p)

@@ -71,7 +71,7 @@ makedocs(;
         "Tutorial" => "tutorial.md",
         "Manual" => map(
             name -> titlecase(name) => "manual/" * name * ".md",
-            ["operators", "propositions", "printing", "semantics", "extensions", "internals"]
+            ["operators", "propositions", "semantics", "printing", "extensions", "internals"]
         ),
     ]
 )

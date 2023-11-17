@@ -2,10 +2,7 @@
 # Semantics
 
 !!! warning
-    The algorithm to find the interpretations of a [`Proposition`](@ref PAndQ.Proposition)
-    currently has a naive implementation with a runtime of
-    [`O(2 ^ n)`](https://en.wikipedia.org/wiki/Big_O_notation)
-    where [`n = length(unique(atoms(p)))`](@ref atoms).
+    The model checking algorithm currently has a naive implementation with a [time complexity](https://en.wikipedia.org/wiki/Big_O_notation) of [`O(2 ^ length(unique(atoms(p))))`](@ref atoms).
 
 ## Truths
 

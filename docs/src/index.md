@@ -99,7 +99,7 @@ julia> TruthTable([p ∧ ¬p, r, p ⊻ q, s])
     - PAndQ.jl implements a superset of the features in this package
 - [MathematicalPredicates.jl](https://github.com/JuliaReach/MathematicalPredicates.jl)
     - Implements propositional logic
-    - PAndQ.jl, SoleLogics, and Julog.jl implement a superset of the features in this package
+    - PAndQ.jl, Julog.jl, and SoleLogics.jl implement a superset of the features in this package
 
 #### Wrappers
 
