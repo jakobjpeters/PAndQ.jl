@@ -31,7 +31,7 @@ Supertype of [`Constant`](@ref) and [`Variable`](@ref).
 abstract type Atom <: Proposition end
 
 """
-    Compound{O} <: Proposition
+    Compound <: Proposition
 
 A proposition composed from connecting [`Atom`](@ref)s
 with one or more [`Operator`](@ref)s.
@@ -39,7 +39,7 @@ with one or more [`Operator`](@ref)s.
 Subtype of [`Proposition`](@ref).
 Supertype of [`Tree`](@ref), [`Clause`](@ref), and [`Normal`](@ref).
 """
-abstract type Compound{O} <: Proposition end
+abstract type Compound <: Proposition end
 
 ### Concrete
 
@@ -83,8 +83,7 @@ q
 struct Variable <: Atom
     symbol::Symbol
 
-    function Variable(symbol)
-        s = string(symbol)
+    function Variable(s::String)
         isempty(s) && error("The symbol must be non-empty")
         all(c -> isprint(c) && !isspace(c), s) ||
             error("The symbol must contain only printable non-space characters")
@@ -92,8 +91,10 @@ struct Variable <: Atom
     end
 end
 
+Variable(x) = Variable(string(x))
+
 """
-    Tree{O <: Operator, AT <: Union{Atom, Tree}, N} <: Compound{O}
+    Tree{O <: Operator, AT <: Union{Atom, Tree}, N} <: Compound
     Tree(::NullaryOperator, ::Atom)
     Tree(::Operator, ::Tree...)
     Tree(::Proposition)
@@ -116,25 +117,24 @@ julia> @atomize PAndQ.Tree(and, PAndQ.Tree(p), PAndQ.Tree(q))
 p ∧ q
 ```
 """
-struct Tree{O <: Operator, P <: Proposition, N} <: Compound{O}
+struct Tree{O <: Operator, P <: Proposition, N} <: Compound
     nodes::NTuple{N, P}
 
-    Tree(::UO, node::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, A, 1}((node,))
-    function Tree(o::O, nodes...) where O <: Operator
-        _arity, _length = arity(o), length(nodes)
+    function Tree(::O, nodes...) where O <: Operator
+        _arity, _length = arity(O.instance), length(nodes)
         _arity != _length &&
-            error("`arity($o) == $_arity`, but `$_length` argument$(_length == 1 ? " was" : "s were") given")
+            error("`arity($(O.instance)) == $_arity`, but `$_length` argument$(_length == 1 ? " was" : "s were") given")
         new{O, eltype(nodes), _arity}(nodes)
     end
 end
 
 """
-    Literal <: Tree{<:UnaryOperator, <:Atom, 1}
+    Literal <: Tree{<:Operator, <:Atom, 1}
 
 A proposition represented by [an atomic formula or its negation]
 (https://en.wikipedia.org/wiki/Literal_(mathematical_logic)).
 
-See also [`UnaryOperator`](@ref), [`Atom`](@ref), and [`Tree`](@ref).
+See also [`Operator`](@ref), [`Atom`](@ref), and [`Tree`](@ref).
 
 # Examples
 ```jldoctest
@@ -148,7 +148,7 @@ julia> @atomize PAndQ.Literal(¬, p)
 const Literal = Tree{<:Operator, <:Atom, 1}
 
 """
-    Clause{AO <: AndOr, L <: Literal} <: Compound{AO}
+    Clause{AO <: AndOr, L <: Literal} <: Compound
     Clause(::AO, ps = Literal[])
     Clause(::AO, p::Proposition)
     Clause(::Union{NullaryOperator, Atom, Literal})
@@ -175,7 +175,7 @@ julia> @atomize PAndQ.Clause(∨, [¬p, q])
 ¬p ∨ q
 ```
 """
-struct Clause{AO <: AndOr, L <: Literal} <: Compound{AO}
+struct Clause{AO <: AndOr, L <: Literal} <: Compound
     literals::Vector{L}
 
     Clause(::AO, literals::Vector{L} = Literal[]) where {AO <: AndOr, L <: Literal} =
@@ -183,7 +183,7 @@ struct Clause{AO <: AndOr, L <: Literal} <: Compound{AO}
 end
 
 """
-    Normal{AO <: AndOr, C <: Clause} <: Compound{AO}
+    Normal{AO <: AndOr, C <: Clause} <: Compound
     Normal(::typeof(and), ps = Clause{typeof(or)}[])
     Normal(::typeof(or), ps = Clause{typeof(and)}[])
     Normal(::AO, ::Proposition)
@@ -209,7 +209,7 @@ julia> @atomize PAndQ.Normal(∧, p ⊻ q)
 (p ∨ q) ∧ (¬p ∨ ¬q)
 ```
 """
-struct Normal{AO <: AndOr, C <: Clause} <: Compound{AO}
+struct Normal{AO <: AndOr, C <: Clause} <: Compound
     clauses::Vector{C}
 
     Normal(::A, clauses::Vector{C} = Clause{typeof(or)}[]) where {A <: typeof(and), C <: Clause{typeof(or)}} =
@@ -242,7 +242,7 @@ children(p::Clause) = p.literals
 children(p::Normal) = p.clauses
 
 """
-    nodevalue(::Compound{O})
+    nodevalue(::Union{Tree{O}, Clause{O}, Normal{O}}) where O
 
 Return `O.instance`.
 
@@ -251,13 +251,13 @@ See also [`Compound`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize PAndQ.nodevalue(¬p)
-not (generic function with 6 methods)
+not (generic function with 5 methods)
 
 julia> @atomize PAndQ.nodevalue(p ∧ q)
 and (generic function with 17 methods)
 ```
 """
-nodevalue(::Compound{O}) where O = O.instance
+nodevalue(::Union{Tree{O}, Clause{O}, Normal{O}}) where O = O.instance
 
 """
     printnode(::IO, ::Union{NullaryOperator, Proposition}; kwargs...)
@@ -423,12 +423,12 @@ Return an iterator of each [operator]
 ```jldoctest
 julia> @atomize collect(operators(¬p))
 1-element Vector{typeof(not)}:
- not (generic function with 6 methods)
+ not (generic function with 5 methods)
 
 julia> @atomize collect(operators(¬p ∧ q))
 3-element Vector{Function}:
  and (generic function with 17 methods)
- not (generic function with 6 methods)
+ not (generic function with 5 methods)
  identity (generic function with 1 method)
 ```
 """
@@ -476,8 +476,8 @@ julia> @atomize value(\$1)
 """
 function value(p)
     _atoms = Stateful(atoms(p))
-    atom = first(_atoms)
     !isempty(_atoms) && error("the `Proposition` must contain only one `Atom`")
+    atom = first(_atoms)
     p != atom && error("The `Proposition` must be logically equivalent to its `Atom`")
     !isa(atom, Constant) && error("the `Atom` must be a `Constant`")
     atom.value

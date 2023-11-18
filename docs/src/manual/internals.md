@@ -86,5 +86,5 @@ PAndQ.base_type
 PAndQ.process_valuations
 PAndQ.neutral_operator
 PAndQ.eval_doubles
-convert(::Type{PAndQ.Atom}, ::PAndQ.Literal)
+convert(::Type{PAndQ.Atom}, ::PAndQ.Literal{typeof(𝒾)})
 ```

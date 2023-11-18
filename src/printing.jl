@@ -136,7 +136,7 @@ end
 """
     print_node(io, p)
 """
-print_node(io, ::Compound{typeof(𝒾)}) = nothing
+print_node(io, ::Tree{typeof(𝒾)}) = nothing
 print_node(io, p) = printnode(io, p)
 
 """
@@ -191,7 +191,7 @@ show(io::IO, ::MIME"text/plain", p::Atom) =
         print(io, ")")
     else show_atom(io, p)
     end
-function show(io::IO, ::MIME"text/plain", p::Compound{<:UnaryOperator})
+function show(io::IO, ::MIME"text/plain", p::Tree{<:UnaryOperator})
     print_node(io, p)
     parenthesize(io, child(p))
 end

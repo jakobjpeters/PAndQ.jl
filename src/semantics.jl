@@ -558,8 +558,7 @@ end
 
 ## Propositions
 
-¬p::Atom = Literal(¬, p)
-(¬p::Tree) = Tree(¬, p)
+(¬p::Union{Atom, Tree}) = Tree(¬, p)
 (¬p::Clause) = Clause(dual(nodevalue(p)), map(
     _child -> Literal(nodevalue(_child) == 𝒾 ? (¬) : 𝒾, child(_child)),
 children(p)))
@@ -604,7 +603,7 @@ end
 
 # Constructors
 
-Literal(uo::UnaryOperator, p::Atom) = Tree(uo, p)
+Literal(uo, p::Atom) = Tree(uo, p)
 
 Clause(ao::AndOr, ps) = isempty(ps) ?
     Clause(ao) :
@@ -635,7 +634,7 @@ convert(::Type{Bool}, ::typeof(⊥)) = false
 
 See also [`NullaryOperator`](@ref) and [`Proposition`](@ref).
 """
-convert(::Type{Atom}, p::Literal) = child(p)
+convert(::Type{Atom}, p::Literal{typeof(𝒾)}) = child(p)
 convert(::Type{Literal}, p::Tree{<:UnaryOperator, <:Atom}) =
     Literal(nodevalue(p), child(p))
 convert(::Type{Literal}, p::Atom) = Literal(𝒾, p)
