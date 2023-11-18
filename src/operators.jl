@@ -416,7 +416,7 @@ const NaryOperator = union_typeof((⋀, ⋁))
 
 The `Union` of [Operators](@ref operators_operators).
 """
-const Operator = Union{NullaryOperator, UnaryOperator, BinaryOperator, NullaryOperator}
+const Operator = Union{NullaryOperator, UnaryOperator, BinaryOperator, NaryOperator}
 
 """
     AndOr
