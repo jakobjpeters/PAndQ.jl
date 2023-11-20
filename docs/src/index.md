@@ -110,6 +110,7 @@ julia> TruthTable([p ∧ ¬p, r, p ⊻ q, s])
     - An interface to the [PicoSAT](https://fmv.jku.at/picosat/) solver using PicoSAT_jll.jl
 - [Z3.jl](https://github.com/ahumenberger/Z3.jl)
     - An interface to the [Z3 Theorem Prover](https://github.com/Z3Prover/z3) using z3_jll.jl
+    - Commits [type piracy](https://docs.julialang.org/en/v1/manual/style-guide/#Avoid-type-piracy)
 
 ##### Binaries
 

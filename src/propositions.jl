@@ -83,15 +83,14 @@ q
 struct Variable <: Atom
     symbol::Symbol
 
-    function Variable(s::String)
+    function Variable(symbol)
+        s = string(symbol)
         isempty(s) && error("The symbol must be non-empty")
         all(c -> isprint(c) && !isspace(c), s) ||
             error("The symbol must contain only printable non-space characters")
         new(symbol)
     end
 end
-
-Variable(x) = Variable(string(x))
 
 """
     Tree{O <: Operator, AT <: Union{Atom, Tree}, N} <: Compound
