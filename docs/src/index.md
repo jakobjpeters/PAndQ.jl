@@ -63,13 +63,13 @@ julia> @variables p q
 julia> r = ¬p
 ¬p
 
-julia> r(p => true)
+julia> interpret(p => true, r)
 false
 
 julia> s = (p ∨ q) ∧ (r ∨ ¬q)
 (p ∨ q) ∧ (¬p ∨ ¬q)
 
-julia> s([p => ⊤, q => ⊥])
+julia> interpret([p => ⊤, q => ⊥], s)
 (⊤ ∨ ⊥) ∧ (¬⊤ ∨ ¬⊥)
 
 julia> TruthTable([p ∧ ¬p, r, p ⊻ q, s])

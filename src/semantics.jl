@@ -5,12 +5,34 @@ using Base: Iterators.product, uniontypes
 # Internals
 
 """
+    interpret_bool
+"""
+interpret_bool(no::NullaryOperator, valuation) = Bool(no)
+interpret_bool(p::Atom, valuation) = valuation(p)
+interpret_bool(p::Tree, valuation) =
+    nodevalue(p)(map(child -> interpret_bool(child, valuation), children(p))...)
+interpret_bool(p::Tree{<:NullaryOperator}, valuation) = Bool(nodevalue(p))
+function interpret_bool(p::Union{Clause, Normal}, valuation)
+    _nodevalue = nodevalue(p)
+    neutral = only(left_neutrals(_nodevalue))()
+    not_neutral = ¬neutral
+    q = union_all_type(p)(_nodevalue)
+
+    for r in children(p)
+        s = interpret_bool(r, valuation)
+        s == not_neutral && return not_neutral
+        q = _nodevalue(q, s)
+    end
+
+    isempty(children(q)) ? neutral : q
+end
+
+"""
     process_valuations(valuations, p, f)
 """
-process_valuations(valuations, p, f) =
-    f(valuation -> interpret(valuation, p), valuations)
+process_valuations(valuations, p, f) = f(valuation -> interpret(valuation, p), valuations)
 process_valuations(p, f) =
-    f(valuation -> _interpret(p, a -> Dict(valuation)[a], Bool), valuations(p))
+    f(valuation -> interpret_bool(p, a -> Dict(valuation)[a]), valuations(p))
 
 """
     neutral_operator(::NullaryOperator)
@@ -73,39 +95,41 @@ function valuations(atoms)
         Iterators.product(Iterators.repeated([true, false], length(unique_atoms))...)
     )
 end
-    valuations(p::Union{NullaryOperator, Proposition}) = valuations(collect(atoms(p)))
+valuations(p::Union{NullaryOperator, Proposition}) = valuations(collect(atoms(p)))
 
-_interpret(no::NullaryOperator, valuation, convert) = convert(no)
-_interpret(p::Atom, valuation, convert) = valuation(p)
-_interpret(p::Tree, valuation, convert) =
-    nodevalue(p)(map(child -> _interpret(child, valuation, convert), children(p))...)
-_interpret(p::Tree{<:NullaryOperator}, valuation, convert) = convert(nodevalue(p))
-function _interpret(p::Union{Clause, Normal}, valuation, convert)
-    _nodevalue = nodevalue(p)
-    neutral = only(left_neutrals(_nodevalue))()
-    not_neutral = ¬neutral
-    q = union_all_type(p)(_nodevalue)
-
-    for r in children(p)
-        s = _interpret(r, valuation, convert)
-        s == not_neutral && return not_neutral
-        q = _nodevalue(q, s)
-    end
-
-    isempty(children(q)) ? neutral : q
-end
+_map(g, f, p) = g(nodevalue(p))(map(child -> map(f, child), children(p)))
 
 """
-    interpret(valuation, ::Union{NullaryOperator, Proposition})
+    map(::Function, ::Union{NullaryOperator, Proposition})
+
+Apply the given function to each [`Atom`](@ref) in the given argument.
+
+Alternatively, propositions are callable with the function as an argument.
+
+See also [Nullary Operators](@ref nullary_operators) and [`Proposition`](@ref).
+
+# Examples
+```jldoctest
+julia> @atomize map(atom -> ⊤, p ⊻ q)
+⊤ ⊻ ⊤
+
+julia> @atomize map(atom -> \$(value(atom) + 1), \$1 ∧ \$2)
+\$(2) ∧ \$(3)
+```
+"""
+map(f, p::Atom) = f(p)
+map(f, p::Union{NullaryOperator, Tree}) = _map(splat, f, p)
+map(f, p::Union{Clause, Normal}) = _map(𝒾, f, p)
+
+"""
+    interpret(valuation, p)
 
 Substitute each [`Atom`](@ref) in the given
 [`Proposition`](@ref) with values from the `valuation`.
 
-The `valuation` can be a [function]
-(https://docs.julialang.org/en/v1/manual/functions/) with the signature
-`valuation(::Atom)::Union{Bool, NullaryOperator, Proposition}`, a
-[`Dict`](https://docs.julialang.org/en/v1/base/collections/#Base.Dict),
-or an iterable that can construct a `Dict`.
+The `valuation` can be a `Function` with the signature
+`valuation(::Atom)::Union{Bool, NullaryOperator, Proposition}`,
+a `Dict`, or an iterable that can construct a `Dict`.
 No substitution is performed if an [`Atom`](@ref) from the
 [`Proposition`](@ref) is not one of the dictionary's keys.
 
@@ -120,25 +144,9 @@ julia> @atomize interpret(p => ⊤, p ∧ q)
 ⊤ ∧ q
 ```
 """
-interpret(valuation::Function, p) = _interpret(p, valuation, 𝒾)
+interpret(valuation::Function, p) = map(valuation, p)
 interpret(valuation::Dict, p) = interpret(a -> get(valuation, a, a), p)
 interpret(valuation, p) = interpret(Dict(valuation), p)
-
-"""
-    (::Proposition)(valuation)
-
-Equivalent to [`interpret(valuation, p)`](@ref interpret).
-
-# Examples
-```jldoctest
-julia> @atomize ¬p([p => ⊤])
-¬⊤
-
-julia> @atomize (p ∧ q)([p => ⊤])
-⊤ ∧ q
-```
-"""
-(p::Proposition)(valuation) = interpret(valuation, p)
 
 """
     interpretations(valuations, p)
@@ -265,7 +273,7 @@ true
 """
 is_tautology(::typeof(⊤)) = true
 is_tautology(::Union{typeof(⊥), Atom, Literal}) = false
-is_tautology(p) = all(isequal(true), interpretations(p))
+is_tautology(p) = all(==(true), interpretations(p))
 
 """
     is_contradiction(p)
@@ -521,10 +529,8 @@ p::Bool ∨ q::NullaryOperator = q ∨ p
 
 ### NullaryOperators
 
-for no in (:⊤, :⊥)
-    @eval $no() = $no
-    @eval $no(valuation) = interpret(valuation, $no)
-end
+⊤() = ⊤
+⊥() = ⊥
 
 ### Unary Operators
 

@@ -15,10 +15,10 @@ The operators [`tautology`](@ref) and [`contradiction`](@ref) are similar to the
 
 ```jldoctest
 julia> ⊤()
-tautology (generic function with 2 methods)
+tautology (generic function with 1 method)
 
 julia> ⊥()
-contradiction (generic function with 2 methods)
+contradiction (generic function with 1 method)
 ```
 
 The symbols `!` and `¬` both represent the unary operator [`not`](@ref). The symbols `&` and `∧` represent the binary operator [`and`](@ref).
@@ -100,7 +100,7 @@ Constants and variables are atomic propositions. Operators construct compound pr
 julia> interpret(p => ⊤, p ∧ q)
 ⊤ ∧ q
 
-julia> (p ∧ q)([p => ⊤, q => ⊥])
+julia> interpret([p => ⊤, q => ⊥], p ∧ q)
 ⊤ ∧ ⊥
 ```
 

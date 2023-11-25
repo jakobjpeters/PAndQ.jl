@@ -83,6 +83,7 @@ PAndQ.base_type
 ## Semantics
 
 ```@docs
+PAndQ.interpret_bool
 PAndQ.process_valuations
 PAndQ.neutral_operator
 PAndQ.eval_doubles

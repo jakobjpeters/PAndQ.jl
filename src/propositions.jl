@@ -433,39 +433,12 @@ julia> @atomize collect(operators(¬p ∧ q))
 """
 operators(p) = Iterators.filter(node -> !isa(node, Atom), nodevalues(PreOrderDFS(p)))
 
-_map(g, f, p) = g(nodevalue(p))(map(child -> map(f, child), children(p)))
-
-"""
-    map(f, ::Union{NullaryOperator, Proposition})
-
-Apply `f` to each [`Atom`](@ref) in the given argument.
-
-See also [Nullary Operators](@ref nullary_operators) and [`Proposition`](@ref).
-
-# Examples
-```jldoctest
-julia> @atomize map(p -> \$(p.value + 1), \$1 ∧ \$2)
-\$(2) ∧ \$(3)
-
-julia> @atomize map(p ∧ q) do atom
-           println(atom)
-           atom
-       end
-PAndQ.Variable(:p)
-PAndQ.Variable(:q)
-p ∧ q
-```
-"""
-map(f, p::Atom) = f(p)
-map(f, p::Union{NullaryOperator, Tree}) = _map(splat, f, p)
-map(f, p::Union{Clause, Normal}) = _map(𝒾, f, p)
-
 """
     value(::Proposition)
 
 Unwrap the value of a [`Constant`](@ref).
 
-The [`Proposition`](@ref) must be logically equivalent to a [`Constant`](@ref).
+The [`Proposition`](@ref) must be logically equivalent to a `Constant`.
 
 # Examples
 ```jldoctest
@@ -475,8 +448,8 @@ julia> @atomize value(\$1)
 """
 function value(p)
     _atoms = Stateful(atoms(p))
-    !isempty(_atoms) && error("the `Proposition` must contain only one `Atom`")
     atom = first(_atoms)
+    !isempty(_atoms) && error("the `Proposition` must contain only one `Atom`")
     p != atom && error("The `Proposition` must be logically equivalent to its `Atom`")
     !isa(atom, Constant) && error("the `Atom` must be a `Constant`")
     atom.value

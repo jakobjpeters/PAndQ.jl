@@ -13,6 +13,5 @@
 ```@docs
 atoms
 operators
-map
 value
 ```

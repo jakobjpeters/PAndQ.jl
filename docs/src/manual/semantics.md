@@ -8,6 +8,7 @@
 
 ```@docs
 valuations
+map
 interpret
 interpretations
 solve
