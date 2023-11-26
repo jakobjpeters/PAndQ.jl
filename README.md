@@ -77,13 +77,13 @@ julia> @variables p q
 julia> r = ¬p
 ¬p
 
-julia> r(p => true)
+julia> interpret(p => true, r)
 false
 
 julia> s = (p ∨ q) ∧ (r ∨ ¬q)
 (p ∨ q) ∧ (¬p ∨ ¬q)
 
-julia> s([p => ⊤, q => ⊥])
+julia> interpret([p => ⊤, q => ⊥], s)
 (⊤ ∨ ⊥) ∧ (¬⊤ ∨ ¬⊥)
 
 julia> TruthTable([p ∧ ¬p, r, p ⊻ q, s])
@@ -124,6 +124,7 @@ julia> TruthTable([p ∧ ¬p, r, p ⊻ q, s])
     - An interface to the [PicoSAT](https://fmv.jku.at/picosat/) solver using PicoSAT_jll.jl
 - [Z3.jl](https://github.com/ahumenberger/Z3.jl)
     - An interface to the [Z3 Theorem Prover](https://github.com/Z3Prover/z3) using z3_jll.jl
+    - Commits [type piracy](https://docs.julialang.org/en/v1/manual/style-guide/#Avoid-type-piracy)
 
 ##### Binaries
 
