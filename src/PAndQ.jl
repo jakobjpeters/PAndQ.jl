@@ -61,8 +61,8 @@ __init__() = @compile_workload begin
     pretty_table(String, TruthTable(qs))
 
     for r in qs
-        r(p => ⊤)
-        r(p => ⊥)
+        interpret(p => ⊤, r)
+        interpret(p => ⊥, r)
 
         for iterator in map(f -> f(r), (atoms, operators, solve))
             collect(iterator)

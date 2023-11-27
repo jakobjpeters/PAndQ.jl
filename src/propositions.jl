@@ -450,7 +450,7 @@ function value(p)
     _atoms = Stateful(atoms(p))
     atom = first(_atoms)
     !isempty(_atoms) && error("the `Proposition` must contain only one `Atom`")
-    p != atom && error("The `Proposition` must be logically equivalent to its `Atom`")
+    p != atom && error("the `Proposition` must be logically equivalent to its `Atom`")
     !isa(atom, Constant) && error("the `Atom` must be a `Constant`")
     atom.value
 end
