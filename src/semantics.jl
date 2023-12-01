@@ -424,9 +424,9 @@ true
 ```
 """
 dual(uo::UnaryOperator) = uo
-dual(no::NullaryOperator) = ¬no
 
 eval_doubles(:dual, (
+    (⊤, ⊥),
     (∧, ∨),
     (⊼, ⊽),
     (⊻, ↔),
