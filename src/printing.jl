@@ -124,7 +124,7 @@ julia> PAndQ.symbol_of(∧)
 symbol_of
 
 """
-    parenthesize(::IO, p)
+    parenthesize(io, p)
 """
 parenthesize(io, p) = show(io, MIME"text/plain"(), p)
 function parenthesize(io, p::Union{Clause, <:Tree{<:BinaryOperator}})

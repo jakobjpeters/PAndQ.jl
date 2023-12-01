@@ -311,7 +311,7 @@ const child = only ∘ children
 If `x` is a symbol, return an expression that instantiates it as a
 [`Variable`](@ref) if it is undefined in the caller's scope.
 If `isexpr(x, :\$)`, return an expression that instantiates it as a [`Constant`](@ref).
-If `x` is another expression, traverse it with recursive calls to `atomize`
+If `x` is a different expression, traverse it with recursive calls to `atomize`.
 Otherise, return x.
 """
 atomize(x::Symbol) = :((@isdefined $x) ? $x : $(Variable(x)))
