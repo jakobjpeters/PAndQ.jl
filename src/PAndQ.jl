@@ -30,17 +30,17 @@ include("propositions.jl")
 
 export
     @atomize, @variables,
-    atoms, operators, value
+    atoms, operators, value, normalize, tseytin
 
 include("semantics.jl")
 
 export
     valuations, interpret, interpretations, solve,
     is_commutative, is_associative,
-    ==,
     is_tautology, is_contradiction,
     is_truth, is_contingency,
     is_satisfiable, is_falsifiable,
+    is_equisatisfiable, ==,
     dual, converse,
     left_neutrals, right_neutrals
 

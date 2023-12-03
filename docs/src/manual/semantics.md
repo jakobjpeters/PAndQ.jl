@@ -25,6 +25,7 @@ is_truth
 is_contingency
 is_satisfiable
 is_falsifiable
+is_equisatisfiable
 ```
 
 ### Ordering

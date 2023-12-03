@@ -428,23 +428,23 @@ const AndOr = union_typeof((∧, ∨))
 # Utilities
 
 """
-    arity(::Operator)
+    arity(operator)
 
 Return the [arity](https://en.wikipedia.org/wiki/Arity)
 of the given [operator](@ref operators_operators).
 
 # Examples
 ```jldoctest
-julia> arity(tautology)
+julia> arity(⊤)
 0
 
-julia> arity(not)
+julia> arity(¬)
 1
 
-julia> arity(and)
+julia> arity(∧)
 2
 
-julia> arity(conjunction)
+julia> arity(⋀)
 Inf
 ```
 """

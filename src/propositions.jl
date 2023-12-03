@@ -1,7 +1,7 @@
 
 import Base: map
 import AbstractTrees: children, nodevalue, printnode, NodeType, nodetype, HasNodeType
-using Base: Iterators.Stateful
+using Base.Iterators: Stateful, flatmap
 using Base.Meta: isexpr, parse
 using AbstractTrees: childtype, Leaves, nodevalues, PreOrderDFS
 
@@ -253,7 +253,7 @@ julia> @atomize PAndQ.nodevalue(¬p)
 not (generic function with 5 methods)
 
 julia> @atomize PAndQ.nodevalue(p ∧ q)
-and (generic function with 17 methods)
+and (generic function with 19 methods)
 ```
 """
 nodevalue(::Union{Tree{O}, Clause{O}, Normal{O}}) where O = O.instance
@@ -426,7 +426,7 @@ julia> @atomize collect(operators(¬p))
 
 julia> @atomize collect(operators(¬p ∧ q))
 3-element Vector{Function}:
- and (generic function with 17 methods)
+ and (generic function with 19 methods)
  not (generic function with 5 methods)
  identity (generic function with 1 method)
 ```
@@ -454,3 +454,61 @@ function value(p)
     !isa(atom, Constant) && error("the `Atom` must be a `Constant`")
     atom.value
 end
+
+# Transformations
+
+"""
+    normalize(::Union{typeof(∧), typeof(∨)}, p)
+
+Convert the given proposition to either conjunctive or disjunctive normal form depending
+on whether the first argument is [`and`](@ref) or [`or`](@ref), respectively.
+
+# Examples
+```jldoctest
+julia> @atomize normalize(∧, p ⊻ q)
+(p ∨ q) ∧ (¬p ∨ ¬q)
+
+julia> @atomize normalize(∨, p ↔ q)
+(p ∧ q) ∨ (¬p ∧ ¬q)
+```
+"""
+normalize(ao, p) = Normal(ao, p)
+
+__tseytin(p::Union{Atom, Tree{typeof(𝒾), <:Atom}}) = p
+__tseytin(p) = Variable(gensym())
+
+_tseytin(p::Union{Atom, Tree{typeof(𝒾), <:Atom}}, substitution) = ()
+function _tseytin(p, substitution)
+    substitutions = map(__tseytin, p.nodes)
+    ((substitution, nodevalue(p)(map(__tseytin, substitutions)...)), filter(!=(()), collect(flatmap(_tseytin, p.nodes, substitutions)))...)
+end
+
+"""
+    tseytin(p)
+
+Apply the [Tseytin transformation](https://en.wikipedia.org/wiki/Tseytin_transformation) to the given proposition.
+
+The transformed proposition is in conjunctive normal form,
+contains introduced [`Variable`](@ref)s,
+and [`is_equisatisfiable`](@ref) to `p`.
+The [`valuations`](@ref) of the transformed proposition that result
+in a true interpretation are a subset of the same for `p`.
+
+# Examples
+```jldoctest
+julia> is_equisatisfiable(⊤, tseytin(⊤))
+true
+
+julia> is_equisatisfiable(p, tseytin(p))
+true
+
+julia> is_equisatisfiable(⊥, tseytin(⊥))
+true
+```
+"""
+tseytin(p::Atom) = p
+function tseytin(p::Tree)
+    pairs = _tseytin(p, Variable(gensym()))
+    first(first(pairs)) ∧ ⋀(map(splat(↔), pairs))
+end
+tseytin(p) = tseytin(Tree(p))

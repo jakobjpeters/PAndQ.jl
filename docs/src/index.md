@@ -16,8 +16,9 @@ PAndQ.jl is a [computer algebra system](https://en.wikipedia.org/wiki/Computer_a
 - First-class propositions
     - Syntax and pretty-printing corresponding to written logic
 - Normalization
+    - Tseytin transformation
 - Logical equivalence checking
-- Boolean satisfiability solving
+- Satisfiability solving
     - Partial interpretation
 - Convert propositions to LaTeX
 - Truth tables

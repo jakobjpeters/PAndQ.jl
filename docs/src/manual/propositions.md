@@ -15,3 +15,10 @@ atoms
 operators
 value
 ```
+
+## Transformations
+
+```@docs
+normalize
+tseytin
+```
