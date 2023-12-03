@@ -1,5 +1,5 @@
 
-import Base: ==, convert, Bool, Fix2
+import Base: ==, <, convert, Bool, Fix2
 using Base: Iterators.product, uniontypes
 
 # Internals
@@ -221,40 +221,6 @@ is_associative(::union_typeof((∧, ∨, ⊻, ↔))) = true
 is_associative(::BinaryOperator) = false
 
 """
-    ==(::Union{Bool, NullaryOperator, Proposition}, ::Union{Bool, NullaryOperator, Proposition})
-    p == q
-
-Returns a boolean indicating whether `p` and `q` are [logically equivalent]
-(https://en.wikipedia.org/wiki/Logical_equivalence).
-
-[`Constant`](@ref)s are equivalent if and only if their values are equivalent.
-
-!!! info
-    The `≡` symbol is sometimes used to represent logical equivalence.
-    However, Julia uses `≡` as an alias for the builtin function `===`
-    which cannot have methods added to it.
-
-See also [Nullary Operators](@ref nullary_operators) and [`Proposition`](@ref).
-
-# Examples
-```jldoctest
-julia> @atomize p == ¬p
-false
-
-julia> @atomize ¬(p ⊻ q) == (p → q) ∧ (p ← q)
-true
-
-julia> @atomize ¬(p ⊻ q) === (p → q) ∧ (p ← q)
-false
-```
-"""
-p::Constant == q::Constant = p.value == q.value
-p::Bool == q::Proposition = p ↔ is_tautology(q)
-p::NullaryOperator == q::Proposition = Bool(p) == q
-p::Proposition == q::Union{Bool, NullaryOperator} = q == p
-p::Proposition == q::Proposition = is_tautology(p ↔ q)
-
-"""
     is_tautology(p)
 
 Returns a boolean on whether `p` is a [`tautology`](@ref).
@@ -273,7 +239,7 @@ true
 """
 is_tautology(::typeof(⊤)) = true
 is_tautology(::Union{typeof(⊥), Atom, Literal}) = false
-is_tautology(p) = all(==(true), interpretations(p))
+is_tautology(p) = ⋀(interpretations(p))
 
 """
     is_contradiction(p)
@@ -398,6 +364,81 @@ true
 ```
 """
 is_falsifiable(p) = !is_tautology(p)
+
+## Ordering
+
+"""
+    ==(::Union{Bool, NullaryOperator, Proposition}, ::Union{Bool, NullaryOperator, Proposition})
+    p == q
+
+Return a boolean indicating whether `p` and `q` are [logically equivalent]
+(https://en.wikipedia.org/wiki/Logical_equivalence).
+
+[`Constant`](@ref)s are equivalent only if their values are equivalent.
+
+!!! info
+    The `≡` symbol is sometimes used to represent logical equivalence.
+    However, Julia uses `≡` as an alias for the builtin function `===`
+    which cannot have methods added to it.
+
+See also [Nullary Operators](@ref nullary_operators) and [`Proposition`](@ref).
+
+# Examples
+```jldoctest
+julia> @atomize ⊥ == p ∧ ¬p
+true
+
+julia> @atomize (p ↔ q) == ¬(p ⊻ q)
+true
+
+julia> @atomize \$1 == \$1
+true
+
+julia> @atomize p == ¬p
+false
+```
+"""
+p::Constant == q::Constant = p.value == q.value
+p::Bool == q::Union{NullaryOperator, Proposition} = (p ? is_tautology : is_contradiction)(q)
+p::NullaryOperator == q::Union{Bool, Proposition} = Bool(p) == q
+p::Proposition == q::Union{Bool, NullaryOperator} = q == p
+p::Proposition == q::Proposition = is_tautology(p ↔ q)
+
+"""
+    <(::Union{Bool, NullaryOperator, Proposition}, ::Union{Bool, NullaryOperator, Proposition})
+
+Return a boolean whether the arguments are ordered such that `p < q < r`,
+where `p`, `q`, and `r` satisfy [`is_contradiction`](@ref),
+[`is_contingency`](@ref), and [`is_tautology`](@ref), respectively.
+
+See also [Nullary Operators](@ref nullary_operators) and [`Proposition`](@ref).
+
+# Examples
+```jldoctest
+julia> @atomize ⊥ < p < ⊤
+true
+
+julia> @atomize p ∧ ¬p < p < p ∨ ¬p
+true
+
+julia> ⊤ < ⊥
+false
+
+julia> @atomize p < p
+false
+```
+"""
+p::NullaryOperator < q::NullaryOperator = p == ⊥ && q == ⊤
+::Union{Atom, Literal} < ::Union{Atom, Literal} = false
+p::Bool < q::Union{NullaryOperator, Proposition} = p ? false : is_satisfiable(q)
+p::NullaryOperator < q::Union{Bool, Proposition} = Bool(p) < q
+p::Proposition < q::Union{Bool, NullaryOperator} = ¬q < ¬p
+function <(p::Proposition, q::Proposition)
+    _interpretations = interpretations(p)
+    if allequal(_interpretations) first(_interpretations) == ⊥ && is_satisfiable(q)
+    else is_tautology(q)
+    end
+end
 
 # Properties
 
