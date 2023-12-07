@@ -477,10 +477,13 @@ normalize(ao, p) = Normal(ao, p)
 __tseytin(p::Union{Atom, Tree{typeof(𝒾), <:Atom}}) = p
 __tseytin(p) = Variable(gensym())
 
-_tseytin(p::Union{Atom, Tree{typeof(𝒾), <:Atom}}, substitution) = ()
-function _tseytin(p, substitution)
+_tseytin(p::Union{Atom, Tree{typeof(𝒾), <:Atom}}, substitution, pairs) = nothing
+function _tseytin(p, substitution, pairs)
     substitutions = map(__tseytin, p.nodes)
-    ((substitution, nodevalue(p)(map(__tseytin, substitutions)...)), filter(!=(()), collect(flatmap(_tseytin, p.nodes, substitutions)))...)
+    push!(pairs, (substitution, nodevalue(p)(map(__tseytin, substitutions)...)))
+    for (node, substitution) in zip(p.nodes, substitutions)
+        _tseytin(node, substitution, pairs)
+    end
 end
 
 """
@@ -508,7 +511,8 @@ true
 """
 tseytin(p::Atom) = p
 function tseytin(p::Tree)
-    pairs = _tseytin(p, Variable(gensym()))
-    first(first(pairs)) ∧ ⋀(map(splat(↔), pairs))
+    pairs = Tuple{Union{Atom, Tree}, Tree}[]
+    _tseytin(p, Variable(gensym()), pairs)
+    normalize(∧, first(first(pairs)) ∧ ⋀(map(splat(↔), pairs)))
 end
 tseytin(p) = tseytin(Tree(p))
