@@ -7,6 +7,11 @@ using AbstractTrees: childtype, Leaves, nodevalues, PreOrderDFS
 
 # Internals
 
+"""
+    value_exception
+"""
+const value_exception = ArgumentError("the `Proposition` must be logically equivalent to a `Constant`")
+
 ## Types
 
 ### Abstract
@@ -85,9 +90,9 @@ struct Variable <: Atom
 
     function Variable(symbol)
         s = string(symbol)
-        isempty(s) && error("The symbol must be non-empty")
+        isempty(s) && throw(ArgumentError("The symbol must be non-empty"))
         all(c -> isprint(c) && !isspace(c), s) ||
-            error("The symbol must contain only printable non-space characters")
+            throw(ArgumentError("The symbol must contain only printable non-space characters"))
         new(symbol)
     end
 end
@@ -121,8 +126,9 @@ struct Tree{O <: Operator, P <: Proposition, N} <: Compound
 
     function Tree(::O, nodes...) where O <: Operator
         _arity, _length = arity(O.instance), length(nodes)
-        _arity != _length &&
-            error("`arity($(O.instance)) == $_arity`, but `$_length` argument$(_length == 1 ? " was" : "s were") given")
+        _arity != _length && throw(ArgumentError(
+            "`arity($(O.instance)) == $_arity`, but `$_length` argument$(_length == 1 ? " was" : "s were") given"
+        ))
         new{O, eltype(nodes), _arity}(nodes)
     end
 end
@@ -301,7 +307,7 @@ nodetype(::Type{A}) where A <: Atom = A
 
 Equivalent to `only ∘ children`
 
-See also [`children`](@ref)
+See also [`children`](@ref).
 """
 const child = only ∘ children
 
@@ -448,11 +454,9 @@ julia> @atomize value(\$1)
 """
 function value(p)
     _atoms = Stateful(atoms(p))
+    isempty(_atoms) && throw(value_exception)
     atom = first(_atoms)
-    !isempty(_atoms) && error("the `Proposition` must contain only one `Atom`")
-    p != atom && error("the `Proposition` must be logically equivalent to its `Atom`")
-    !isa(atom, Constant) && error("the `Atom` must be a `Constant`")
-    atom.value
+    isempty(_atoms) && atom isa Constant && atom == p ? atom.value : throw(value_exception)
 end
 
 # Transformations
