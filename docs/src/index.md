@@ -28,7 +28,6 @@ PAndQ.jl is a [computer algebra system](https://en.wikipedia.org/wiki/Computer_a
 #### Planned
 
 - Canonical normal form
-- Fast solver backends
 - Graph plotting
 - Substitution
 - Simplification

@@ -1,25 +1,9 @@
 
 import Base: ==, <, convert, Bool, Fix2
 using Base: Iterators.product, uniontypes
+using PicoSAT: itersolve
 
 # Internals
-
-"""
-    interpret_bool(p, valuation)
-"""
-interpret_bool(no::NullaryOperator, valuation) = Bool(no)
-interpret_bool(p::Atom, valuation) = valuation(p)
-interpret_bool(p::Tree, valuation) =
-    nodevalue(p)(map(child -> interpret_bool(child, valuation), children(p))...)
-interpret_bool(p::Tree{<:NullaryOperator}, valuation) = Bool(nodevalue(p))
-interpret_bool(p::Normal, valuation) = interpret_bool(Tree(p), valuation)
-
-"""
-    process_valuations(valuations, p, f)
-"""
-process_valuations(valuations, p, f) = f(valuation -> interpret(valuation, p), valuations)
-process_valuations(p, f) =
-    f(valuation -> interpret_bool(p, a -> Dict(valuation)[a]), valuations(p))
 
 """
     neutral_operator(::NullaryOperator)
@@ -194,35 +178,27 @@ julia> @atomize collect(interpretations(p ∧ q))
  0  0
 ```
 """
-interpretations(valuations, p) = process_valuations(valuations, p, Iterators.map)
-interpretations(p) = process_valuations(p, Iterators.map)
+interpretations(valuations, p) = Iterators.map(valuation -> interpret(valuation, p), valuations)
+interpretations(p) = Iterators.map(valuation -> Bool(interpret(a -> Dict(valuation)[a], normalize(¬, p))), valuations(p))
 
 """
-    solve(valuations, p)
-    solve(p)
+    solultions(p)
 
-Return a vector containing all [`valuations`](@ref) such that
-`interpret(valuation, p) == ⊤`.
+Return an iterator containing [`valuations`](@ref)
+such that `interpret(valuation, p) == ⊤`.
+
+To find every valuation that results in a true interpretation,
+convert the proposition to conjunctive normal form using [`normalize`](@ref).
+Otherwise, a subset of those valuations will be
+identified using the [`tseytin`](@ref) transformation.
 
 See also [`interpret`](@ref) and [`tautology`](@ref).
-
-# Examples
-```jldoctest
-julia> collect(solve(⊤))
-1-element Vector{Vector{Union{}}}:
- []
-
-julia> @atomize collect(solve(p))
-1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
- [PAndQ.Variable(:p) => 1]
-
-julia> @atomize collect(solve(p ∧ q))
-1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
- [PAndQ.Variable(:p) => 1, PAndQ.Variable(:q) => 1]
 ```
 """
-solve(valuations, p) = process_valuations(valuations, p, Iterators.filter)
-solve(p) = process_valuations(p, Iterators.filter)
+solutions(p::Normal{typeof(∧)}) = Iterators.map(
+    valuation -> map(literal -> p.atoms[abs(literal)] => !signbit(literal), valuation),
+itersolve(p.clauses))
+solutions(p) = solutions(tseytin(p))
 
 # Predicates
 
@@ -282,7 +258,7 @@ true
 """
 is_tautology(::typeof(⊤)) = true
 is_tautology(::Union{typeof(⊥), Atom, Literal}) = false
-is_tautology(p) = all(==(true), interpretations(p))
+is_tautology(p) = is_contradiction(¬p)
 
 """
     is_contradiction(p)
@@ -302,7 +278,7 @@ julia> @atomize is_contradiction(p ∧ ¬p)
 true
 ```
 """
-is_contradiction(p) = is_tautology(¬p)
+is_contradiction(p) = isempty(solutions(p))
 
 """
     is_truth(p)
@@ -329,7 +305,7 @@ false
 """
 is_truth(::NullaryOperator) = true
 is_truth(::Union{Atom, Literal}) = false
-is_truth(p) = allequal(interpretations(p))
+is_truth(p) = is_tautology(p) || is_contradiction(p)
 
 """
     is_contingency(p)
@@ -460,10 +436,12 @@ false
 ```
 """
 p::Constant == q::Constant = p.value == q.value
+p::Variable == q::Variable = p === q
+p::Atom == q::Atom = false
 p::Bool == q::Union{NullaryOperator, Proposition} = (p ? is_tautology : is_contradiction)(q)
 p::NullaryOperator == q::Union{Bool, Proposition} = Bool(p) == q
 p::Proposition == q::Union{Bool, NullaryOperator} = q == p
-p::Proposition == q::Proposition = is_tautology(p ↔ q)
+p::Proposition == q::Proposition = is_contradiction(p ⊻ q)
 
 """
     <(::Union{Bool, NullaryOperator, Proposition}, ::Union{Bool, NullaryOperator, Proposition})
@@ -494,12 +472,8 @@ p::NullaryOperator < q::NullaryOperator = p == ⊥ && q == ⊤
 p::Bool < q::Union{NullaryOperator, Proposition} = p ? false : is_satisfiable(q)
 p::NullaryOperator < q::Union{Bool, Proposition} = Bool(p) < q
 p::Proposition < q::Union{Bool, NullaryOperator} = ¬q < ¬p
-function <(p::Proposition, q::Proposition)
-    _interpretations = interpretations(p)
-    if allequal(_interpretations) first(_interpretations) == ⊥ && is_satisfiable(q)
-    else is_tautology(q)
-    end
-end
+<(p::Proposition, q::Proposition) =
+    is_contradiction(p) ? is_satisfiable(q) : !is_tautology(p) && is_tautology(q)
 
 # Properties
 

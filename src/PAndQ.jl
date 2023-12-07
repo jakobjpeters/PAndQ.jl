@@ -35,7 +35,7 @@ export
 include("semantics.jl")
 
 export
-    valuations, interpret, interpretations, solve,
+    valuations, interpret, interpretations, solutions,
     is_commutative, is_associative,
     is_tautology, is_contradiction,
     is_truth, is_contingency,
@@ -64,7 +64,7 @@ __init__() = @compile_workload begin
         interpret(p => ⊤, r)
         interpret(p => ⊥, r)
 
-        for iterator in map(f -> f(r), (atoms, operators, solve))
+        for iterator in map(f -> f(r), (atoms, operators, solutions))
             collect(iterator)
         end
 

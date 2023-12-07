@@ -635,10 +635,9 @@ julia> is_equisatisfiable(⊥, tseytin(⊥))
 true
 ```
 """
-tseytin(p::Atom) = p
 function tseytin(p::Tree)
     pairs = Tuple{Union{Atom, Tree}, Tree}[]
-    tseytin!(p, Variable(gensym()), pairs)
-    normalize(∧, first(first(pairs)) ∧ ⋀(map(splat(↔), pairs)))
+    tseytin!(Tree(normalize(¬, p)), Variable(gensym()), pairs)
+    normalize(∧, isempty(pairs) ? p : first(first(pairs)) ∧ ⋀(map(splat(↔), pairs)))
 end
 tseytin(p) = tseytin(Tree(p))
