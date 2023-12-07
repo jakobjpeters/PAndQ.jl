@@ -155,14 +155,14 @@ function show_atom(io, p::Constant)
 end
 show_atom(io, p::Variable) = (get(io, :verbose, false) ? show : print)(io, p.symbol)
 
-for P in (:Constant, :Variable, :Tree, :Clause, :Normal)
-    @eval base_type(::$P) = $P
-end
+"""
+    base_type(::Union{<:Type{<:Proposition}}, Proposition)
+"""
+base_type(::T) where T = base_type(T)
 
-"""
-    base_type(::Proposition)
-"""
-base_type
+for P in (:Constant, :Variable, :Tree, :Clause, :Normal)
+    @eval base_type(::Type{<:$P}) = $P
+end
 
 # `show`
 
@@ -180,8 +180,8 @@ The value of a [`Constant`](@ref) is shown with
 julia> @atomize show(stdout, MIME"text/plain"(), p ⊻ q)
 p ⊻ q
 
-julia> @atomize show(stdout, MIME"text/plain"(), PAndQ.Normal(p ⊻ q))
-(p ∨ q) ∧ (¬p ∨ ¬q)
+julia> @atomize show(stdout, MIME"text/plain"(), normalize(∧, p ⊻ q))
+(¬q ∨ ¬p) ∧ (q ∨ p)
 ```
 """
 show(io::IO, ::MIME"text/plain", p::Atom) =
@@ -376,33 +376,26 @@ See also [`AbstractTrees.print_tree`]
 (https://github.com/JuliaCollections/AbstractTrees.jl/blob/master/src/printing.jl).
 
 ```jldoctest
-julia> @atomize print_tree(p ∧ ¬q ⊻ s)
-⊻
+julia> @atomize print_tree(p ∧ q ∨ ¬s)
+∨
 ├─ ∧
 │  ├─ 𝒾
 │  │  └─ p
-│  └─ ¬
+│  └─ 𝒾
 │     └─ q
-└─ 𝒾
+└─ ¬
    └─ s
 
-julia> @atomize print_tree(PAndQ.Normal(p ∧ ¬q ⊻ s))
+julia> @atomize print_tree(normalize(∧, p ∧ q ∨ ¬s))
 ∧
 ├─ ∨
 │  ├─ 𝒾
-│  │  └─ p
-│  └─ 𝒾
-│     └─ s
-├─ ∨
-│  ├─ ¬
 │  │  └─ q
-│  └─ 𝒾
+│  └─ ¬
 │     └─ s
 └─ ∨
-   ├─ ¬
-   │  └─ p
    ├─ 𝒾
-   │  └─ q
+   │  └─ p
    └─ ¬
       └─ s
 ```

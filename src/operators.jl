@@ -345,7 +345,7 @@ const ← = converse_imply
     conjunction(ps)
     ⋀(ps)
 
-Equivalent to `foldl(∧, ps; init = ⊤)`.
+Equivalent to `something(foldl(∧, ps; init = Some(⊤)))`.
 
 `⋀` can be typed by `\\bigwedge[TAB]`.
 
@@ -354,17 +354,17 @@ See also [`and`](@ref) and [`tautology`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize ⋀((p, q, r, s))
-(((⊤ ∧ p) ∧ q) ∧ r) ∧ s
+((p ∧ q) ∧ r) ∧ s
 ```
 """
-conjunction(ps) = foldl(∧, ps; init = ⊤)
+conjunction(ps) = something(foldl(∧, ps; init = Some(⊤)))
 const ⋀ = conjunction
 
 """
     disjunction(ps)
     ⋁(ps)
 
-Equivalent to `foldl(∨, ps; init = ⊥)`.
+Equivalent to `something(foldl(∨, ps; init = Some(⊥)))`.
 
 `⋁` can be typed by `\\bigvee[TAB]`.
 
@@ -373,10 +373,10 @@ See also [`or`](@ref) and [`contradiction`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize ⋁((p, q, r, s))
-(((⊥ ∨ p) ∨ q) ∨ r) ∨ s
+((¬¬p ∨ q) ∨ r) ∨ s
 ```
 """
-disjunction(ps) = foldl(∨, ps; init = ⊥)
+disjunction(ps) = something(foldl(∨, ps; init = Some(⊥)))
 const ⋁ = disjunction
 
 # Internals

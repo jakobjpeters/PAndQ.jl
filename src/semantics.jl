@@ -12,7 +12,7 @@ interpret_bool(p::Atom, valuation) = valuation(p)
 interpret_bool(p::Tree, valuation) =
     nodevalue(p)(map(child -> interpret_bool(child, valuation), children(p))...)
 interpret_bool(p::Tree{<:NullaryOperator}, valuation) = Bool(nodevalue(p))
-interpret_bool(p::Union{Clause, Normal}, valuation) = interpret_bool(Tree(p), valuation)
+interpret_bool(p::Normal, valuation) = interpret_bool(Tree(p), valuation)
 
 """
     process_valuations(valuations, p, f)
@@ -30,10 +30,10 @@ element of the given [`NullaryOperator`](@ref).
 # Examples
 ```jldoctest
 julia> PAndQ.neutral_operator(⊤)
-and (generic function with 19 methods)
+and (generic function with 11 methods)
 
 julia> PAndQ.neutral_operator(⊥)
-or (generic function with 19 methods)
+or (generic function with 9 methods)
 ```
 """
 neutral_operator(::typeof(⊤)) = ∧
@@ -47,6 +47,38 @@ eval_doubles(f, doubles) = for double in doubles
         @eval $f(::typeof($left)) = $right
     end
 end
+
+"""
+    combine(p, q)
+"""
+function combine(p, q)
+    new_indices = Dict{promote_type(eltype(p.atoms), eltype(q.atoms)), Int}(map(reverse, enumerate(p.atoms)))
+    atoms, _clauses = copy(p.atoms), copy(p.clauses)
+
+    for clause in q.clauses
+        _clause = Int[]
+
+        for i in clause
+            atom = q.atoms[abs(i)]
+            push!(_clause, sign(i) * get!(new_indices, atom) do
+                push!(atoms, atom)
+                lastindex(atoms)
+            end)
+        end
+
+        push!(_clauses, _clause)
+    end
+
+    atoms, _clauses
+end
+
+"""
+    negated_normal_template(left, right)
+"""
+negated_normal_template(left, right) = :(function negated_normal(p::Tree{typeof($left)})
+    p, q = p.nodes
+    negated_normal($right)
+end)
 
 # Truths
 
@@ -84,7 +116,7 @@ function valuations(atoms)
 end
 valuations(p::Union{NullaryOperator, Proposition}) = valuations(collect(atoms(p)))
 
-_map(g, f, p) = g(nodevalue(p))(map(child -> map(f, child), children(p)))
+_map(f, p) = map(child -> map(f, child), children(p))
 
 """
     map(::Function, ::Union{NullaryOperator, Proposition})
@@ -105,8 +137,11 @@ julia> @atomize map(atom -> \$(value(atom) + 1), \$1 ∧ \$2)
 ```
 """
 map(f, p::Atom) = f(p)
-map(f, p::Union{NullaryOperator, Tree}) = _map(splat, f, p)
-map(f, p::Union{Clause, Normal}) = _map(𝒾, f, p)
+map(f, p::Union{NullaryOperator, Tree}) = nodevalue(p)(_map(f, p)...)
+function map(f, p::Union{Clause, Normal})
+    and_or = nodevalue(p)
+    foldl(and_or, _map(f, p); init = Some(first(left_neutrals(and_or))))
+end
 
 """
     interpret(valuation, p)
@@ -478,13 +513,13 @@ of the given [operator](@ref operators_operators).
 # Examples
 ```jldoctest
 julia> dual(and)
-or (generic function with 19 methods)
+or (generic function with 9 methods)
 
 julia> @atomize and(p, q) == not(dual(and)(not(p), not(q)))
 true
 
 julia> dual(imply)
-not_converse_imply (generic function with 3 methods)
+not_converse_imply (generic function with 6 methods)
 
 julia> @atomize imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
@@ -511,13 +546,13 @@ of the given [binary operator](@ref binary_operators).
 # Examples
 ```jldoctest
 julia> converse(and)
-and (generic function with 19 methods)
+and (generic function with 11 methods)
 
 julia> @atomize and(p, q) == converse(and)(q, p)
 true
 
 julia> converse(imply)
-converse_imply (generic function with 3 methods)
+converse_imply (generic function with 6 methods)
 
 julia> @atomize imply(p, q) == converse(imply)(q, p)
 true
@@ -596,10 +631,10 @@ false
 Bool(nullary_operator::NullaryOperator) = convert(Bool, nullary_operator)
 
 ¬p::Bool = !p
-p::Union{Bool, NullaryOperator} ∧ q::Bool = Bool(p) && q
-p::Union{Bool, NullaryOperator} ∨ q::Bool = Bool(p) || q
-p::Bool ∧ q::NullaryOperator = q ∧ p
-p::Bool ∨ q::NullaryOperator = q ∨ p
+p::Bool ∧ q::Union{Bool, NullaryOperator} = p && Bool(q)
+p::Bool ∨ q::Union{Bool, NullaryOperator} = p || Bool(q)
+p::NullaryOperator ∧ q::Bool = q ∧ p
+p::NullaryOperator ∨ q::Bool = q ∨ q
 
 ## Operators
 
@@ -614,17 +649,22 @@ p::Bool ∨ q::NullaryOperator = q ∨ p
 
 ### Binary Operators
 
-p::Union{NullaryOperator, Proposition} ∨ q::Union{NullaryOperator, Proposition} = ¬(p ⊽ q)
+p::Union{NullaryOperator, Some{<:NullaryOperator}, Proposition} ∨ q::Union{NullaryOperator, Some{<:NullaryOperator}, Proposition} =
+    ¬(p ⊽ q)
 
 for (left, right) in (
     :⊼ => :(¬(p ∧ q)),
     :⊽ => :(¬p ∧ ¬q),
     :⊻ => :((p ∨ q) ∧ (p ⊼ q)),
 ) @eval begin
-    $left(p::NullaryOperator, q::Bool) = $right
-    $left(p::Bool, q::NullaryOperator) = $left(q, p)
-    $left(p::Union{NullaryOperator, Proposition}, q::Union{NullaryOperator, Proposition}) =
-        $right
+    $(negated_normal_template(left, right))
+    $left(p::Bool, q::NullaryOperator) = $right
+    $left(p::NullaryOperator, q::Bool) = $left(q, p)
+    $left(p::Normal, q::Normal) = $right
+    $left(
+        p::Union{Some{<:NullaryOperator}, NullaryOperator, Proposition},
+        q::Union{Some{<:NullaryOperator}, NullaryOperator, Proposition}
+    ) = $right
 end end
 
 for (left, right) in (
@@ -633,82 +673,58 @@ for (left, right) in (
     :→ => :(¬p ∨ q),
     :↚ => :(¬p ∧ q),
     :← => :(p ∨ ¬q)
-)
-    @eval $left(p::Union{Bool, NullaryOperator, Proposition}, q::Union{Bool, NullaryOperator, Proposition}) =
-        $right
-end
+) @eval begin
+    $(negated_normal_template(left, right))
+    $left(p::Normal, q::Normal) = $right
+    $left(
+        p::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition},
+        q::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition}
+    ) = $right
+end end
 
 ## Propositions
 
-(¬p::Union{Atom, Tree}) = Tree(¬, p)
-(¬p::Clause) = Clause(dual(nodevalue(p)), map(
-    _child -> Literal(nodevalue(_child) == 𝒾 ? (¬) : 𝒾, child(_child)),
-children(p)))
-(¬p::Normal) = Normal(dual(nodevalue(p)), map(¬, children(p)))
+¬::Some{typeof(⊤)} = Some(⊥)
+¬::Some{typeof(⊥)} = Some(⊤)
+¬p::Union{Atom, Tree} = Tree(¬, p)
+¬p::Normal = Normal(dual(nodevalue(p)), p.atoms, -p.clauses)
 
-p::Proposition ∧ q::Proposition = Normal(∧, p) ∧ Normal(∧, q)
+::Some{typeof(⊤)} ∧ q::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition} = q
+p::Some{typeof(⊥)} ∧ q::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition} = p
+p::Union{Bool, NullaryOperator, Proposition} ∧ q::Some{<:NullaryOperator} = q ∧ p
 
 for BO in uniontypes(BinaryOperator)
     bo = nameof(BO.instance)
-    @eval $bo(p::Union{NullaryOperator, Proposition}) = Fix2($bo, p)
-    @eval $bo(p::Union{NullaryOperator, Atom, Tree}, q::Union{NullaryOperator, Atom, Tree}) =
-        Tree($bo, Tree(p), Tree(q))
-end
-
-for AO in uniontypes(AndOr)
-    ao = nameof(AO.instance)
-    dao = nameof(dual(AO.instance))
-    DAO = typeof(dual(AO.instance))
-
     @eval begin
-        $ao(p::Clause{$DAO}, q::Clause{$DAO}) = Normal($ao, [p, q])
-
-        $ao(p::Union{NullaryOperator, Atom, Literal, Clause{$AO}}, q::Clause{$DAO}) =
-            $ao(Normal($ao, p), q)
-        $ao(p::Clause{$DAO}, q::Union{NullaryOperator, Atom, Literal, Clause{$AO}}) =
-            $ao(p, Normal($ao, q))
-        $ao(p::NullaryOperator, q::Normal) = $ao(Normal(p), q)
-        $ao(p::Normal, q::NullaryOperator) = $ao(p, Normal(q))
-
-        $ao(p::Normal, q::Normal) = $ao(Normal($ao, p), Normal($ao, q))
-        $ao(p::Clause, q::Normal) = $ao(Normal($ao, p), q)
-        $ao(p::Normal, q::Clause) = $ao(p, Normal($ao, q))
-    end
-
-    for (left, right) in ((Clause, Union{Atom, Literal}), (Normal, Clause{DAO}))
-        @eval begin
-            $ao(p::$left{$AO}, q::$right) = $left($ao, vcat(children(p), q))
-            $ao(p::$right, q::$left{$AO}) = $left($ao, vcat(p, children(q)))
-            $ao(p::$left{$AO}, q::$left{$AO}) =
-                $left($ao, vcat(children(p), children(q)))
-        end
+        $bo(p::Union{Some{<:NullaryOperator}, NullaryOperator, Proposition}) = Fix2($bo, p)
+        $bo(p::Union{NullaryOperator, Atom, Tree}, q::Union{NullaryOperator, Atom, Tree}) =
+            Tree($bo, Tree(p), Tree(q))
+        $bo(p::Normal, q::Union{NullaryOperator, Proposition}) = $bo(Tree(p), q)
+        $bo(p::Union{NullaryOperator, Proposition}, q::Normal) = $bo(p, Tree(q))
     end
 end
+
+for and_or in (:∧, :∨) @eval begin
+    $and_or(p::Normal{typeof($and_or)}, q::Normal{typeof($and_or)}) = Normal($and_or, combine(p, q)...)
+    $and_or(p::Normal, q::Normal) = $and_or(Normal($and_or, p), Normal($and_or, q))
+end end
 
 # Constructors
 
 Literal(uo, p::Atom) = Tree(uo, p)
 
-Clause(ao::AndOr, ps) = isempty(ps) ?
-    Clause(ao) :
-    Clause(ao, collect(map(Literal, ps)))
-Clause(::AO, p::Proposition) where AO <: AndOr = convert(Clause{AO}, p)
-
-Normal(ao::AndOr, ps) = isempty(ps) ?
-    Normal(ao) :
-    Normal(ao, collect(map(p -> Clause(dual(ao), [p]), ps)))
-Normal(::AO, p::Proposition) where AO <: AndOr = convert(Normal{AO}, p)
-
-for P in (:Atom, :Literal, :Tree, :Clause, :Normal)
+for P in (:Atom, :Literal, :Tree)
     @eval $P(p) = convert($P, p)
 end
+
+Normal(::AO, p) where AO = convert(Normal{AO}, p)
 
 # Utilities
 
 """
-    convert(::Type{Bool}, ::NullaryOperator)
+    convert(::Type{Bool}, p)
 
-Convert the given [nullary operator](@ref nullary_operators) to a `Bool`.
+Convert the given [truth value](@ref nullary_operators) to a `Bool`.
 
 # Examples
 ```jldoctest
@@ -719,48 +735,22 @@ julia> convert(Bool, ⊥)
 false
 ```
 """
+convert(::Type{Bool}, p::Some{<:NullaryOperator}) = Bool(something(p))
 convert(::Type{Bool}, ::typeof(⊤)) = true
 convert(::Type{Bool}, ::typeof(⊥)) = false
+convert(::Type{Bool}, p::Tree{<:NullaryOperator}) = Bool(nodevalue(p))
 
 """
-    convert(::Type{<:Proposition}, ::Union{NullaryOperator, Proposition})
+    convert(::Type{<:Proposition}, p)
 
-See also [`NullaryOperator`](@ref) and [`Proposition`](@ref).
+See also [`Proposition`](@ref).
 """
 convert(::Type{Atom}, p::Literal{typeof(𝒾)}) = child(p)
-convert(::Type{Literal}, p::Tree{<:UnaryOperator, <:Atom}) =
-    Literal(nodevalue(p), child(p))
-convert(::Type{Literal}, p::Atom) = Literal(𝒾, p)
+convert(::Type{Literal}, p::Atom) = Tree(p)
 convert(::Type{Tree}, p::NullaryOperator) = Tree(p)
 convert(::Type{Tree}, p::Atom) = Tree(𝒾, p)
-function convert(::Type{Tree}, p::Clause)
-    _nodevalue = nodevalue(p)
-    Tree(foldl(_nodevalue, p.literals; init = only(left_neutrals(_nodevalue))))
-end
-function convert(::Type{Tree}, p::Normal)
-    _nodevalue = nodevalue(p)
-    Tree(mapfoldl(Tree, _nodevalue, p.clauses; init = only(left_neutrals(_nodevalue))))
-end
-convert(::Type{Clause}, p::Union{Atom, Literal}) = Clause(or, [p])
-convert(::Type{Clause{AO}}, p::Union{Atom, Literal}) where AO <: AndOr = Clause(AO.instance, [p])
-convert(::Type{Clause}, no::NullaryOperator) = Clause(neutral_operator(no))
-convert(::Type{Normal}, no::NullaryOperator) = Normal(neutral_operator(no))
-convert(::Type{Clause}, p::Tree{<:NullaryOperator}) = Clause(nodevalue(p))
-convert(::Type{Normal}, p::Tree{<:NullaryOperator}) = Normal(nodevalue(p))
-convert(::Type{Normal}, p::Clause) = Normal(dual(nodevalue(p)), [p])
-convert(::Type{Normal{AO}}, p::Union{Atom, Literal}) where AO <: AndOr = Normal(AO.instance, Clause(p))
-convert(::Type{Normal{AO}}, p::Clause{AO}) where AO <: AndOr =
-    Normal(AO.instance, map(literal -> Clause(dual(AO.instance), literal), p.literals))
-convert(::Type{Normal{AO}}, p::Clause) where AO <: AndOr = Normal(AO.instance, [p])
-convert(::Type{Normal}, p::Proposition) = Normal(∧, p)
-convert(::Type{Normal{AO}}, p::Tree) where AO =
-    Normal(AO.instance, nodevalue(p)(map(Normal, p.nodes)...))
-convert(::Type{Normal{AO}}, p::Normal{AO}) where AO <: AndOr = p
-convert(::Type{Normal{AO}}, p::Normal) where AO <: AndOr = Normal(AO.instance,
-    vec(map(product(map(p.clauses) do clause
-        clause.literals
-    end...)) do literals
-        Clause(dual(AO.instance), literals)
-    end)
-)
-convert(::Type{Proposition}, no::NullaryOperator) = Tree(no)
+convert(::Type{Tree}, p::Normal) = map(𝒾, p)
+convert(::Type{Normal{AO}}, p::Union{NullaryOperator, Proposition}) where AO =
+    normalize(AO.instance, p)
+convert(::Type{Proposition}, p::NullaryOperator) = Tree(p)
+convert(P::Type{<:Proposition}, p::Some{<:NullaryOperator}) = convert(P, something(p))

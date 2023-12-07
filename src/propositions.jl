@@ -12,6 +12,22 @@ using AbstractTrees: childtype, Leaves, nodevalues, PreOrderDFS
 """
 const value_exception = ArgumentError("the `Proposition` must be logically equivalent to a `Constant`")
 
+"""
+    simplify_clause(p)
+"""
+function simplify_clause(clause)
+    _clause = Int[]
+    for literal in clause
+        n = 0
+        for _literal in _clause
+            -literal == _literal && return [literal, -literal]
+            n += literal == _literal
+        end
+        n == 0 && push!(_clause, literal)
+    end
+    _clause
+end
+
 ## Types
 
 ### Abstract
@@ -153,10 +169,8 @@ julia> @atomize PAndQ.Literal(¬, p)
 const Literal = Tree{<:Operator, <:Atom, 1}
 
 """
-    Clause{AO <: AndOr, L <: Literal} <: Compound
-    Clause(::AO, ps = Literal[])
-    Clause(::AO, p::Proposition)
-    Clause(::Union{NullaryOperator, Atom, Literal})
+    Clause{AO <: AndOr, A <: AbstractVector{<:Atom}, L <: AbstractVector{Int}} <: Compound
+    Clause(::AO, ::A, ::L)
 
 A proposition represented as either a [conjunction or disjunction of literals]
 (https://en.wikipedia.org/wiki/Clause_(logic)).
@@ -170,29 +184,27 @@ See also [`Atom`](@ref), [`Literal`](@ref), [`AndOr`](@ref), and [`NullaryOperat
 
 # Examples
 ```jldoctest
-julia> PAndQ.Clause(∧)
+julia> PAndQ.Clause(∧, PAndQ.Atom[], Int[])
 ⊤
 
-julia> @atomize PAndQ.Clause(p)
+julia> @atomize PAndQ.Clause(∧, [p], [1])
 p
 
-julia> @atomize PAndQ.Clause(∨, [¬p, q])
-¬p ∨ q
+julia> @atomize PAndQ.Clause(∨, [p, q], [1, -2])
+p ∨ ¬q
 ```
 """
-struct Clause{AO <: AndOr, L <: Literal} <: Compound
-    literals::Vector{L}
+struct Clause{AO <: AndOr, A <: AbstractVector{<:Atom}, L <: AbstractVector{Int}} <: Compound
+    atoms::A
+    literals::L
 
-    Clause(::AO, literals::Vector{L} = Literal[]) where {AO <: AndOr, L <: Literal} =
-        new{AO, L}(union(literals))
+    Clause(::AO, atoms::A, literals::L) where {AO <: AndOr, A <: AbstractVector{<:Atom}, L <: AbstractVector{Int}} =
+        new{AO, A, L}(atoms, simplify_clause(literals))
 end
 
 """
-    Normal{AO <: AndOr, C <: Clause} <: Compound
-    Normal(::typeof(and), ps = Clause{typeof(or)}[])
-    Normal(::typeof(or), ps = Clause{typeof(and)}[])
-    Normal(::AO, ::Proposition)
-    Normal(::Union{NullaryOperator, Proposition})
+    Normal{AO <: AndOr, A <: AbstractVector{<:Atom}, C <: AbstractVector{<:AbstractVector{Int}}} <: Compound
+    Normal(::AO, ::A, ::C)
 
 A [`Proposition`](@ref) represented in [conjunctive]
 (https://en.wikipedia.org/wiki/Conjunctive_normal_form) or [disjunctive]
@@ -207,20 +219,27 @@ See also [`Clause`](@ref), [`AndOr`](@ref), and [`NullaryOperator`](@ref).
 
 # Examples
 ```jldoctest
-julia> PAndQ.Normal(⊤)
+julia> PAndQ.Normal(∧, PAndQ.Atom[], Vector{Int}[])
 ⊤
 
-julia> @atomize PAndQ.Normal(∧, p ⊻ q)
+julia> @atomize PAndQ.Normal(∧, [p, q], [[1, 2], [-1, -2]])
 (p ∨ q) ∧ (¬p ∨ ¬q)
 ```
 """
-struct Normal{AO <: AndOr, C <: Clause} <: Compound
-    clauses::Vector{C}
+struct Normal{AO <: AndOr, A <: AbstractVector{<:Atom}, C <: AbstractVector{<:AbstractVector{Int}}} <: Compound
+    atoms::A
+    clauses::C
 
-    Normal(::A, clauses::Vector{C} = Clause{typeof(or)}[]) where {A <: typeof(and), C <: Clause{typeof(or)}} =
-        new{A, C}(union(clauses))
-    Normal(::O, clauses::Vector{C} = Clause{typeof(and)}[]) where {O <: typeof(or), C <: Clause{typeof(and)}} =
-        new{O, C}(union(clauses))
+    function Normal(::AO, atoms::A, clauses::C) where {AO <: AndOr, A <: AbstractVector{<:Atom}, C <: AbstractVector{<:AbstractVector{Int}}}
+        _clauses = Vector{Int}[]
+
+        for clause in clauses
+            _clause = simplify_clause(clause)
+            isempty(_clause) || first(_clause) == -last(_clause) || _clause in _clauses || push!(_clauses, _clause)
+        end
+
+        new{AO, A, C}(atoms, _clauses)
+    end
 end
 
 ## AbstractTrees.jl
@@ -243,8 +262,20 @@ julia> @atomize PAndQ.children(p ∧ q)
 ```
 """
 children(p::Tree) = p.nodes
-children(p::Clause) = p.literals
-children(p::Normal) = p.clauses
+children(p::Clause) = Iterators.map(i -> Literal(signbit(i) ? (¬) : 𝒾, p.atoms[abs(i)]), p.literals)
+function children(p::Normal)
+    and_or = dual(nodevalue(p))
+    Iterators.map(p.clauses) do is
+        atoms = p.atoms[map(abs, is)]
+        indices = Int[]
+
+        for i in is
+            push!(indices, sign(i) * findfirst(==(p.atoms[abs(i)]), atoms))
+        end
+
+        Clause(and_or, atoms, indices)
+    end
+end
 
 """
     nodevalue(::Union{Tree{O}, Clause{O}, Normal{O}}) where O
@@ -256,10 +287,10 @@ See also [`Compound`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize PAndQ.nodevalue(¬p)
-not (generic function with 5 methods)
+not (generic function with 6 methods)
 
 julia> @atomize PAndQ.nodevalue(p ∧ q)
-and (generic function with 19 methods)
+and (generic function with 11 methods)
 ```
 """
 nodevalue(::Union{Tree{O}, Clause{O}, Normal{O}}) where O = O.instance
@@ -298,7 +329,6 @@ NodeType(::Type{<:Atom}) = HasNodeType()
 See also [`Atom`](@ref).
 """
 nodetype(::Type{A}) where A <: Atom = A
-
 
 ## Utilities
 
@@ -340,6 +370,71 @@ function atomize(x::Expr)
     end
 end
 atomize(x) = x
+
+__negated_normal(p::Some, q, and_or) = negated_normal(and_or(p, q))
+__negated_normal(p::NullaryOperator, q, and_or) = __negated_normal(Some(p), q, and_or)
+__negated_normal(p, q, and_or) = and_or(p, q)
+
+_negated_normal(p::Some, q, and_or) = negated_normal(and_or(p, q))
+_negated_normal(p::NullaryOperator, q, and_or) = _negated_normal(Some(p), q, and_or)
+_negated_normal(p, q, and_or) = __negated_normal(q, p, and_or)
+
+"""
+    negated_normal(p)
+"""
+negated_normal(p::Some) = something(p)
+negated_normal(p::NullaryOperator) = p
+negated_normal(p::Tree{<:NullaryOperator}) = Some(nodevalue(p))
+negated_normal(p::Union{Atom, Literal}) = p
+negated_normal(p::Tree{typeof(𝒾)}) = negated_normal(child(p))
+negated_normal(p::Tree{typeof(¬), <:Tree{typeof(¬)}}) = negated_normal(child(child(p)))
+function negated_normal(p::Tree{typeof(¬)})
+    _child = child(p)
+    negated_normal(dual(nodevalue(_child))(map(¬, _child.nodes)...))
+end
+negated_normal(p::Tree{<:AndOr}) = _negated_normal(map(negated_normal, p.nodes)..., nodevalue(p))
+
+___distribute(p::Tree{typeof(∧)}, q) = distribute(p ∨ q)
+___distribute(p, q) = p ∨ q
+
+__distribute(p::Tree{typeof(∧)}, q) = distribute(p ∨ q)
+__distribute(p, q) = ___distribute(distribute(q), p)
+
+_distribute(p::Literal, q::Literal) = p ∨ q
+function _distribute(p::Tree{typeof(∧)}, q)
+    (r, s), t = p.nodes, distribute(q)
+    distribute(distribute(r) ∨ t) ∧ distribute(distribute(s) ∨ t)
+end
+_distribute(p::Tree{typeof(∨)}, q) = __distribute(distribute(p), q)
+_distribute(p, q) = distribute(q ∨ p)
+
+"""
+    distribute(p)
+"""
+distribute(p::NullaryOperator) = p
+distribute(p::Literal) = p
+distribute(p::Tree{typeof(∧)}) = ∧(map(distribute, p.nodes)...)
+distribute(p::Tree{typeof(∨)}) = _distribute(p.nodes...)
+
+_flatten!(p::Literal, clause) = push!(clause, p)
+_flatten!(p::Tree{typeof(∨)}, clause) = for node in p.nodes
+    _flatten!(node, clause)
+end
+
+"""
+    flatten!(p, clauses)
+"""
+flatten!(p::typeof(⊤), clauses) = nothing
+flatten!(p::typeof(⊥), clauses) = push!(clauses, Literal[])
+flatten!(p::Literal, clauses) = push!(clauses, [p])
+flatten!(p::Tree{typeof(∧)}, clauses) = for node in p.nodes
+    flatten!(node, clauses)
+end
+function flatten!(p::Tree{typeof(∨)}, clauses)
+    clause = Literal[]
+    _flatten!(p, clause)
+    push!(clauses, clause)
+end
 
 # Macros
 
@@ -428,12 +523,12 @@ Return an iterator of each [operator]
 ```jldoctest
 julia> @atomize collect(operators(¬p))
 1-element Vector{typeof(not)}:
- not (generic function with 5 methods)
+ not (generic function with 6 methods)
 
 julia> @atomize collect(operators(¬p ∧ q))
 3-element Vector{Function}:
- and (generic function with 19 methods)
- not (generic function with 5 methods)
+ and (generic function with 11 methods)
+ not (generic function with 6 methods)
  identity (generic function with 1 method)
 ```
 """
@@ -462,31 +557,58 @@ end
 # Transformations
 
 """
-    normalize(::Union{typeof(∧), typeof(∨)}, p)
+    normalize(::Union{typeof(¬), typeof(∧), typeof(∨)}, p)
 
-Convert the given proposition to either conjunctive or disjunctive normal form depending
-on whether the first argument is [`and`](@ref) or [`or`](@ref), respectively.
+Convert the given proposition to negation, conjunctive, or disjunctive normal form depending
+on whether the first argument is [`not`](@ref), [`and`](@ref), or [`or`](@ref), respectively.
 
 # Examples
 ```jldoctest
 julia> @atomize normalize(∧, p ⊻ q)
-(p ∨ q) ∧ (¬p ∨ ¬q)
+(¬q ∨ ¬p) ∧ (q ∨ p)
 
 julia> @atomize normalize(∨, p ↔ q)
-(p ∧ q) ∨ (¬p ∧ ¬q)
+(¬q ∧ ¬p) ∨ (q ∧ p)
 ```
 """
-normalize(ao, p) = Normal(ao, p)
+normalize(::typeof(¬), p::Tree) = something(negated_normal(p))
+function normalize(::typeof(∧), p::Tree)
+    clauses = Vector{Literal}[]
+    flatten!(distribute(normalize(¬, p)), clauses)
 
-__tseytin(p::Union{Atom, Tree{typeof(𝒾), <:Atom}}) = p
-__tseytin(p) = Variable(gensym())
+    atom_type = isempty(clauses) || (length(clauses) == 1 && only(clauses) == Literal[]) ?
+        Atom :
+        mapfoldl(clause -> mapfoldl(typeof ∘ child, typejoin, clause), typejoin, clauses)
+    mapping = Dict{atom_type, Int}()
+    atoms = atom_type[]
+    _clauses = Vector{Int}[]
 
-_tseytin(p::Union{Atom, Tree{typeof(𝒾), <:Atom}}, substitution, pairs) = nothing
-function _tseytin(p, substitution, pairs)
-    substitutions = map(__tseytin, p.nodes)
-    push!(pairs, (substitution, nodevalue(p)(map(__tseytin, substitutions)...)))
+    for clause in clauses
+        _clause = Int[]
+        for literal in clause
+            atom = child(literal)
+            push!(_clause, (nodevalue(literal) == 𝒾 ? (+) : -)(get!(mapping, atom) do
+                push!(atoms, atom)
+                lastindex(atoms)
+            end))
+        end
+        push!(_clauses, _clause)
+    end
+
+    Normal(∧, atoms, _clauses)
+end
+normalize(::typeof(∨), p) = ¬normalize(∧, ¬p)
+normalize(operator, p) = normalize(operator, Tree(p))
+
+_tseytin(p::Union{Atom, Tree{typeof(𝒾), <:Atom}}) = p
+_tseytin(p) = Variable(gensym())
+
+tseytin!(p::Union{Atom, Tree{typeof(𝒾), <:Atom}}, substitution, pairs) = nothing
+function tseytin!(p, substitution, pairs)
+    substitutions = map(_tseytin, p.nodes)
+    push!(pairs, (substitution, nodevalue(p)(map(_tseytin, substitutions)...)))
     for (node, substitution) in zip(p.nodes, substitutions)
-        _tseytin(node, substitution, pairs)
+        tseytin!(node, substitution, pairs)
     end
 end
 
@@ -506,7 +628,7 @@ in a true interpretation are a subset of the same for `p`.
 julia> is_equisatisfiable(⊤, tseytin(⊤))
 true
 
-julia> is_equisatisfiable(p, tseytin(p))
+julia> @atomize is_equisatisfiable(p, tseytin(p))
 true
 
 julia> is_equisatisfiable(⊥, tseytin(⊥))
@@ -516,7 +638,7 @@ true
 tseytin(p::Atom) = p
 function tseytin(p::Tree)
     pairs = Tuple{Union{Atom, Tree}, Tree}[]
-    _tseytin(p, Variable(gensym()), pairs)
+    tseytin!(p, Variable(gensym()), pairs)
     normalize(∧, first(first(pairs)) ∧ ⋀(map(splat(↔), pairs)))
 end
 tseytin(p) = tseytin(Tree(p))
