@@ -578,8 +578,32 @@ operators(p) = Iterators.filter(node -> !isa(node, Atom), nodevalues(PreOrderDFS
 """
     normalize(::Union{typeof(¬), typeof(∧), typeof(∨)}, p)
 
-Convert the given proposition to negation, conjunctive, or disjunctive normal form depending
+Convert the given proposition to negation, conjunction, or disjunction normal form depending
 on whether the first argument is [`not`](@ref), [`and`](@ref), or [`or`](@ref), respectively.
+
+Considering the syntax tree of a normalized proposition, each leaf
+node is a literal; either an [`Atom`](@ref) or it's negation.
+Propositions in negation normal form are expanded such that the
+syntax tree branches only contain the operators [`and`](@ref) and [`or`].
+Conjunction and disjunction normal forms are negated normal forms that have
+been flattened by recursively distributing either the `and` or `or` operator over the other.
+In other words, a collection of literals is a clause and
+a proposition in conjunctive or disjunctive normal form is a conjunction of
+disjunctive clauses or a disjunction of conjunctive clauses, respectively.
+
+Conjunctive and disjunctive, but not negation, normal forms are called *canonical*.
+Distributing an operator during conversion increases the size of the syntax tree exponentially.
+Therefore, it is not possible to compute the canonical form for sufficiently large propositions.
+Use the [`tseytin`](@ref) transformation to compute an [equisatisfiable](@ref is_equisatisfiable)
+proposition in conjunctive normal form.
+
+Operations between canonical propositions return another canonical proposition,
+while operations between canonical and non-canonical propositions return a non-canonical proposition.
+It is performant to apply the `not` operator to a proposition in canonical normal form
+and the `and` or `or` operator to two propositions in conjunction or disjunction normal form, respectively.
+It is not performant to convert a proposition between conjunction and disjunction normal form.
+Therefore, it is usually more performant to first perform operations on
+non-canonical propositions before converting them to a canonical form.
 
 # Examples
 ```jldoctest
@@ -634,9 +658,10 @@ end
 """
     tseytin(p)
 
-Apply the [Tseytin transformation](https://en.wikipedia.org/wiki/Tseytin_transformation) to the given proposition.
+Apply the [Tseytin transformation](https://en.wikipedia.org/wiki/Tseytin_transformation)
+to the given proposition.
 
-The transformed proposition is in conjunctive normal form,
+The transformed proposition is [`normalize`](@ref)d to conjunction form,
 contains introduced [`Variable`](@ref)s,
 and [`is_equisatisfiable`](@ref) to `p`.
 The [`valuations`](@ref) of the transformed proposition that result

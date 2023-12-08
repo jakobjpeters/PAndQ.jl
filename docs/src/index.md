@@ -16,23 +16,29 @@ PAndQ.jl is a [computer algebra system](https://en.wikipedia.org/wiki/Computer_a
 - First-class propositions
     - Syntax and pretty-printing corresponding to written logic
 - Normalization
+    - Negated, conjunctive, and disjunctive forms
     - Tseytin transformation
-- Logical equivalence checking
 - Satisfiability solving
-    - Partial interpretation
+- Logical equivalence
+- Partial interpretation
+- Diagrams
+    - Syntax trees
+    - Truth tables
+        - Plain text, HTML, Markdown, and LaTeX output
 - Convert propositions to LaTeX
-- Truth tables
-    - Plain text, HTML, Markdown, and LaTeX output
-- Tree diagrams
 
 #### Planned
 
-- Canonical normal form
-- Graph plotting
-- Substitution
 - Simplification
+- Substitution
 - Proofs
 - Generate propositions
+- Normal forms
+    - Algebraic, Blake
+    - Minimization
+- Diagrams
+    - Decision trees
+    - Circuits
 - Modal logic
 - First order logic
 - Lambda calculus
@@ -62,21 +68,26 @@ julia> @variables p q
  p
  q
 
-julia> r = ¬p
-¬p
+julia> r = p ⊻ q
+p ⊻ q
 
-julia> interpret(p => true, r)
-false
+julia> interpret(p => ⊤, r)
+⊤ ⊻ q
 
-julia> s = (p ∨ q) ∧ (r ∨ ¬q)
-(p ∨ q) ∧ (¬p ∨ ¬q)
+julia> valuation = only(solutions(p ∧ q))
+2-element Vector{Pair{PAndQ.Variable, Bool}}:
+ PAndQ.Variable(:p) => 1
+ PAndQ.Variable(:q) => 1
 
-julia> interpret([p => ⊤, q => ⊥], s)
-(⊤ ∨ ⊥) ∧ (¬⊤ ∨ ¬⊥)
+julia> interpret(valuation, p ∧ q)
+true
 
-julia> TruthTable([p ∧ ¬p, r, p ⊻ q, s])
+julia> s = normalize(∧, r)
+(¬q ∨ ¬p) ∧ (q ∨ p)
+
+julia> TruthTable([p ∧ ¬p, ¬p, r, s])
 ┌────────┬───┬───┬────┬────────────────────────────┐
-│ p ∧ ¬p │ p │ q │ ¬p │ p ⊻ q, (p ∨ q) ∧ (¬p ∨ ¬q) │
+│ p ∧ ¬p │ p │ q │ ¬p │ p ⊻ q, (¬q ∨ ¬p) ∧ (q ∨ p) │
 ├────────┼───┼───┼────┼────────────────────────────┤
 │ ⊥      │ ⊤ │ ⊤ │ ⊥  │ ⊥                          │
 │ ⊥      │ ⊥ │ ⊤ │ ⊤  │ ⊤                          │

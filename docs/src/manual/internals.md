@@ -22,6 +22,11 @@ PAndQ.AndOr
 
 ## Propositions
 
+```@docs
+PAndQ.value_exception
+PAndQ.simplify_clause
+```
+
 ### Types
 
 ```@example
@@ -68,6 +73,9 @@ PAndQ.nodetype
 ```@docs
 PAndQ.child
 PAndQ.atomize
+PAndQ.negated_normal
+PAndQ.distribute
+PAndQ.flatten!
 ```
 
 ## Printing
@@ -83,9 +91,9 @@ PAndQ.base_type
 ## Semantics
 
 ```@docs
-PAndQ.interpret_bool
-PAndQ.process_valuations
 PAndQ.neutral_operator
 PAndQ.eval_doubles
+PAndQ.combine
+PAndQ.negated_normal_template
 convert(::Type{PAndQ.Atom}, ::PAndQ.Literal{typeof(𝒾)})
 ```

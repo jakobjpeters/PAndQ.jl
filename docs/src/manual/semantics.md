@@ -60,5 +60,5 @@ right_neutrals
 
 ```@docs
 Bool(::PAndQ.NullaryOperator)
-convert(::Type{Bool}, ::typeof(⊤))
+convert(::Type{Bool}, ::Some{<:PAndQ.NullaryOperator})
 ```
