@@ -235,7 +235,7 @@ struct Normal{AO <: AndOr, A <: AbstractVector{<:Atom}, C <: AbstractVector{<:Ab
 
         for clause in clauses
             _clause = simplify_clause(clause)
-            isempty(_clause) || first(_clause) == -last(_clause) || _clause in _clauses || push!(_clauses, _clause)
+            (!isempty(_clause) && first(_clause) == -last(_clause)) || _clause in _clauses || push!(_clauses, _clause)
         end
 
         new{AO, A, C}(atoms, _clauses)
@@ -411,8 +411,7 @@ _distribute(p, q) = distribute(q ∨ p)
 """
     distribute(p)
 """
-distribute(p::NullaryOperator) = p
-distribute(p::Literal) = p
+distribute(p::Union{NullaryOperator, Atom, Literal}) = p
 distribute(p::Tree{typeof(∧)}) = ∧(map(distribute, p.nodes)...)
 distribute(p::Tree{typeof(∨)}) = _distribute(p.nodes...)
 
@@ -426,7 +425,7 @@ end
 """
 flatten!(p::typeof(⊤), clauses) = nothing
 flatten!(p::typeof(⊥), clauses) = push!(clauses, Literal[])
-flatten!(p::Literal, clauses) = push!(clauses, [p])
+flatten!(p::Union{Atom, Literal}, clauses) = push!(clauses, [p])
 flatten!(p::Tree{typeof(∧)}, clauses) = for node in p.nodes
     flatten!(node, clauses)
 end
