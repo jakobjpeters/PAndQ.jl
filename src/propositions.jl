@@ -435,7 +435,7 @@ function flatten!(p::Tree{typeof(∨)}, clauses)
     push!(clauses, clause)
 end
 
-# Macros
+# Instantiation
 
 """
     @atomize(expression)
@@ -495,7 +495,47 @@ macro variables(ps...) esc(quote
     [$(ps...)]
 end) end
 
+"""
+    constants(xs)
+
+Instantiate each element as a [`Constant`](@ref).
+
+# Examples
+```jldoctest
+julia> constants(1:2)
+2-element Vector{PAndQ.Constant{Int64}}:
+ \$(1)
+ \$(2)
+
+julia> constants([[1,2], [3,4]])
+2-element Vector{PAndQ.Constant{Vector{Int64}}}:
+ \$([1, 2])
+ \$([3, 4])
+```
+"""
+constants(xs) = map(Constant, xs)
+
 # Utility
+
+"""
+    value(::Proposition)
+
+Unwrap the value of a [`Constant`](@ref).
+
+The [`Proposition`](@ref) must be logically equivalent to a `Constant`.
+
+# Examples
+```jldoctest
+julia> @atomize value(\$1)
+1
+```
+"""
+function value(p)
+    _atoms = Stateful(atoms(p))
+    isempty(_atoms) && throw(value_exception)
+    atom = first(_atoms)
+    isempty(_atoms) && atom isa Constant && atom == p ? atom.value : throw(value_exception)
+end
 
 """
     atoms(p)
@@ -532,26 +572,6 @@ julia> @atomize collect(operators(¬p ∧ q))
 ```
 """
 operators(p) = Iterators.filter(node -> !isa(node, Atom), nodevalues(PreOrderDFS(p)))
-
-"""
-    value(::Proposition)
-
-Unwrap the value of a [`Constant`](@ref).
-
-The [`Proposition`](@ref) must be logically equivalent to a `Constant`.
-
-# Examples
-```jldoctest
-julia> @atomize value(\$1)
-1
-```
-"""
-function value(p)
-    _atoms = Stateful(atoms(p))
-    isempty(_atoms) && throw(value_exception)
-    atom = first(_atoms)
-    isempty(_atoms) && atom isa Constant && atom == p ? atom.value : throw(value_exception)
-end
 
 # Transformations
 

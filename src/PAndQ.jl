@@ -29,8 +29,9 @@ export
 include("propositions.jl")
 
 export
-    @atomize, @variables,
-    atoms, operators, value, normalize, tseytin
+    @atomize, @variables, constants,
+    value, atoms, operators,
+    normalize, tseytin
 
 include("semantics.jl")
 

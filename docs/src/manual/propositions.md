@@ -1,19 +1,20 @@
 
 # Propositions
 
-## Macros
+## Instantiation
 
 ```@docs
 @atomize
 @variables
+constants
 ```
 
 ## Utilities
 
 ```@docs
+value
 atoms
 operators
-value
 ```
 
 ## Transformations
