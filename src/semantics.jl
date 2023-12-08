@@ -193,12 +193,28 @@ Otherwise, a subset of those valuations will be
 identified using the [`tseytin`](@ref) transformation.
 
 See also [`interpret`](@ref) and [`tautology`](@ref).
+
+# Examples
+```jldoctest
+julia> collect(solutions(⊤))
+1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
+ []
+
+julia> @atomize collect(solutions(p))
+1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
+ [PAndQ.Variable(:p) => 1]
+
+julia> collect(solutions(⊥))
+Vector{Pair{PAndQ.Variable, Bool}}[]
 ```
 """
 solutions(p::Normal{typeof(∧)}) = Iterators.map(
     valuation -> map(literal -> p.atoms[abs(literal)] => !signbit(literal), valuation),
 itersolve(p.clauses))
-solutions(p) = solutions(tseytin(p))
+solutions(p) = Iterators.map(solution -> filter(
+    ((atom, _),) -> atom isa Constant || !startswith(string(atom.symbol), "##"),
+solution), solutions(tseytin(p)))
+
 
 # Predicates
 
