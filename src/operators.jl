@@ -357,7 +357,7 @@ julia> @atomize ⋀((p, q, r, s))
 ((p ∧ q) ∧ r) ∧ s
 ```
 """
-conjunction(ps) = something(foldl(∧, ps; init = Some(⊤)))
+conjunction(ps) = something(foldl(∧, ps; init = Some(⊤)))::Proposition
 const ⋀ = conjunction
 
 """
@@ -376,7 +376,7 @@ julia> @atomize ⋁((p, q, r, s))
 ((¬¬p ∨ q) ∨ r) ∨ s
 ```
 """
-disjunction(ps) = something(foldl(∨, ps; init = Some(⊥)))
+disjunction(ps) = something(foldl(∨, ps; init = Some(⊥)))::Proposition
 const ⋁ = disjunction
 
 # Internals

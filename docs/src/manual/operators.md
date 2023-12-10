@@ -68,6 +68,10 @@ not_converse_imply
 
 ## [Nary Operators](@id nary_operators)
 
+!!! tip
+    It is more performant to perform a reduction of propositions contained in a `tuple`.
+    Using other containers may be type unstable due to the internal representation of propositions.
+
 ```@docs
 conjunction
 disjunction
