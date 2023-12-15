@@ -3,11 +3,11 @@
 DocTestSetup = :(using PAndQ)
 ```
 
-# Tutorial
+# Getting Started
 
-This page demonstrates the basic functionality of this package. For additional features and documentation, see the Manual.
+This page demonstrates the basic functionality of this package. For additional features and documentation, see the Tutorials and Manual.
 
-## [Operators](@id tutorial_operators)
+## Operators
 
 [Operators](@ref operators_operators) are functions represented by a symbol that return a symbolic expression.
 

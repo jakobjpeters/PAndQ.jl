@@ -43,6 +43,7 @@ PAndQ.jl is a [computer algebra system](https://en.wikipedia.org/wiki/Computer_a
 - First order logic
 - Lambda calculus
 - Electronic circuits
+- Satisfiability modulo theories
 
 ## Installation
 
@@ -74,7 +75,7 @@ p ⊻ q
 julia> interpret(p => ⊤, r)
 ⊤ ⊻ q
 
-julia> valuation = only(solutions(p ∧ q))
+julia> valuation = collect(only(solutions(p ∧ q)))
 2-element Vector{Pair{PAndQ.Variable, Bool}}:
  PAndQ.Variable(:p) => 1
  PAndQ.Variable(:q) => 1

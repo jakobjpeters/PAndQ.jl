@@ -68,7 +68,8 @@ makedocs(;
     sitename = "PAndQ.jl",
     pages = [
         "Home" => "index.md",
-        "Tutorial" => "tutorial.md",
+        "Getting Started" => "getting_started.md",
+        "Tutorials" => ["tutorials/sudoku.md"],
         "Manual" => map(
             name -> titlecase(name) => "manual/" * name * ".md",
             ["operators", "propositions", "semantics", "printing", "extensions", "internals"]
