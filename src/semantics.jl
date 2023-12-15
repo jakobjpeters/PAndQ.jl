@@ -1,9 +1,21 @@
 
-import Base: ==, <, convert, Bool, Fix2
-using Base: Iterators.product, uniontypes
-using PicoSAT: itersolve
+import Base: ==, <, convert, Bool, Fix2, IteratorSize
+using Base: Iterators.product, uniontypes, SizeUnknown
+using PicoSAT: itersolve, PicoSolIterator
 
 # Internals
+
+"""
+    IteratorSize(::Type{PicoSolIterator})
+
+Patch a bug in PicoSAT.jl
+
+!!! warning
+    This method commits type piracy.
+    Remove it after the [PR](https://github.com/sisl/PicoSAT.jl/pull/24)
+    to fix the bug has been released.
+"""
+IteratorSize(::Type{PicoSolIterator}) = SizeUnknown()
 
 """
     neutral_operator(::NullaryOperator)

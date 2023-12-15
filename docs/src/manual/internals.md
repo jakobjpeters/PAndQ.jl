@@ -98,6 +98,7 @@ PAndQ.base_type
 ## Semantics
 
 ```@docs
+PAndQ.IteratorSize
 PAndQ.neutral_operator
 PAndQ.eval_doubles
 PAndQ.combine
