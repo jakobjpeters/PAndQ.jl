@@ -81,4 +81,5 @@ disjunction
 
 ```@docs
 arity
+map_reducers
 ```

@@ -381,6 +381,54 @@ const ⋁ = disjunction
 
 # Internals
 
+"""
+    FoldDirection
+
+A trait to indicate which direction to fold an operator.
+
+Supertype of [`Left`](@ref) and [`Right`](@ref).
+"""
+abstract type FoldDirection end
+
+"""
+    Left <: FoldDirection
+
+A trait to indicate that an operator should fold left.
+
+Subtype of [`FoldDirection`](@ref).
+"""
+struct Left <: FoldDirection end
+
+"""
+    Right <: FoldDirection
+
+A trait to indicate that an operator should fold right.
+
+Subtype of [`FoldDirection`](@ref).
+"""
+struct Right <: FoldDirection end
+
+"""
+    fold_direction(operator)
+
+Return the [`FoldDirection`](@ref) of the given `operator`.
+
+If the `operator` has no `FoldDirection`, return `nothing`.
+
+```jldoctest
+julia> PAndQ.fold_direction(→)
+PAndQ.Left()
+
+julia> PAndQ.fold_direction(←)
+PAndQ.Right()
+
+julia> PAndQ.fold_direction(⊼)
+```
+"""
+fold_direction(::union_typeof((∧, ↔, →, ∨, ⊻, ↚))) = Left()
+fold_direction(::union_typeof((↛, ←))) = Right()
+fold_direction(operator) = nothing
+
 ## Union Types
 
 """
@@ -452,3 +500,60 @@ arity(::NullaryOperator) = 0
 arity(::UnaryOperator) = 1
 arity(::BinaryOperator) = 2
 arity(::NaryOperator) = Inf
+
+___map_reducers(f, operator, xs, ::Left) = mapfoldl(f, operator, xs; init = Some(first(left_neutrals(operator))))
+___map_reducers(f, operator, xs, ::Right) = mapfoldr(f, operator, xs; init = Some(first(right_neutrals(operator))))
+___map_reducers(f, operator, xs, ::Nothing) = mapfoldl(f, operator, xs)
+__map_reducers(f, operator, xs) = g -> (args...) -> ___map_reducers(x -> f(g)(args..., x), operator, xs, fold_direction(operator))
+_map_reducers() = 𝒾
+_map_reducers((operator, xs)) = __map_reducers(𝒾, operator, xs)
+_map_reducers((operator, xs), pairs...) = __map_reducers(_map_reducers(pairs...), operator, xs)
+
+"""
+    map_reducers(f, pairs...)
+
+Similar to `mapreduce`, but with an arbitrary number of nested reductions.
+
+The function `f` must accept as many arguments as there are `pairs`.
+Each pair must be a two element iterable where the first element is a
+binary operator and the second element is an iterable.
+
+The purpose of this function is to simplify the following pattern:
+
+```julia
+mapreduce(a, xs) do x
+    mapreduce(b, ys) do y
+        ...
+            f(x, y, zs...)
+        ...
+    end
+end
+```
+
+This can be rewritten as:
+
+```julia
+map_reducers(a => xs, b => ys, ...) do (x, y, zs...)
+    f(x, y, zs...)
+end
+```
+
+Using `do` notation corresponds to mathematical syntax. For example:
+
+```math
+\\bigwedge\\limits_{i = 1}^n \\bigvee\\limits_{j = 1}^m f(i, j)
+```
+
+# Examples
+```jldoctest
+julia> map_reducers(⊤)
+tautology (generic function with 1 method)
+
+julia> @atomize map_reducers(i -> \$i, (∧) => 1:2)
+\$(1) ∧ \$(2)
+
+julia> @atomize map_reducers((i, j) -> \$(i, j), (∧) => 1:2, (∨) => 1:2)
+(¬¬\$((1, 1)) ∨ \$((1, 2))) ∧ (¬¬\$((2, 1)) ∨ \$((2, 2)))
+```
+"""
+map_reducers(f, pairs...) = _map_reducers(pairs...)(f)()

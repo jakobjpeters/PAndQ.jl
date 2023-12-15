@@ -9,6 +9,13 @@ PAndQ.union_typeof
 
 ## [Operators](@id internals_operators)
 
+```@docs
+PAndQ.FoldDirection
+PAndQ.Left
+PAndQ.Right
+PAndQ.fold_direction
+```
+
 ### Union Types
 
 ```@docs

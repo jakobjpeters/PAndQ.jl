@@ -196,25 +196,24 @@ See also [`interpret`](@ref) and [`tautology`](@ref).
 
 # Examples
 ```jldoctest
-julia> collect(solutions(⊤))
+julia> map(collect, solutions(⊤))
 1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
  []
 
-julia> @atomize collect(solutions(p))
+julia> @atomize map(collect, solutions(p))
 1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
  [PAndQ.Variable(:p) => 1]
 
-julia> collect(solutions(⊥))
+julia> map(collect, solutions(⊥))
 Vector{Pair{PAndQ.Variable, Bool}}[]
 ```
 """
 solutions(p::Normal{typeof(∧)}) = Iterators.map(
-    valuation -> map(literal -> p.atoms[abs(literal)] => !signbit(literal), valuation),
+    valuation -> Iterators.map(literal -> p.atoms[abs(literal)] => !signbit(literal), valuation),
 itersolve(p.clauses))
-solutions(p) = Iterators.map(solution -> filter(
+solutions(p) = Iterators.map(solution -> Iterators.filter(
     ((atom, _),) -> atom isa Constant || !startswith(string(atom.symbol), "##"),
 solution), solutions(tseytin(p)))
-
 
 # Predicates
 
@@ -711,20 +710,6 @@ Normal(::AO, p) where AO = convert(Normal{AO}, p)
 
 # Utilities
 
-"""
-    convert(::Type{Bool}, p)
-
-Convert the given [truth value](@ref nullary_operators) to a `Bool`.
-
-# Examples
-```jldoctest
-julia> convert(Bool, ⊤)
-true
-
-julia> convert(Bool, ⊥)
-false
-```
-"""
 convert(::Type{Bool}, p::Some{<:NullaryOperator}) = Bool(something(p))
 convert(::Type{Bool}, ::typeof(⊤)) = true
 convert(::Type{Bool}, ::typeof(⊥)) = false
