@@ -4,6 +4,7 @@ import AbstractTrees: children, nodevalue, printnode, NodeType, nodetype, HasNod
 using Base.Iterators: Stateful, flatmap
 using Base.Meta: isexpr, parse
 using AbstractTrees: childtype, Leaves, nodevalues, PreOrderDFS
+using ReplMaker: initrepl, complete_julia
 
 # Internals
 
@@ -572,6 +573,28 @@ julia> @atomize collect(operators(¬p ∧ q))
 ```
 """
 operators(p) = Iterators.filter(node -> !isa(node, Atom), nodevalues(PreOrderDFS(p)))
+
+"""
+    install_atomize_mode(; start_key = "\\M-a", prompt_text = "atomize> ", prompt_color = :cyan, kwargs...)
+
+Install the `atomize` REPL mode, where input implicitly begins with [`@atomize`](@ref).
+
+Keyword arguments are passed to [`ReplMaker.initrepl`](https://github.com/MasonProtter/ReplMaker.jl).
+The default start keys are pressing both the \\[Meta\\] (also known as [Alt]) and [a] keys at the same time.
+The available `prompt_color`s are in `Base.text_colors`.
+"""
+function install_atomize_mode(; start_key = "\\M-a", prompt_text = "atomize> ", prompt_color = :cyan, kwargs...)
+    initrepl(atomize ∘ Meta.parse;
+        prompt_text,
+        start_key,
+        prompt_color,
+        mode_name = :atomize,
+        valid_input_checker = complete_julia,
+        startup_text = false,
+        kwargs...
+    )
+    @info "The `atomize` REPL mode has been installed: press [$start_key] to enter and [Backspace] to exit"
+end
 
 # Transformations
 

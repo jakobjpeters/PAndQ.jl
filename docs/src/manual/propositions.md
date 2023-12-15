@@ -15,6 +15,7 @@ constants
 value
 atoms
 operators
+install_atomize_mode
 ```
 
 ## Transformations

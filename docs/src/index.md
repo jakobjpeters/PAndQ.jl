@@ -15,6 +15,8 @@ PAndQ.jl is a [computer algebra system](https://en.wikipedia.org/wiki/Computer_a
 
 - First-class propositions
     - Syntax and pretty-printing corresponding to written logic
+    - Easy instantiation
+        - Custom REPL mode
 - Normalization
     - Negated, conjunctive, and disjunctive forms
     - Tseytin transformation

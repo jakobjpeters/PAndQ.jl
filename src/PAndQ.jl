@@ -30,7 +30,7 @@ include("propositions.jl")
 
 export
     @atomize, @variables, constants,
-    value, atoms, operators,
+    value, atoms, operators, install_atomize_mode,
     normalize, tseytin
 
 include("semantics.jl")
