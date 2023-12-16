@@ -299,7 +299,7 @@ __pretty_table(
     backend::Union{Val{:text}, Val{:latex}}, io, body;
     body_hlines = collect(0:2:size(body, 1)), kwargs...
 ) = ___pretty_table(backend, io, body; body_hlines, kwargs...)
-__pretty_table(backend::Val{:html}, io, body; kwargs...) =
+__pretty_table(backend::Union{Val{:markdown}, Val{:html}}, io, body; kwargs...) =
     pretty_table(io, body; backend, kwargs...)
 
 _pretty_table(backend, io, tt; formatters = formatter(NullaryOperator), kwargs...) =
@@ -330,7 +330,15 @@ julia> @atomize pretty_table(p ∧ q)
 │ ⊥ │ ⊥ │ ⊥     │
 └───┴───┴───────┘
 
-julia> print(pretty_table(Docs.HTML, @atomize p ∧ q).content)
+julia> @atomize pretty_table(p ∧ q; backend = Val(:markdown))
+| **p** | **q** | **p ∧ q** |
+|:------|:------|:----------|
+| ⊤     | ⊤     | ⊤         |
+| ⊥     | ⊤     | ⊥         |
+| ⊤     | ⊥     | ⊥         |
+| ⊥     | ⊥     | ⊥         |
+
+julia> @atomize print(pretty_table(String, p ∧ q; backend = Val(:html)))
 <table>
   <thead>
     <tr class = "header headerLastRow">
