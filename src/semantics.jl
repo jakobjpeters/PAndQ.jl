@@ -194,7 +194,7 @@ interpretations(valuations, p) = Iterators.map(valuation -> interpret(valuation,
 interpretations(p) = Iterators.map(valuation -> Bool(interpret(a -> Dict(valuation)[a], normalize(¬, p))), valuations(p))
 
 """
-    solultions(p)
+    solutions(p)
 
 Return an iterator containing [`valuations`](@ref)
 such that `interpret(valuation, p) == ⊤`.
