@@ -642,9 +642,7 @@ function normalize(::typeof(∧), p::Tree)
     clauses = Vector{Literal}[]
     flatten!(distribute(normalize(¬, p)), clauses)
 
-    atom_type = isempty(clauses) || (length(clauses) == 1 && only(clauses) == Literal[]) ?
-        Atom :
-        mapfoldl(clause -> mapfoldl(typeof ∘ child, typejoin, clause), typejoin, clauses)
+    atom_type = mapfoldl(clause -> mapfoldl(typeof ∘ child, typejoin, clause; init = Union{}), typejoin, clauses; init = Union{})
     mapping = Dict{atom_type, Int}()
     atoms = atom_type[]
     _clauses = Vector{Int}[]
