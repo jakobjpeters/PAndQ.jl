@@ -13,22 +13,6 @@ using ReplMaker: initrepl, complete_julia
 """
 const value_exception = ArgumentError("the `Proposition` must be logically equivalent to a `Constant`")
 
-"""
-    simplify_clause(p)
-"""
-function simplify_clause(clause)
-    _clause = Int[]
-    for literal in clause
-        n = 0
-        for _literal in _clause
-            -literal == _literal && return [literal, -literal]
-            n += literal == _literal
-        end
-        n == 0 && push!(_clause, literal)
-    end
-    _clause
-end
-
 ## Types
 
 ### Abstract
@@ -185,22 +169,22 @@ See also [`Atom`](@ref), [`Literal`](@ref), [`AndOr`](@ref), and [`NullaryOperat
 
 # Examples
 ```jldoctest
-julia> PAndQ.Clause(∧, PAndQ.Atom[], Int[])
+julia> PAndQ.Clause(∧, PAndQ.Atom[], Set{Int}())
 ⊤
 
-julia> @atomize PAndQ.Clause(∧, [p], [1])
+julia> @atomize PAndQ.Clause(∧, [p], Set(1))
 p
 
-julia> @atomize PAndQ.Clause(∨, [p, q], [1, -2])
-p ∨ ¬q
+julia> @atomize PAndQ.Clause(∨, [p, q], Set((1, -2)))
+¬q ∨ p
 ```
 """
-struct Clause{AO <: AndOr, A <: AbstractVector{<:Atom}, L <: AbstractVector{Int}} <: Compound
+struct Clause{AO <: AndOr, A <: AbstractVector{<:Atom}} <: Compound
     atoms::A
-    literals::L
+    literals::Set{Int}
 
-    Clause(::AO, atoms::A, literals::L) where {AO <: AndOr, A <: AbstractVector{<:Atom}, L <: AbstractVector{Int}} =
-        new{AO, A, L}(atoms, simplify_clause(literals))
+    Clause(::AO, atoms::A, literals::Set{Int}) where {AO <: AndOr, A <: AbstractVector{<:Atom}} =
+        new{AO, A}(atoms, literals)
 end
 
 """
@@ -220,27 +204,19 @@ See also [`Clause`](@ref), [`AndOr`](@ref), and [`NullaryOperator`](@ref).
 
 # Examples
 ```jldoctest
-julia> PAndQ.Normal(∧, PAndQ.Atom[], Vector{Int}[])
+julia> PAndQ.Normal(∧, PAndQ.Atom[], Set{Set{Int}}())
 ⊤
 
-julia> @atomize PAndQ.Normal(∧, [p, q], [[1, 2], [-1, -2]])
-(p ∨ q) ∧ (¬p ∨ ¬q)
+julia> @atomize PAndQ.Normal(∧, [p, q], Set(map(Set, ((1, 2), (-1, -2)))))
+(¬p ∨ ¬q) ∧ (p ∨ q)
 ```
 """
-struct Normal{AO <: AndOr, A <: AbstractVector{<:Atom}, C <: AbstractVector{<:AbstractVector{Int}}} <: Compound
+struct Normal{AO <: AndOr, A <: AbstractVector{<:Atom}} <: Compound
     atoms::A
-    clauses::C
+    clauses::Set{Set{Int}}
 
-    function Normal(::AO, atoms::A, clauses::C) where {AO <: AndOr, A <: AbstractVector{<:Atom}, C <: AbstractVector{<:AbstractVector{Int}}}
-        _clauses = Vector{Int}[]
-
-        for clause in clauses
-            _clause = simplify_clause(clause)
-            (!isempty(_clause) && first(_clause) == -last(_clause)) || _clause in _clauses || push!(_clauses, _clause)
-        end
-
-        new{AO, A, C}(atoms, _clauses)
-    end
+    Normal(::AO, atoms::A, clauses::Set{Set{Int}}) where {AO <: AndOr, A <: AbstractVector{<:Atom}} =
+        new{AO, A}(atoms, clauses)
 end
 
 ## AbstractTrees.jl
@@ -266,15 +242,9 @@ children(p::Tree) = p.nodes
 children(p::Clause) = Iterators.map(i -> Literal(signbit(i) ? (¬) : 𝒾, p.atoms[abs(i)]), p.literals)
 function children(p::Normal)
     and_or = dual(nodevalue(p))
-    Iterators.map(p.clauses) do is
-        atoms = p.atoms[map(abs, is)]
-        indices = Int[]
-
-        for i in is
-            push!(indices, sign(i) * findfirst(==(p.atoms[abs(i)]), atoms))
-        end
-
-        Clause(and_or, atoms, indices)
+    Iterators.map(p.clauses) do clause
+        atoms = p.atoms[collect(Iterators.map(abs, clause))]
+        Clause(and_or, atoms, Set(Iterators.map(literal -> sign(literal) * findfirst(==(p.atoms[abs(literal)]), atoms), clause)))
     end
 end
 
@@ -659,7 +629,7 @@ function normalize(::typeof(∧), p::Tree)
         push!(_clauses, _clause)
     end
 
-    Normal(∧, atoms, _clauses)
+    Normal(∧, atoms, Set(Iterators.map(Set, _clauses)))
 end
 normalize(::typeof(∨), p) = ¬normalize(∧, ¬p)
 normalize(operator, p) = normalize(operator, Tree(p))

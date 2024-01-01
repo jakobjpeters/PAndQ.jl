@@ -688,7 +688,7 @@ end end
 ¬::Some{typeof(⊤)} = Some(⊥)
 ¬::Some{typeof(⊥)} = Some(⊤)
 ¬p::Union{Atom, Tree} = Tree(¬, p)
-¬p::Normal = Normal(dual(nodevalue(p)), p.atoms, -p.clauses)
+¬p::Normal = Normal(dual(nodevalue(p)), p.atoms, Set(Iterators.map(clause -> Set(Iterators.map(-, clause)), p.clauses)))
 
 ::Some{typeof(⊤)} ∧ q::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition} = q
 p::Some{typeof(⊥)} ∧ q::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition} = p

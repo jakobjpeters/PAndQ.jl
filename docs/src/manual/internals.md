@@ -31,7 +31,6 @@ PAndQ.AndOr
 
 ```@docs
 PAndQ.value_exception
-PAndQ.simplify_clause
 ```
 
 ### Types
