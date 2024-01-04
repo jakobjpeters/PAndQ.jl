@@ -30,84 +30,84 @@
  PAndQ.Constant((1, 1)=&gt;1) =&gt; 0
  PAndQ.Constant((1, 2)=&gt;1) =&gt; 0
  PAndQ.Constant((1, 3)=&gt;1) =&gt; 0
- PAndQ.Constant((1, 4)=&gt;1) =&gt; 0
- PAndQ.Constant((1, 5)=&gt;1) =&gt; 1
+ PAndQ.Constant((1, 4)=&gt;1) =&gt; 1
+ PAndQ.Constant((1, 5)=&gt;1) =&gt; 0
  PAndQ.Constant((1, 6)=&gt;1) =&gt; 0
  PAndQ.Constant((1, 7)=&gt;1) =&gt; 0
  PAndQ.Constant((1, 8)=&gt;1) =&gt; 0
  PAndQ.Constant((1, 9)=&gt;1) =&gt; 0
  PAndQ.Constant((1, 1)=&gt;2) =&gt; 0
                            ⋮
- PAndQ.Constant((9, 1)=&gt;9) =&gt; 0
+ PAndQ.Constant((9, 1)=&gt;9) =&gt; 1
  PAndQ.Constant((9, 2)=&gt;9) =&gt; 0
  PAndQ.Constant((9, 3)=&gt;9) =&gt; 0
  PAndQ.Constant((9, 4)=&gt;9) =&gt; 0
  PAndQ.Constant((9, 5)=&gt;9) =&gt; 0
- PAndQ.Constant((9, 6)=&gt;9) =&gt; 1
+ PAndQ.Constant((9, 6)=&gt;9) =&gt; 0
  PAndQ.Constant((9, 7)=&gt;9) =&gt; 0
  PAndQ.Constant((9, 8)=&gt;9) =&gt; 0
  PAndQ.Constant((9, 9)=&gt;9) =&gt; 0</code></pre><h2 id="Decoding-the-Solution"><a class="docs-heading-anchor" href="#Decoding-the-Solution">Decoding the Solution</a><a id="Decoding-the-Solution-1"></a><a class="docs-heading-anchor-permalink" href="#Decoding-the-Solution" title="Permalink"></a></h2><p>The assignments from a <code>Constant</code> to <code>true</code> correspond to cells that contain the given values. There are 81 such constants, corresponding to each cell in the grid. Each cell contains a <code>Pair</code> in the form <code>(row, column) =&gt; value</code>, which maps from the row and column of the grid to that cell&#39;s value. Each pair can be extracted with the <a href="../../manual/propositions/#PAndQ.value"><code>value</code></a> function, then placed into the grid.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; extract(solution) = map(value ∘ first, filter(last, solution));</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; cells = extract(solution)</code><code class="nohighlight hljs ansi" style="display:block;">81-element Vector{Pair{Tuple{Int64, Int64}, Int64}}:
- (1, 5) =&gt; 1
- (1, 7) =&gt; 2
- (1, 9) =&gt; 3
- (1, 8) =&gt; 4
- (1, 6) =&gt; 5
- (1, 3) =&gt; 6
- (1, 4) =&gt; 7
+ (1, 4) =&gt; 1
+ (1, 9) =&gt; 2
+ (1, 3) =&gt; 3
+ (1, 2) =&gt; 4
+ (1, 8) =&gt; 5
+ (1, 5) =&gt; 6
+ (1, 6) =&gt; 7
  (1, 1) =&gt; 8
- (1, 2) =&gt; 9
- (2, 9) =&gt; 1
+ (1, 7) =&gt; 9
+ (2, 8) =&gt; 1
         ⋮
- (9, 7) =&gt; 1
- (9, 1) =&gt; 2
- (9, 3) =&gt; 3
- (9, 5) =&gt; 4
- (9, 4) =&gt; 5
+ (9, 3) =&gt; 1
+ (9, 7) =&gt; 2
+ (9, 9) =&gt; 3
+ (9, 6) =&gt; 4
+ (9, 2) =&gt; 5
  (9, 8) =&gt; 6
- (9, 2) =&gt; 7
- (9, 9) =&gt; 8
- (9, 6) =&gt; 9</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; function decode!(grid, cells)
+ (9, 4) =&gt; 7
+ (9, 5) =&gt; 8
+ (9, 1) =&gt; 9</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; function decode!(grid, cells)
            for ((row, column), value) in cells
                grid[row, column] = value
            end
        
            grid
        end;</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; print_grid(decode!(grid, cells))</code><code class="nohighlight hljs ansi" style="display:block;">┌─────────┬─────────┬─────────┐
-│ 8  9  6 │ 7  1  5 │ 2  4  3 │
-│ 5  4  7 │ 3  2  6 │ 8  9  1 │
-│ 3  2  1 │ 4  9  8 │ 5  7  6 │
+│ 8  4  3 │ 1  6  7 │ 9  5  2 │
+│ 2  7  9 │ 5  4  8 │ 3  1  6 │
+│ 5  1  6 │ 3  2  9 │ 8  4  7 │
 ├─────────┼─────────┼─────────┤
-│ 7  8  9 │ 2  6  4 │ 3  1  5 │
-│ 1  3  2 │ 9  5  7 │ 6  8  4 │
-│ 6  5  4 │ 8  3  1 │ 9  2  7 │
+│ 7  3  5 │ 8  9  1 │ 6  2  4 │
+│ 4  9  2 │ 6  7  5 │ 1  3  8 │
+│ 1  6  8 │ 4  3  2 │ 5  7  9 │
 ├─────────┼─────────┼─────────┤
-│ 4  6  5 │ 1  8  2 │ 7  3  9 │
-│ 9  1  8 │ 6  7  3 │ 4  5  2 │
-│ 2  7  3 │ 5  4  9 │ 1  6  8 │
+│ 3  2  7 │ 9  1  6 │ 4  8  5 │
+│ 6  8  4 │ 2  5  3 │ 7  9  1 │
+│ 9  5  1 │ 7  8  4 │ 2  6  3 │
 └─────────┴─────────┴─────────┘</code></pre><h2 id="Creating-a-Puzzle"><a class="docs-heading-anchor" href="#Creating-a-Puzzle">Creating a Puzzle</a><a id="Creating-a-Puzzle-1"></a><a class="docs-heading-anchor-permalink" href="#Creating-a-Puzzle" title="Permalink"></a></h2><p>Now that a solution has been found, it can be used to create a puzzle.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; grid .*= rand(Bool, 9, 9);</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; print_grid(grid)</code><code class="nohighlight hljs ansi" style="display:block;">┌─────────┬─────────┬─────────┐
-│ ⋅  9  ⋅ │ 7  ⋅  5 │ 2  4  3 │
-│ 5  4  7 │ 3  2  ⋅ │ ⋅  9  ⋅ │
-│ 3  ⋅  ⋅ │ 4  ⋅  8 │ 5  7  ⋅ │
+│ ⋅  ⋅  3 │ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │
+│ 2  ⋅  ⋅ │ 5  ⋅  ⋅ │ 3  1  6 │
+│ 5  1  6 │ 3  2  9 │ 8  ⋅  ⋅ │
 ├─────────┼─────────┼─────────┤
-│ 7  ⋅  ⋅ │ ⋅  ⋅  4 │ ⋅  1  ⋅ │
-│ ⋅  3  2 │ 9  5  7 │ 6  8  ⋅ │
-│ ⋅  5  ⋅ │ 8  ⋅  1 │ ⋅  2  ⋅ │
+│ 7  3  5 │ 8  ⋅  ⋅ │ 6  ⋅  ⋅ │
+│ ⋅  9  2 │ ⋅  7  5 │ 1  ⋅  8 │
+│ 1  ⋅  8 │ ⋅  ⋅  2 │ 5  ⋅  ⋅ │
 ├─────────┼─────────┼─────────┤
-│ ⋅  6  5 │ 1  ⋅  ⋅ │ 7  ⋅  ⋅ │
-│ ⋅  1  8 │ 6  7  3 │ 4  ⋅  2 │
-│ 2  ⋅  3 │ 5  ⋅  ⋅ │ ⋅  6  ⋅ │
+│ 3  2  7 │ ⋅  1  ⋅ │ 4  ⋅  ⋅ │
+│ 6  8  ⋅ │ ⋅  ⋅  ⋅ │ ⋅  9  ⋅ │
+│ ⋅  ⋅  1 │ 7  8  4 │ ⋅  ⋅  ⋅ │
 └─────────┴─────────┴─────────┘</code></pre><h2 id="Solving-a-Puzzle"><a class="docs-heading-anchor" href="#Solving-a-Puzzle">Solving a Puzzle</a><a id="Solving-a-Puzzle-1"></a><a class="docs-heading-anchor-permalink" href="#Solving-a-Puzzle" title="Permalink"></a></h2><p>Since <code>rules</code> represents an empty Sudoku grid, finding a solution to this puzzle means encoding the initial values as additional rules and finding a solution to the combined ruleset. If a grid has no solutions, then it contains a contradiction to the rules.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; puzzle = rules ∧ ⋀(map(filter(i -&gt; grid[i] != 0, CartesianIndices(grid))) do i
            p(i.I..., grid[i])
        end);</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; print_grid(decode!(grid, extract(first_solution(puzzle))))</code><code class="nohighlight hljs ansi" style="display:block;">┌─────────┬─────────┬─────────┐
-│ 8  9  6 │ 7  1  5 │ 2  4  3 │
-│ 5  4  7 │ 3  2  6 │ 8  9  1 │
-│ 3  2  1 │ 4  9  8 │ 5  7  6 │
+│ 8  4  3 │ 1  6  7 │ 9  5  2 │
+│ 2  7  9 │ 5  4  8 │ 3  1  6 │
+│ 5  1  6 │ 3  2  9 │ 8  4  7 │
 ├─────────┼─────────┼─────────┤
-│ 7  8  9 │ 2  6  4 │ 3  1  5 │
-│ 1  3  2 │ 9  5  7 │ 6  8  4 │
-│ 6  5  4 │ 8  3  1 │ 9  2  7 │
+│ 7  3  5 │ 8  9  1 │ 6  2  4 │
+│ 4  9  2 │ 6  7  5 │ 1  3  8 │
+│ 1  6  8 │ 4  3  2 │ 5  7  9 │
 ├─────────┼─────────┼─────────┤
-│ 4  6  5 │ 1  8  2 │ 7  3  9 │
-│ 9  1  8 │ 6  7  3 │ 4  5  2 │
-│ 2  7  3 │ 5  4  9 │ 1  6  8 │
-└─────────┴─────────┴─────────┘</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../getting_started/">« Getting Started</a><a class="docs-footer-nextpage" href="../../manual/operators/">Operators »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Sunday 17 December 2023 10:05">Sunday 17 December 2023</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+│ 3  2  7 │ 9  1  6 │ 4  8  5 │
+│ 6  8  4 │ 2  5  3 │ 7  9  1 │
+│ 9  5  1 │ 7  8  4 │ 2  6  3 │
+└─────────┴─────────┴─────────┘</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../getting_started/">« Getting Started</a><a class="docs-footer-nextpage" href="../../manual/operators/">Operators »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Thursday 4 January 2024 13:04">Thursday 4 January 2024</span>. Using Julia version 1.10.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
