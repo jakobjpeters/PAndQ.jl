@@ -132,8 +132,7 @@ print_grid(grid)
 Since `rules` represents an empty Sudoku grid, finding a solution to this puzzle means encoding the initial values as additional rules and finding a solution to the combined ruleset. If a grid has no solutions, then it contains a contradiction to the rules.
 
 ```@repl 1
-puzzle = rules ∧ ⋀(map(filter(i -> grid[i] != 0, CartesianIndices(grid))) do i
-    p(i.I..., grid[i])
-end);
+puzzle = rules ∧ ⋀(map(i -> p(i.I..., grid[i]),
+    filter(i -> grid[i] != 0, CartesianIndices(grid))));
 print_grid(decode!(grid, extract(first_solution(puzzle))))
 ```
