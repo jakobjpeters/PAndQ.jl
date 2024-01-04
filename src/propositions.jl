@@ -5,7 +5,7 @@ using AbstractTrees: Leaves, PreOrderDFS, childtype, nodevalues
 using Base.Iterators: Stateful, flatmap
 using Base.Meta: isexpr, parse
 using ReplMaker: complete_julia, initrepl
-using .PicoSAT: initialize, picosat_print, picosat_reset
+using .PicoSAT: PicoSAT, initialize, picosat_print, picosat_reset
 
 # Internals
 
@@ -567,7 +567,7 @@ function install_atomize_mode(; start_key = "\\M-a", prompt_text = "atomize> ", 
     @info "The `atomize` REPL mode has been installed: press [$start_key] to enter and [Backspace] to exit"
 end
 
-# Transformations
+# Normalization
 
 """
     normalize(::Union{typeof(¬), typeof(∧), typeof(∨)}, p)
@@ -677,26 +677,6 @@ function tseytin(p::Tree)
 end
 tseytin(p) = tseytin(Tree(p))
 
-function _dimacs(io::IO, p)
-    _read, _write = pipe = Pipe()
-    pico_sat = initialize(p.clauses)
-    (file = @ccall fdopen(1::Cint, "w"::Cstring)::Ptr{Cvoid}) == C_NULL && error("could not open file")
-    redirect_stdout(pipe) do
-        picosat_print(pico_sat, file)
-        @ccall(fclose(file::Ptr{Cvoid})::Cint) == 0 || error("could not close file")
-    end
-    picosat_reset(pico_sat)
-    close(_write)
-    write(io, _read)
-    nothing
-end
-function _dimacs(::Type{String}, p)
-    buffer = IOBuffer()
-    _dimacs(buffer, p)
-    String(take!(buffer))
-end
-_dimacs(path::String, p) = open(file -> _dimacs(file, p), path; truncate = true)
-
 """
     dimacs(io = stdout, p)
 
@@ -708,9 +688,9 @@ p cnf 2 2
 1 2 0
 
 julia> @atomize dimacs(String, p ↔ q)
-"p cnf 2 2\n1 -2 0\n-1 2 0\n"
+"p cnf 2 2\\n1 -2 0\\n-1 2 0\\n"
 ```
 """
-dimacs(io, p::Normal{typeof(∧)}) = _dimacs(io, p)
+dimacs(io, p::Normal{typeof(∧)}) = PicoSAT.dimacs(io, p.clauses)
 dimacs(io, p) = dimacs(io, normalize(∧, p))
 dimacs(p) = dimacs(stdout, p)

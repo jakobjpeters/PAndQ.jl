@@ -18,9 +18,10 @@ operators
 install_atomize_mode
 ```
 
-## Transformations
+## Normalization
 
 ```@docs
 normalize
 tseytin
+dimacs
 ```

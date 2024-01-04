@@ -1,7 +1,7 @@
 
-import Base: Bool, Fix2, IteratorSize, convert, eltype, isdone, iterate, ==, <
-using Base: Iterators.product, SizeUnknown, uniontypes
-using .PicoSAT: add_clause, initialize, picosat_deref, picosat_reset, picosat_sat, picosat_variables
+import Base: Bool, Fix2, convert, ==, <
+using Base: Iterators.product, uniontypes
+using .PicoSAT: Solutions
 
 # Internals
 
@@ -59,84 +59,6 @@ negated_normal_template(left, right) = :(function negated_normal(p::Tree{typeof(
     p, q = p.nodes
     negated_normal($right)
 end)
-
-"""
-    finalize!(solutions)
-
-If the argument has not been finalized, call [`PicoSAT.picosat_reset`](@ref)
-on its PicoSAT pointer and then set the pointer equal to `C_NULL`.
-"""
-function finalize!(solutions)
-    pico_sat = solutions.pico_sat
-    if pico_sat != C_NULL
-        solutions.pico_sat = C_NULL
-        picosat_reset(pico_sat)
-    end
-end
-
-"""
-    Solutions{A <: Atom}
-    Solutions(::Normal{typeof(∧)})
-
-A stateful iterator of [`valuations`](@ref) that satisfy the given proposition.
-"""
-mutable struct Solutions{A <: Atom}
-    const atoms::Vector{A}
-    pico_sat::Ptr{Cvoid}
-
-    Solutions(p::Normal{typeof(∧), A}) where A =
-        finalizer(finalize!, new{A}(p.atoms, initialize(p.clauses)))
-end
-
-"""
-    IteratorSize(::Type{<:Solutions})
-
-Since counting the number of [`Solutions`](@ref) to a proposition is intractable,
-its `IteratorSize` is `Base.SizeUnknown`.
-
-# Examples
-```jldoctest
-julia> Base.IteratorSize(PAndQ.Solutions)
-Base.SizeUnknown()
-
-julia> Base.IteratorSize(solutions(⊤))
-Base.SizeUnknown()
-```
-"""
-IteratorSize(::Type{<:Solutions}) = SizeUnknown()
-
-"""
-    eltype(::Type{<:Solutions})
-
-Each element of the [`Solutions`](@ref) is a `Vector{Pair{A, Bool}}`,
-where `A` is the common type of the [`Atom`](@ref)s in the original proposition.
-"""
-eltype(::Type{<:Solutions{A}}) where A = Vector{Pair{A, Bool}}
-
-"""
-    isdone(solutions::Solutions, pico_sat = solutions.pico_sat)
-
-Return whether the [`Solutions`](@ref) has been [`finalize!`](@ref)d without consuming a solution.
-"""
-isdone(solutions::Solutions, pico_sat = solutions.pico_sat) = pico_sat == C_NULL
-
-"""
-    iterate(solutions::Solutions, pico_sat = solutions.pico_sat)
-
-If a the status of [`PicoSAT.picosat_sat`](@ref) is satisfiable, return a `Tuple` of the current solution and `nothing`.
-Otherwise, return `nothing` and [`finalize`](@ref) the `solutions`.
-"""
-iterate(solutions::Solutions, pico_sat = solutions.pico_sat) =
-    if !isdone(solutions)
-        if picosat_sat(pico_sat, -1) == 10
-            indices_atoms = enumerate(Iterators.filter(!=(0), map(
-                atom -> picosat_deref(pico_sat, atom), 1:picosat_variables(pico_sat))))
-            add_clause(pico_sat, Iterators.map((-) ∘ splat(flipsign), indices_atoms))
-            Iterators.map(literal -> solutions.atoms[abs(literal)] => !signbit(literal),
-                Iterators.map(splat(*), indices_atoms)), pico_sat
-        else finalize(solutions)
-        end
-    end
 
 # Truths
 
@@ -282,7 +204,11 @@ julia> map(collect, solutions(⊥))
 Vector{Pair{PAndQ.Variable, Bool}}[]
 ```
 """
-solutions(p::Normal{typeof(∧)}) = Solutions(p)
+function solutions(p::Normal{typeof(∧)})
+    atoms = p.atoms
+    Iterators.map(solution -> Iterators.map(
+        literal -> atoms[abs(literal)] => !signbit(literal), solution), Solutions(p.clauses))
+end
 solutions(p) = Iterators.map(solution -> Iterators.filter(
     ((atom, _),) -> atom isa Constant || !startswith(string(atom.symbol), "##"),
 solution), solutions(tseytin(p)))

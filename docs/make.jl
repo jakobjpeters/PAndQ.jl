@@ -4,6 +4,7 @@ using Documenter: DocMeta.setdocmeta!, HTML, deploydocs, makedocs
 using Latexify
 using Markdown
 using PAndQ
+using PAndQ: PicoSAT
 
 const directory = joinpath(@__DIR__, "src", "assets")
 const logo = joinpath(directory, "logo.svg")
@@ -40,27 +41,20 @@ if !ispath(logo)
     finish()
 end
 
-setdocmeta!(
-    PAndQ,
-    :DocTestSetup,
-    :(using PAndQ)
-)
+setdocmeta!(PAndQ, :DocTestSetup, :(using PAndQ))
+setdocmeta!(PicoSAT, :DocTestSetup, :(using PAndQ))
 
-const extensions = map(
-    extension -> chop(extension; tail = 3),
-    cd(readdir, joinpath(@__DIR__, "..", "ext"))
-)
-const modules = [PAndQ; map(
-    extension -> get_extension(PAndQ, Symbol(extension)),
-extensions)]
+const extensions = map(extension -> chop(extension; tail = 3),
+    cd(readdir, joinpath(@__DIR__, "..", "ext")))
 
-for (extension, _module) in zip(extensions, modules[2:end])
-    setdocmeta!(
-        _module,
-        :DocTestSetup,
-        :(using PAndQ, $(Symbol(chop(extension; tail = 9))))
-    )
+const modules = map(extension -> get_extension(PAndQ, Symbol(extension)), extensions)
+
+for (extension, _module) in zip(extensions, modules)
+    setdocmeta!(_module, :DocTestSetup,
+        :(using PAndQ, $(Symbol(chop(extension; tail = 9)))))
 end
+
+push!(modules, PAndQ, PicoSAT)
 
 makedocs(;
     modules,

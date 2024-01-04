@@ -7,6 +7,12 @@ Everything that is not `export`ed is considered internal.
 PAndQ.union_typeof
 ```
 
+## PicoSAT
+
+```@autodocs
+Modules = [PicoSAT]
+```
+
 ## [Operators](@id internals_operators)
 
 ```@docs
@@ -31,12 +37,6 @@ PAndQ.AndOr
 
 ```@docs
 PAndQ.value_exception
-```
-
-## PicoSAT
-
-```@autodocs
-Modules = [PicoSAT]
 ```
 
 ### Types
