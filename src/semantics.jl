@@ -1,6 +1,6 @@
 
-import Base: Bool, Fix2, IteratorEltype, IteratorSize, convert, eltype, isdone, iterate, ==, <
-using Base: Iterators.product, HasEltype, SizeUnknown, uniontypes
+import Base: Bool, Fix2, IteratorSize, convert, eltype, isdone, iterate, ==, <
+using Base: Iterators.product, SizeUnknown, uniontypes
 using .PicoSAT: add_clause, initialize, picosat_deref, picosat_reset, picosat_sat, picosat_variables
 
 # Internals
@@ -65,9 +65,12 @@ negated_normal_template(left, right) = :(function negated_normal(p::Tree{typeof(
 end)
 
 """
-    finalize(solutions)
+    finalize!(solutions)
+
+If the argument has not been finalized, call [`PicoSAT.picosat_reset`](@ref)
+on its PicoSAT pointer and then set the pointer equal to `C_NULL`.
 """
-function finalize(solutions)
+function finalize!(solutions)
     pico_sat = solutions.pico_sat
     if pico_sat != C_NULL
         solutions.pico_sat = C_NULL
@@ -77,37 +80,55 @@ end
 
 """
     Solutions{A <: Atom}
+    Solutions(::Normal{typeof(∧)})
+
+A stateful iterator of [`valuations`](@ref) that satisfy the given proposition.
 """
 mutable struct Solutions{A <: Atom}
     const atoms::Vector{A}
     pico_sat::Ptr{Cvoid}
 
     Solutions(p::Normal{typeof(∧), A}) where A =
-        finalizer(finalize, new{A}(p.atoms, initialize(p)))
+        finalizer(finalize!, new{A}(p.atoms, initialize(p.clauses)))
 end
 
 """
     IteratorSize(::Type{<:Solutions})
+
+Since counting the number of [`Solutions`](@ref) to a proposition is intractable,
+its `IteratorSize` is `Base.SizeUnknown`.
+
+# Examples
+```jldoctest
+julia> Base.IteratorSize(PAndQ.Solutions)
+Base.SizeUnknown()
+
+julia> Base.IteratorSize(solutions(⊤))
+Base.SizeUnknown()
+```
 """
 IteratorSize(::Type{<:Solutions}) = SizeUnknown()
 
 """
-    IteratorEltype(::Type{<:Solutions})
-"""
-IteratorEltype(::Type{<:Solutions}) = HasEltype()
-
-"""
     eltype(::Type{<:Solutions})
+
+Each element of the [`Solutions`](@ref) is a `Vector{Pair{A, Bool}}`,
+where `A` is the common type of the [`Atom`](@ref)s in the original proposition.
 """
 eltype(::Type{<:Solutions{A}}) where A = Vector{Pair{A, Bool}}
 
 """
-    isdone(::Solutions)
+    isdone(solutions::Solutions, pico_sat = solutions.pico_sat)
+
+Return whether the [`Solutions`](@ref) has been [`finalize!`](@ref)d without consuming a solution.
 """
-isdone(solutions::Solutions) = solutions.pico_sat == C_NULL
+isdone(solutions::Solutions, pico_sat = solutions.pico_sat) = pico_sat == C_NULL
 
 """
-    iterate(solutions, pico_sat = solutions.pico_sat)
+    iterate(solutions::Solutions, pico_sat = solutions.pico_sat)
+
+If a the status of [`PicoSAT.picosat_sat`](@ref) is satisfiable, return a `Tuple` of the current solution and `nothing`.
+Otherwise, return `nothing` and [`finalize`](@ref) the `solutions`.
 """
 iterate(solutions::Solutions, pico_sat = solutions.pico_sat) =
     if !isdone(solutions)
@@ -241,7 +262,7 @@ interpretations(p) = Iterators.map(valuation -> Bool(interpret(a -> Dict(valuati
 """
     solutions(p)
 
-Return an iterator containing [`valuations`](@ref)
+Return a stateful iterator of [`valuations`](@ref)
 such that `interpret(valuation, p) == ⊤`.
 
 To find every valuation that results in a true interpretation,

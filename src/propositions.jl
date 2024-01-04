@@ -490,11 +490,9 @@ constants(xs) = map(Constant, xs)
 # Utility
 
 """
-    value(::Proposition)
+    value(p)
 
-Unwrap the value of a [`Constant`](@ref).
-
-The [`Proposition`](@ref) must be logically equivalent to a `Constant`.
+Return the value of a constant.
 
 # Examples
 ```jldoctest
@@ -580,7 +578,7 @@ on whether the first argument is [`not`](@ref), [`and`](@ref), or [`or`](@ref), 
 Considering the syntax tree of a normalized proposition, each leaf
 node is a literal; either an [`Atom`](@ref) or it's negation.
 Propositions in negation normal form are expanded such that the
-syntax tree branches only contain the operators [`and`](@ref) and [`or`].
+syntax tree branches only contain the operators `and` and `or`.
 Conjunction and disjunction normal forms are negated normal forms that have
 been flattened by recursively distributing either the `and` or `or` operator over the other.
 In other words, a collection of literals is a clause and
@@ -590,15 +588,14 @@ disjunctive clauses or a disjunction of conjunctive clauses, respectively.
 Conjunctive and disjunctive, but not negation, normal forms are called *canonical*.
 Distributing an operator during conversion increases the size of the syntax tree exponentially.
 Therefore, it is not possible to compute the canonical form for sufficiently large propositions.
-Use the [`tseytin`](@ref) transformation to compute an [equisatisfiable](@ref is_equisatisfiable)
-proposition in conjunctive normal form.
+Use the [`tseytin`](@ref) transformation to find a proposition in conjunctive normal form which [`is_equisatisfiable`](@ref).
 
 Operations between canonical propositions return another canonical proposition,
 while operations between canonical and non-canonical propositions return a non-canonical proposition.
 It is performant to apply the `not` operator to a proposition in canonical normal form
 and the `and` or `or` operator to two propositions in conjunction or disjunction normal form, respectively.
 It is not performant to convert a proposition between conjunction and disjunction normal form.
-Therefore, it is usually more performant to first perform operations on
+Therefore, it is typically more performant to first perform operations on
 non-canonical propositions before converting them to a canonical form.
 
 # Examples
@@ -682,7 +679,7 @@ tseytin(p) = tseytin(Tree(p))
 
 function _dimacs(io::IO, p)
     _read, _write = pipe = Pipe()
-    pico_sat = initialize(p)
+    pico_sat = initialize(p.clauses)
     (file = @ccall fdopen(1::Cint, "w"::Cstring)::Ptr{Cvoid}) == C_NULL && error("could not open file")
     redirect_stdout(pipe) do
         picosat_print(pico_sat, file)

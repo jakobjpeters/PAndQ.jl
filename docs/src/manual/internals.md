@@ -35,7 +35,8 @@ PAndQ.value_exception
 
 ## PicoSAT
 
-```@docs
+```@autodocs
+Modules = [PicoSAT]
 ```
 
 ### Types
