@@ -1,9 +1,9 @@
 
-import Base: show, Stateful
-import PrettyTables: pretty_table
 import AbstractTrees: print_tree
-using Base.Docs: HTML
+import Base: Stateful, show
+import PrettyTables: pretty_table
 using AbstractTrees: print_child_key
+using Base.Docs: HTML
 
 
 

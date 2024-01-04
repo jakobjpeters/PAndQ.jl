@@ -1,7 +1,7 @@
 
-import Base: IteratorSize, IteratorEltype, eltype, iterate, isdone, ==, <, convert, Bool, Fix2
-using Base: SizeUnknown, HasEltype, Iterators.product, uniontypes
-using .PicoSAT: picosat_reset, picosat_variables, picosat_sat, picosat_deref, initialize, add_clause
+import Base: Bool, Fix2, IteratorEltype, IteratorSize, convert, eltype, isdone, iterate, ==, <
+using Base: Iterators.product, HasEltype, SizeUnknown, uniontypes
+using .PicoSAT: add_clause, initialize, picosat_deref, picosat_reset, picosat_sat, picosat_variables
 
 # Internals
 

@@ -1,10 +1,10 @@
 
+import AbstractTrees: HasNodeType, NodeType, children, nodetype, nodevalue, printnode
 import Base: map
-import AbstractTrees: children, nodevalue, printnode, NodeType, nodetype, HasNodeType
+using AbstractTrees: Leaves, PreOrderDFS, childtype, nodevalues
 using Base.Iterators: Stateful, flatmap
 using Base.Meta: isexpr, parse
-using AbstractTrees: childtype, Leaves, nodevalues, PreOrderDFS
-using ReplMaker: initrepl, complete_julia
+using ReplMaker: complete_julia, initrepl
 using .PicoSAT: initialize, picosat_print, picosat_reset
 
 # Internals

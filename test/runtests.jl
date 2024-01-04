@@ -1,10 +1,10 @@
 
-using Test: @testset, @test, detect_ambiguities, detect_unbound_args
-using Documenter: DocMeta.setdocmeta!, doctest
 using Base: get_extension
-using PAndQ
-using Markdown
+using Documenter: DocMeta.setdocmeta!, doctest
 using Latexify
+using Markdown
+using PAndQ
+using Test: @testset, @test, detect_ambiguities, detect_unbound_args
 
 @testset "`detect_ambiguities` and `detect_unbound_args`" all(
     detect -> isempty(detect(PAndQ)), (detect_ambiguities, detect_unbound_args)

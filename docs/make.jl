@@ -1,9 +1,9 @@
 
-using Documenter: DocMeta.setdocmeta!, makedocs, HTML, deploydocs
 using Base: get_extension
-using PAndQ
-using Markdown
+using Documenter: DocMeta.setdocmeta!, HTML, deploydocs, makedocs
 using Latexify
+using Markdown
+using PAndQ
 
 const directory = joinpath(@__DIR__, "src", "assets")
 const logo = joinpath(directory, "logo.svg")
