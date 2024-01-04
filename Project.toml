@@ -9,6 +9,7 @@ PicoSAT = "ff2beb65-d7cd-5ff1-a187-74671133a339"
 PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
 PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
 ReplMaker = "b873ce64-0db9-51f5-a568-4457d8e49576"
+libpicosat_jll = "6b231c3b-13f8-5ced-86ae-8860c7f75d86"
 
 [weakdeps]
 Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
@@ -20,7 +21,6 @@ MarkdownExtension = "Markdown"
 
 [compat]
 AbstractTrees = "0.4"
-PicoSAT = "0.3.2 - 0.4"
 PrecompileTools = "1.1"
 PrettyTables = "2.3"
 ReplMaker = "0.2.2"

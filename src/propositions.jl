@@ -5,6 +5,7 @@ using Base.Iterators: Stateful, flatmap
 using Base.Meta: isexpr, parse
 using AbstractTrees: childtype, Leaves, nodevalues, PreOrderDFS
 using ReplMaker: initrepl, complete_julia
+using .PicoSAT: initialize, picosat_print, picosat_reset
 
 # Internals
 
@@ -179,16 +180,16 @@ julia> @atomize PAndQ.Clause(∨, [p, q], Set((1, -2)))
 ¬q ∨ p
 ```
 """
-struct Clause{AO <: AndOr, A <: AbstractVector{<:Atom}} <: Compound
-    atoms::A
+struct Clause{AO <: AndOr, A <: Atom} <: Compound
+    atoms::Vector{A}
     literals::Set{Int}
 
-    Clause(::AO, atoms::A, literals::Set{Int}) where {AO <: AndOr, A <: AbstractVector{<:Atom}} =
+    Clause(::AO, atoms::Vector{A}, literals) where {AO <: AndOr, A <: Atom} =
         new{AO, A}(atoms, literals)
 end
 
 """
-    Normal{AO <: AndOr, A <: AbstractVector{<:Atom}, C <: AbstractVector{<:AbstractVector{Int}}} <: Compound
+    Normal{AO <: AndOr, A <: Atom, C <: AbstractVector{<:AbstractVector{Int}}} <: Compound
     Normal(::AO, ::A, ::C)
 
 A [`Proposition`](@ref) represented in [conjunctive]
@@ -211,11 +212,11 @@ julia> @atomize PAndQ.Normal(∧, [p, q], Set(map(Set, ((1, 2), (-1, -2)))))
 (¬p ∨ ¬q) ∧ (p ∨ q)
 ```
 """
-struct Normal{AO <: AndOr, A <: AbstractVector{<:Atom}} <: Compound
-    atoms::A
+struct Normal{AO <: AndOr, A <: Atom} <: Compound
+    atoms::Vector{A}
     clauses::Set{Set{Int}}
 
-    Normal(::AO, atoms::A, clauses::Set{Set{Int}}) where {AO <: AndOr, A <: AbstractVector{<:Atom}} =
+    Normal(::AO, atoms::Vector{A}, clauses) where {AO <: AndOr, A <: Atom} =
         new{AO, A}(atoms, clauses)
 end
 
@@ -545,7 +546,9 @@ julia> @atomize collect(operators(¬p ∧ q))
 operators(p) = Iterators.filter(node -> !isa(node, Atom), nodevalues(PreOrderDFS(p)))
 
 """
-    install_atomize_mode(; start_key = "\\M-a", prompt_text = "atomize> ", prompt_color = :cyan, kwargs...)
+    install_atomize_mode(;
+        start_key = "\\M-a", prompt_text = "atomize> ", prompt_color = :cyan,
+    kwargs...)
 
 Install the `atomize` REPL mode, where input implicitly begins with [`@atomize`](@ref).
 
@@ -676,3 +679,41 @@ function tseytin(p::Tree)
     normalize(∧, isempty(pairs) ? p : first(first(pairs)) ∧ ⋀(map(splat(↔), pairs)))
 end
 tseytin(p) = tseytin(Tree(p))
+
+function _dimacs(io::IO, p)
+    _read, _write = pipe = Pipe()
+    pico_sat = initialize(p)
+    (file = @ccall fdopen(1::Cint, "w"::Cstring)::Ptr{Cvoid}) == C_NULL && error("could not open file")
+    redirect_stdout(pipe) do
+        picosat_print(pico_sat, file)
+        @ccall(fclose(file::Ptr{Cvoid})::Cint) == 0 || error("could not close file")
+    end
+    picosat_reset(pico_sat)
+    close(_write)
+    write(io, _read)
+    nothing
+end
+function _dimacs(::Type{String}, p)
+    buffer = IOBuffer()
+    _dimacs(buffer, p)
+    String(take!(buffer))
+end
+_dimacs(path::String, p) = open(file -> _dimacs(file, p), path; truncate = true)
+
+"""
+    dimacs(io = stdout, p)
+
+# Examples
+```jldoctest
+julia> @atomize dimacs(p ⊻ q)
+p cnf 2 2
+-1 -2 0
+1 2 0
+
+julia> @atomize dimacs(String, p ↔ q)
+"p cnf 2 2\n1 -2 0\n-1 2 0\n"
+```
+"""
+dimacs(io, p::Normal{typeof(∧)}) = _dimacs(io, p)
+dimacs(io, p) = dimacs(io, normalize(∧, p))
+dimacs(p) = dimacs(stdout, p)

@@ -8,6 +8,8 @@ using PrecompileTools: @compile_workload
 """
 union_typeof(xs) = Union{map(typeof, xs)...}
 
+include("PicoSAT.jl")
+
 include("operators.jl")
 
 export
@@ -31,7 +33,7 @@ include("propositions.jl")
 export
     @atomize, @variables, constants,
     value, atoms, operators, install_atomize_mode,
-    normalize, tseytin
+    normalize, tseytin, dimacs
 
 include("semantics.jl")
 

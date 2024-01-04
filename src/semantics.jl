@@ -1,21 +1,9 @@
 
-import Base: ==, <, convert, Bool, Fix2, IteratorSize
-using Base: Iterators.product, uniontypes, SizeUnknown
-using PicoSAT: itersolve, PicoSolIterator
+import Base: IteratorSize, IteratorEltype, eltype, iterate, isdone, ==, <, convert, Bool, Fix2
+using Base: SizeUnknown, HasEltype, Iterators.product, uniontypes
+using .PicoSAT: picosat_reset, picosat_variables, picosat_sat, picosat_deref, initialize, add_clause
 
 # Internals
-
-"""
-    IteratorSize(::Type{PicoSolIterator})
-
-Patch a bug in PicoSAT.jl
-
-!!! warning
-    This method commits type piracy.
-    Remove it after the [PR](https://github.com/sisl/PicoSAT.jl/pull/24)
-    to fix the bug has been released.
-"""
-IteratorSize(::Type{PicoSolIterator}) = SizeUnknown()
 
 """
     neutral_operator(::NullaryOperator)
@@ -75,6 +63,63 @@ negated_normal_template(left, right) = :(function negated_normal(p::Tree{typeof(
     p, q = p.nodes
     negated_normal($right)
 end)
+
+"""
+    finalize(solutions)
+"""
+function finalize(solutions)
+    pico_sat = solutions.pico_sat
+    if pico_sat != C_NULL
+        solutions.pico_sat = C_NULL
+        picosat_reset(pico_sat)
+    end
+end
+
+"""
+    Solutions{A <: Atom}
+"""
+mutable struct Solutions{A <: Atom}
+    const atoms::Vector{A}
+    pico_sat::Ptr{Cvoid}
+
+    Solutions(p::Normal{typeof(∧), A}) where A =
+        finalizer(finalize, new{A}(p.atoms, initialize(p)))
+end
+
+"""
+    IteratorSize(::Type{<:Solutions})
+"""
+IteratorSize(::Type{<:Solutions}) = SizeUnknown()
+
+"""
+    IteratorEltype(::Type{<:Solutions})
+"""
+IteratorEltype(::Type{<:Solutions}) = HasEltype()
+
+"""
+    eltype(::Type{<:Solutions})
+"""
+eltype(::Type{<:Solutions{A}}) where A = Vector{Pair{A, Bool}}
+
+"""
+    isdone(::Solutions)
+"""
+isdone(solutions::Solutions) = solutions.pico_sat == C_NULL
+
+"""
+    iterate(solutions, pico_sat = solutions.pico_sat)
+"""
+iterate(solutions::Solutions, pico_sat = solutions.pico_sat) =
+    if !isdone(solutions)
+        if picosat_sat(pico_sat, -1) == 10
+            indices_atoms = enumerate(Iterators.filter(!=(0), map(
+                atom -> picosat_deref(pico_sat, atom), 1:picosat_variables(pico_sat))))
+            add_clause(pico_sat, Iterators.map((-) ∘ splat(flipsign), indices_atoms))
+            Iterators.map(literal -> solutions.atoms[abs(literal)] => !signbit(literal),
+                Iterators.map(splat(*), indices_atoms)), pico_sat
+        else finalize(solutions)
+        end
+    end
 
 # Truths
 
@@ -220,9 +265,7 @@ julia> map(collect, solutions(⊥))
 Vector{Pair{PAndQ.Variable, Bool}}[]
 ```
 """
-solutions(p::Normal{typeof(∧)}) = Iterators.map(
-    valuation -> Iterators.map(literal -> p.atoms[abs(literal)] => !signbit(literal), valuation),
-itersolve(p.clauses))
+solutions(p::Normal{typeof(∧)}) = Solutions(p)
 solutions(p) = Iterators.map(solution -> Iterators.filter(
     ((atom, _),) -> atom isa Constant || !startswith(string(atom.symbol), "##"),
 solution), solutions(tseytin(p)))
