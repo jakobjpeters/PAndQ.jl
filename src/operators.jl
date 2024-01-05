@@ -535,7 +535,7 @@ _map_fold(::HasInitialValue, fold_direction, mapfold, f, operator, xs) =
     map_fold(f, operator, xs)
 
 Similar to `mapreduce`, but with the fold direction and initial values determined by the
-[`FoldDirection`](@ref) and [`NeutralElement`](@ref) traits.
+[`FoldDirection`](@ref) and [`InitialValue`](@ref) traits.
 
 # Examples
 ```jldoctest

@@ -108,7 +108,7 @@ end
     Solutions
     Solutions(clauses)
 
-A stateful iterator of [`valuations`](@ref) that satisfy the given proposition.
+A stateful iterator of valuations that satisfy the given proposition.
 """
 mutable struct Solutions
     pico_sat::Ptr{Cvoid}
@@ -154,7 +154,7 @@ isdone(solutions::Solutions, pico_sat = solutions.pico_sat) = pico_sat == C_NULL
 """
     iterate(solutions::Solutions, pico_sat = solutions.pico_sat)
 
-If the status of `pico_sat` [`is_satisfiable](@ref PAndQ.PicoSAT.is_satisfiable),
+If the status of `pico_sat` [`is_satisfiable`](@ref),
 return a `Tuple` of the current solution and `pico_sat`.
 Otherwise, [`finalize!`](@ref) the `solutions` and return `nothing`.
 """
