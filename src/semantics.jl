@@ -36,20 +36,20 @@ end
     combine(p, q)
 """
 function combine(p, q)
-    new_indices = Dict{promote_type(eltype(p.atoms), eltype(q.atoms)), Int}(Iterators.map(reverse, pairs(p.atoms)))
-    atoms = copy(p.atoms)
+    p_atoms, q_atoms = p.atoms, q.atoms
+    atom_type = promote_type(eltype(p_atoms), eltype(q_atoms))
+    mapping = Dict{atom_type, Int}(Iterators.map(reverse, pairs(p_atoms)))
+    atoms = append!(atom_type[], p_atoms)
 
-    clauses = Iterators.map(Iterators.map(first, zip(q.clauses))) do clause
-        Set(Iterators.map(clause) do i
-            atom = q.atoms[abs(i)]
-            sign(i) * get!(new_indices, atom) do
+    atoms, p.clauses ∪ Iterators.map(
+        clause -> Set(Iterators.map(clause) do literal
+            atom = q_atoms[abs(literal)]
+            sign(literal) * get!(mapping, atom) do
                 push!(atoms, atom)
                 lastindex(atoms)
             end
-        end)
-    end
-
-    atoms, p.clauses ∪ clauses
+        end),
+    q.clauses)
 end
 
 """

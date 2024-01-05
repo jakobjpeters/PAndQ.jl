@@ -615,21 +615,16 @@ function normalize(::typeof(∧), p::Tree)
     atom_type = mapfoldl(clause -> mapfoldl(typeof ∘ child, typejoin, clause; init = Union{}), typejoin, clauses; init = Union{})
     mapping = Dict{atom_type, Int}()
     atoms = atom_type[]
-    _clauses = Vector{Int}[]
 
-    for clause in clauses
-        _clause = Int[]
-        for literal in clause
+    Normal(∧, atoms, Set(Iterators.map(
+        clause -> Set(Iterators.map(clause) do literal
             atom = child(literal)
-            push!(_clause, (nodevalue(literal) == 𝒾 ? (+) : -)(get!(mapping, atom) do
+            (nodevalue(literal) == 𝒾 ? (+) : -)(get!(mapping, atom) do
                 push!(atoms, atom)
                 lastindex(atoms)
-            end))
-        end
-        push!(_clauses, _clause)
-    end
-
-    Normal(∧, atoms, Set(Iterators.map(Set, _clauses)))
+            end)
+        end),
+    clauses)))
 end
 normalize(::typeof(∨), p) = ¬normalize(∧, ¬p)
 normalize(operator, p) = normalize(operator, Tree(p))
@@ -671,7 +666,7 @@ true
 ```
 """
 function tseytin(p::Tree)
-    pairs = Tuple{Union{Atom, Tree}, Tree}[]
+    pairs = NTuple{2, Tree}[]
     tseytin!(Tree(normalize(¬, p)), Variable(gensym()), pairs)
     normalize(∧, isempty(pairs) ? p : first(first(pairs)) ∧ ⋀(map(splat(↔), pairs)))
 end
