@@ -52,8 +52,6 @@ The ordering is partial because the predicates [`==`](@ref) and [`is_truth`](@re
 ```@docs
 dual
 converse
-left_neutrals
-right_neutrals
 ```
 
 ## Utilities

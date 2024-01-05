@@ -5,8 +5,6 @@ import Base: IteratorSize, eltype, isdone, iterate
 using Base: Fix2, Generator, HasEltype, SizeUnknown, Splat
 using Base.Iterators: Enumerate, Filter
 using libpicosat_jll
-using ..PAndQ: PAndQ
-using ..PAndQ
 
 """
     picosat_init()

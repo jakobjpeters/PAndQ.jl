@@ -286,7 +286,7 @@ printnode(io::IO, no::NullaryOperator; kwargs...) = print(io, symbol_of(no))
 printnode(io::IO, p::Atom; kwargs...) = show(io, MIME"text/plain"(), p)
 printnode(io::IO, p::Tree; kwargs...) = print(io, symbol_of(nodevalue(p)))
 printnode(io::IO, p::Union{Clause, Normal}; kwargs...) =
-    print(io, symbol_of((isempty(children(p)) ? only ∘ left_neutrals : 𝒾)(nodevalue(p))))
+    print(io, symbol_of((isempty(children(p)) ? something ∘ initial_value : 𝒾)(nodevalue(p))))
 
 """
     NodeType(::Type{<:Atom})

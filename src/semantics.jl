@@ -118,10 +118,7 @@ julia> @atomize map(atom -> \$(value(atom) + 1), \$1 ∧ \$2)
 """
 map(f, p::Atom) = f(p)
 map(f, p::Union{NullaryOperator, Tree}) = nodevalue(p)(_map(f, p)...)
-function map(f, p::Union{Clause, Normal})
-    and_or = nodevalue(p)
-    foldl(and_or, _map(f, p); init = Some(first(left_neutrals(and_or))))
-end
+map(f, p::Union{Clause, Normal}) = fold(nodevalue(p), _map(f, p))
 
 """
     interpret(valuation, p)
@@ -548,54 +545,6 @@ true
 converse(binary_operator::union_typeof((∧, ⊼, ⊽, ⊽, ⊻, ↔))) = binary_operator
 
 eval_doubles(:converse, ((→, ←), (↛, ↚)))
-
-"""
-    left_neutrals(binary_operator)
-
-Return a `Set` of the [Nullary Operators](@ref nullary_operators) that are
-left neutral elements of the given [binary operator](@ref binary_operators).
-
-# Examples
-```jldoctest
-julia> left_neutrals(or)
-Set{typeof(contradiction)} with 1 element:
-  PAndQ.contradiction
-
-julia> left_neutrals(imply)
-Set{typeof(tautology)} with 1 element:
-  PAndQ.tautology
-
-julia> left_neutrals(nor)
-Set{Union{typeof(contradiction), typeof(tautology)}}()
-```
-"""
-left_neutrals(::union_typeof((∧, ↔, →))) = Set((⊤,))
-left_neutrals(::union_typeof((∨, ⊻, ↚))) = Set((⊥,))
-left_neutrals(::BinaryOperator) = Set{NullaryOperator}()
-
-"""
-    right_neutrals(binary_operator)
-
-Return a `Set` of the [Nullary Operators](@ref nullary_operators) that are
-right neutral elements of the given [binary operator](@ref binary_operators).
-
-# Examples
-```jldoctest
-julia> right_neutrals(or)
-Set{typeof(contradiction)} with 1 element:
-  PAndQ.contradiction
-
-julia> right_neutrals(converse_imply)
-Set{typeof(tautology)} with 1 element:
-  PAndQ.tautology
-
-julia> left_neutrals(nor)
-Set{Union{typeof(contradiction), typeof(tautology)}}()
-```
-"""
-right_neutrals(::union_typeof((∧, ↔, ←))) = Set((⊤,))
-right_neutrals(::union_typeof((∨, ⊻, ↛))) = Set((⊥,))
-right_neutrals(::BinaryOperator) = Set{NullaryOperator}()
 
 # Operators
 

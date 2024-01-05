@@ -459,18 +459,24 @@ Subtype of [`InitialValue`](@ref).
 struct NoInitialValue <: InitialValue end
 InitialValue(::union_typeof((⊼, ⊽))) = NoInitialValue()
 
-_initial_value(::Left) = left_neutrals
-_initial_value(::Right) = right_neutrals
-
-_initial_value(neutrals, operator) = Some(first(neutrals(operator)))
+_initial_value(::union_typeof((∧, ↔, →, ←))) = ⊤
+_initial_value(::union_typeof((∨, ⊻, ↚, ↛))) = ⊥
 
 """
-    initial_value(::FoldDirection, ::Operator)
+    initial_value(::Operator)
 
 See also [`Operator`](@ref).
+
+# Examples
+```jldoctest
+julia> PAndQ.initial_value(∧)
+Some(PAndQ.tautology)
+
+julia> PAndQ.initial_value(∨)
+Some(PAndQ.contradiction)
+```
 """
-initial_value(::Left, operator) = _initial_value(left_neutrals, operator)
-initial_value(::Right, operator) = _initial_value(right_neutrals, operator)
+initial_value(operator) = Some(_initial_value(operator))
 
 ## Union Types
 
@@ -523,7 +529,7 @@ __map_fold(::Right) = mapfoldr
 
 _map_fold(::NoInitialValue, ::FoldDirection, mapfold, f, operator, xs) = mapfold(f, operator, xs)
 _map_fold(::HasInitialValue, fold_direction, mapfold, f, operator, xs) =
-    mapfold(f, operator, xs; init = initial_value(fold_direction, operator))
+    mapfold(f, operator, xs; init = initial_value(operator))
 
 """
     map_fold(f, operator, xs)
@@ -533,7 +539,7 @@ Similar to `mapreduce`, but with the fold direction and initial values determine
 
 # Examples
 ```jldoctest
-julia> @atomize map_fold(¬, ∧, ())
+julia> map_fold(¬, ∧, ())
 Some(PAndQ.tautology)
 
 julia> @atomize map_fold(¬, ∧, (p, q))
@@ -606,8 +612,17 @@ map_folds(f, pairs...) = _map_folds(pairs...)(f)()
 Equivalent to `map_fold(𝒾, ps)`.
 
 See also [`identity`](@ref) and [`map_fold`](@ref).
+
+# Examples
+```jldoctest
+julia> fold(∧, ())
+Some(PAndQ.tautology)
+
+julia> @atomize fold(∧, (p, q))
+p ∧ q
+```
 """
-fold(operator, ps) = mapfold(𝒾, operator, ps)
+fold(operator, ps) = map_fold(𝒾, operator, ps)
 
 # Utilities
 

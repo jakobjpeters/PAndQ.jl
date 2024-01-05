@@ -45,8 +45,7 @@ export
     is_truth, is_contingency,
     is_satisfiable, is_falsifiable,
     is_equisatisfiable, ==,
-    dual, converse,
-    left_neutrals, right_neutrals
+    dual, converse
 
 include("printing.jl")
 
