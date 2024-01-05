@@ -55,10 +55,12 @@ end
 """
     negated_normal_template(left, right)
 """
-negated_normal_template(left, right) = :(function negated_normal(p::Tree{typeof($left)})
-    p, q = p.nodes
-    negated_normal($right)
-end)
+negated_normal_template(left, right) = quote
+    function negated_normal!(operator_stack, input_stack, output_stack, node::Tree{typeof($left)})
+        p, q = node.nodes
+        operator_stack, push!(input_stack, $right), output_stack
+    end
+end
 
 # Truths
 

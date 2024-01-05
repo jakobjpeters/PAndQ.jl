@@ -183,7 +183,7 @@ julia> @atomize show(stdout, MIME"text/plain"(), p ⊻ q)
 p ⊻ q
 
 julia> @atomize show(stdout, MIME"text/plain"(), normalize(∧, p ⊻ q))
-(¬q ∨ ¬p) ∧ (q ∨ p)
+(¬p ∨ ¬q) ∧ (p ∨ q)
 ```
 """
 show(io::IO, ::MIME"text/plain", p::Atom) =
@@ -402,12 +402,12 @@ julia> @atomize print_tree(normalize(∧, p ∧ q ∨ ¬s))
 │  ├─ ¬
 │  │  └─ s
 │  └─ 𝒾
-│     └─ p
+│     └─ q
 └─ ∨
    ├─ ¬
    │  └─ s
    └─ 𝒾
-      └─ q
+      └─ p
 ```
 """
 print_tree

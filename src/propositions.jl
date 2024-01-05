@@ -343,28 +343,50 @@ function atomize(x::Expr)
 end
 atomize(x) = x
 
-__negated_normal(p::Some, q, and_or) = negated_normal(and_or(p, q))
-__negated_normal(p::NullaryOperator, q, and_or) = __negated_normal(Some(p), q, and_or)
-__negated_normal(p, q, and_or) = and_or(p, q)
+__negated_normal(p::Tree{<:NullaryOperator}) = Some(nodevalue(p))
+__negated_normal(p) = p
 
-_negated_normal(p::Some, q, and_or) = negated_normal(and_or(p, q))
-_negated_normal(p::NullaryOperator, q, and_or) = _negated_normal(Some(p), q, and_or)
-_negated_normal(p, q, and_or) = __negated_normal(q, p, and_or)
+_negated_normal(p::Some) = Tree(something(p))
+_negated_normal(p::Tree{typeof(¬), <:Tree{typeof(¬)}}) = Tree(child(child(p)))
+_negated_normal(p) = p
+
+__negated_normal!(output_stack, operator, nodes...) =
+    push!(output_stack, _negated_normal(Tree(something(operator(map(__negated_normal, nodes)...)))))
+
+_negated_normal!(operator_stack, i, p::Tree{typeof(𝒾)}) = operators
+_negated_normal!(operator_stack, i, p) = push!(operator_stack, i => nodevalue(p))
+
+negated_normal!(operator_stack, input_stack, output_stack, operator::UnaryOperator) =
+    operator_stack, input_stack, __negated_normal!(output_stack, operator, pop!(output_stack))
+negated_normal!(operator_stack, input_stack, output_stack, operator::AndOr) =
+    operator_stack, input_stack, __negated_normal!(output_stack, operator, pop!(output_stack), pop!(output_stack))
+negated_normal!(operator_stack, input_stack, output_stack, p::Union{Tree{<:NullaryOperator}, Literal}) =
+    operator_stack, input_stack, push!(output_stack, p)
+negated_normal!(operator_stack, input_stack, output_stack, p::Tree{typeof(¬), <:Tree{typeof(¬)}}) =
+    operator_stack, push!(input_stack, Tree(child(child(p)))), output_stack
+function negated_normal!(operators, input_stack, output_stack, p::Tree{typeof(¬)})
+    _child = child(p)
+    operators, push!(input_stack, Tree(dual(nodevalue(_child))(map(¬, _child.nodes)...))), output_stack
+end
+negated_normal!(operator_stack, input_stack, output_stack, p::Tree{<:Union{typeof(𝒾), AndOr}}) =
+    _negated_normal!(operator_stack, length(output_stack), p), append!(input_stack, p.nodes), output_stack
 
 """
     negated_normal(p)
 """
-negated_normal(p::Some) = something(p)
-negated_normal(p::NullaryOperator) = p
-negated_normal(p::Tree{<:NullaryOperator}) = Some(nodevalue(p))
-negated_normal(p::Union{Atom, Literal}) = p
-negated_normal(p::Tree{typeof(𝒾)}) = negated_normal(child(p))
-negated_normal(p::Tree{typeof(¬), <:Tree{typeof(¬)}}) = negated_normal(child(child(p)))
-function negated_normal(p::Tree{typeof(¬)})
-    _child = child(p)
-    negated_normal(dual(nodevalue(_child))(map(¬, _child.nodes)...))
+function negated_normal(p)
+    operator_stack, input_stack, output_stack = Pair{Int, Operator}[], Tree[p], Tree[]
+
+    while !all(isempty, (operator_stack, input_stack))
+        i_operator = isempty(operator_stack) ? nothing : last(operator_stack)
+        negated_normal!(operator_stack, input_stack, output_stack,
+            isnothing(i_operator) || first(i_operator) + arity(last(i_operator)) != length(output_stack) ?
+                pop!(input_stack) :
+                last(pop!(operator_stack)))
+    end
+
+    only(output_stack)
 end
-negated_normal(p::Tree{<:AndOr}) = _negated_normal(map(negated_normal, p.nodes)..., nodevalue(p))
 
 ___distribute(p::Tree{typeof(∧)}, q) = distribute(p ∨ q)
 ___distribute(p, q) = p ∨ q
@@ -601,10 +623,10 @@ non-canonical propositions before converting them to a canonical form.
 # Examples
 ```jldoctest
 julia> @atomize normalize(∧, p ⊻ q)
-(¬q ∨ ¬p) ∧ (q ∨ p)
+(¬p ∨ ¬q) ∧ (p ∨ q)
 
 julia> @atomize normalize(∨, p ↔ q)
-(¬q ∧ ¬p) ∨ (q ∧ p)
+(¬p ∧ ¬q) ∨ (p ∧ q)
 ```
 """
 normalize(::typeof(¬), p::Tree) = something(negated_normal(p))
