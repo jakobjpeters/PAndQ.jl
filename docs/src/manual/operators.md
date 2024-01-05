@@ -77,9 +77,16 @@ conjunction
 disjunction
 ```
 
+## Folds
+
+```@docs
+map_fold
+map_folds
+fold
+```
+
 ## Utilities
 
 ```@docs
 arity
-map_reducers
 ```

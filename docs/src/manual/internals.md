@@ -19,7 +19,10 @@ Modules = [PicoSAT]
 PAndQ.FoldDirection
 PAndQ.Left
 PAndQ.Right
-PAndQ.fold_direction
+PAndQ.InitialValue
+PAndQ.HasInitialValue
+PAndQ.NoInitialValue
+PAndQ.initial_value
 ```
 
 ### Union Types

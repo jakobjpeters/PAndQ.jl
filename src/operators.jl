@@ -382,52 +382,95 @@ const ⋁ = disjunction
 # Internals
 
 """
-    FoldDirection
+    FoldDirection(::Operator)
 
-A trait to indicate which direction to fold an operator.
+A trait to indicate which direction to fold a binary operator.
 
 Supertype of [`Left`](@ref) and [`Right`](@ref).
+See also [`Operator`](@ref).
+
+# Examples
+```jldoctest
+julia> PAndQ.FoldDirection(→)
+PAndQ.Left()
+
+julia> PAndQ.FoldDirection(←)
+PAndQ.Right()
+```
 """
 abstract type FoldDirection end
 
 """
     Left <: FoldDirection
 
-A trait to indicate that an operator should fold left.
+A trait to indicate that a binary operator should fold left.
 
 Subtype of [`FoldDirection`](@ref).
 """
 struct Left <: FoldDirection end
+FoldDirection(::union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔, →, ↚))) = Left()
 
 """
     Right <: FoldDirection
 
-A trait to indicate that an operator should fold right.
+A trait to indicate that a binary operator should fold right.
 
 Subtype of [`FoldDirection`](@ref).
 """
 struct Right <: FoldDirection end
+FoldDirection(::union_typeof((↛, ←))) = Right()
 
 """
-    fold_direction(operator)
+    InitialValue(::Operator)
 
-Return the [`FoldDirection`](@ref) of the given `operator`.
+A trait to indicate whether a binary operator has an initial value.
 
-If the `operator` has no `FoldDirection`, return `nothing`.
+Supertype of [`HasInitialValue`](@ref) and [`NoInitialValue`](@ref).
+See also [`Operator`](@ref).
 
+# Examples
 ```jldoctest
-julia> PAndQ.fold_direction(→)
-PAndQ.Left()
+julia> PAndQ.InitialValue(∧)
+PAndQ.HasInitialValue()
 
-julia> PAndQ.fold_direction(←)
-PAndQ.Right()
-
-julia> PAndQ.fold_direction(⊼)
+julia> PAndQ.InitialValue(⊼)
+PAndQ.NoInitialValue()
 ```
 """
-fold_direction(::union_typeof((∧, ↔, →, ∨, ⊻, ↚))) = Left()
-fold_direction(::union_typeof((↛, ←))) = Right()
-fold_direction(operator) = nothing
+abstract type InitialValue end
+
+"""
+    HasInitialValue <: InitialValue
+
+A trait to indicate that a binary operator has an initial value.
+
+Subtype of [`InitialValue`](@ref).
+"""
+struct HasInitialValue <: InitialValue end
+InitialValue(::union_typeof((∧, ∨, ⊻, ↔, →, ↛, ←, ↚))) = HasInitialValue()
+
+"""
+    NoInitialValue <: InitialValue
+
+A trait to indicate that a binary operator does not have a neutral element.
+
+Subtype of [`InitialValue`](@ref).
+"""
+struct NoInitialValue <: InitialValue end
+InitialValue(::union_typeof((⊼, ⊽))) = NoInitialValue()
+
+_initial_value(::Left) = left_neutrals
+_initial_value(::Right) = right_neutrals
+
+_initial_value(neutrals, operator) = Some(first(neutrals(operator)))
+
+"""
+    initial_value(::FoldDirection, ::Operator)
+
+See also [`Operator`](@ref).
+"""
+initial_value(::Left, operator) = _initial_value(left_neutrals, operator)
+initial_value(::Right, operator) = _initial_value(right_neutrals, operator)
 
 ## Union Types
 
@@ -473,6 +516,99 @@ The `Union` of [`and`](@ref) and [`or`](@ref).
 """
 const AndOr = union_typeof((∧, ∨))
 
+# Folds
+
+__map_fold(::Left) = mapfoldl
+__map_fold(::Right) = mapfoldr
+
+_map_fold(::NoInitialValue, ::FoldDirection, mapfold, f, operator, xs) = mapfold(f, operator, xs)
+_map_fold(::HasInitialValue, fold_direction, mapfold, f, operator, xs) =
+    mapfold(f, operator, xs; init = initial_value(fold_direction, operator))
+
+"""
+    map_fold(f, operator, xs)
+
+Similar to `mapreduce`, but with the fold direction and initial values determined by the
+[`FoldDirection`](@ref) and [`NeutralElement`](@ref) traits.
+
+# Examples
+```jldoctest
+julia> @atomize map_fold(¬, ∧, ())
+Some(PAndQ.tautology)
+
+julia> @atomize map_fold(¬, ∧, (p, q))
+¬p ∧ ¬q
+```
+"""
+function map_fold(f, operator, xs)
+    fold_direction = FoldDirection(operator)
+    _map_fold(InitialValue(operator), fold_direction, __map_fold(fold_direction), f, operator, xs)
+end
+
+__map_folds(f, operator, xs) = g -> (args...) -> map_fold(x -> f(g)(args..., x), operator, xs)
+
+_map_folds() = 𝒾
+_map_folds((operator, xs)) = __map_folds(𝒾, operator, xs)
+_map_folds((operator, xs), pairs...) = __map_folds(_map_folds(pairs...), operator, xs)
+
+"""
+    map_folds(f, pairs...)
+
+Similar to [`map_fold`](@ref), but with an arbitrary number of nested folds.
+
+The function `f` must accept as many arguments as there are `pairs`.
+Each pair must be a two element iterable where the first element is a
+binary operator and the second element is an iterable.
+
+The purpose of this function is to simplify the following pattern:
+
+```julia
+mapreduce(a, xs) do x
+    mapreduce(b, ys) do y
+        ...
+            f(x, y, zs...)
+        ...
+    end
+end
+```
+
+This can be rewritten as:
+
+```julia
+map_folds(a => xs, b => ys, ...) do (x, y, zs...)
+    f(x, y, zs...)
+end
+```
+
+Using `do` notation corresponds to mathematical syntax. For example:
+
+```math
+\\bigwedge\\limits_{i = 1}^n \\bigvee\\limits_{j = 1}^m f(i, j)
+```
+
+# Examples
+```jldoctest
+julia> map_folds(⊤)
+tautology (generic function with 1 method)
+
+julia> @atomize map_folds(i -> \$i, (∧) => 1:2)
+\$(1) ∧ \$(2)
+
+julia> @atomize map_folds((i, j) -> \$(i, j), (∧) => 1:2, (∨) => 1:2)
+(¬¬\$((1, 1)) ∨ \$((1, 2))) ∧ (¬¬\$((2, 1)) ∨ \$((2, 2)))
+```
+"""
+map_folds(f, pairs...) = _map_folds(pairs...)(f)()
+
+"""
+    fold(operator, ps)
+
+Equivalent to `map_fold(𝒾, ps)`.
+
+See also [`identity`](@ref) and [`map_fold`](@ref).
+"""
+fold(operator, ps) = mapfold(𝒾, operator, ps)
+
 # Utilities
 
 """
@@ -500,60 +636,3 @@ arity(::NullaryOperator) = 0
 arity(::UnaryOperator) = 1
 arity(::BinaryOperator) = 2
 arity(::NaryOperator) = Inf
-
-___map_reducers(f, operator, xs, ::Left) = mapfoldl(f, operator, xs; init = Some(first(left_neutrals(operator))))
-___map_reducers(f, operator, xs, ::Right) = mapfoldr(f, operator, xs; init = Some(first(right_neutrals(operator))))
-___map_reducers(f, operator, xs, ::Nothing) = mapfoldl(f, operator, xs)
-__map_reducers(f, operator, xs) = g -> (args...) -> ___map_reducers(x -> f(g)(args..., x), operator, xs, fold_direction(operator))
-_map_reducers() = 𝒾
-_map_reducers((operator, xs)) = __map_reducers(𝒾, operator, xs)
-_map_reducers((operator, xs), pairs...) = __map_reducers(_map_reducers(pairs...), operator, xs)
-
-"""
-    map_reducers(f, pairs...)
-
-Similar to `mapreduce`, but with an arbitrary number of nested reductions.
-
-The function `f` must accept as many arguments as there are `pairs`.
-Each pair must be a two element iterable where the first element is a
-binary operator and the second element is an iterable.
-
-The purpose of this function is to simplify the following pattern:
-
-```julia
-mapreduce(a, xs) do x
-    mapreduce(b, ys) do y
-        ...
-            f(x, y, zs...)
-        ...
-    end
-end
-```
-
-This can be rewritten as:
-
-```julia
-map_reducers(a => xs, b => ys, ...) do (x, y, zs...)
-    f(x, y, zs...)
-end
-```
-
-Using `do` notation corresponds to mathematical syntax. For example:
-
-```math
-\\bigwedge\\limits_{i = 1}^n \\bigvee\\limits_{j = 1}^m f(i, j)
-```
-
-# Examples
-```jldoctest
-julia> map_reducers(⊤)
-tautology (generic function with 1 method)
-
-julia> @atomize map_reducers(i -> \$i, (∧) => 1:2)
-\$(1) ∧ \$(2)
-
-julia> @atomize map_reducers((i, j) -> \$(i, j), (∧) => 1:2, (∨) => 1:2)
-(¬¬\$((1, 1)) ∨ \$((1, 2))) ∧ (¬¬\$((2, 1)) ∨ \$((2, 2)))
-```
-"""
-map_reducers(f, pairs...) = _map_reducers(pairs...)(f)()
