@@ -409,24 +409,33 @@ distribute(p::Union{NullaryOperator, Atom, Literal}) = p
 distribute(p::Tree{typeof(∧)}) = ∧(map(distribute, p.nodes)...)
 distribute(p::Tree{typeof(∨)}) = _distribute(p.nodes...)
 
-_flatten!(p::Literal, clause) = push!(clause, p)
-_flatten!(p::Tree{typeof(∨)}, clause) = for node in p.nodes
-    _flatten!(node, clause)
+__flatten!(mapping, clause, p, sign) =
+    mapping, push!(clause, sign * get!(() -> length(mapping) + 1, mapping, p))
+
+_flatten!(mapping, clause, ::typeof(⊥)) = mapping, clause
+_flatten!(mapping, clause, p::Atom) = __flatten!(mapping, clause, p, 1)
+_flatten!(mapping, clause, p::Literal) = __flatten!(mapping, clause, child(p), nodevalue(p) == 𝒾 ? 1 : -1)
+function _flatten!(mapping, clause, p::Tree{typeof(∨)})
+    for node in p.nodes
+        _flatten!(mapping, clause, node)
+    end
+    mapping, clause
 end
 
 """
-    flatten!(p, clauses)
+    flatten!(mapping, clauses, p)
 """
-flatten!(p::typeof(⊤), clauses) = nothing
-flatten!(p::typeof(⊥), clauses) = push!(clauses, Literal[])
-flatten!(p::Union{Atom, Literal}, clauses) = push!(clauses, [p])
-flatten!(p::Tree{typeof(∧)}, clauses) = for node in p.nodes
-    flatten!(node, clauses)
+flatten!(mapping, clauses, ::typeof(⊤)) = mapping, clauses
+function flatten!(mapping, clauses, p::Union{typeof(⊥), <:Atom, <:Literal, <:Tree{typeof(∨)}})
+    clause = last(_flatten!(mapping, Set{Int}(), p))
+    any(literal -> -literal in clause, clause) || push!(clauses, clause)
+    mapping, clauses
 end
-function flatten!(p::Tree{typeof(∨)}, clauses)
-    clause = Literal[]
-    _flatten!(p, clause)
-    push!(clauses, clause)
+function flatten!(mapping, clauses, p::Tree{typeof(∧)})
+    for node in p.nodes
+        flatten!(mapping, clauses, node)
+    end
+    mapping, clauses
 end
 
 # Instantiation
@@ -631,22 +640,8 @@ julia> @atomize normalize(∨, p ↔ q)
 """
 normalize(::typeof(¬), p::Tree) = something(negated_normal(p))
 function normalize(::typeof(∧), p::Tree)
-    clauses = Vector{Literal}[]
-    flatten!(distribute(normalize(¬, p)), clauses)
-
-    atom_type = mapfoldl(clause -> mapfoldl(typeof ∘ child, typejoin, clause; init = Union{}), typejoin, clauses; init = Union{})
-    mapping = Dict{atom_type, Int}()
-    atoms = atom_type[]
-
-    Normal(∧, atoms, Set(Iterators.map(
-        clause -> Set(Iterators.map(clause) do literal
-            atom = child(literal)
-            (nodevalue(literal) == 𝒾 ? (+) : -)(get!(mapping, atom) do
-                push!(atoms, atom)
-                lastindex(atoms)
-            end)
-        end),
-    clauses)))
+    mapping, clauses = flatten!(Dict{Atom, Int}(), Set{Set{Int}}(), distribute(normalize(¬, p)))
+    Normal(∧, map(first, sort!(collect(mapping); by = last)), clauses)
 end
 normalize(::typeof(∨), p) = ¬normalize(∧, ¬p)
 normalize(operator, p) = normalize(operator, Tree(p))
