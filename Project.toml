@@ -21,6 +21,7 @@ MarkdownExtension = "Markdown"
 
 [compat]
 AbstractTrees = "0.4"
+libpicosat_jll = "965"
 PrecompileTools = "1.1"
 PrettyTables = "2.3"
 ReplMaker = "0.2.2"
