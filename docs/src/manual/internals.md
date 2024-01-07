@@ -90,7 +90,7 @@ PAndQ.child
 PAndQ.atomize
 PAndQ.negated_normal
 PAndQ.distribute
-PAndQ.flatten!
+PAndQ.flatten
 ```
 
 ## Printing

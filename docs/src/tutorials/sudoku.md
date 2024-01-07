@@ -87,9 +87,6 @@ rules = ⋀((one, two, three, four));
 ```
 
 !!! note
-    The backend solver requires that propositions are given in conjunctive normal form. Although there are several ways to encode the rules of Sudoku into a proposition, these rules are constructed in such a way that it is more computationally efficient to convert the syntax tree representation to a [`normalize`](@ref)d internal representation. Since the syntax tree is already in conjunctive normal form, converting the representation does not require computationally expensive operator distribution.
-
-!!! note
     See also [`@atomize`](@ref), [`map_folds`](@ref), [`and`](@ref), and [`or`](@ref).
 
 ## Finding a Solution

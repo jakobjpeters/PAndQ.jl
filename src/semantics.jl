@@ -192,7 +192,7 @@ See also [`interpret`](@ref) and [`tautology`](@ref).
 # Examples
 ```jldoctest
 julia> map(collect, solutions(⊤))
-1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
+1-element Vector{Vector{Any}}:
  []
 
 julia> @atomize map(collect, solutions(p))
@@ -200,7 +200,7 @@ julia> @atomize map(collect, solutions(p))
  [PAndQ.Variable(:p) => 1]
 
 julia> map(collect, solutions(⊥))
-Vector{Pair{PAndQ.Variable, Bool}}[]
+Any[]
 ```
 """
 function solutions(p::Normal{typeof(∧)})
@@ -208,9 +208,12 @@ function solutions(p::Normal{typeof(∧)})
     Iterators.map(solution -> Iterators.map(
         literal -> atoms[abs(literal)] => !signbit(literal), solution), Solutions(p.clauses))
 end
-solutions(p) = Iterators.map(solution -> Iterators.filter(
-    ((atom, _),) -> atom isa Constant || !startswith(string(atom.symbol), "##"),
-solution), solutions(tseytin(p)))
+function solutions(p)
+    q, rs = flatten(p)
+    Iterators.map(solution -> Iterators.filter(
+        ((atom, _),) -> atom isa Constant || !startswith(string(atom.symbol), "##"),
+    solution), solutions(tseytin(q ∧ map_fold(tseytin, ∧, rs))))
+end
 
 # Predicates
 
