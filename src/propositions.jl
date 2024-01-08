@@ -7,13 +7,6 @@ using Base.Meta: isexpr, parse
 using ReplMaker: complete_julia, initrepl
 using .PicoSAT: PicoSAT, initialize, picosat_print, picosat_reset
 
-# Internals
-
-"""
-    value_exception
-"""
-const value_exception = ArgumentError("the `Proposition` must be logically equivalent to a `Constant`")
-
 ## Types
 
 ### Abstract
@@ -532,19 +525,29 @@ constants(xs) = map(Constant, xs)
 """
     value(p)
 
-Return the value of a constant.
+If `p` is logically equivalent to a [`Constant`](@ref), return that value wrapped in `Some`.
+Otherwise, return nothing.
+
+Values wrapped in `Some` can be unwrapped using the `something` function.
 
 # Examples
 ```jldoctest
+julia> @atomize value(p)
+
 julia> @atomize value(\$1)
-1
+Some(1)
+
+julia> @atomize something(value(\$2))
+2
 ```
 """
 function value(p)
-    _atoms = Stateful(atoms(p))
-    isempty(_atoms) && throw(value_exception)
-    atom = first(_atoms)
-    isempty(_atoms) && atom isa Constant && atom == p ? atom.value : throw(value_exception)
+    _atoms = atoms(p)
+    if isempty(_atoms) nothing
+    else
+        atom = first(_atoms)
+        atom isa Constant && atom == p ? Some(atom.value) : nothing
+    end
 end
 
 """

@@ -103,7 +103,7 @@ solution = first_solution(rules)
 The assignments from a `Constant` to `true` correspond to cells that contain the given values. There are 81 such constants, corresponding to each cell in the grid. Each cell contains a `Pair` in the form `(row, column) => value`, which maps from the row and column of the grid to that cell's value. Each pair can be extracted with the [`value`](@ref) function, then placed into the grid.
 
 ```@repl 1
-extract(solution) = map(value ∘ first, filter(last, solution));
+extract(solution) = map(something ∘ value ∘ first, filter(last, solution));
 cells = extract(solution)
 function decode!(grid, cells)
     for ((row, column), value) in cells

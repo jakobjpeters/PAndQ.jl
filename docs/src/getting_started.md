@@ -48,7 +48,7 @@ $("Logic is fun")
 julia> q = @atomize $"Julia is awesome"
 $("Julia is awesome")
 
-julia> map(value, [p, q])
+julia> map(something ∘ value, [p, q])
 2-element Vector{String}:
  "Logic is fun"
  "Julia is awesome"

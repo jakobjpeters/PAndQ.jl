@@ -114,7 +114,7 @@ See also [Nullary Operators](@ref nullary_operators) and [`Proposition`](@ref).
 julia> @atomize map(atom -> ⊤, p ⊻ q)
 ⊤ ⊻ ⊤
 
-julia> @atomize map(atom -> \$(value(atom) + 1), \$1 ∧ \$2)
+julia> @atomize map(atom -> \$(something(value(atom)) + 1), \$1 ∧ \$2)
 \$(2) ∧ \$(3)
 ```
 """

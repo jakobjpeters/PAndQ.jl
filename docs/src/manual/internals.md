@@ -38,10 +38,6 @@ PAndQ.AndOr
 
 ## Propositions
 
-```@docs
-PAndQ.value_exception
-```
-
 ### Types
 
 ```@example
