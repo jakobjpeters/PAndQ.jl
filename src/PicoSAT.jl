@@ -1,4 +1,9 @@
 
+"""
+    PicoSAT
+
+This module provides an interface to libpicosat_jll.jl.
+"""
 module PicoSAT
 
 import Base: IteratorSize, eltype, isdone, iterate
