@@ -1,5 +1,5 @@
 
-import Base: nand, nor, xor, ⊻, ⊼, ⊽
+import Base: Fix1, nand, nor, xor, ⊻, ⊼, ⊽
 
 # Nullary Operators
 
@@ -357,7 +357,7 @@ julia> @atomize ⋀((p, q, r, s))
 ((p ∧ q) ∧ r) ∧ s
 ```
 """
-conjunction(ps) = something(foldl(∧, ps; init = Some(⊤)))::Proposition
+conjunction(ps) = fold(∧, ps)
 const ⋀ = conjunction
 
 """
@@ -376,7 +376,7 @@ julia> @atomize ⋁((p, q, r, s))
 ((¬¬p ∨ q) ∨ r) ∨ s
 ```
 """
-disjunction(ps) = something(foldl(∨, ps; init = Some(⊥)))::Proposition
+disjunction(ps) = fold(∨, ps)
 const ⋁ = disjunction
 
 # Internals
@@ -459,9 +459,6 @@ Subtype of [`InitialValue`](@ref).
 struct NoInitialValue <: InitialValue end
 InitialValue(::union_typeof((⊼, ⊽))) = NoInitialValue()
 
-_initial_value(::union_typeof((∧, ↔, →, ←))) = ⊤
-_initial_value(::union_typeof((∨, ⊻, ↚, ↛))) = ⊥
-
 """
     initial_value(::Operator)
 
@@ -476,7 +473,8 @@ julia> PAndQ.initial_value(∨)
 Some(PAndQ.contradiction)
 ```
 """
-initial_value(operator) = Some(_initial_value(operator))
+initial_value(::union_typeof((∧, ↔, →, ←))) = Some(⊤)
+initial_value(::union_typeof((∨, ⊻, ↚, ↛))) = Some(⊥)
 
 ## Union Types
 
@@ -529,7 +527,7 @@ __map_fold(::Right) = mapfoldr
 
 _map_fold(::NoInitialValue, ::FoldDirection, mapfold, f, operator, xs) = mapfold(f, operator, xs)
 _map_fold(::HasInitialValue, fold_direction, mapfold, f, operator, xs) =
-    mapfold(f, operator, xs; init = initial_value(operator))
+    something(mapfold(f, operator, xs; init = initial_value(operator)))
 
 """
     map_fold(f, operator, xs)
@@ -540,7 +538,7 @@ Similar to `mapreduce`, but with the fold direction and initial values determine
 # Examples
 ```jldoctest
 julia> map_fold(¬, ∧, ())
-Some(PAndQ.tautology)
+tautology (generic function with 1 method)
 
 julia> @atomize map_fold(¬, ∧, (p, q))
 ¬p ∧ ¬q
@@ -616,7 +614,7 @@ See also [`identity`](@ref) and [`map_fold`](@ref).
 # Examples
 ```jldoctest
 julia> fold(∧, ())
-Some(PAndQ.tautology)
+tautology (generic function with 1 method)
 
 julia> @atomize fold(∧, (p, q))
 p ∧ q
