@@ -435,10 +435,11 @@ flatten!(mapping, clauses, qs, p) = mapping, clauses, push!(qs, p)
 """
     flatten(p)
 """
-function flatten(p)
+function flatten(p::Tree)
     mapping, clauses, qs = flatten!(Dict{Atom, Int}(), Set{Set{Int}}(), Tree[], p)
     Normal(∧, map(first, sort!(collect(mapping); by = last)), clauses), qs
 end
+flatten(p) = flatten(Tree(p))
 
 # Instantiation
 
@@ -662,7 +663,7 @@ _tseytin(p::Union{Atom, Tree{typeof(𝒾), <:Atom}}) = p
 _tseytin(p) = Variable(gensym())
 
 tseytin!(pairs, substitution, ::Union{Atom, Tree{typeof(𝒾), <:Atom}}) = pairs
-function tseytin!(pairs, p, substitution)
+function tseytin!(pairs, substitution, p)
     nodes = p.nodes
     substitutions = map(_tseytin, nodes)
     push!(pairs, (substitution, nodevalue(p)(map(_tseytin, substitutions)...)))
@@ -696,9 +697,8 @@ julia> is_equisatisfiable(⊥, tseytin(⊥))
 true
 ```
 """
-tseytin(p::Normal{typeof(∧)}) = p
 function tseytin(p::Tree)
-    pairs = tseytin!(NTuple{2, Tree}[], Tree(normalize(¬, p)), Variable(gensym()))
+    pairs = tseytin!(NTuple{2, Tree}[], Variable(gensym()), Tree(p))
     normalize(∧, isempty(pairs) ? p : first(first(pairs)) ∧ ⋀(map(splat(↔), pairs)))
 end
 tseytin(p) = tseytin(Tree(p))

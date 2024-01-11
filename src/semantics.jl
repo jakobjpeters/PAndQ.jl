@@ -17,7 +17,7 @@ julia> PAndQ.neutral_operator(⊤)
 and (generic function with 11 methods)
 
 julia> PAndQ.neutral_operator(⊥)
-or (generic function with 9 methods)
+or (generic function with 10 methods)
 ```
 """
 neutral_operator(::typeof(⊤)) = ∧
@@ -212,7 +212,7 @@ function solutions(p)
     q, rs = flatten(p)
     Iterators.map(solution -> Iterators.filter(
         ((atom, _),) -> atom isa Constant || !startswith(string(atom.symbol), "##"),
-    solution), solutions(tseytin(q ∧ fold(tseytin, (∧) => rs))))
+    solution), solutions(q ∧ normalize(∧, fold(tseytin, (∧) => rs))))
 end
 
 # Predicates
@@ -502,13 +502,13 @@ of the given [operator](@ref operators_operators).
 # Examples
 ```jldoctest
 julia> dual(and)
-or (generic function with 9 methods)
+or (generic function with 10 methods)
 
 julia> @atomize and(p, q) == not(dual(and)(not(p), not(q)))
 true
 
 julia> dual(imply)
-not_converse_imply (generic function with 6 methods)
+not_converse_imply (generic function with 7 methods)
 
 julia> @atomize imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
@@ -541,7 +541,7 @@ julia> @atomize and(p, q) == converse(and)(q, p)
 true
 
 julia> converse(imply)
-converse_imply (generic function with 6 methods)
+converse_imply (generic function with 7 methods)
 
 julia> @atomize imply(p, q) == converse(imply)(q, p)
 true
@@ -590,6 +590,7 @@ p::NullaryOperator ∨ q::Bool = q ∨ q
 
 ### Binary Operators
 
+p::Some{<:NullaryOperator} ∨ q::Atom = normalize(¬, ¬(p ⊽ q))
 p::Union{NullaryOperator, Some{<:NullaryOperator}, Proposition} ∨ q::Union{NullaryOperator, Some{<:NullaryOperator}, Proposition} =
     ¬(p ⊽ q)
 
@@ -602,6 +603,7 @@ for (left, right) in (
     $left(p::Bool, q::NullaryOperator) = $right
     $left(p::NullaryOperator, q::Bool) = $left(q, p)
     $left(p::Normal, q::Normal) = $right
+    $left(p::Some{<:NullaryOperator}, q::Atom) = normalize(¬, $right)
     $left(
         p::Union{Some{<:NullaryOperator}, NullaryOperator, Proposition},
         q::Union{Some{<:NullaryOperator}, NullaryOperator, Proposition}
@@ -617,6 +619,7 @@ for (left, right) in (
 ) @eval begin
     $(negated_normal_template(left, right))
     $left(p::Normal, q::Normal) = $right
+    $left(p::Some{<:NullaryOperator}, q::Atom) = normalize(¬, $right)
     $left(
         p::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition},
         q::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition}

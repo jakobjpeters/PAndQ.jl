@@ -373,7 +373,7 @@ See also [`or`](@ref) and [`contradiction`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize ⋁((p, q, r, s))
-((¬¬p ∨ q) ∨ r) ∨ s
+((p ∨ q) ∨ r) ∨ s
 ```
 """
 disjunction(ps) = fold(𝒾, (∨) => ps)
