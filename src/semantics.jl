@@ -120,7 +120,7 @@ julia> @atomize map(atom -> \$(something(value(atom)) + 1), \$1 ∧ \$2)
 """
 map(f, p::Atom) = f(p)
 map(f, p::Union{NullaryOperator, Tree}) = nodevalue(p)(_map(f, p)...)
-map(f, p::Union{Clause, Normal}) = fold(nodevalue(p), _map(f, p))
+map(f, p::Union{Clause, Normal}) = fold(𝒾, nodevalue(p) => _map(f, p))
 
 """
     interpret(valuation, p)
@@ -212,7 +212,7 @@ function solutions(p)
     q, rs = flatten(p)
     Iterators.map(solution -> Iterators.filter(
         ((atom, _),) -> atom isa Constant || !startswith(string(atom.symbol), "##"),
-    solution), solutions(tseytin(q ∧ map_fold(tseytin, ∧, rs))))
+    solution), solutions(tseytin(q ∧ fold(tseytin, (∧) => rs))))
 end
 
 # Predicates

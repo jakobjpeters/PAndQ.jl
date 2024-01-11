@@ -357,7 +357,7 @@ julia> @atomize ⋀((p, q, r, s))
 ((p ∧ q) ∧ r) ∧ s
 ```
 """
-conjunction(ps) = fold(∧, ps)
+conjunction(ps) = fold(𝒾, (∧) => ps)
 const ⋀ = conjunction
 
 """
@@ -376,7 +376,7 @@ julia> @atomize ⋁((p, q, r, s))
 ((¬¬p ∨ q) ∨ r) ∨ s
 ```
 """
-disjunction(ps) = fold(∨, ps)
+disjunction(ps) = fold(𝒾, (∨) => ps)
 const ⋁ = disjunction
 
 # Internals
@@ -520,57 +520,38 @@ The `Union` of [`and`](@ref) and [`or`](@ref).
 """
 const AndOr = union_typeof((∧, ∨))
 
-# Folds
+# Utilities
 
-__map_fold(::Left) = mapfoldl
-__map_fold(::Right) = mapfoldr
+____fold(::Left) = mapfoldl
+____fold(::Right) = mapfoldr
 
-_map_fold(::NoInitialValue, ::FoldDirection, mapfold, f, operator, xs) = mapfold(f, operator, xs)
-_map_fold(::HasInitialValue, fold_direction, mapfold, f, operator, xs) =
+___fold(::NoInitialValue, mapfold, f, operator, xs) = mapfold(f, operator, xs)
+___fold(::HasInitialValue, mapfold, f, operator, xs) =
     something(mapfold(f, operator, xs; init = initial_value(operator)))
 
-"""
-    map_fold(f, operator, xs)
+__fold(f, operator, xs) = g -> (args...) -> ___fold(InitialValue(operator),
+    ____fold(FoldDirection(operator)), x -> f(g)(args..., x), operator, xs)
 
-Similar to `mapreduce`, but with the fold direction and initial values determined by the
-[`FoldDirection`](@ref) and [`InitialValue`](@ref) traits.
-
-# Examples
-```jldoctest
-julia> map_fold(¬, ∧, ())
-tautology (generic function with 1 method)
-
-julia> @atomize map_fold(¬, ∧, (p, q))
-¬p ∧ ¬q
-```
-"""
-function map_fold(f, operator, xs)
-    fold_direction = FoldDirection(operator)
-    _map_fold(InitialValue(operator), fold_direction, __map_fold(fold_direction), f, operator, xs)
-end
-
-__map_folds(f, operator, xs) = g -> (args...) -> map_fold(x -> f(g)(args..., x), operator, xs)
-
-_map_folds() = 𝒾
-_map_folds((operator, xs)) = __map_folds(𝒾, operator, xs)
-_map_folds((operator, xs), pairs...) = __map_folds(_map_folds(pairs...), operator, xs)
+_fold() = 𝒾
+_fold((operator, xs)) = __fold(𝒾, operator, xs)
+_fold((operator, xs), pairs...) = __fold(_fold(pairs...), operator, xs)
 
 """
-    map_folds(f, pairs...)
+    fold(f, pairs...)
 
-Similar to [`map_fold`](@ref), but with an arbitrary number of nested folds.
+A generalization of `mapreduce` with an arbitrary number of nested folds
+and traits to determine the [`FoldDirection`](@ref) and [`InitialValue`](@ref).
 
 The function `f` must accept as many arguments as there are `pairs`.
-Each pair must be a two element iterable where the first element is a
+Each pair must be an two element iterable where the first element is a
 binary operator and the second element is an iterable.
 
-The purpose of this function is to simplify the following pattern:
+Given a single pair, this function is similar to `mapreduce` and other related functions.
+Giving additional pairs will generalize the following pattern:
 
 ```julia
 mapreduce(a, xs) do x
     mapreduce(b, ys) do y
-        ...
-            f(x, y, zs...)
         ...
     end
 end
@@ -579,50 +560,26 @@ end
 This can be rewritten as:
 
 ```julia
-map_folds(a => xs, b => ys, ...) do (x, y, zs...)
-    f(x, y, zs...)
+fold(a => xs, b => ys, ...) do (x, y, ...)
+    ...
 end
 ```
 
-Using `do` notation corresponds to mathematical syntax. For example:
-
-```math
-\\bigwedge\\limits_{i = 1}^n \\bigvee\\limits_{j = 1}^m f(i, j)
-```
-
 # Examples
 ```jldoctest
-julia> map_folds(⊤)
+julia> fold(⊤)
 tautology (generic function with 1 method)
 
-julia> @atomize map_folds(i -> \$i, (∧) => 1:2)
-\$(1) ∧ \$(2)
+julia> @atomize fold(¬, (∧) => (p, q))
+¬p ∧ ¬q
 
-julia> @atomize map_folds((i, j) -> \$(i, j), (∧) => 1:2, (∨) => 1:2)
-(¬¬\$((1, 1)) ∨ \$((1, 2))) ∧ (¬¬\$((2, 1)) ∨ \$((2, 2)))
+julia> @atomize fold(↔, (∧) => (p, q), (∨) => (r, s))
+(¬¬(p ↔ r) ∨ (p ↔ s)) ∧ (¬¬(q ↔ r) ∨ (q ↔ s))
 ```
 """
-map_folds(f, pairs...) = _map_folds(pairs...)(f)()
+fold(f::Function, pairs::Pair...) = _fold(pairs...)(f)()
+fold(pair) = fold(𝒾, pair)
 
-"""
-    fold(operator, ps)
-
-Equivalent to `map_fold(𝒾, ps)`.
-
-See also [`identity`](@ref) and [`map_fold`](@ref).
-
-# Examples
-```jldoctest
-julia> fold(∧, ())
-tautology (generic function with 1 method)
-
-julia> @atomize fold(∧, (p, q))
-p ∧ q
-```
-"""
-fold(operator, ps) = map_fold(𝒾, operator, ps)
-
-# Utilities
 
 """
     arity(operator)

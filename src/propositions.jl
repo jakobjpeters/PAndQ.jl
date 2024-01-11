@@ -653,7 +653,7 @@ julia> @atomize normalize(∨, p ↔ q)
 normalize(::typeof(¬), p::Tree) = something(negated_normal(p))
 function normalize(::typeof(∧), p::Tree)
     q, rs = flatten(p)
-    q ∧ first(flatten(something(map_fold(r -> distribute(normalize(¬, r)), ∧, rs))))
+    q ∧ first(flatten(something(fold(r -> distribute(normalize(¬, r)), (∧) => rs))))
 end
 normalize(::typeof(∨), p) = ¬normalize(∧, ¬p)
 normalize(operator, p) = normalize(operator, Tree(p))

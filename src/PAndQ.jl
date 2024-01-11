@@ -26,8 +26,7 @@ export
     not_converse_imply, ↚,
     conjunction, ⋀,
     disjunction, ⋁,
-    map_fold, map_folds, fold,
-    arity
+    fold, arity
 
 include("propositions.jl")
 
