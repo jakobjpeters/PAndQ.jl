@@ -13,16 +13,20 @@ include("PicoSAT.jl")
 include("operators.jl")
 
 export
+    Operator,
     tautology, ⊤,
     contradiction, ⊥,
-    𝒾,
+    identical, 𝒾,
     not, ¬,
     and, ∧,
     or, ∨,
-    xnor, ↔,
     imply, →,
-    not_imply, ↛,
+    exclusive_or, ↮,
     converse_imply, ←,
+    not_and, ↑,
+    not_or, ↓,
+    not_imply, ↛,
+    not_exclusive_or, ↔,
     not_converse_imply, ↚,
     conjunction, ⋀,
     disjunction, ⋁,

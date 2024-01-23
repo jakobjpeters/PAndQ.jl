@@ -14,10 +14,10 @@ element of the given [`NullaryOperator`](@ref).
 # Examples
 ```jldoctest
 julia> PAndQ.neutral_operator(⊤)
-and (generic function with 11 methods)
+∧
 
 julia> PAndQ.neutral_operator(⊥)
-or (generic function with 10 methods)
+∨
 ```
 """
 neutral_operator(::typeof(⊤)) = ∧
@@ -50,16 +50,6 @@ function combine(p, q)
             end
         end),
     q.clauses)
-end
-
-"""
-    negated_normal_template(left, right)
-"""
-negated_normal_template(left, right) = quote
-    function negated_normal!(operator_stack, input_stack, output_stack, node::Tree{typeof($left)})
-        p, q = node.nodes
-        operator_stack, push!(input_stack, $right), output_stack
-    end
 end
 
 # Truths
@@ -111,8 +101,8 @@ See also [Nullary Operators](@ref nullary_operators) and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
-julia> @atomize map(atom -> ⊤, p ⊻ q)
-⊤ ⊻ ⊤
+julia> @atomize map(atom -> ⊤, p ↔ q)
+⊤ ↔ ⊤
 
 julia> @atomize map(atom -> \$(something(value(atom)) + 1), \$1 ∧ \$2)
 \$(2) ∧ \$(3)
@@ -232,7 +222,7 @@ julia> is_commutative(→)
 false
 ```
 """
-is_commutative(::union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔))) = true
+is_commutative(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔))) = true
 is_commutative(::BinaryOperator) = false
 
 """
@@ -250,7 +240,7 @@ julia> is_associative(→)
 false
 ```
 """
-is_associative(::union_typeof((∧, ∨, ⊻, ↔))) = true
+is_associative(::union_typeof((∧, ∨, ↮, ↔))) = true
 is_associative(::BinaryOperator) = false
 
 """
@@ -440,7 +430,7 @@ See also [Nullary Operators](@ref nullary_operators) and [`Proposition`](@ref).
 julia> @atomize ⊥ == p ∧ ¬p
 true
 
-julia> @atomize (p ↔ q) == ¬(p ⊻ q)
+julia> @atomize (p ↔ q) == ¬(p ↮ q)
 true
 
 julia> @atomize \$1 == \$1
@@ -456,7 +446,7 @@ p::Atom == q::Atom = false
 p::Bool == q::Union{NullaryOperator, Proposition} = (p ? is_tautology : is_contradiction)(q)
 p::NullaryOperator == q::Union{Bool, Proposition} = Bool(p) == q
 p::Proposition == q::Union{Bool, NullaryOperator} = q == p
-p::Proposition == q::Proposition = is_contradiction(p ⊻ q)
+p::Proposition == q::Proposition = is_contradiction(p ↮ q)
 
 """
     <(::Union{Bool, NullaryOperator, Proposition}, ::Union{Bool, NullaryOperator, Proposition})
@@ -502,13 +492,13 @@ of the given [operator](@ref operators_operators).
 # Examples
 ```jldoctest
 julia> dual(and)
-or (generic function with 10 methods)
+∨
 
 julia> @atomize and(p, q) == not(dual(and)(not(p), not(q)))
 true
 
 julia> dual(imply)
-not_converse_imply (generic function with 7 methods)
+↚
 
 julia> @atomize imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
@@ -519,10 +509,10 @@ dual(unary_operator::UnaryOperator) = unary_operator
 eval_doubles(:dual, (
     (⊤, ⊥),
     (∧, ∨),
-    (⊼, ⊽),
-    (⊻, ↔),
+    (↑, ↓),
+    (↔, ↮),
     (→, ↚),
-    (↛, ←)
+    (←, ↛)
 ))
 
 """
@@ -535,19 +525,19 @@ of the given [binary operator](@ref binary_operators).
 # Examples
 ```jldoctest
 julia> converse(and)
-and (generic function with 11 methods)
+∧
 
 julia> @atomize and(p, q) == converse(and)(q, p)
 true
 
 julia> converse(imply)
-converse_imply (generic function with 7 methods)
+←
 
 julia> @atomize imply(p, q) == converse(imply)(q, p)
 true
 ```
 """
-converse(binary_operator::union_typeof((∧, ⊼, ⊽, ⊽, ⊻, ↔))) = binary_operator
+converse(binary_operator::union_typeof((∧, ∨, ↑, ↓, ↔, ↮))) = binary_operator
 
 eval_doubles(:converse, ((→, ←), (↛, ↚)))
 
@@ -571,56 +561,47 @@ false
 """
 Bool(nullary_operator::NullaryOperator) = convert(Bool, nullary_operator)
 
-¬p::Bool = !p
-p::Bool ∧ q::Union{Bool, NullaryOperator} = p && Bool(q)
-p::Bool ∨ q::Union{Bool, NullaryOperator} = p || Bool(q)
-p::NullaryOperator ∧ q::Bool = q ∧ p
-p::NullaryOperator ∨ q::Bool = q ∨ q
+(::typeof(¬))(p::Bool) = !p
+(::typeof(∧))(p::Bool, q::Bool) = p && Bool(q)
+(::typeof(∨))(p::Bool, q::Bool) = p || Bool(q)
+(o::union_typeof((∧, ∨)))(p::Bool, q::NullaryOperator) = o(p, Bool(q))
+(o::union_typeof((∧, ∨)))(p::NullaryOperator, q::Bool) = o(q, p)
 
 ## Operators
 
 ### NullaryOperators
 
-⊤() = ⊤
-⊥() = ⊥
+(o::union_typeof((⊤, ⊥)))() = o
 
 ### Unary Operators
 
-¬p::NullaryOperator = ¬Tree(p)
+(::typeof(¬))(p::NullaryOperator) = ¬Tree(p)
 
 ### Binary Operators
 
-p::Some{<:NullaryOperator} ∨ q::Atom = normalize(¬, ¬(p ⊽ q))
-p::Union{NullaryOperator, Some{<:NullaryOperator}, Proposition} ∨ q::Union{NullaryOperator, Some{<:NullaryOperator}, Proposition} =
-    ¬(p ⊽ q)
+(::typeof(∨))(p::Some{<:NullaryOperator}, q::Atom) = normalize(¬, ¬(p ↓ q))
+(::typeof(∨))(
+    p::Union{NullaryOperator, Some{<:NullaryOperator}, Proposition},
+    q::Union{NullaryOperator, Some{<:NullaryOperator}, Proposition}
+) = ¬(p ↓ q)
 
 for (left, right) in (
-    :⊼ => :(¬(p ∧ q)),
-    :⊽ => :(¬p ∧ ¬q),
-    :⊻ => :((p ∨ q) ∧ (p ⊼ q)),
+    :not_and => :(¬(p ∧ q)),
+    :not_or => :(¬p ∧ ¬q),
+    :exclusive_or => :((p ∨ q) ∧ (p ↑ q)),
+    :not_exclusive_or => :((p ∧ q) ∨ (p ↓ q)),
+    :not_imply => :(p ∧ ¬q),
+    :imply => :(¬p ∨ q),
+    :not_converse_imply => :(¬p ∧ q),
+    :converse_imply => :(p ∨ ¬q)
 ) @eval begin
-    $(negated_normal_template(left, right))
-    $left(p::Bool, q::NullaryOperator) = $right
-    $left(p::NullaryOperator, q::Bool) = $left(q, p)
-    $left(p::Normal, q::Normal) = $right
-    $left(p::Some{<:NullaryOperator}, q::Atom) = normalize(¬, $right)
-    $left(
-        p::Union{Some{<:NullaryOperator}, NullaryOperator, Proposition},
-        q::Union{Some{<:NullaryOperator}, NullaryOperator, Proposition}
-    ) = $right
-end end
-
-for (left, right) in (
-    :↔ => :((p ∧ q) ∨ (p ⊽ q)),
-    :↛ => :(p ∧ ¬q),
-    :→ => :(¬p ∨ q),
-    :↚ => :(¬p ∧ q),
-    :← => :(p ∨ ¬q)
-) @eval begin
-    $(negated_normal_template(left, right))
-    $left(p::Normal, q::Normal) = $right
-    $left(p::Some{<:NullaryOperator}, q::Atom) = normalize(¬, $right)
-    $left(
+    function negated_normal!(operator_stack, input_stack, output_stack, node::Tree{Operator{$(QuoteNode(left))}})
+        p, q = node.nodes
+        operator_stack, push!(input_stack, $right), output_stack
+    end
+    PAndQ.$left(p::Normal, q::Normal) = $right
+    PAndQ.$left(p::Some{<:NullaryOperator}, q::Atom) = normalize(¬, $right)
+    PAndQ.$left(
         p::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition},
         q::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition}
     ) = $right
@@ -628,30 +609,29 @@ end end
 
 ## Propositions
 
-¬::Some{typeof(⊤)} = Some(⊥)
-¬::Some{typeof(⊥)} = Some(⊤)
-¬p::Union{Atom, Tree} = Tree(¬, p)
-¬p::Normal = Normal(dual(nodevalue(p)), p.atoms, Set(Iterators.map(clause -> Set(Iterators.map(-, clause)), p.clauses)))
+(::typeof(𝒾))(p) = p
+(::typeof(¬))(::Some{typeof(⊤)}) = Some(⊥)
+(::typeof(¬))(::Some{typeof(⊥)}) = Some(⊤)
+(::typeof(¬))(p::Union{Atom, Tree}) = Tree(¬, p)
+(::typeof(¬))(p::Normal) =
+    Normal(dual(nodevalue(p)), p.atoms, Set(Iterators.map(clause -> Set(Iterators.map(-, clause)), p.clauses)))
 
-::Some{typeof(⊤)} ∧ q::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition} = q
-p::Some{typeof(⊥)} ∧ q::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition} = p
-p::Union{Bool, NullaryOperator, Proposition} ∧ q::Some{<:NullaryOperator} = q ∧ p
+(::typeof(∧))(::Some{typeof(⊤)}, q::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition}) = q
+(::typeof(∧))(p::Some{typeof(⊥)}, q::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition}) = p
+(::typeof(∧))(p::Union{Bool, NullaryOperator, Proposition}, q::Some{<:NullaryOperator}) = q ∧ p
 
-for BO in uniontypes(BinaryOperator)
-    bo = nameof(BO.instance)
-    @eval begin
-        $bo(p::Union{Some{<:NullaryOperator}, NullaryOperator, Proposition}) = Fix2($bo, p)
-        $bo(p::Union{NullaryOperator, Atom, Tree}, q::Union{NullaryOperator, Atom, Tree}) =
-            Tree($bo, Tree(p), Tree(q))
-        $bo(p::Normal, q::Union{NullaryOperator, Proposition}) = $bo(Tree(p), q)
-        $bo(p::Union{NullaryOperator, Proposition}, q::Normal) = $bo(p, Tree(q))
-    end
-end
-
-for and_or in (:∧, :∨) @eval begin
-    $and_or(p::Normal{typeof($and_or)}, q::Normal{typeof($and_or)}) = Normal($and_or, combine(p, q)...)
-    $and_or(p::Normal, q::Normal) = $and_or(Normal($and_or, p), Normal($and_or, q))
+for bo in (:←, :∧, :∨, :→, :↮, :↑, :↓, :↛, :↔, :↚) @eval begin
+    PAndQ.$bo(p::Union{Some{<:NullaryOperator}, NullaryOperator, Proposition}) = Fix2($bo, p)
+    PAndQ.$bo(p::Union{NullaryOperator, Atom, Tree}, q::Union{NullaryOperator, Atom, Tree}) =
+        Tree($bo, Tree(p), Tree(q))
+    PAndQ.$bo(p::Normal, q::Union{NullaryOperator, Proposition}) = $bo(Tree(p), q)
+    PAndQ.$bo(p::Union{NullaryOperator, Proposition}, q::Normal) = $bo(p, Tree(q))
 end end
+
+(::typeof(∧))(p::Normal{typeof(∧)}, q::Normal{typeof(∧)}) = Normal(∧, combine(p, q)...)
+(::typeof(∨))(p::Normal{typeof(∨)}, q::Normal{typeof(∨)}) = Normal(∨, combine(p, q)...)
+(::typeof(∧))(p::Normal, q::Normal) = Normal(∧, p) ∧ Normal(∧, q)
+(::typeof(∨))(p::Normal, q::Normal) = Normal(∨, p) ∨ Normal(∨, q)
 
 # Constructors
 

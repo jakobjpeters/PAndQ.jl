@@ -1,5 +1,8 @@
 
-import Base: Fix1, nand, nor, xor, ⊻, ⊼, ⊽
+"""
+    Operator{N}
+"""
+struct Operator{N} end
 
 # Nullary Operators
 
@@ -21,8 +24,7 @@ julia> TruthTable([⊤])
 └───┘
 ```
 """
-function tautology end
-const ⊤ = tautology
+const tautology = ⊤ = Operator{:tautology}()
 
 """
     contradiction()
@@ -42,13 +44,12 @@ julia> TruthTable([⊥])
 └───┘
 ```
 """
-function contradiction end
-const ⊥ = contradiction
+const contradiction = ⊥ = Operator{:contradiction}()
 
 # Unary Operators
 
 """
-    identity(p)
+    identical(p)
     𝒾(p)
 
 Logical [identity](https://en.wikipedia.org/wiki/Law_of_identity) operator.
@@ -64,8 +65,7 @@ julia> @atomize TruthTable([𝒾(p)])
 └───┘
 ```
 """
-identity
-const 𝒾 = identity
+const identical = 𝒾 = Operator{:identical}()
 
 """
     not(p)
@@ -86,8 +86,7 @@ julia> @atomize TruthTable([¬p])
 └───┴────┘
 ```
 """
-function not end
-const ¬ = not
+const not = ¬ = Operator{:not}()
 
 # Binary Operators
 
@@ -113,56 +112,7 @@ julia> @atomize TruthTable([p ∧ q])
 └───┴───┴───────┘
 ```
 """
-function and end
-const ∧ = and
-
-"""
-    nand(p, q)
-    p ⊼ q
-
-Logical [non-conjunction](https://en.wikipedia.org/wiki/Sheffer_stroke) operator.
-
-`⊼` can be typed by `\\nand[TAB]`.
-
-# Examples
-```jldoctest
-julia> @atomize TruthTable([p ⊼ q])
-┌───┬───┬───────┐
-│ p │ q │ p ⊼ q │
-├───┼───┼───────┤
-│ ⊤ │ ⊤ │ ⊥     │
-│ ⊥ │ ⊤ │ ⊤     │
-├───┼───┼───────┤
-│ ⊤ │ ⊥ │ ⊤     │
-│ ⊥ │ ⊥ │ ⊤     │
-└───┴───┴───────┘
-```
-"""
-nand
-
-"""
-    nor(p, q)
-    p ⊽ q
-
-Logical [non-disjunction](https://en.wikipedia.org/wiki/Logical_NOR) operator.
-
-`⊽` can be typed by `\\nor[TAB]`.
-
-# Examples
-```jldoctest
-julia> @atomize TruthTable([p ⊽ q])
-┌───┬───┬───────┐
-│ p │ q │ p ⊽ q │
-├───┼───┼───────┤
-│ ⊤ │ ⊤ │ ⊥     │
-│ ⊥ │ ⊤ │ ⊥     │
-├───┼───┼───────┤
-│ ⊤ │ ⊥ │ ⊥     │
-│ ⊥ │ ⊥ │ ⊤     │
-└───┴───┴───────┘
-```
-"""
-nor
+const and = ∧ = Operator{:and}()
 
 """
     or(p, q)
@@ -186,83 +136,7 @@ julia> @atomize TruthTable([p ∨ q])
 └───┴───┴───────┘
 ```
 """
-function or end
-const ∨ = or
-
-"""
-    xor(p, q)
-    p ⊻ q
-
-Logical [exclusive disjunction](https://en.wikipedia.org/wiki/Exclusive_or) operator.
-
-`⊻` can be typed by `\\xor[TAB]`.
-
-# Examples
-```jldoctest
-julia> @atomize TruthTable([p ⊻ q])
-┌───┬───┬───────┐
-│ p │ q │ p ⊻ q │
-├───┼───┼───────┤
-│ ⊤ │ ⊤ │ ⊥     │
-│ ⊥ │ ⊤ │ ⊤     │
-├───┼───┼───────┤
-│ ⊤ │ ⊥ │ ⊤     │
-│ ⊥ │ ⊥ │ ⊥     │
-└───┴───┴───────┘
-```
-"""
-xor
-
-"""
-    xnor(p, q)
-    p ↔ q
-
-Logical [exclusive non-disjunction]
-(https://en.wikipedia.org/wiki/Logical_biconditional) operator.
-
-`↔` can be typed by `\\leftrightarrow[TAB]`.
-
-# Examples
-```jldoctest
-julia> @atomize TruthTable([p ↔ q])
-┌───┬───┬───────┐
-│ p │ q │ p ↔ q │
-├───┼───┼───────┤
-│ ⊤ │ ⊤ │ ⊤     │
-│ ⊥ │ ⊤ │ ⊥     │
-├───┼───┼───────┤
-│ ⊤ │ ⊥ │ ⊥     │
-│ ⊥ │ ⊥ │ ⊤     │
-└───┴───┴───────┘
-```
-"""
-function xnor end
-const ↔ = xnor
-
-"""
-    not_imply(p, q)
-    p ↛ q
-
-Logical [non-implication](https://en.wikipedia.org/wiki/Material_nonimplication) operator.
-
-`↛` can be typed by `\\nrightarrow[TAB]`.
-
-# Examples
-```jldoctest
-julia> @atomize TruthTable([p ↛ q])
-┌───┬───┬───────┐
-│ p │ q │ p ↛ q │
-├───┼───┼───────┤
-│ ⊤ │ ⊤ │ ⊥     │
-│ ⊥ │ ⊤ │ ⊥     │
-├───┼───┼───────┤
-│ ⊤ │ ⊥ │ ⊤     │
-│ ⊥ │ ⊥ │ ⊥     │
-└───┴───┴───────┘
-```
-"""
-function not_imply end
-const ↛ = not_imply
+const or = ∨ = Operator{:or}()
 
 """
     imply(p, q)
@@ -286,33 +160,31 @@ julia> @atomize TruthTable([p → q])
 └───┴───┴───────┘
 ```
 """
-function imply end
-const → = imply
+const imply = → = Operator{:imply}()
 
 """
-    not_converse_imply(p, q)
-    p ↚ q
+    exclusive_or(p, q)
+    p ↮ q
 
-Logical [converse non-implication](https://en.wikipedia.org/wiki/Converse_nonimplication) operator.
+Logical [exclusive disjunction](https://en.wikipedia.org/wiki/Exclusive_or) operator.
 
-`↚` can be typed by `\\nleftarrow[TAB]`.
+`↮` can be typed by `\\nleftrightarrow[TAB]`.
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable([p ↚ q])
+julia> @atomize TruthTable([p ↮ q])
 ┌───┬───┬───────┐
-│ p │ q │ p ↚ q │
+│ p │ q │ p ↮ q │
 ├───┼───┼───────┤
 │ ⊤ │ ⊤ │ ⊥     │
 │ ⊥ │ ⊤ │ ⊤     │
 ├───┼───┼───────┤
-│ ⊤ │ ⊥ │ ⊥     │
+│ ⊤ │ ⊥ │ ⊤     │
 │ ⊥ │ ⊥ │ ⊥     │
 └───┴───┴───────┘
 ```
 """
-function not_converse_imply end
-const ↚ = not_converse_imply
+const exclusive_or = ↮ = Operator{:exclusive_or}()
 
 """
     converse_imply(p, q)
@@ -336,8 +208,128 @@ julia> @atomize TruthTable([p ← q])
 └───┴───┴───────┘
 ```
 """
-function converse_imply end
-const ← = converse_imply
+const converse_imply = ← = Operator{:converse_imply}()
+
+"""
+    not_and(p, q)
+    p ↑ q
+
+Logical [non-conjunction](https://en.wikipedia.org/wiki/Sheffer_stroke) operator.
+
+`↑` can be typed by `\\uparrow[TAB]`.
+
+# Examples
+```jldoctest
+julia> @atomize TruthTable([p ↑ q])
+┌───┬───┬───────┐
+│ p │ q │ p ↑ q │
+├───┼───┼───────┤
+│ ⊤ │ ⊤ │ ⊥     │
+│ ⊥ │ ⊤ │ ⊤     │
+├───┼───┼───────┤
+│ ⊤ │ ⊥ │ ⊤     │
+│ ⊥ │ ⊥ │ ⊤     │
+└───┴───┴───────┘
+```
+"""
+const not_and = ↑ = Operator{:not_and}()
+
+"""
+    not_or(p, q)
+    p ↓ q
+
+Logical [non-disjunction](https://en.wikipedia.org/wiki/Logical_NOR) operator.
+
+`↓` can be typed by `\\downarrow[TAB]`.
+
+# Examples
+```jldoctest
+julia> @atomize TruthTable([p ↓ q])
+┌───┬───┬───────┐
+│ p │ q │ p ↓ q │
+├───┼───┼───────┤
+│ ⊤ │ ⊤ │ ⊥     │
+│ ⊥ │ ⊤ │ ⊥     │
+├───┼───┼───────┤
+│ ⊤ │ ⊥ │ ⊥     │
+│ ⊥ │ ⊥ │ ⊤     │
+└───┴───┴───────┘
+```
+"""
+const not_or = ↓ = Operator{:not_or}()
+
+"""
+    not_exclusive_or(p, q)
+    p ↔ q
+
+Logical [exclusive non-disjunction]
+(https://en.wikipedia.org/wiki/Logical_biconditional) operator.
+
+`↔` can be typed by `\\leftrightarrow[TAB]`.
+
+# Examples
+```jldoctest
+julia> @atomize TruthTable([p ↔ q])
+┌───┬───┬───────┐
+│ p │ q │ p ↔ q │
+├───┼───┼───────┤
+│ ⊤ │ ⊤ │ ⊤     │
+│ ⊥ │ ⊤ │ ⊥     │
+├───┼───┼───────┤
+│ ⊤ │ ⊥ │ ⊥     │
+│ ⊥ │ ⊥ │ ⊤     │
+└───┴───┴───────┘
+```
+"""
+const not_exclusive_or = ↔ = Operator{:not_exclusive_or}()
+
+"""
+    not_imply(p, q)
+    p ↛ q
+
+Logical [non-implication](https://en.wikipedia.org/wiki/Material_nonimplication) operator.
+
+`↛` can be typed by `\\nrightarrow[TAB]`.
+
+# Examples
+```jldoctest
+julia> @atomize TruthTable([p ↛ q])
+┌───┬───┬───────┐
+│ p │ q │ p ↛ q │
+├───┼───┼───────┤
+│ ⊤ │ ⊤ │ ⊥     │
+│ ⊥ │ ⊤ │ ⊥     │
+├───┼───┼───────┤
+│ ⊤ │ ⊥ │ ⊤     │
+│ ⊥ │ ⊥ │ ⊥     │
+└───┴───┴───────┘
+```
+"""
+const not_imply = ↛ = Operator{:not_imply}()
+
+"""
+    not_converse_imply(p, q)
+    p ↚ q
+
+Logical [converse non-implication](https://en.wikipedia.org/wiki/Converse_nonimplication) operator.
+
+`↚` can be typed by `\\nleftarrow[TAB]`.
+
+# Examples
+```jldoctest
+julia> @atomize TruthTable([p ↚ q])
+┌───┬───┬───────┐
+│ p │ q │ p ↚ q │
+├───┼───┼───────┤
+│ ⊤ │ ⊤ │ ⊥     │
+│ ⊥ │ ⊤ │ ⊤     │
+├───┼───┼───────┤
+│ ⊤ │ ⊥ │ ⊥     │
+│ ⊥ │ ⊥ │ ⊥     │
+└───┴───┴───────┘
+```
+"""
+const not_converse_imply = ↚ = Operator{:not_converse_imply}()
 
 # Nary Operators
 
@@ -408,7 +400,7 @@ A trait to indicate that a binary operator should fold left.
 Subtype of [`FoldDirection`](@ref).
 """
 struct Left <: FoldDirection end
-FoldDirection(::union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔, →, ↚))) = Left()
+FoldDirection(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔, →, ↚))) = Left()
 
 """
     Right <: FoldDirection
@@ -433,7 +425,7 @@ See also [`Operator`](@ref).
 julia> PAndQ.InitialValue(∧)
 PAndQ.HasInitialValue()
 
-julia> PAndQ.InitialValue(⊼)
+julia> PAndQ.InitialValue(↑)
 PAndQ.NoInitialValue()
 ```
 """
@@ -447,7 +439,7 @@ A trait to indicate that a binary operator has an initial value.
 Subtype of [`InitialValue`](@ref).
 """
 struct HasInitialValue <: InitialValue end
-InitialValue(::union_typeof((∧, ∨, ⊻, ↔, →, ↛, ←, ↚))) = HasInitialValue()
+InitialValue(::union_typeof((∧, ∨, ↮, ↔, →, ↛, ←, ↚))) = HasInitialValue()
 
 """
     NoInitialValue <: InitialValue
@@ -457,7 +449,7 @@ A trait to indicate that a binary operator does not have a neutral element.
 Subtype of [`InitialValue`](@ref).
 """
 struct NoInitialValue <: InitialValue end
-InitialValue(::union_typeof((⊼, ⊽))) = NoInitialValue()
+InitialValue(::union_typeof((↑, ↓))) = NoInitialValue()
 
 """
     initial_value(::Operator)
@@ -467,14 +459,14 @@ See also [`Operator`](@ref).
 # Examples
 ```jldoctest
 julia> PAndQ.initial_value(∧)
-Some(PAndQ.tautology)
+Some(Operator{:tautology}())
 
 julia> PAndQ.initial_value(∨)
-Some(PAndQ.contradiction)
+Some(Operator{:contradiction}())
 ```
 """
 initial_value(::union_typeof((∧, ↔, →, ←))) = Some(⊤)
-initial_value(::union_typeof((∨, ⊻, ↚, ↛))) = Some(⊥)
+initial_value(::union_typeof((∨, ↮, ↚, ↛))) = Some(⊥)
 
 ## Union Types
 
@@ -497,7 +489,7 @@ const UnaryOperator = union_typeof((𝒾, ¬))
 
 The `Union` of [Binary Operators](@ref binary_operators).
 """
-const BinaryOperator = union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔, →, ↛, ←, ↚))
+const BinaryOperator = union_typeof((∧, ↑, ↓, ∨, ↮, ↔, →, ↛, ←, ↚))
 
 """
     NaryOperator
@@ -505,13 +497,6 @@ const BinaryOperator = union_typeof((∧, ⊼, ⊽, ∨, ⊻, ↔, →, ↛, ←
 The `Union` of [Nary Operators](@ref nary_operators).
 """
 const NaryOperator = union_typeof((⋀, ⋁))
-
-"""
-    Operator
-
-The `Union` of [Operators](@ref operators_operators).
-"""
-const Operator = Union{NullaryOperator, UnaryOperator, BinaryOperator, NaryOperator}
 
 """
     AndOr
@@ -568,7 +553,7 @@ end
 # Examples
 ```jldoctest
 julia> fold(⊤)
-tautology (generic function with 1 method)
+⊤
 
 julia> @atomize fold(¬, (∧) => (p, q))
 ¬p ∧ ¬q
@@ -577,9 +562,8 @@ julia> @atomize fold(↔, (∧) => (p, q), (∨) => (r, s))
 (¬¬(p ↔ r) ∨ (p ↔ s)) ∧ (¬¬(q ↔ r) ∨ (q ↔ s))
 ```
 """
-fold(f::Function, pairs::Pair...) = _fold(pairs...)(f)()
+fold(f::Union{Function, Operator}, pairs::Pair...) = _fold(pairs...)(f)()
 fold(pair) = fold(𝒾, pair)
-
 
 """
     arity(operator)

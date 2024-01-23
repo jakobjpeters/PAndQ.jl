@@ -15,10 +15,10 @@ The operators [`tautology`](@ref) and [`contradiction`](@ref) are similar to the
 
 ```jldoctest
 julia> ⊤()
-tautology (generic function with 1 method)
+⊤
 
 julia> ⊥()
-contradiction (generic function with 1 method)
+⊥
 ```
 
 The symbols `!` and `¬` both represent the unary operator [`not`](@ref). The symbols `&` and `∧` represent the binary operator [`and`](@ref).

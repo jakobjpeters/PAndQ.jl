@@ -252,10 +252,10 @@ See also [`Compound`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize PAndQ.nodevalue(¬p)
-not (generic function with 6 methods)
+¬
 
 julia> @atomize PAndQ.nodevalue(p ∧ q)
-and (generic function with 11 methods)
+∧
 ```
 """
 nodevalue(::Union{Tree{O}, Clause{O}, Normal{O}}) where O = O.instance
@@ -575,14 +575,14 @@ Return an iterator of each [operator]
 # Examples
 ```jldoctest
 julia> @atomize collect(operators(¬p))
-1-element Vector{typeof(not)}:
- not (generic function with 6 methods)
+1-element Vector{Operator{:not}}:
+ ¬
 
 julia> @atomize collect(operators(¬p ∧ q))
-3-element Vector{Function}:
- and (generic function with 11 methods)
- not (generic function with 6 methods)
- identity (generic function with 1 method)
+3-element Vector{Operator}:
+ ∧
+ ¬
+ 𝒾
 ```
 """
 operators(p) = Iterators.filter(node -> !isa(node, Atom), nodevalues(PreOrderDFS(p)))
@@ -644,8 +644,8 @@ non-canonical propositions before converting them to a canonical form.
 
 # Examples
 ```jldoctest
-julia> @atomize normalize(∧, p ⊻ q)
-(¬q ∨ ¬p) ∧ (q ∨ p)
+julia> @atomize normalize(∧, ¬(p ∨ q))
+(¬p) ∧ (¬q)
 
 julia> @atomize normalize(∨, p ↔ q)
 (¬q ∧ ¬p) ∨ (q ∧ p)
@@ -708,10 +708,10 @@ tseytin(p) = tseytin(Tree(p))
 
 # Examples
 ```jldoctest
-julia> @atomize dimacs(p ⊻ q)
+julia> @atomize dimacs(p ↔ q)
 p cnf 2 2
--1 -2 0
-1 2 0
+1 -2 0
+-1 2 0
 
 julia> @atomize dimacs(String, p ↔ q)
 "p cnf 2 2\\n1 -2 0\\n-1 2 0\\n"

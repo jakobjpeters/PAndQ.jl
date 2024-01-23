@@ -105,6 +105,5 @@ PAndQ.base_type
 PAndQ.neutral_operator
 PAndQ.eval_doubles
 PAndQ.combine
-PAndQ.negated_normal_template
 convert(::Type{PAndQ.Atom}, ::PAndQ.Literal{typeof(𝒾)})
 ```
