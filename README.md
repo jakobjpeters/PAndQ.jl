@@ -34,6 +34,7 @@ PAndQ.jl is a [computer algebra system](https://en.wikipedia.org/wiki/Computer_a
 - Normalization
     - Negated, conjunctive, and disjunctive forms
     - Tseytin transformation
+    - DIMACS format
 - Satisfiability solving
 - Logical equivalence
 - Partial interpretation
