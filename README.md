@@ -89,11 +89,11 @@ julia> @variables p q
  p
  q
 
-julia> r = p ⊻ q
-p ⊻ q
+julia> r = p ↔ q
+p ↔ q
 
 julia> interpret(p => ⊤, r)
-⊤ ⊻ q
+⊤ ↔ q
 
 julia> valuation = collect(only(solutions(p ∧ q)))
 2-element Vector{Pair{PAndQ.Variable, Bool}}:
@@ -104,17 +104,17 @@ julia> interpret(valuation, p ∧ q)
 true
 
 julia> s = normalize(∧, r)
-(¬q ∨ ¬p) ∧ (q ∨ p)
+(¬p ∨ q) ∧ (¬q ∨ p)
 
 julia> TruthTable([p ∧ ¬p, ¬p, r, s])
 ┌────────┬───┬───┬────┬────────────────────────────┐
-│ p ∧ ¬p │ p │ q │ ¬p │ p ⊻ q, (¬q ∨ ¬p) ∧ (q ∨ p) │
+│ p ∧ ¬p │ p │ q │ ¬p │ p ↔ q, (¬p ∨ q) ∧ (¬q ∨ p) │
 ├────────┼───┼───┼────┼────────────────────────────┤
-│ ⊥      │ ⊤ │ ⊤ │ ⊥  │ ⊥                          │
-│ ⊥      │ ⊥ │ ⊤ │ ⊤  │ ⊤                          │
+│ ⊥      │ ⊤ │ ⊤ │ ⊥  │ ⊤                          │
+│ ⊥      │ ⊥ │ ⊤ │ ⊤  │ ⊥                          │
 ├────────┼───┼───┼────┼────────────────────────────┤
-│ ⊥      │ ⊤ │ ⊥ │ ⊥  │ ⊤                          │
-│ ⊥      │ ⊥ │ ⊥ │ ⊤  │ ⊥                          │
+│ ⊥      │ ⊤ │ ⊥ │ ⊥  │ ⊥                          │
+│ ⊥      │ ⊥ │ ⊥ │ ⊤  │ ⊤                          │
 └────────┴───┴───┴────┴────────────────────────────┘
 ```
 
