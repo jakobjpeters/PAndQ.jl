@@ -154,7 +154,11 @@ is_satisfiable(pico_sat) = picosat_sat(pico_sat, -1) == 10
 """
     isdone(solutions::Solutions, pico_sat = solutions.pico_sat)
 """
-isdone(solutions::Solutions, pico_sat = solutions.pico_sat) = pico_sat == C_NULL || !is_satisfiable(pico_sat)
+isdone(solutions::Solutions, pico_sat = solutions.pico_sat) = pico_sat == C_NULL ||
+    let _is_satisfiable = is_satisfiable(pico_sat)
+        _is_satisfiable || finalize(solutions)
+        !_is_satisfiable
+    end
 
 """
     iterate(solutions::Solutions, pico_sat = solutions.pico_sat)
@@ -163,16 +167,12 @@ If the status of `pico_sat` [`is_satisfiable`](@ref),
 return a `Tuple` of the current solution and `pico_sat`.
 Otherwise, [`finalize!`](@ref) the `solutions` and return `nothing`.
 """
-iterate(solutions::Solutions, pico_sat = solutions.pico_sat) =
-    if !isdone(solutions)
-        if is_satisfiable(pico_sat)
-            atoms_truths = enumerate(Iterators.filter(!=(0), map(
-                atom -> picosat_deref(pico_sat, atom), 1:picosat_variables(pico_sat))))
-            add_clause(pico_sat, Iterators.map((-) ∘ splat(flipsign), atoms_truths))
-            Iterators.map(splat(*), atoms_truths), pico_sat
-        else finalize(solutions)
-        end
-    end
+iterate(solutions::Solutions, pico_sat = solutions.pico_sat) = if !isdone(solutions)
+    atoms_truths = enumerate(Iterators.filter(!=(0), map(
+        atom -> picosat_deref(pico_sat, atom), 1:picosat_variables(pico_sat))))
+    add_clause(pico_sat, Iterators.map((-) ∘ splat(copysign), atoms_truths))
+    Iterators.map(splat(*), atoms_truths), pico_sat
+end
 
 """
     dimacs(io, clauses)
@@ -201,11 +201,7 @@ function dimacs(io::IO, clauses)
     write(io, _read)
     nothing
 end
-function dimacs(::Type{String}, clauses)
-    buffer = IOBuffer()
-    dimacs(buffer, clauses)
-    String(take!(buffer))
-end
+dimacs(::Type{String}, clauses) = sprint(dimacs, clauses)
 dimacs(path::String, clauses) = open(file -> dimacs(file, clauses), path; truncate = true)
 
 end # module
