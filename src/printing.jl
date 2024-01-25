@@ -142,20 +142,20 @@ print_node(io, ::Tree{typeof(𝒾)}) = nothing
 print_node(io, p) = printnode(io, p)
 
 """
-    show_atom(::IO, ::Atom)
+    show_atom(::IO, ::Atom, ::Bool)
 
 See also [`Atom`](@ref).
 """
-function show_atom(io, p::Constant)
+function show_atom(io, p::Constant, verbose)
     _io = IOContext(io, :compact => get(io, :compact, true))
-    if get(io, :verbose, false) show(_io, p.value)
+    if verbose show(_io, p.value)
     else
         print(_io, "\$(")
         show(_io, p.value)
         print(_io, ")")
     end
 end
-show_atom(io, p::Variable) = (get(io, :verbose, false) ? show : print)(io, p.symbol)
+show_atom(io, p::Variable, verbose) = (verbose ? show : print)(io, p.symbol)
 
 """
     base_type(::Union{<:Type{<:Proposition}}, Proposition)
@@ -169,7 +169,7 @@ end
 # `show`
 
 """
-    show(::IO, ::MIME"text/plain", ::Operator
+    show(::IO, ::MIME"text/plain", ::Operator)
 """
 show(io::IO, ::MIME"text/plain", o::Operator) = print(io, symbol_of(o))
 
@@ -191,13 +191,15 @@ julia> @atomize show(stdout, MIME"text/plain"(), normalize(∧, p ↔ q))
 (¬p ∨ q) ∧ (¬q ∨ p)
 ```
 """
-show(io::IO, ::MIME"text/plain", p::Atom) =
-    if get(io, :verbose, false)
+function show(io::IO, ::MIME"text/plain", p::Atom)
+    verbose = get(io, :verbose, false)
+    if verbose
         print(io, base_type(p), "(")
-        show_atom(io, p)
+        show_atom(io, p, verbose)
         print(io, ")")
-    else show_atom(io, p)
+    else show_atom(io, p, verbose)
     end
+end
 function show(io::IO, ::MIME"text/plain", p::Tree{<:UnaryOperator})
     print_node(io, p)
     parenthesize(io, child(p))
