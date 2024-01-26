@@ -459,14 +459,14 @@ See also [`Operator`](@ref).
 # Examples
 ```jldoctest
 julia> PAndQ.initial_value(∧)
-Some(Operator{:tautology}())
+⊤
 
 julia> PAndQ.initial_value(∨)
-Some(Operator{:contradiction}())
+⊥
 ```
 """
-initial_value(::union_typeof((∧, ↔, →, ←))) = Some(⊤)
-initial_value(::union_typeof((∨, ↮, ↚, ↛))) = Some(⊥)
+initial_value(::union_typeof((∧, ↔, →, ←))) = ⊤
+initial_value(::union_typeof((∨, ↮, ↚, ↛))) = ⊥
 
 ## Union Types
 
@@ -511,8 +511,10 @@ ____fold(::Left) = mapfoldl
 ____fold(::Right) = mapfoldr
 
 ___fold(::NoInitialValue, mapfold, f, operator, xs) = mapfold(f, operator, xs)
-___fold(::HasInitialValue, mapfold, f, operator, xs) =
-    something(mapfold(f, operator, xs; init = initial_value(operator)))
+function ___fold(::HasInitialValue, mapfold, f, operator, xs)
+    _initial_value = initial_value(operator)
+    isempty(xs) ? _initial_value : mapfold(f, operator, xs)
+end
 
 __fold(f, operator, xs) = g -> (args...) -> ___fold(InitialValue(operator),
     ____fold(FoldDirection(operator)), x -> f(g)(args..., x), operator, xs)
@@ -559,7 +561,7 @@ julia> @atomize fold(¬, (∧) => (p, q))
 ¬p ∧ ¬q
 
 julia> @atomize fold(↔, (∧) => (p, q), (∨) => (r, s))
-(¬¬(p ↔ r) ∨ (p ↔ s)) ∧ (¬¬(q ↔ r) ∨ (q ↔ s))
+((p ↔ r) ∨ (p ↔ s)) ∧ ((q ↔ r) ∨ (q ↔ s))
 ```
 """
 fold(f::Union{Function, Operator}, pairs::Pair...) = _fold(pairs...)(f)()

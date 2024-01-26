@@ -234,12 +234,9 @@ julia> @atomize PAndQ.children(p ∧ q)
 """
 children(p::Tree) = p.nodes
 children(p::Clause) = Iterators.map(i -> Literal(signbit(i) ? (¬) : 𝒾, p.atoms[abs(i)]), p.literals)
-function children(p::Normal)
-    and_or = dual(nodevalue(p))
-    Iterators.map(p.clauses) do clause
-        atoms = p.atoms[collect(Iterators.map(abs, clause))]
-        Clause(and_or, atoms, Set(Iterators.map(literal -> sign(literal) * findfirst(==(p.atoms[abs(literal)]), atoms), clause)))
-    end
+children(p::Normal) = Iterators.map(p.clauses) do clause
+    atoms = p.atoms[collect(Iterators.map(abs, clause))]
+    Clause(dual(nodevalue(p)), atoms, Set(Iterators.map(literal -> sign(literal) * findfirst(==(p.atoms[abs(literal)]), atoms), clause)))
 end
 
 """
@@ -337,51 +334,6 @@ function atomize(x::Expr)
     end
 end
 atomize(x) = x
-
-__negated_normal(p::Tree{<:NullaryOperator}) = Some(nodevalue(p))
-__negated_normal(p) = p
-
-_negated_normal(p::Some) = Tree(something(p))
-_negated_normal(p::Tree{typeof(¬), <:Tree{typeof(¬)}}) = Tree(child(child(p)))
-_negated_normal(p) = p
-
-__negated_normal!(output_stack, operator, nodes...) =
-    push!(output_stack, _negated_normal(Tree(something(operator(map(__negated_normal, nodes)...)))))
-
-_negated_normal!(operator_stack, i, p::Tree{typeof(𝒾)}) = operators
-_negated_normal!(operator_stack, i, p) = push!(operator_stack, i => nodevalue(p))
-
-negated_normal!(operator_stack, input_stack, output_stack, operator::UnaryOperator) =
-    operator_stack, input_stack, __negated_normal!(output_stack, operator, pop!(output_stack))
-negated_normal!(operator_stack, input_stack, output_stack, operator::AndOr) =
-    operator_stack, input_stack, __negated_normal!(output_stack, operator, pop!(output_stack), pop!(output_stack))
-negated_normal!(operator_stack, input_stack, output_stack, p::Union{Tree{<:NullaryOperator}, Literal}) =
-    operator_stack, input_stack, push!(output_stack, p)
-negated_normal!(operator_stack, input_stack, output_stack, p::Tree{typeof(¬), <:Tree{typeof(¬)}}) =
-    operator_stack, push!(input_stack, Tree(child(child(p)))), output_stack
-function negated_normal!(operators, input_stack, output_stack, p::Tree{typeof(¬)})
-    _child = child(p)
-    operators, push!(input_stack, Tree(dual(nodevalue(_child))(map(¬, _child.nodes)...))), output_stack
-end
-negated_normal!(operator_stack, input_stack, output_stack, p::Tree{<:Union{typeof(𝒾), AndOr}}) =
-    _negated_normal!(operator_stack, length(output_stack), p), append!(input_stack, p.nodes), output_stack
-
-"""
-    negated_normal(p)
-"""
-function negated_normal(p)
-    operator_stack, input_stack, output_stack = Pair{Int, Operator}[], Tree[p], Tree[]
-
-    while !all(isempty, (operator_stack, input_stack))
-        i_operator = isempty(operator_stack) ? nothing : last(operator_stack)
-        negated_normal!(operator_stack, input_stack, output_stack,
-            isnothing(i_operator) || first(i_operator) + arity(last(i_operator)) != length(output_stack) ?
-                pop!(input_stack) :
-                last(pop!(operator_stack)))
-    end
-
-    only(output_stack)
-end
 
 ___distribute(p::Tree{typeof(∧)}, q) = distribute(p ∨ q)
 ___distribute(p, q) = p ∨ q
@@ -653,13 +605,50 @@ julia> @atomize normalize(∨, p ↔ q)
 (¬q ∧ ¬p) ∨ (q ∧ p)
 ```
 """
-normalize(::typeof(¬), p::Tree) = something(negated_normal(p))
+function normalize(::typeof(¬), p::Tree)
+    operator_stack, input_stack, output_stack = Pair{Int, Operator}[], Tree[p], Tree[]
+
+    while !isempty(input_stack)
+        q = pop!(input_stack)
+        if typeof(q) <: Union{Tree{<:NullaryOperator}, Literal} push!(output_stack, q)
+        else
+            o = nodevalue(q)
+            nodes = q.nodes
+            if q isa Literal push!(output_stack, q)
+            elseif o isa AndOr
+                push!(operator_stack, length(input_stack) => o)
+                append!(input_stack, nodes)
+            else push!(input_stack, evaluate(o, nodes...))
+            end
+        end
+    end
+
+    isempty(operator_stack) && append!(input_stack, output_stack)
+
+    while !isempty(operator_stack)
+        i, o = pop!(operator_stack)
+        _arity = arity(o)
+
+        while i + _arity > length(input_stack)
+            push!(input_stack, pop!(output_stack))
+        end
+
+        push!(input_stack,
+            if _arity == 0 o()
+            elseif _arity == 1 o(pop!(input_stack))
+            else evaluate(o, pop!(input_stack), pop!(input_stack))
+            end
+        )
+    end
+
+    only(input_stack)
+end
 function normalize(::typeof(∧), p::Tree)
     q, rs = flatten(p)
     q ∧ first(flatten(something(fold(r -> distribute(normalize(¬, r)), (∧) => rs))))
 end
 normalize(::typeof(∨), p) = ¬normalize(∧, ¬p)
-normalize(operator, p) = normalize(operator, Tree(p))
+normalize(o, p) = normalize(o, Tree(p))
 
 _tseytin(p::Union{Atom, Tree{typeof(𝒾), <:Atom}}) = p
 _tseytin(p) = Variable(gensym())

@@ -84,7 +84,6 @@ PAndQ.nodetype
 ```@docs
 PAndQ.child
 PAndQ.atomize
-PAndQ.negated_normal
 PAndQ.distribute
 PAndQ.flatten
 ```
@@ -104,6 +103,6 @@ PAndQ.base_type
 ```@docs
 PAndQ.neutral_operator
 PAndQ.eval_doubles
-PAndQ.combine
 convert(::Type{PAndQ.Atom}, ::PAndQ.Literal{typeof(𝒾)})
+promote_rule
 ```

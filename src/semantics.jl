@@ -1,5 +1,5 @@
 
-import Base: Bool, Fix2, convert, ==, <
+import Base: Bool, Fix2, convert, promote_rule, ==, <
 using Base: Iterators.product, uniontypes
 using .PicoSAT: Solutions
 
@@ -30,26 +30,6 @@ eval_doubles(f, doubles) = for double in doubles
     for (left, right) in (double, reverse(double))
         @eval $f(::typeof($left)) = $right
     end
-end
-
-"""
-    combine(p, q)
-"""
-function combine(p, q)
-    p_atoms, q_atoms = p.atoms, q.atoms
-    atom_type = promote_type(eltype(p_atoms), eltype(q_atoms))
-    mapping = Dict{atom_type, Int}(Iterators.map(reverse, pairs(p_atoms)))
-    atoms = append!(atom_type[], p_atoms)
-
-    atoms, p.clauses ∪ Iterators.map(
-        clause -> Set(Iterators.map(clause) do literal
-            atom = q_atoms[abs(literal)]
-            sign(literal) * get!(mapping, atom) do
-                push!(atoms, atom)
-                lastindex(atoms)
-            end
-        end),
-    q.clauses)
 end
 
 # Truths
@@ -504,7 +484,7 @@ julia> @atomize imply(p, q) == not(dual(imply)(not(p), not(q)))
 true
 ```
 """
-dual(unary_operator::UnaryOperator) = unary_operator
+dual(o::UnaryOperator) = o
 
 eval_doubles(:dual, (
     (⊤, ⊥),
@@ -543,8 +523,6 @@ eval_doubles(:converse, ((→, ←), (↛, ↚)))
 
 # Operators
 
-## Bool
-
 """
     Bool(nullary_operator)
 
@@ -561,81 +539,68 @@ false
 """
 Bool(nullary_operator::NullaryOperator) = convert(Bool, nullary_operator)
 
-(::typeof(¬))(p::Bool) = !p
-(::typeof(∧))(p::Bool, q::Bool) = p && Bool(q)
-(::typeof(∨))(p::Bool, q::Bool) = p || Bool(q)
-(o::union_typeof((∧, ∨)))(p::Bool, q::NullaryOperator) = o(p, Bool(q))
-(o::union_typeof((∧, ∨)))(p::NullaryOperator, q::Bool) = o(q, p)
+(o::typeof(𝒾))(p) = evaluate(o, p)
+(o::typeof(¬))(p::Normal) = evaluate(o, p)
+(o::BinaryOperator)(p::Normal, q::Normal) = evaluate(o, p, q)
+(o::Union{NullaryOperator, typeof(¬), BinaryOperator})(ps::Bool...) = evaluate(o, ps...)
+(o::Union{NullaryOperator, typeof(¬), BinaryOperator})(ps...) = Tree(o, map(Tree, ps)...)
 
-## Operators
+___evaluate(::typeof(∧), ::typeof(⊤), q) = q
+___evaluate(::typeof(∧), ::typeof(⊥), q) = ⊥
+___evaluate(::typeof(∨), ::typeof(⊤), q) = ⊤
+___evaluate(::typeof(∨), ::typeof(⊥), q) = q
+___evaluate(o, p::Tree{<:NullaryOperator}, q) = ___evaluate(o, nodevalue(p), q)
 
-### NullaryOperators
+__evaluate(o, p::Union{NullaryOperator, Tree{<:NullaryOperator}}, q) = ___evaluate(o, p, q)
+__evaluate(o, p, q) = o(p, q)
 
-(o::union_typeof((⊤, ⊥)))() = o
+_evaluate(o, p::Union{NullaryOperator, Tree{<:NullaryOperator}}, q) = ___evaluate(o, p, q)
+_evaluate(o, p, q) = __evaluate(o, q, p)
 
-### Unary Operators
-
-(::typeof(¬))(p::NullaryOperator) = ¬Tree(p)
-
-### Binary Operators
-
-(::typeof(∨))(p::Some{<:NullaryOperator}, q::Atom) = normalize(¬, ¬(p ↓ q))
-(::typeof(∨))(
-    p::Union{NullaryOperator, Some{<:NullaryOperator}, Proposition},
-    q::Union{NullaryOperator, Some{<:NullaryOperator}, Proposition}
-) = ¬(p ↓ q)
-
-for (left, right) in (
-    :not_and => :(¬(p ∧ q)),
-    :not_or => :(¬p ∧ ¬q),
-    :exclusive_or => :((p ∨ q) ∧ (p ↑ q)),
-    :not_exclusive_or => :((p ∧ q) ∨ (p ↓ q)),
-    :not_imply => :(p ∧ ¬q),
-    :imply => :(¬p ∨ q),
-    :not_converse_imply => :(¬p ∧ q),
-    :converse_imply => :(p ∨ ¬q)
-) @eval begin
-    function negated_normal!(operator_stack, input_stack, output_stack, node::Tree{Operator{$(QuoteNode(left))}})
-        p, q = node.nodes
-        operator_stack, push!(input_stack, $right), output_stack
-    end
-    PAndQ.$left(p::Normal, q::Normal) = $right
-    PAndQ.$left(p::Some{<:NullaryOperator}, q::Atom) = normalize(¬, $right)
-    PAndQ.$left(
-        p::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition},
-        q::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition}
-    ) = $right
-end end
-
-## Propositions
-
-(::typeof(𝒾))(p) = p
-(::typeof(¬))(::Some{typeof(⊤)}) = Some(⊥)
-(::typeof(¬))(::Some{typeof(⊥)}) = Some(⊤)
-(::typeof(¬))(p::Union{Atom, Tree}) = Tree(¬, p)
-(::typeof(¬))(p::Normal) =
+evaluate(o::NullaryOperator) = o
+evaluate(::typeof(𝒾), p) = p
+evaluate(::typeof(¬), p::Bool) = !p
+evaluate(::typeof(¬), p::NullaryOperator) = dual(p)
+evaluate(::typeof(¬), p::Tree{typeof(𝒾)}) = ¬child(p)
+evaluate(::typeof(¬), p::Tree{typeof(¬)}) = child(p)
+evaluate(::typeof(¬), p::Tree) = dual(nodevalue(p))(map(¬, p.nodes)...)
+evaluate(::typeof(¬), p::Normal) =
     Normal(dual(nodevalue(p)), p.atoms, Set(Iterators.map(clause -> Set(Iterators.map(-, clause)), p.clauses)))
+evaluate(::typeof(∧), p::Bool, q::Bool) = p && q
+evaluate(::typeof(∨), p::Bool, q::Bool) = p || q
+function evaluate(o::AO, p::Normal{AO}, q::Normal{AO}) where AO <: AndOr
+    p_atoms, q_atoms = p.atoms, q.atoms
+    atom_type = promote_type(eltype(p_atoms), eltype(q_atoms))
+    mapping = Dict{atom_type, Int}(Iterators.map(reverse, pairs(p_atoms)))
+    atoms = append!(atom_type[], p_atoms)
 
-(::typeof(∧))(::Some{typeof(⊤)}, q::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition}) = q
-(::typeof(∧))(p::Some{typeof(⊥)}, q::Union{Bool, Some{<:NullaryOperator}, NullaryOperator, Proposition}) = p
-(::typeof(∧))(p::Union{Bool, NullaryOperator, Proposition}, q::Some{<:NullaryOperator}) = q ∧ p
-
-for bo in (:←, :∧, :∨, :→, :↮, :↑, :↓, :↛, :↔, :↚) @eval begin
-    PAndQ.$bo(p::Union{Some{<:NullaryOperator}, NullaryOperator, Proposition}) = Fix2($bo, p)
-    PAndQ.$bo(p::Union{NullaryOperator, Atom, Tree}, q::Union{NullaryOperator, Atom, Tree}) =
-        Tree($bo, Tree(p), Tree(q))
-    PAndQ.$bo(p::Normal, q::Union{NullaryOperator, Proposition}) = $bo(Tree(p), q)
-    PAndQ.$bo(p::Union{NullaryOperator, Proposition}, q::Normal) = $bo(p, Tree(q))
-end end
-
-(::typeof(∧))(p::Normal{typeof(∧)}, q::Normal{typeof(∧)}) = Normal(∧, combine(p, q)...)
-(::typeof(∨))(p::Normal{typeof(∨)}, q::Normal{typeof(∨)}) = Normal(∨, combine(p, q)...)
-(::typeof(∧))(p::Normal, q::Normal) = Normal(∧, p) ∧ Normal(∧, q)
-(::typeof(∨))(p::Normal, q::Normal) = Normal(∨, p) ∨ Normal(∨, q)
+    Normal(o, atoms, p.clauses ∪ Iterators.map(
+        clause -> Set(Iterators.map(clause) do literal
+            atom = q_atoms[abs(literal)]
+            sign(literal) * get!(mapping, atom) do
+                push!(atoms, atom)
+                lastindex(atoms)
+            end
+        end),
+    q.clauses))
+end
+evaluate(o::AndOr, p::Normal, q::Normal) = o(Normal(o, p), Normal(o, q))
+evaluate(o::AndOr, p, q) = _evaluate(o, p, q)
+evaluate(::typeof(→), p, q) = ¬p ∨ q
+evaluate(::typeof(↮), p, q) = (p ∨ q) ∧ (p ↑ q)
+evaluate(::typeof(←), p, q) = p ∨ ¬q
+evaluate(::typeof(↑), p, q) = ¬(p ∧ q)
+evaluate(::typeof(↓), p, q) = ¬p ∧ ¬q
+evaluate(::typeof(↛), p, q) = p ∧ ¬q
+evaluate(::typeof(↔), p, q) = (p ∧ q) ∨ (p ↓ q)
+evaluate(::typeof(↚), p, q) = ¬p ∧ q
+evaluate(o, ps...) = evaluate(o, promote(ps...)...)
 
 # Constructors
 
 Literal(uo, p::Atom) = Tree(uo, p)
+
+Tree(::typeof(¬), p::Tree{typeof(𝒾)}) = Tree(¬, child(p))
 
 for P in (:Atom, :Literal, :Tree)
     @eval $P(p) = convert($P, p)
@@ -659,8 +624,15 @@ convert(::Type{Atom}, p::Literal{typeof(𝒾)}) = child(p)
 convert(::Type{Literal}, p::Atom) = Tree(p)
 convert(::Type{Tree}, p::NullaryOperator) = Tree(p)
 convert(::Type{Tree}, p::Atom) = Tree(𝒾, p)
-convert(::Type{Tree}, p::Normal) = map(𝒾, p)
+convert(::Type{Tree}, p::Normal) = normalize(¬, map(𝒾, p))
 convert(::Type{Normal{AO}}, p::Union{NullaryOperator, Proposition}) where AO =
     normalize(AO.instance, p)
 convert(::Type{Proposition}, p::NullaryOperator) = Tree(p)
 convert(P::Type{<:Proposition}, p::Some{<:NullaryOperator}) = convert(P, something(p))
+
+"""
+    promote_rule
+"""
+promote_rule(::Type{Bool}, ::Type{<:NullaryOperator}) = Bool
+promote_rule(::Type{<:Atom}, ::Type{<:Atom}) = Atom
+promote_rule(::Type{<:Union{NullaryOperator, Proposition}}, ::Type{<:Union{NullaryOperator, Proposition}}) = Tree
