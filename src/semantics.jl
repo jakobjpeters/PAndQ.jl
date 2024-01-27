@@ -610,7 +610,6 @@ Normal(::AO, p) where AO = convert(Normal{AO}, p)
 
 # Utilities
 
-convert(::Type{Bool}, p::Some{<:NullaryOperator}) = Bool(something(p))
 convert(::Type{Bool}, ::typeof(⊤)) = true
 convert(::Type{Bool}, ::typeof(⊥)) = false
 convert(::Type{Bool}, p::Tree{<:NullaryOperator}) = Bool(nodevalue(p))
@@ -628,7 +627,6 @@ convert(::Type{Tree}, p::Normal) = normalize(¬, map(𝒾, p))
 convert(::Type{Normal{AO}}, p::Union{NullaryOperator, Proposition}) where AO =
     normalize(AO.instance, p)
 convert(::Type{Proposition}, p::NullaryOperator) = Tree(p)
-convert(P::Type{<:Proposition}, p::Some{<:NullaryOperator}) = convert(P, something(p))
 
 """
     promote_rule
