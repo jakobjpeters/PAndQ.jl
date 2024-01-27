@@ -485,6 +485,7 @@ true
 ```
 """
 dual(o::UnaryOperator) = o
+dual(o) = (ps...) -> map(¬, ¬normalize(∧, o(ps...)))
 
 eval_doubles(:dual, (
     (⊤, ⊥),
@@ -517,7 +518,7 @@ julia> @atomize imply(p, q) == converse(imply)(q, p)
 true
 ```
 """
-converse(binary_operator::union_typeof((∧, ∨, ↑, ↓, ↔, ↮))) = binary_operator
+converse(o::union_typeof((∧, ∨, ↑, ↓, ↔, ↮))) = o
 
 eval_doubles(:converse, ((→, ←), (↛, ↚)))
 
@@ -537,7 +538,7 @@ julia> Bool(⊥)
 false
 ```
 """
-Bool(nullary_operator::NullaryOperator) = convert(Bool, nullary_operator)
+Bool(o::NullaryOperator) = convert(Bool, o)
 
 f(o, ps::Bool...) = evaluate(o, ps...)
 f(o, ps...) = Tree(o, map(Tree, ps)...)
