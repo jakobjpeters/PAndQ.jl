@@ -101,7 +101,6 @@ PAndQ.base_type
 ## Semantics
 
 ```@docs
-PAndQ.neutral_operator
 PAndQ.eval_doubles
 convert(::Type{PAndQ.Atom}, ::PAndQ.Literal{typeof(𝒾)})
 promote_rule

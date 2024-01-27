@@ -6,24 +6,6 @@ using .PicoSAT: Solutions
 # Internals
 
 """
-    neutral_operator(::NullaryOperator)
-
-Return one of [`AndOr`](@ref) that is the neutral
-element of the given [`NullaryOperator`](@ref).
-
-# Examples
-```jldoctest
-julia> PAndQ.neutral_operator(⊤)
-∧
-
-julia> PAndQ.neutral_operator(⊥)
-∨
-```
-"""
-neutral_operator(::typeof(⊤)) = ∧
-neutral_operator(::typeof(⊥)) = ∨
-
-"""
     eval_doubles(f, doubles)
 """
 eval_doubles(f, doubles) = for double in doubles
@@ -452,12 +434,10 @@ julia> @atomize p < p
 false
 ```
 """
-p::NullaryOperator < q::NullaryOperator = p == ⊥ && q == ⊤
-::Union{Atom, Literal} < ::Union{Atom, Literal} = false
 p::Bool < q::Union{NullaryOperator, Proposition} = p ? false : is_satisfiable(q)
-p::NullaryOperator < q::Union{Bool, Proposition} = Bool(p) < q
+p::NullaryOperator < q::Union{Bool, NullaryOperator, Proposition} = Bool(p) < q
 p::Proposition < q::Union{Bool, NullaryOperator} = ¬q < ¬p
-<(p::Proposition, q::Proposition) =
+p::Proposition < q::Proposition =
     is_contradiction(p) ? is_satisfiable(q) : !is_tautology(p) && is_tautology(q)
 
 # Properties
