@@ -539,11 +539,14 @@ false
 """
 Bool(nullary_operator::NullaryOperator) = convert(Bool, nullary_operator)
 
+f(o, ps::Bool...) = evaluate(o, ps...)
+f(o, ps...) = Tree(o, map(Tree, ps)...)
+
 (o::typeof(𝒾))(p) = evaluate(o, p)
 (o::typeof(¬))(p::Normal) = evaluate(o, p)
 (o::BinaryOperator)(p::Normal, q::Normal) = evaluate(o, p, q)
-(o::Union{NullaryOperator, typeof(¬), BinaryOperator})(ps::Bool...) = evaluate(o, ps...)
-(o::Union{NullaryOperator, typeof(¬), BinaryOperator})(ps...) = Tree(o, map(Tree, ps)...)
+(o::NaryOperator)(ps) = evaluate(o, ps)
+(o::Operator)(ps...) = f(o, ps...)
 
 ___evaluate(::typeof(∧), ::typeof(⊤), q) = q
 ___evaluate(::typeof(∧), ::typeof(⊥), q) = ⊥
@@ -594,6 +597,8 @@ evaluate(::typeof(↓), p, q) = ¬p ∧ ¬q
 evaluate(::typeof(↛), p, q) = p ∧ ¬q
 evaluate(::typeof(↔), p, q) = (p ∧ q) ∨ (p ↓ q)
 evaluate(::typeof(↚), p, q) = ¬p ∧ q
+evaluate(::typeof(⋀), ps) = fold(𝒾, (∧) => ps)
+evaluate(::typeof(⋁), ps) = fold(𝒾, (∨) => ps)
 evaluate(o, ps...) = evaluate(o, promote(ps...)...)
 
 # Constructors

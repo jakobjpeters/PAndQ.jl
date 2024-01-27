@@ -349,8 +349,7 @@ julia> @atomize ⋀((p, q, r, s))
 ((p ∧ q) ∧ r) ∧ s
 ```
 """
-conjunction(ps) = fold(𝒾, (∧) => ps)
-const ⋀ = conjunction
+const conjunction = ⋀ = Operator{:conjunction}()
 
 """
     disjunction(ps)
@@ -368,8 +367,7 @@ julia> @atomize ⋁((p, q, r, s))
 ((p ∨ q) ∨ r) ∨ s
 ```
 """
-disjunction(ps) = fold(𝒾, (∨) => ps)
-const ⋁ = disjunction
+const disjunction = ⋁ = Operator{:disjunction}()
 
 # Internals
 
