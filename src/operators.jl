@@ -411,45 +411,6 @@ struct Right <: FoldDirection end
 FoldDirection(::union_typeof((↛, ←))) = Right()
 
 """
-    InitialValue(::Operator)
-
-A trait to indicate whether a binary operator has an initial value.
-
-Supertype of [`HasInitialValue`](@ref) and [`NoInitialValue`](@ref).
-See also [`Operator`](@ref).
-
-# Examples
-```jldoctest
-julia> PAndQ.InitialValue(∧)
-PAndQ.HasInitialValue()
-
-julia> PAndQ.InitialValue(↑)
-PAndQ.NoInitialValue()
-```
-"""
-abstract type InitialValue end
-
-"""
-    HasInitialValue <: InitialValue
-
-A trait to indicate that a binary operator has an initial value.
-
-Subtype of [`InitialValue`](@ref).
-"""
-struct HasInitialValue <: InitialValue end
-InitialValue(::union_typeof((∧, ∨, ↮, ↔, →, ↛, ←, ↚))) = HasInitialValue()
-
-"""
-    NoInitialValue <: InitialValue
-
-A trait to indicate that a binary operator does not have a neutral element.
-
-Subtype of [`InitialValue`](@ref).
-"""
-struct NoInitialValue <: InitialValue end
-InitialValue(::union_typeof((↑, ↓))) = NoInitialValue()
-
-"""
     initial_value(::Operator)
 
 See also [`Operator`](@ref).
@@ -457,14 +418,15 @@ See also [`Operator`](@ref).
 # Examples
 ```jldoctest
 julia> PAndQ.initial_value(∧)
-⊤
+Some(Operator{:tautology}())
 
 julia> PAndQ.initial_value(∨)
-⊥
+Some(Operator{:contradiction}())
 ```
 """
-initial_value(::union_typeof((∧, ↔, →, ←))) = ⊤
-initial_value(::union_typeof((∨, ↮, ↚, ↛))) = ⊥
+initial_value(::union_typeof((∧, ↔, →, ←))) = Some(⊤)
+initial_value(::union_typeof((∨, ↮, ↚, ↛))) = Some(⊥)
+initial_value(o) = nothing
 
 ## Union Types
 
@@ -508,14 +470,13 @@ const AndOr = union_typeof((∧, ∨))
 ____fold(::Left) = mapfoldl
 ____fold(::Right) = mapfoldr
 
-___fold(::NoInitialValue, mapfold, f, operator, xs) = mapfold(f, operator, xs)
-function ___fold(::HasInitialValue, mapfold, f, operator, xs)
-    _initial_value = initial_value(operator)
-    isempty(xs) ? _initial_value : mapfold(f, operator, xs)
-end
+___fold(mapfold, f, operator, xs, ::Nothing) = mapfold(f, operator, xs)
+___fold(mapfold, f, operator, xs, initial_value::Some) =
+    isempty(xs) ? something(initial_value) : mapfold(f, operator, xs)
 
-__fold(f, operator, xs) = g -> (args...) -> ___fold(InitialValue(operator),
-    ____fold(FoldDirection(operator)), x -> f(g)(args..., x), operator, xs)
+__fold(f, operator, xs) = g -> (args...) -> ___fold(
+    ____fold(FoldDirection(operator)), x -> f(g)(args..., x),
+operator, xs, initial_value(operator))
 
 _fold() = 𝒾
 _fold((operator, xs)) = __fold(𝒾, operator, xs)
@@ -525,7 +486,7 @@ _fold((operator, xs), pairs...) = __fold(_fold(pairs...), operator, xs)
     fold(f, pairs...)
 
 A generalization of `mapreduce` with an arbitrary number of nested folds
-and traits to determine the [`FoldDirection`](@ref) and [`InitialValue`](@ref).
+and traits to determine the [`FoldDirection`](@ref) and initial value.
 
 The function `f` must accept as many arguments as there are `pairs`.
 Each pair must be an two element iterable where the first element is a

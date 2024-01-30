@@ -19,9 +19,6 @@ Modules = [PicoSAT]
 PAndQ.FoldDirection
 PAndQ.Left
 PAndQ.Right
-PAndQ.InitialValue
-PAndQ.HasInitialValue
-PAndQ.NoInitialValue
 PAndQ.initial_value
 ```
 
