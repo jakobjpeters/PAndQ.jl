@@ -389,6 +389,7 @@ PAndQ.Right()
 ```
 """
 abstract type FoldDirection end
+FoldDirection(o) = throw(InterfaceError(FoldDirection, o))
 
 """
     Left <: FoldDirection
@@ -422,11 +423,14 @@ Some(Operator{:tautology}())
 
 julia> PAndQ.initial_value(∨)
 Some(Operator{:contradiction}())
+
+julia> PAndQ.initial_value(↑)
 ```
 """
 initial_value(::union_typeof((∧, ↔, →, ←))) = Some(⊤)
 initial_value(::union_typeof((∨, ↮, ↚, ↛))) = Some(⊥)
-initial_value(o) = nothing
+initial_value(::union_typeof((↑, ↓))) = nothing
+initial_value(o) = throw(InterfaceError(initial_value, o))
 
 ## Union Types
 

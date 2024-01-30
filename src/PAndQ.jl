@@ -1,7 +1,18 @@
 
 module PAndQ
 
+import Base: showerror
 using PrecompileTools: @compile_workload
+
+struct InterfaceError{F, T} <: Exception
+    f::F
+    x::T
+
+    InterfaceError(f::F, x::T) where {F, T} = new{F, T}(f, x)
+end
+
+showerror(io::IO, e::InterfaceError) =
+    print(io, "InterfaceError: implement `$(e.f)` for `$(e.x)`")
 
 """
     union_typeof(xs)
