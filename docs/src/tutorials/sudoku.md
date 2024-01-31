@@ -74,7 +74,7 @@ end;
 
 ```@repl 1
 four = fold((∧) => 1:9, (∧) => 1:9, (∧) => 1:8) do i, j, n
-    map_folds((∧) => n + 1:9) do m
+    fold((∧) => n + 1:9) do m
         ¬p(i, j, n) ∨ ¬p(i, j, m)
     end
 end;
