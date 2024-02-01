@@ -535,7 +535,7 @@ _Evaluation(o, ps...) = __Evaluation(ps...)
 
 Evaluation(o::Union{NullaryOperator, UnaryOperator, BinaryOperator, NaryOperator}, ps...) =
     _Evaluation(o, ps...)
-Evaluation(o, ps...) = throw(InterfaceError(Evaluation, o))
+Evaluation(o::Operator, ps...) = throw(InterfaceError(Evaluation, o))
 
 _evaluation(o::UnaryOperator, p::Atom) = Tree(o, p)
 _evaluation(o, ps::Tree...) = Tree(o, ps...)

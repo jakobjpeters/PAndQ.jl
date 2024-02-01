@@ -389,7 +389,7 @@ PAndQ.Right()
 ```
 """
 abstract type FoldDirection end
-FoldDirection(o) = throw(InterfaceError(FoldDirection, o))
+FoldDirection(o::Operator) = throw(InterfaceError(FoldDirection, o))
 
 """
     Left <: FoldDirection
@@ -430,7 +430,7 @@ julia> PAndQ.initial_value(↑)
 initial_value(::union_typeof((∧, ↔, →, ←))) = Some(⊤)
 initial_value(::union_typeof((∨, ↮, ↚, ↛))) = Some(⊥)
 initial_value(::union_typeof((↑, ↓))) = nothing
-initial_value(o) = throw(InterfaceError(initial_value, o))
+initial_value(o::Operator) = throw(InterfaceError(initial_value, o))
 
 ## Union Types
 
@@ -546,12 +546,9 @@ julia> arity(¬)
 
 julia> arity(∧)
 2
-
-julia> arity(⋀)
-Inf
 ```
 """
 arity(::NullaryOperator) = 0
 arity(::UnaryOperator) = 1
 arity(::BinaryOperator) = 2
-arity(::NaryOperator) = Inf
+arity(o::Operator) = throw(InterfaceError(Arity, o))

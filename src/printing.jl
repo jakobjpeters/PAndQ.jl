@@ -114,16 +114,20 @@ Return the Unicode symbol of the given [`Operator`](@ref).
 # Examples
 ```jldoctest
 julia> PAndQ.symbol_of(⊤)
-:⊤
+"⊤"
 
 julia> PAndQ.symbol_of(¬)
-:¬
+"¬"
 
 julia> PAndQ.symbol_of(∧)
-:∧
+"∧"
 ```
 """
-symbol_of
+symbol_of(o::Operator) = throw(InterfaceError(symbol_of, o))
+
+for o in (:⊤, :⊥, :𝒾, :¬, :∧, :↑, :↓, :∨, :↮, :↔, :→, :↛, :←, :↚, :⋀, :⋁)
+    @eval symbol_of(::typeof($o)) = $(string(o))
+end
 
 """
     parenthesize(io, p)
