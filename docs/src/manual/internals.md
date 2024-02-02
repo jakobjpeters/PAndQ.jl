@@ -90,9 +90,6 @@ PAndQ.flatten
 ```@docs
 PAndQ.symbol_of
 PAndQ.parenthesize
-PAndQ.print_node
-PAndQ.show_atom
-PAndQ.base_type
 ```
 
 ## Semantics

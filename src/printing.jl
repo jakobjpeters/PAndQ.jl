@@ -5,8 +5,6 @@ import PrettyTables: pretty_table
 using AbstractTrees: print_child_key
 using Base.Docs: HTML
 
-
-
 """
     TruthTable(::Vector{String}, ::Matrix{Bool})
     TruthTable(ps)
@@ -54,6 +52,7 @@ struct TruthTable
 end
 
 function TruthTable(ps)
+    ps = map(p -> p isa Proposition ? p : Tree(p), ps)
     _atoms = unique(Iterators.flatmap(atoms, ps))
     ps = union(_atoms, ps)
     _valuations = valuations(_atoms)
@@ -102,10 +101,6 @@ end
 
 # Internals
 
-for o in (:⊤, :⊥, :𝒾, :¬, :∧, :↑, :↓, :∨, :↮, :↔, :→, :↛, :←, :↚, :⋀, :⋁)
-    @eval symbol_of(::typeof($o)) = $(QuoteNode(o))
-end
-
 """
     symbol_of(::Operator)
 
@@ -129,45 +124,51 @@ for o in (:⊤, :⊥, :𝒾, :¬, :∧, :↑, :↓, :∨, :↮, :↔, :→, :↛
     @eval symbol_of(::typeof($o)) = $(string(o))
 end
 
-"""
-    parenthesize(io, p)
-"""
-parenthesize(io, p) = show(io, MIME"text/plain"(), p)
-function parenthesize(io, p::Union{Clause, <:Tree{<:BinaryOperator}})
+function _parenthesize(io, p)
     print(io, "(")
-    show(io, MIME"text/plain"(), p)
+    show_proposition(io, p)
     print(io, ")")
 end
 
 """
-    print_node(io, p)
+    parenthesize(io, p)
 """
-print_node(io, ::Tree{typeof(𝒾)}) = nothing
-print_node(io, p) = printnode(io, p)
-
-"""
-    show_atom(::IO, ::Atom, ::Bool)
-
-See also [`Atom`](@ref).
-"""
-function show_atom(io, p::Constant, verbose)
-    _io = IOContext(io, :compact => get(io, :compact, true))
-    if verbose show(_io, p.value)
-    else
-        print(_io, "\$(")
-        show(_io, p.value)
-        print(_io, ")")
-    end
+parenthesize(io, p::Union{Atom, Tree{<:NullaryOperator}, Literal}) = show_proposition(io, p)
+function parenthesize(io, p)
+    print(io, "(")
+    show_proposition(io, p)
+    print(io, ")")
 end
-show_atom(io, p::Variable, verbose) = (verbose ? show : print)(io, p.symbol)
 
-"""
-    base_type(::Union{<:Type{<:Proposition}}, Proposition)
-"""
-base_type(::T) where T = base_type(T)
+minimize_io(io) = IOContext(io, map(key -> key => get(io, key, true), (:compact, :limit))...)
 
-for P in (:Constant, :Variable, :Tree, :Clause, :Normal)
-    @eval base_type(::Type{<:$P}) = $P
+name_of(::Operator{S}) where S = S
+
+_pretty_print(io, o, ps) = __show(parenthesize, io, ps) do io
+    print(io, " ")
+    pretty_print(io, o)
+    print(io, " ")
+end
+
+pretty_print(io, o::Operator) = print(io, symbol_of(o))
+pretty_print(io, ::typeof(𝒾), p) = show_proposition(io, p)
+function pretty_print(io, ::typeof(¬), p)
+    pretty_print(io, ¬)
+    parenthesize(io, p)
+end
+pretty_print(io, o::BinaryOperator, p, q) = _pretty_print(io, o, (p, q))
+pretty_print(io, o::Operator, ps...) = throw(InterfaceError(pretty_print, o))
+
+function show_proposition(io, p::Constant)
+    print(io, "\$(")
+    show(io, p.value)
+    print(io, ")")
+end
+show_proposition(io, p::Variable) = print(io, p.symbol)
+show_proposition(io, p::Tree) = pretty_print(io, nodevalue(p), children(p)...)
+function show_proposition(io, p::Union{Clause, Normal})
+    o, qs = nodevalue(p), children(p)
+    isempty(qs) ? pretty_print(io, something(initial_value(o))) : _pretty_print(io, o, qs)
 end
 
 # `show`
@@ -175,7 +176,7 @@ end
 """
     show(::IO, ::MIME"text/plain", ::Operator)
 """
-show(io::IO, ::MIME"text/plain", o::Operator) = print(io, symbol_of(o))
+show(io::IO, ::MIME"text/plain", o::Operator) = pretty_print(io, o)
 
 """
     show(::IO, ::MIME"text/plain", ::Proposition)
@@ -195,32 +196,7 @@ julia> @atomize show(stdout, MIME"text/plain"(), normalize(∧, p ↔ q))
 (¬p ∨ q) ∧ (¬q ∨ p)
 ```
 """
-function show(io::IO, ::MIME"text/plain", p::Atom)
-    verbose = get(io, :verbose, false)
-    if verbose
-        print(io, base_type(p), "(")
-        show_atom(io, p, verbose)
-        print(io, ")")
-    else show_atom(io, p, verbose)
-    end
-end
-function show(io::IO, ::MIME"text/plain", p::Tree{<:UnaryOperator})
-    print_node(io, p)
-    parenthesize(io, child(p))
-end
-function show(io::IO, ::MIME"text/plain", p::Compound)
-    _children = Stateful(children(p))
-    isempty(_children) ?
-        printnode(io, p) :
-        for child in _children
-            parenthesize(io, child)
-            if !isempty(_children)
-                print(io, " ")
-                printnode(io, p)
-                print(io, " ")
-            end
-        end
-end
+show(io::IO, ::MIME"text/plain", p::Proposition) = show_proposition(minimize_io(io), p)
 
 """
     show(::IO, ::MIME"text/plain", ::TruthTable)
@@ -244,6 +220,17 @@ julia> @atomize show(stdout, MIME"text/plain"(), TruthTable([p ∧ q]))
 show(io::IO, ::MIME"text/plain", tt::TruthTable) =
     pretty_table(io, tt; newline_at_end = false)
 
+function __show(f, g, io, ps)
+    qs = Stateful(ps)
+    for q in qs
+        g(io, q)
+        isempty(qs) || f(io)
+    end
+end
+
+_show(io, p::Constant) = show(minimize_io(io), p.value)
+_show(io, p::Variable) = show(io, p.symbol)
+
 """
     show(::IO, ::Proposition)
 
@@ -252,13 +239,24 @@ Show the given [`Proposition`](@ref) with verbose [`Atom`](@ref)s.
 # Examples
 ```jldoctest
 julia> @atomize show(stdout, p ∧ q)
-PAndQ.Variable(:p) ∧ PAndQ.Variable(:q)
+and(PAndQ.Variable(:p), PAndQ.Variable(:q))
 
-julia> PAndQ.Variable(:p) ∧ PAndQ.Variable(:q)
+julia> and(PAndQ.Variable(:p), PAndQ.Variable(:q))
 p ∧ q
 ```
 """
-show(io::IO, p::Proposition) = show(IOContext(io, :verbose => true), MIME"text/plain"(), p)
+function show(io::IO, p::Atom)
+    print(io, typeof(p), "(")
+    _show(io, p)
+    print(io, ")")
+end
+show(io::IO, p::Tree{typeof(𝒾)}) = show(io, child(p))
+function show(io::IO, p::Tree)
+    o = nodevalue(p)
+    print(io, name_of(o), "(")
+    __show(io -> print(io, ", "), show, io, children(p))
+    print(io, ")")
+end
 
 for (T, f) in (
     NullaryOperator => v -> v ? "⊤" : "⊥",
