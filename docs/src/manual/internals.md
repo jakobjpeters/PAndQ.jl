@@ -89,7 +89,6 @@ PAndQ.flatten
 
 ```@docs
 PAndQ.symbol_of
-PAndQ.parenthesize
 ```
 
 ## Semantics

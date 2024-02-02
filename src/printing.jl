@@ -124,27 +124,11 @@ for o in (:⊤, :⊥, :𝒾, :¬, :∧, :↑, :↓, :∨, :↮, :↔, :→, :↛
     @eval symbol_of(::typeof($o)) = $(string(o))
 end
 
-function _parenthesize(io, p)
-    print(io, "(")
-    show_proposition(io, p)
-    print(io, ")")
-end
-
-"""
-    parenthesize(io, p)
-"""
-parenthesize(io, p::Union{Atom, Tree{<:NullaryOperator}, Literal}) = show_proposition(io, p)
-function parenthesize(io, p)
-    print(io, "(")
-    show_proposition(io, p)
-    print(io, ")")
-end
-
 minimize_io(io) = IOContext(io, map(key -> key => get(io, key, true), (:compact, :limit))...)
 
 name_of(::Operator{S}) where S = S
 
-_pretty_print(io, o, ps) = __show(parenthesize, io, ps) do io
+_pretty_print(io, o, ps) = __show(show_proposition, io, ps) do io
     print(io, " ")
     pretty_print(io, o)
     print(io, " ")
@@ -154,22 +138,24 @@ pretty_print(io, o::Operator) = print(io, symbol_of(o))
 pretty_print(io, ::typeof(𝒾), p) = show_proposition(io, p)
 function pretty_print(io, ::typeof(¬), p)
     pretty_print(io, ¬)
-    parenthesize(io, p)
+    show_proposition(io, p)
 end
 pretty_print(io, o::BinaryOperator, p, q) = _pretty_print(io, o, (p, q))
 pretty_print(io, o::Operator, ps...) = throw(InterfaceError(pretty_print, o))
 
-function show_proposition(io, p::Constant)
+function _show_proposition(io, p::Constant)
     print(io, "\$(")
     show(io, p.value)
     print(io, ")")
 end
-show_proposition(io, p::Variable) = print(io, p.symbol)
-show_proposition(io, p::Tree) = pretty_print(io, nodevalue(p), children(p)...)
-function show_proposition(io, p::Union{Clause, Normal})
+_show_proposition(io, p::Variable) = print(io, p.symbol)
+_show_proposition(io, p::Tree) = pretty_print(io, nodevalue(p), children(p)...)
+function _show_proposition(io, p::Union{Clause, Normal})
     o, qs = nodevalue(p), children(p)
     isempty(qs) ? pretty_print(io, something(initial_value(o))) : _pretty_print(io, o, qs)
 end
+
+show_proposition(io, p) = _show_proposition(IOContext(io, :root => false), p)
 
 # `show`
 
@@ -196,7 +182,8 @@ julia> @atomize show(stdout, MIME"text/plain"(), normalize(∧, p ↔ q))
 (¬p ∨ q) ∧ (¬q ∨ p)
 ```
 """
-show(io::IO, ::MIME"text/plain", p::Proposition) = show_proposition(minimize_io(io), p)
+show(io::IO, ::MIME"text/plain", p::Proposition) =
+    _show_proposition(IOContext(minimize_io(io), :root => true), p)
 
 """
     show(::IO, ::MIME"text/plain", ::TruthTable)
@@ -221,11 +208,13 @@ show(io::IO, ::MIME"text/plain", tt::TruthTable) =
     pretty_table(io, tt; newline_at_end = false)
 
 function __show(f, g, io, ps)
-    qs = Stateful(ps)
+    qs, root = Stateful(ps), get(io, :root, true)
+    root || print(io, "(")
     for q in qs
         g(io, q)
         isempty(qs) || f(io)
     end
+    if !root print(io, ")") end
 end
 
 _show(io, p::Constant) = show(minimize_io(io), p.value)
