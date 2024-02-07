@@ -1,9 +1,4 @@
 
-"""
-    Operator{N}
-"""
-struct Operator{N} end
-
 # Nullary Operators
 
 """
@@ -369,106 +364,6 @@ julia> @atomize ⋁((p, q, r, s))
 """
 const disjunction = ⋁ = Operator{:disjunction}()
 
-# Internals
-
-"""
-    FoldDirection(::Operator)
-
-A trait to indicate which direction to fold a binary operator.
-
-Supertype of [`Left`](@ref) and [`Right`](@ref).
-See also [`Operator`](@ref).
-
-# Examples
-```jldoctest
-julia> PAndQ.FoldDirection(→)
-PAndQ.Left()
-
-julia> PAndQ.FoldDirection(←)
-PAndQ.Right()
-```
-"""
-abstract type FoldDirection end
-FoldDirection(o::Operator) = throw(InterfaceError(FoldDirection, o))
-
-"""
-    Left <: FoldDirection
-
-A trait to indicate that a binary operator should fold left.
-
-Subtype of [`FoldDirection`](@ref).
-"""
-struct Left <: FoldDirection end
-FoldDirection(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔, →, ↚))) = Left()
-
-"""
-    Right <: FoldDirection
-
-A trait to indicate that a binary operator should fold right.
-
-Subtype of [`FoldDirection`](@ref).
-"""
-struct Right <: FoldDirection end
-FoldDirection(::union_typeof((↛, ←))) = Right()
-
-"""
-    initial_value(::Operator)
-
-See also [`Operator`](@ref).
-
-# Examples
-```jldoctest
-julia> PAndQ.initial_value(∧)
-Some(Operator{:tautology}())
-
-julia> PAndQ.initial_value(∨)
-Some(Operator{:contradiction}())
-
-julia> PAndQ.initial_value(↑)
-```
-"""
-initial_value(::union_typeof((∧, ↔, →, ←))) = Some(⊤)
-initial_value(::union_typeof((∨, ↮, ↚, ↛))) = Some(⊥)
-initial_value(::union_typeof((↑, ↓))) = nothing
-initial_value(o::Operator) = throw(InterfaceError(initial_value, o))
-
-## Union Types
-
-"""
-    NullaryOperator
-
-The `Union` of [Nullary Operators](@ref nullary_operators).
-"""
-const NullaryOperator = union_typeof((⊤, ⊥))
-
-"""
-    UnaryOperator
-
-The `Union` of [Unary Operators](@ref unary_operators).
-"""
-const UnaryOperator = union_typeof((𝒾, ¬))
-
-"""
-    BinaryOperator
-
-The `Union` of [Binary Operators](@ref binary_operators).
-"""
-const BinaryOperator = union_typeof((∧, ↑, ↓, ∨, ↮, ↔, →, ↛, ←, ↚))
-
-"""
-    NaryOperator
-
-The `Union` of [Nary Operators](@ref nary_operators).
-"""
-const NaryOperator = union_typeof((⋀, ⋁))
-
-"""
-    AndOr
-
-The `Union` of [`and`](@ref) and [`or`](@ref).
-"""
-const AndOr = union_typeof((∧, ∨))
-
 # Utilities
 
 ____fold(::Left) = mapfoldl
@@ -530,25 +425,39 @@ julia> @atomize fold(↔, (∧) => (p, q), (∨) => (r, s))
 fold(f::Union{Function, Operator}, pairs::Pair...) = _fold(pairs...)(f)()
 fold(pair) = fold(𝒾, pair)
 
+# Internals
+
 """
-    arity(operator)
+    NullaryOperator
 
-Return the [arity](https://en.wikipedia.org/wiki/Arity)
-of the given [operator](@ref operators_operators).
-
-# Examples
-```jldoctest
-julia> arity(⊤)
-0
-
-julia> arity(¬)
-1
-
-julia> arity(∧)
-2
-```
+The `Union` of [Nullary Operators](@ref nullary_operators).
 """
-arity(::NullaryOperator) = 0
-arity(::UnaryOperator) = 1
-arity(::BinaryOperator) = 2
-arity(o::Operator) = throw(InterfaceError(Arity, o))
+const NullaryOperator = union_typeof((⊤, ⊥))
+
+"""
+    UnaryOperator
+
+The `Union` of [Unary Operators](@ref unary_operators).
+"""
+const UnaryOperator = union_typeof((𝒾, ¬))
+
+"""
+    BinaryOperator
+
+The `Union` of [Binary Operators](@ref binary_operators).
+"""
+const BinaryOperator = union_typeof((∧, ↑, ↓, ∨, ↮, ↔, →, ↛, ←, ↚))
+
+"""
+    NaryOperator
+
+The `Union` of [Nary Operators](@ref nary_operators).
+"""
+const NaryOperator = union_typeof((⋀, ⋁))
+
+"""
+    AndOr
+
+The `Union` of [`and`](@ref) and [`or`](@ref).
+"""
+const AndOr = union_typeof((∧, ∨))

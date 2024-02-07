@@ -1,8 +1,6 @@
 
 # Internals
 
-Everything that is not `export`ed is considered internal.
-
 ```@docs
 PAndQ.union_typeof
 ```
@@ -13,23 +11,21 @@ PAndQ.union_typeof
 Modules = [PicoSAT]
 ```
 
-## [Operators](@id internals_operators)
+## Interface
 
 ```@docs
-PAndQ.FoldDirection
-PAndQ.Left
-PAndQ.Right
-PAndQ.initial_value
+Interface.InterfaceError
+Interface.showerror
+Interface.@interface
 ```
 
-### Union Types
+## [Operators](@id internals_operators)
 
 ```@docs
 PAndQ.NullaryOperator
 PAndQ.UnaryOperator
 PAndQ.BinaryOperator
 PAndQ.NaryOperator
-PAndQ.Operator
 PAndQ.AndOr
 ```
 
@@ -88,7 +84,8 @@ PAndQ.flatten
 ## Printing
 
 ```@docs
-PAndQ.symbol_of
+PAndQ.name_of
+PAndQ.minimize_io
 ```
 
 ## Semantics

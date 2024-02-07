@@ -1,18 +1,7 @@
 
 module PAndQ
 
-import Base: showerror
 using PrecompileTools: @compile_workload
-
-struct InterfaceError{F, T} <: Exception
-    f::F
-    x::T
-
-    InterfaceError(f::F, x::T) where {F, T} = new{F, T}(f, x)
-end
-
-showerror(io::IO, e::InterfaceError) =
-    print(io, "InterfaceError: implement `$(e.f)` for `$(e.x)`")
 
 """
     union_typeof(xs)
@@ -21,10 +10,18 @@ union_typeof(xs) = Union{map(typeof, xs)...}
 
 include("PicoSAT.jl")
 
+include("interface.jl")
+
+import .Interface:
+    Evaluation, FoldDirection,
+    arity, converse, dual, evaluate, initial_value,
+    is_associative, is_commutative, pretty_print, symbol_of
+using .Interface: Eager, Lazy, Left, Operator, Right
+export Interface
+
 include("operators.jl")
 
 export
-    Operator,
     tautology, ⊤,
     contradiction, ⊥,
     identical, 𝒾,
@@ -41,7 +38,7 @@ export
     not_converse_imply, ↚,
     conjunction, ⋀,
     disjunction, ⋁,
-    fold, arity
+    fold
 
 include("propositions.jl")
 
@@ -54,12 +51,10 @@ include("semantics.jl")
 
 export
     valuations, interpret, interpretations, solutions,
-    is_commutative, is_associative,
     is_tautology, is_contradiction,
     is_truth, is_contingency,
     is_satisfiable, is_falsifiable,
-    is_equisatisfiable, ==,
-    dual, converse
+    is_equisatisfiable, ==
 
 include("printing.jl")
 
@@ -67,7 +62,8 @@ export
     TruthTable,
     formatter,
     pretty_table,
-    print_tree
+    print_tree,
+    show_proposition
 
 __init__() = @compile_workload begin
     @variables p q
@@ -99,4 +95,4 @@ __init__() = @compile_workload begin
     end
 end
 
-end # module
+end

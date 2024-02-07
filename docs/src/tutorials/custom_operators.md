@@ -3,65 +3,73 @@
 DocTestSetup = :(using PAndQ)
 ```
 
-# Custom Operator
+# Custom Operators
 
-| Method                   | Description                                   |
-|:-------------------------|:----------------------------------------------|
-| [`Operator`](@ref)       | Instantiate the operator                      |
-| [`show`](@ref)           | Pretty printing                               |
-| [`arity`](@ref)          | Syntax [`Tree`](@ref PAndQ.Tree) construction |
-| `evaluate`       | Semantics                                     |
-| [`dual`](@ref)           |                                               |
-| [`converse`](@ref)       |                                               |
-| [`is_commutative`](@ref) |                                               |
-| [`is_associative`](@ref) |                                               |
+Implementing a custom operator can be useful to:
+
+- Use a specific symbol
+- Custom semantics
+- Different number of parameters
+- Eager vs lazy evaluation
+- Folding associativity
 
 ```julia 1
-julia> import PAndQ: Evaluation, FoldDirection, symbol, arity, show_proposition, evaluate, dual, initial_value
+julia> using PAndQ
+
+julia> import PAndQ: Evaluation, FoldDirection, symbol_of, arity, show_proposition, evaluate, dual, initial_value
+
+julia> using .Interface
 ```
-
-## Motivation
-
-- Represented by a specific symbol
-- Different semantics
-- Different number of arguments
-- Eager vs lazy evaluation
-- Folding
 
 ## Nullary Operator
 
 ```julia
 julia> const truth = Operator{:truth}();
 
-julia> symbol_of(::typeof(truth)) = "true";
+julia> symbol_of(::typeof(truth)) = "1";
 
 julia> arity(::typeof(truth)) = 0;
 
-julia> show_proposition(::typeof(truth)) = show_pretty;
+julia> show_proposition(io, ::typeof(truth)) = show(io, MIME"text/plain"(), truth);
 
 julia> Evaluation(::typeof(truth)) = Lazy();
 
 julia> evaluate(::typeof(truth)) = ⊤;
 
 julia> dual(::typeof(truth)) = ⊥;
+
+julia> truth
+1
+
+julia> truth()
+⊤
 ```
 
 ## Unary Operator
 
 ```julia 1
-julia> const negate = ❗ = Operator{:negate}();
+julia> const negate = Operator{:negate}();
 
 julia> symbol_of(::typeof(negate)) = "!";
 
 julia> arity(::typeof(negate)) = 1;
 
-julia> show_proposition(::typeof(negate)) = show_pretty;
+julia> function pretty_print(io, o::typeof(negate), p)
+           show(io, MIME"text/plain"(), o)
+           show_proposition(io, p)
+       end
 
 julia> Evaluation(::typeof(negate), p) = Lazy();
 
 julia> evaluate(::typeof(negate), p) = ¬p;
 
 julia> dual(::typeof(negate)) = negate;
+
+julia> negate
+!
+
+julia> @atomize negate(p)
+!p
 ```
 
 ## Binary Operator
@@ -73,7 +81,16 @@ julia> symbol_of(::typeof(ampersand)) = "&";
 
 julia> arity(::typeof(ampersand)) = 2;
 
-julia> show_proposition(::typeof(ampersand)) = show_pretty;
+julia> function show_proposition(io, o::typeof(ampersand), p, q)
+           root = io[:root]
+           root && print(io, "(")
+           show_proposition(io, p)
+           print(io, " ")
+           show(io, MIME"text/plain"(), o)
+           print(io, " ")
+           show_proposition(io, q)
+           root && print(io, ")")
+       end
 
 julia> Evaluation(::typeof(ampersand), p, q) = Lazy();
 
@@ -89,28 +106,28 @@ julia> initial_value(::typeof(ampersand)) = Some(truth);
 ## Ternary Operator
 
 ```julia
-julia> const conditional = ❓ = Operator{:conditional}();
+julia> const conditional = Operator{:conditional}();
 
-julia> symbol_of(::typeof(❓)) = "❓";
+julia> symbol_of(::typeof(conditional)) = "?";
 
-julia> arity(::typeof(❓)) = 3;
+julia> arity(::typeof(conditional)) = 3;
 
-julia> show_proposition(::typeof(❓)) =
+julia> show_proposition(::typeof(conditional)) =
            (io, o, p, q, r) -> for x in ("(", p, " ", o, " ", q, " : ", r, ")")
                 x isa String ? print(io, x) : show(io, MIME"text/plain"(), x)
            end
 
-julia> Evaluation(::typeof(❓), p, q, r) = Lazy();
+julia> Evaluation(::typeof(conditional), p, q, r) = Lazy();
 
-julia> evaluate(::typeof(❓), p, q, r) = (p → q) ∧ (p ∨ r);
+julia> evaluate(::typeof(conditional), p, q, r) = (p → q) ∧ (p ∨ r);
 
-julia> ❓
+julia> conditional
 ?
 
-julia> @atomize ❓(p, q, r)
+julia> @atomize conditional(p, q, r)
 (p ? q : r)
 
-julia> @atomize TruthTable([❓(p, q, r)])
+julia> @atomize TruthTable([conditional(p, q, r)])
 ┌───┬───┬───┬─────────────┐
 │ p │ q │ r │ (p ? q : r) │
 ├───┼───┼───┼─────────────┤

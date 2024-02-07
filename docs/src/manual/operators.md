@@ -1,8 +1,4 @@
 
-```@meta
-DocTestSetup = :(using PAndQ)
-```
-
 # [Operators](@id operators_operators)
 
 Operators accept `Bool`s, [Nullary Operators](@ref nullary_operators), and [`Proposition`](@ref PAndQ.Proposition)s. Operations on symbolic expressions are not simplified.
@@ -14,24 +10,24 @@ Operator associativity determines how operators with the same precedence group t
 !!! info
     `==` has a precedence of 7, which is higher than that of several binary operators. For those cases, you may need to use parentheses. For example, `@atomize p → q == r` parses as `@atomize p → (q == r)` rather than `@atomize (p → q) == r`.
 
-| Name                         | Symbol | Tab Completion    | Associativity | Precedence |
-|:-----------------------------|:-------|:------------------|:--------------|:-----------|
-| [`tautology`](@ref)          | `⊤`    | \\top             | none          | 0          |
-| [`contradiction`](@ref)      | `⊥`    | \\bot             | none          | 0          |
-| [`identical`](@ref)          | `𝒾`    | \\scri            | none          | 0          |
-| [`not`](@ref)                | `¬`    | \\neg             | right         | 0          |
-| [`and`](@ref)                | `∧`    | \\wedge           | left          | 12         |
-| [`or`](@ref)                 | `∨`    | \\vee             | left          | 11         |
-| [`imply`](@ref)              | `→`    | \\rightarrow      | right         | 4          |
-| [`exclusive_or`](@ref)       | `↮`    | \\nleftrightarrow | left          | 11         |
-| [`converse_imply`](@ref)     | `←`    | \\leftarrow       | right         | 4          |
-| [`not_and`](@ref)            | `↑`    | \\uparrow         | left          | 12         |
-| [`not_or`](@ref)             | `↓`    | \\downarrow       | left          | 11         |
-| [`not_imply`](@ref)          | `↛`    | \\nrightarrow     | right         | 4          |
-| [`not_exclusive_or`](@ref)   | `↔`    | \\leftrightarrow  | right         | 4          |
-| [`not_converse_imply`](@ref) | `↚`    | \\nleftarrow      | right         | 4          |
-| [`conjunction`](@ref)        | `⋀`    | \\bigwedge        | none         | 0          |
-| [`disjunction`](@ref)        | `⋁`    | \\bigvee          | none         | 0          |
+| Name                         | Symbol | Tab Completion    |
+|:-----------------------------|:-------|:------------------|
+| [`tautology`](@ref)          | `⊤`    | \\top             |
+| [`contradiction`](@ref)      | `⊥`    | \\bot             |
+| [`identical`](@ref)          | `𝒾`    | \\scri            |
+| [`not`](@ref)                | `¬`    | \\neg             |
+| [`and`](@ref)                | `∧`    | \\wedge           |
+| [`or`](@ref)                 | `∨`    | \\vee             |
+| [`imply`](@ref)              | `→`    | \\rightarrow      |
+| [`exclusive_or`](@ref)       | `↮`    | \\nleftrightarrow |
+| [`converse_imply`](@ref)     | `←`    | \\leftarrow       |
+| [`not_and`](@ref)            | `↑`    | \\uparrow         |
+| [`not_or`](@ref)             | `↓`    | \\downarrow       |
+| [`not_imply`](@ref)          | `↛`    | \\nrightarrow     |
+| [`not_exclusive_or`](@ref)   | `↔`    | \\leftrightarrow  |
+| [`not_converse_imply`](@ref) | `↚`    | \\nleftarrow      |
+| [`conjunction`](@ref)        | `⋀`    | \\bigwedge        |
+| [`disjunction`](@ref)        | `⋁`    | \\bigvee          |
 
 ## [Nullary Operators](@id nullary_operators)
 
@@ -77,5 +73,4 @@ disjunction
 
 ```@docs
 fold
-arity
 ```

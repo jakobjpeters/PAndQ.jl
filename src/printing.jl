@@ -102,47 +102,16 @@ end
 # Internals
 
 """
-    symbol_of(::Operator)
-
-Return the Unicode symbol of the given [`Operator`](@ref).
-
-# Examples
-```jldoctest
-julia> PAndQ.symbol_of(⊤)
-"⊤"
-
-julia> PAndQ.symbol_of(¬)
-"¬"
-
-julia> PAndQ.symbol_of(∧)
-"∧"
-```
+    name_of(::Operator)
 """
-symbol_of(o::Operator) = throw(InterfaceError(symbol_of, o))
-
-for o in (:⊤, :⊥, :𝒾, :¬, :∧, :↑, :↓, :∨, :↮, :↔, :→, :↛, :←, :↚, :⋀, :⋁)
-    @eval symbol_of(::typeof($o)) = $(string(o))
-end
-
-minimize_io(io) = IOContext(io, map(key -> key => get(io, key, true), (:compact, :limit))...)
-
 name_of(::Operator{S}) where S = S
 
-_pretty_print(io, o, ps) = __show(show_proposition, io, ps) do io
-    print(io, " ")
-    pretty_print(io, o)
-    print(io, " ")
-end
+"""
+    minimize_io(io)
+"""
+minimize_io(io) = IOContext(io, map(key -> key => get(io, key, true), (:compact, :limit))...)
 
-pretty_print(io, o::Operator) = print(io, symbol_of(o))
-pretty_print(io, ::typeof(𝒾), p) = show_proposition(io, p)
-function pretty_print(io, ::typeof(¬), p)
-    pretty_print(io, ¬)
-    show_proposition(io, p)
-end
-pretty_print(io, o::BinaryOperator, p, q) = _pretty_print(io, o, (p, q))
-pretty_print(io, o::Operator, ps...) = throw(InterfaceError(pretty_print, o))
-
+_show_proposition(io, p::NullaryOperator) = show(io, MIME"text/plain"(), p)
 function _show_proposition(io, p::Constant)
     print(io, "\$(")
     show(io, p.value)
@@ -155,14 +124,30 @@ function _show_proposition(io, p::Union{Clause, Normal})
     isempty(qs) ? pretty_print(io, something(initial_value(o))) : _pretty_print(io, o, qs)
 end
 
+"""
+    show_proposition(io, p)
+
+Represent the given proposition given the `IOContext` that `:root => false`.
+
+# Examples
+```jldoctest
+julia> @atomize show_proposition(stdout, ¬p)
+¬p
+
+julia> @atomize show_proposition(stdout, p ∧ q)
+(p ∧ q)
+```
+"""
 show_proposition(io, p) = _show_proposition(IOContext(io, :root => false), p)
 
 # `show`
 
 """
     show(::IO, ::MIME"text/plain", ::Operator)
+
+Represent the given [`Operator`](@ref) as specified by [`symbol_of`](@ref Interface.symbol_of)
 """
-show(io::IO, ::MIME"text/plain", o::Operator) = pretty_print(io, o)
+show(io::IO, ::MIME"text/plain", o::Operator) = print(io, symbol_of(o))
 
 """
     show(::IO, ::MIME"text/plain", ::Proposition)
@@ -171,7 +156,7 @@ Represent the given [`Proposition`](@ref) as a [propositional formula]
 (https://en.wikipedia.org/wiki/Propositional_formula).
 
 The value of a [`Constant`](@ref) is shown with
-`IOContext(io, :compact => get(io, :compact, true))`.
+`IOContext(io, :compact => get(io, :compact, true), :limit => get(io, :limit, true))`.
 
 # Examples
 ```jldoctest
@@ -217,8 +202,8 @@ function __show(f, g, io, ps)
     if !root print(io, ")") end
 end
 
-_show(io, p::Constant) = show(minimize_io(io), p.value)
-_show(io, p::Variable) = show(io, p.symbol)
+show_atom(io, p::Constant) = show(minimize_io(io), p.value)
+show_atom(io, p::Variable) = show(io, p.symbol)
 
 """
     show(::IO, ::Proposition)
@@ -236,7 +221,7 @@ p ∧ q
 """
 function show(io::IO, p::Atom)
     print(io, typeof(p), "(")
-    _show(io, p)
+    show_atom(io, p)
     print(io, ")")
 end
 show(io::IO, p::Tree{typeof(𝒾)}) = show(io, child(p))

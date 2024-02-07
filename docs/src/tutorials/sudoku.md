@@ -1,4 +1,8 @@
 
+```@meta
+DocTestSetup = :(using PAndQ)
+```
+
 # Sudoku
 
 This tutorial will demonstrate how to solve a Sudoku puzzle by encoding the rules sudoku into propositional logic. Although it is more computationally efficient to frame Sudoku as an optimization problem, it is a good example of a non-trivial logic problem.
@@ -8,7 +12,6 @@ This tutorial will demonstrate how to solve a Sudoku puzzle by encoding the rule
 Sudoku is traditionally played on a 9x9 grid. Such a grid can be created using the [`pretty_table`](@ref) function.
 
 ```@repl 1
-using PAndQ
 lines = collect(0:3:9);
 grid = zeros(Int, 9, 9);
 print_grid(grid) = pretty_table(

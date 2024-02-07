@@ -41,20 +41,15 @@ if !ispath(logo)
     finish()
 end
 
-setdocmeta!(PAndQ, :DocTestSetup, :(using PAndQ))
-setdocmeta!(PicoSAT, :DocTestSetup, :(using PAndQ))
+const modules = [PicoSAT, Interface, PAndQ]
 
-const extensions = map(extension -> chop(extension; tail = 3),
-    cd(readdir, joinpath(@__DIR__, "..", "ext")))
+setdocmeta!(PAndQ, :DocTestSetup, :(using PAndQ); recursive = true)
 
-const modules = map(extension -> get_extension(PAndQ, Symbol(extension)), extensions)
-
-for (extension, _module) in zip(extensions, modules)
-    setdocmeta!(_module, :DocTestSetup,
-        :(using PAndQ, $(Symbol(chop(extension; tail = 9)))))
+for extension in map(extension -> chop(extension; tail = 3), cd(readdir, joinpath(@__DIR__, "..", "ext")))
+    _module = get_extension(PAndQ, Symbol(extension))
+    setdocmeta!(_module, :DocTestSetup, :(using PAndQ, $(Symbol(chop(extension; tail = 9)))))
+    push!(modules, _module)
 end
-
-push!(modules, PAndQ, PicoSAT)
 
 makedocs(;
     modules,
@@ -63,10 +58,10 @@ makedocs(;
     pages = [
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",
-        "Tutorials" => ["tutorials/sudoku.md"],
+        "Tutorials" => ["tutorials/sudoku.md", "tutorials/custom_operators"],
         "Manual" => map(
             name -> titlecase(name) => "manual/" * name * ".md",
-            ["operators", "propositions", "semantics", "printing", "extensions", "internals"]
+            ["interface", "operators", "propositions", "semantics", "printing", "extensions", "internals"]
         ),
     ]
 )

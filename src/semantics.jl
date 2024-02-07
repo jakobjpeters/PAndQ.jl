@@ -3,17 +3,6 @@ import Base: Bool, Fix2, convert, promote_rule, ==, <
 using Base: Iterators.product, uniontypes
 using .PicoSAT: Solutions
 
-# Internals
-
-"""
-    eval_doubles(f, doubles)
-"""
-eval_doubles(f, doubles) = for double in doubles
-    for (left, right) in (double, reverse(double))
-        @eval $f(::typeof($left)) = $right
-    end
-end
-
 # Truths
 
 """
@@ -168,42 +157,6 @@ function solutions(p)
 end
 
 # Predicates
-
-"""
-    is_commutative(binary_operator)
-
-Return a boolean indicating whether the given [binary operator](@ref binary_operators) has the
-[commutative property](https://en.wikipedia.org/wiki/Commutative_property).
-
-# Examples
-```jldoctest
-julia> is_commutative(∧)
-true
-
-julia> is_commutative(→)
-false
-```
-"""
-is_commutative(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔))) = true
-is_commutative(::BinaryOperator) = false
-
-"""
-    is_associative(binary_operator)
-
-Return a boolean indicating whether the given [binary operator](@ref binary_operators) has the
-[associative property](https://en.wikipedia.org/wiki/Associative_property).
-
-# Examples
-```jldoctest
-julia> is_associative(∧)
-true
-
-julia> is_associative(→)
-false
-```
-"""
-is_associative(::union_typeof((∧, ∨, ↮, ↔))) = true
-is_associative(::BinaryOperator) = false
 
 """
     is_tautology(p)
@@ -440,68 +393,6 @@ p::Proposition < q::Union{Bool, NullaryOperator} = ¬q < ¬p
 p::Proposition < q::Proposition =
     is_contradiction(p) ? is_satisfiable(q) : !is_tautology(p) && is_tautology(q)
 
-# Properties
-
-"""
-    dual(operator)
-
-Returns the [operator](@ref operators_operators) that is the [dual]
-(https://en.wikipedia.org/wiki/Boolean_algebra#Duality_principle)
-of the given [operator](@ref operators_operators).
-
-# Examples
-```jldoctest
-julia> dual(and)
-∨
-
-julia> @atomize and(p, q) == not(dual(and)(not(p), not(q)))
-true
-
-julia> dual(imply)
-↚
-
-julia> @atomize imply(p, q) == not(dual(imply)(not(p), not(q)))
-true
-```
-"""
-dual(o::UnaryOperator) = o
-dual(o) = (ps...) -> map(¬, ¬normalize(∧, o(ps...)))
-
-eval_doubles(:dual, (
-    (⊤, ⊥),
-    (∧, ∨),
-    (↑, ↓),
-    (↔, ↮),
-    (→, ↚),
-    (←, ↛)
-))
-
-"""
-    converse(binary_operator)
-
-Returns the [operator](@ref operators_operators) that is the
-[converse](https://en.wikipedia.org/wiki/Converse_(logic))
-of the given [binary operator](@ref binary_operators).
-
-# Examples
-```jldoctest
-julia> converse(and)
-∧
-
-julia> @atomize and(p, q) == converse(and)(q, p)
-true
-
-julia> converse(imply)
-←
-
-julia> @atomize imply(p, q) == converse(imply)(q, p)
-true
-```
-"""
-converse(o::union_typeof((∧, ∨, ↑, ↓, ↔, ↮))) = o
-
-eval_doubles(:converse, ((→, ←), (↛, ↚)))
-
 # Operators
 
 """
@@ -520,31 +411,89 @@ false
 """
 Bool(o::NullaryOperator) = convert(Bool, o)
 
-abstract type Evaluation end
-struct Eager <: Evaluation end
-struct Lazy <: Evaluation end
+# Constructors
 
-__Evaluation(::Bool...) = Eager()
-__Evaluation(ps...) = Lazy()
+Literal(uo, p::Atom) = Tree(uo, p)
 
-_Evaluation(::typeof(𝒾), p) = Eager()
-_Evaluation(::typeof(¬), ::Normal) = Eager()
-_Evaluation(::BinaryOperator, ::Normal, ::Normal) = Eager()
-_Evaluation(::NaryOperator, ps) = Eager()
-_Evaluation(o, ps...) = __Evaluation(ps...)
+Tree(::typeof(¬), p::Tree{typeof(𝒾)}) = Tree(¬, child(p))
 
-Evaluation(o::Union{NullaryOperator, UnaryOperator, BinaryOperator, NaryOperator}, ps...) =
-    _Evaluation(o, ps...)
-Evaluation(o::Operator, ps...) = throw(InterfaceError(Evaluation, o))
+for P in (:Atom, :Literal, :Tree)
+    @eval $P(p) = convert($P, p)
+end
 
-_evaluation(o::UnaryOperator, p::Atom) = Tree(o, p)
-_evaluation(o, ps::Tree...) = Tree(o, ps...)
-_evaluation(o, ps...) = _evaluation(o, map(Tree, ps)...)
+Normal(::AO, p) where AO = convert(Normal{AO}, p)
 
-evaluation(::Eager, o, ps...) = evaluate(o, ps...)
-evaluation(::Lazy, o, ps...) = _evaluation(o, ps...)
+# Utilities
 
-(o::Operator)(ps...) = evaluation(Evaluation(o, ps...), o, ps...)
+convert(::Type{Bool}, ::typeof(⊤)) = true
+convert(::Type{Bool}, ::typeof(⊥)) = false
+convert(::Type{Bool}, p::Tree{<:NullaryOperator}) = Bool(nodevalue(p))
+
+"""
+    convert(::Type{<:Proposition}, p)
+
+See also [`Proposition`](@ref).
+"""
+convert(::Type{Atom}, p::Literal{typeof(𝒾)}) = child(p)
+convert(::Type{Literal}, p::Atom) = Tree(p)
+convert(::Type{Tree}, p::NullaryOperator) = Tree(p)
+convert(::Type{Tree}, p::Atom) = Tree(𝒾, p)
+convert(::Type{Tree}, p::Normal) = normalize(¬, map(𝒾, p))
+convert(::Type{Normal{AO}}, p::Union{NullaryOperator, Proposition}) where AO =
+    normalize(AO.instance, p)
+convert(::Type{Proposition}, p::NullaryOperator) = Tree(p)
+
+"""
+    promote_rule
+"""
+promote_rule(::Type{Bool}, ::Type{<:NullaryOperator}) = Bool
+promote_rule(::Type{<:Atom}, ::Type{<:Atom}) = Atom
+promote_rule(::Type{<:Union{NullaryOperator, Proposition}}, ::Type{<:Union{NullaryOperator, Proposition}}) = Tree
+
+# Interface Implementation
+
+"""
+    eval_doubles(f, doubles)
+"""
+eval_doubles(f, doubles) = for double in doubles
+    for (left, right) in (double, reverse(double))
+        @eval $f(::typeof($left)) = $right
+    end
+end
+
+arity(::NullaryOperator) = 0
+arity(::UnaryOperator) = 1
+arity(::BinaryOperator) = 2
+
+initial_value(::union_typeof((∧, ↔, →, ←))) = Some(⊤)
+initial_value(::union_typeof((∨, ↮, ↚, ↛))) = Some(⊥)
+initial_value(::union_typeof((↑, ↓))) = nothing
+
+for o in (:⊤, :⊥, :𝒾, :¬, :∧, :↑, :↓, :∨, :↮, :↔, :→, :↛, :←, :↚, :⋀, :⋁)
+    @eval symbol_of(::typeof($o)) = $(string(o))
+end
+
+FoldDirection(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔, →, ↚))) = Left()
+FoldDirection(::union_typeof((↛, ←))) = Right()
+
+dual(o::UnaryOperator) = o
+eval_doubles(:dual, (
+    (⊤, ⊥),
+    (∧, ∨),
+    (↑, ↓),
+    (↔, ↮),
+    (→, ↚),
+    (←, ↛)
+))
+
+converse(o::union_typeof((∧, ∨, ↑, ↓, ↔, ↮))) = o
+eval_doubles(:converse, ((→, ←), (↛, ↚)))
+
+is_commutative(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔))) = true
+is_commutative(::union_typeof((→, ↛, ←, ↚))) = false
+
+is_associative(::union_typeof((∧, ∨, ↮, ↔))) = true
+is_associative(::union_typeof((↑, ↓, →, ↛, ←, ↚))) = false
 
 ___evaluate(::typeof(∧), ::typeof(⊤), q) = q
 ___evaluate(::typeof(∧), ::typeof(⊥), q) = ⊥
@@ -597,43 +546,38 @@ evaluate(::typeof(↔), p, q) = (p ∧ q) ∨ (p ↓ q)
 evaluate(::typeof(↚), p, q) = ¬p ∧ q
 evaluate(::typeof(⋀), ps) = fold(𝒾, (∧) => ps)
 evaluate(::typeof(⋁), ps) = fold(𝒾, (∨) => ps)
-evaluate(o, ps...) = throw(InterfaceError(evaluate, o))
 
-# Constructors
+_evaluation(o::UnaryOperator, p::Atom) = Tree(o, p)
+_evaluation(o, ps::Tree...) = Tree(o, ps...)
+_evaluation(o, ps...) = _evaluation(o, map(Tree, ps)...)
 
-Literal(uo, p::Atom) = Tree(uo, p)
+evaluation(::Eager, o, ps...) = evaluate(o, ps...)
+evaluation(::Lazy, o, ps...) = _evaluation(o, ps...)
 
-Tree(::typeof(¬), p::Tree{typeof(𝒾)}) = Tree(¬, child(p))
+__Evaluation(::Bool...) = Eager()
+__Evaluation(ps...) = Lazy()
 
-for P in (:Atom, :Literal, :Tree)
-    @eval $P(p) = convert($P, p)
+_Evaluation(::typeof(𝒾), p) = Eager()
+_Evaluation(::typeof(¬), ::Normal) = Eager()
+_Evaluation(::BinaryOperator, ::Normal, ::Normal) = Eager()
+_Evaluation(::NaryOperator, ps) = Eager()
+_Evaluation(o, ps...) = __Evaluation(ps...)
+
+Evaluation(o::Union{NullaryOperator, UnaryOperator, BinaryOperator, NaryOperator}, ps...) =
+    _Evaluation(o, ps...)
+
+(o::Operator)(ps...) = evaluation(Evaluation(o, ps...), o, ps...)
+
+_pretty_print(io, o, ps) = __show(show_proposition, io, ps) do io
+    print(io, " ")
+    show(io, MIME"text/plain"(), o)
+    print(io, " ")
 end
 
-Normal(::AO, p) where AO = convert(Normal{AO}, p)
-
-# Utilities
-
-convert(::Type{Bool}, ::typeof(⊤)) = true
-convert(::Type{Bool}, ::typeof(⊥)) = false
-convert(::Type{Bool}, p::Tree{<:NullaryOperator}) = Bool(nodevalue(p))
-
-"""
-    convert(::Type{<:Proposition}, p)
-
-See also [`Proposition`](@ref).
-"""
-convert(::Type{Atom}, p::Literal{typeof(𝒾)}) = child(p)
-convert(::Type{Literal}, p::Atom) = Tree(p)
-convert(::Type{Tree}, p::NullaryOperator) = Tree(p)
-convert(::Type{Tree}, p::Atom) = Tree(𝒾, p)
-convert(::Type{Tree}, p::Normal) = normalize(¬, map(𝒾, p))
-convert(::Type{Normal{AO}}, p::Union{NullaryOperator, Proposition}) where AO =
-    normalize(AO.instance, p)
-convert(::Type{Proposition}, p::NullaryOperator) = Tree(p)
-
-"""
-    promote_rule
-"""
-promote_rule(::Type{Bool}, ::Type{<:NullaryOperator}) = Bool
-promote_rule(::Type{<:Atom}, ::Type{<:Atom}) = Atom
-promote_rule(::Type{<:Union{NullaryOperator, Proposition}}, ::Type{<:Union{NullaryOperator, Proposition}}) = Tree
+pretty_print(io, p::NullaryOperator) = show_proposition(io, p)
+pretty_print(io, ::typeof(𝒾), p) = show_proposition(io, p)
+function pretty_print(io, ::typeof(¬), p)
+    show(io, MIME"text/plain"(), ¬)
+    show_proposition(io, p)
+end
+pretty_print(io, o::BinaryOperator, p, q) = _pretty_print(io, o, (p, q))

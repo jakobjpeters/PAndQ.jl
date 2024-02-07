@@ -21,6 +21,7 @@ PAndQ.jl is a [computer algebra system](https://en.wikipedia.org/wiki/Computer_a
     - Negated, conjunctive, and disjunctive forms
     - Tseytin transformation
     - DIMACS format
+- Interface for custom operators
 - Satisfiability solving
 - Logical equivalence
 - Partial interpretation

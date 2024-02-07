@@ -3,7 +3,7 @@ import AbstractTrees: HasNodeType, NodeType, children, nodetype, nodevalue, prin
 import Base: map
 using AbstractTrees: Leaves, PreOrderDFS, childtype, nodevalues
 using Base.Iterators: Stateful, flatmap
-using Base.Meta: isexpr, parse
+using Base: isexpr, parse
 using ReplMaker: complete_julia, initrepl
 using .PicoSAT: PicoSAT, initialize, picosat_print, picosat_reset
 
@@ -524,11 +524,11 @@ Return an iterator of each [operator]
 # Examples
 ```jldoctest
 julia> @atomize collect(operators(¬p))
-1-element Vector{Operator{:not}}:
+1-element Vector{PAndQ.Interface.Operator{:not}}:
  ¬
 
 julia> @atomize collect(operators(¬p ∧ q))
-3-element Vector{Operator}:
+3-element Vector{PAndQ.Interface.Operator}:
  ∧
  ¬
  𝒾

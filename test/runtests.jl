@@ -8,11 +8,10 @@ using PAndQ: PicoSAT
 using Test: @testset, @test, detect_ambiguities, detect_unbound_args
 
 @testset "`detect_ambiguities` and `detect_unbound_args`" all(
-    detect -> isempty(detect(PAndQ)), (detect_ambiguities, detect_unbound_args))
+    detect -> isempty(detect(PAndQ; recursive = true)), (detect_ambiguities, detect_unbound_args))
 
 @testset "`doctest`" begin
-    setdocmeta!(PAndQ, :DocTestSetup, :(using PAndQ))
-    setdocmeta!(PicoSAT, :DocTestSetup, :(using PAndQ))
+    setdocmeta!(PAndQ, :DocTestSetup, :(using PAndQ); recursive = true)
 
     doctest(PAndQ)
 

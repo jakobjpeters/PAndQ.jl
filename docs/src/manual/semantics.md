@@ -14,8 +14,6 @@ solutions
 ## Predicates
 
 ```@docs
-is_commutative
-is_associative
 is_tautology
 is_contradiction
 is_truth
@@ -45,13 +43,6 @@ The ordering is partial because the predicates [`==`](@ref) and [`is_truth`](@re
 ```@docs
 ==
 <
-```
-
-## Properties
-
-```@docs
-dual
-converse
 ```
 
 ## Utilities
