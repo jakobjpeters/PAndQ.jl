@@ -9,7 +9,8 @@ module PicoSAT
 import Base: IteratorSize, eltype, isdone, iterate
 using Base: Fix2, Generator, HasEltype, SizeUnknown, Splat
 using Base.Iterators: Enumerate, Filter
-using libpicosat_jll
+using Base.Libc: FILE, RawFD
+using libpicosat_jll: libpicosat
 
 """
     picosat_init()
@@ -191,11 +192,7 @@ julia> PAndQ.PicoSAT.dimacs(String, ((1, -2), (-1, 2)))
 function dimacs(io::IO, clauses)
     _read, _write = pipe = Pipe()
     pico_sat = initialize(clauses)
-    (file = @ccall fdopen(1::Cint, "w"::Cstring)::Ptr{Cvoid}) == C_NULL && error("could not open file")
-    redirect_stdout(pipe) do
-        picosat_print(pico_sat, file)
-        @ccall(fclose(file::Ptr{Cvoid})::Cint) == 0 || error("could not close file")
-    end
+    redirect_stdout(() -> picosat_print(pico_sat, FILE(RawFD(1), "w")), pipe)
     picosat_reset(pico_sat)
     close(_write)
     write(io, _read)
