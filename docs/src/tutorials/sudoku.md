@@ -1,8 +1,4 @@
 
-```@meta
-DocTestSetup = :(using PAndQ)
-```
-
 # Sudoku
 
 This tutorial will demonstrate how to solve a Sudoku puzzle by encoding the rules sudoku into propositional logic. Although it is more computationally efficient to frame Sudoku as an optimization problem, it is a good example of a non-trivial logic problem.
@@ -12,6 +8,7 @@ This tutorial will demonstrate how to solve a Sudoku puzzle by encoding the rule
 Sudoku is traditionally played on a 9x9 grid. Such a grid can be created using the [`pretty_table`](@ref) function.
 
 ```@repl 1
+using PAndQ # hide
 lines = collect(0:3:9);
 grid = zeros(Int, 9, 9);
 print_grid(grid) = pretty_table(
@@ -25,7 +22,7 @@ print_grid(grid)
 
 The grid is currently empty. Placing random numbers in some of the cells has a very high probability of generating an unsolvable board. Knowing which numbers to place in each cell requires the same functionality that it takes to solve the board in the first place. Encoding the rules of Sudoku into a proposition means that any solution to that proposition can be decoded into a solution of Sudoku.
 
-Given the predicate `P(row, column, number)` is true when the given `row` and `column` of the grid contains the given `number`:
+Given the predicate `p(row, column, number)` is true when the given `row` and `column` of the grid contains the given `number`:
 
 ```@repl 1
 p(row, column, number) = @atomize $((row, column) => number);
