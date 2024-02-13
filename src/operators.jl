@@ -369,23 +369,23 @@ const disjunction = ⋁ = Operator{:disjunction}()
 ____fold(::Left) = mapfoldl
 ____fold(::Right) = mapfoldr
 
-___fold(mapfold, f, operator, xs, ::Nothing) = mapfold(f, operator, xs)
-___fold(mapfold, f, operator, xs, initial_value::Some) =
-    isempty(xs) ? something(initial_value) : mapfold(f, operator, xs)
+___fold(mapfold, f, o, xs, ::Nothing) = mapfold(f, o, xs)
+___fold(mapfold, f, o, xs, initial_value::Some) =
+    isempty(xs) ? something(initial_value) : mapfold(f, o, xs)
 
-__fold(f, operator, xs) = g -> (args...) -> ___fold(
-    ____fold(FoldDirection(operator)), x -> f(g)(args..., x),
-operator, xs, initial_value(operator))
+__fold(f, o, xs) = g -> (args...) -> ___fold(
+    ____fold(Associativity(o)), x -> f(g)(args..., x),
+o, xs, initial_value(o))
 
 _fold() = 𝒾
-_fold((operator, xs)) = __fold(𝒾, operator, xs)
-_fold((operator, xs), pairs...) = __fold(_fold(pairs...), operator, xs)
+_fold((o, xs)) = __fold(𝒾, o, xs)
+_fold((o, xs), pairs...) = __fold(_fold(pairs...), o, xs)
 
 """
     fold(f, pairs...)
 
 A generalization of `mapreduce` with an arbitrary number of nested folds
-and traits to determine the [`FoldDirection`](@ref) and initial value.
+and traits to determine the [`Associativity`](@ref Interface.Associativity) and [`initial_value`](@ref Interface.initial_value).
 
 The function `f` must accept as many arguments as there are `pairs`.
 Each pair must be an two element iterable where the first element is a
@@ -423,7 +423,6 @@ julia> @atomize fold(↔, (∧) => (p, q), (∨) => (r, s))
 ```
 """
 fold(f::Union{Function, Operator}, pairs::Pair...) = _fold(pairs...)(f)()
-fold(pair) = fold(𝒾, pair)
 
 # Internals
 

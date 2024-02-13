@@ -12,6 +12,8 @@ using Base.Iterators: Enumerate, Filter
 using Base.Libc: FILE, RawFD
 using libpicosat_jll: libpicosat
 
+# libpicosat
+
 """
     picosat_init()
 
@@ -69,6 +71,8 @@ This function must be called after verifying that the status of [`picosat_sat`](
 """
 picosat_deref(pico_sat, atom) =
     @ccall libpicosat.picosat_deref(pico_sat::Ptr{Cvoid}, atom::Cint)::Cint
+
+# Utilities
 
 """
     add_clause(pico_sat, clause)

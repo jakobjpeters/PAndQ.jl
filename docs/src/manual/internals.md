@@ -7,8 +7,35 @@ PAndQ.union_typeof
 
 ## PicoSAT
 
-```@autodocs
-Modules = [PicoSAT]
+```@docs
+PAndQ.PicoSAT
+```
+
+### libpicosat
+
+```@docs
+PAndQ.PicoSAT.picosat_init
+PAndQ.PicoSAT.picosat_reset
+PAndQ.PicoSAT.picosat_add
+PAndQ.PicoSAT.picosat_variables
+PAndQ.PicoSAT.picosat_print
+PAndQ.PicoSAT.picosat_sat
+PAndQ.PicoSAT.picosat_deref
+```
+
+### Utilities
+
+```@docs
+PAndQ.PicoSAT.add_clause
+PAndQ.PicoSAT.initialize
+PAndQ.PicoSAT.finalize!
+PAndQ.PicoSAT.Solutions
+PAndQ.PicoSAT.eltype
+PAndQ.PicoSAT.IteratorSize
+PAndQ.PicoSAT.is_satisfiable
+PAndQ.PicoSAT.isdone
+PAndQ.PicoSAT.iterate
+PAndQ.PicoSAT.dimacs
 ```
 
 ## Interface
@@ -82,11 +109,6 @@ PAndQ.flatten
 ```
 
 ## Printing
-
-```@docs
-PAndQ.name_of
-PAndQ.minimize_io
-```
 
 ## Semantics
 

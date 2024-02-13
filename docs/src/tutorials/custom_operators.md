@@ -1,148 +1,159 @@
 
-```@meta
-DocTestSetup = :(using PAndQ)
+# [Custom Operators](@id custom_operators)
+
+This tutorial will demonstrate how to implement custom operators using the operator [Interface](@ref interface). This interface can be used to implement operators with custom behavior such as:
+
+- Number of parameters
+- Lazy and eager evaluation
+- Semantics
+- Associativity
+- Initial value
+- Pretty printing
+- Side-effects
+
+## Setup
+
+Implementing an operator requires defining methods for that operator. To do so, their function names must be imported or prefixed by the `Interface` module. This module also exports several other required and useful functions.
+
+```@repl 1
+import PAndQ:
+    Associativity, Evaluation,
+    arity, dual, evaluate, initial_value, pretty_print, symbol_of
+using PAndQ
+using .Interface
 ```
 
-# Custom Operators
+## Nullary
 
-Implementing a custom operator can be useful to:
-
-- Use a specific symbol
-- Custom semantics
-- Different number of parameters
-- Eager vs lazy evaluation
-- Folding associativity
-
-```julia 1
-julia> using PAndQ
-
-julia> import PAndQ: Evaluation, FoldDirection, symbol_of, arity, show_proposition, evaluate, dual, initial_value
-
-julia> using .Interface
-```
-
-## Nullary Operator
+This is a renamed [`tautology`](@ref) operator. First, define an [`Operator`](@ref Interface.Operator). If possible, this should be a `const`ant whose name corresponds to the operator name.
 
 ```julia
-julia> const truth = Operator{:truth}();
-
-julia> symbol_of(::typeof(truth)) = "1";
-
-julia> arity(::typeof(truth)) = 0;
-
-julia> show_proposition(io, ::typeof(truth)) = show(io, MIME"text/plain"(), truth);
-
-julia> Evaluation(::typeof(truth)) = Lazy();
-
-julia> evaluate(::typeof(truth)) = ⊤;
-
-julia> dual(::typeof(truth)) = ⊥;
-
-julia> truth
-1
-
-julia> truth()
-⊤
+julia> const truth = Operator{:truth}()
+Error showing value of type Operator{:truth}:
+ERROR: InterfaceError: implement `symbol_of` for `Operator{:truth}()`
 ```
 
-## Unary Operator
+If a required method is not implemented, a runtime error will display the function and operator that a method must be implemented for. The error says to implement [`symbol_of`](@ref Interface.symbol_of). This function is used to represent an operator.
 
-```julia 1
-julia> const negate = Operator{:negate}();
-
-julia> symbol_of(::typeof(negate)) = "!";
-
-julia> arity(::typeof(negate)) = 1;
-
-julia> function pretty_print(io, o::typeof(negate), p)
-           show(io, MIME"text/plain"(), o)
-           show_proposition(io, p)
-       end
-
-julia> Evaluation(::typeof(negate), p) = Lazy();
-
-julia> evaluate(::typeof(negate), p) = ¬p;
-
-julia> dual(::typeof(negate)) = negate;
-
-julia> negate
-!
-
-julia> @atomize negate(p)
-!p
+```@setup 1
+const truth = Operator{:truth}()
 ```
 
-## Binary Operator
-
-```julia 1
-julia> const ampersand = Operator{:ampersand}();
-
-julia> symbol_of(::typeof(ampersand)) = "&";
-
-julia> arity(::typeof(ampersand)) = 2;
-
-julia> function show_proposition(io, o::typeof(ampersand), p, q)
-           root = io[:root]
-           root && print(io, "(")
-           show_proposition(io, p)
-           print(io, " ")
-           show(io, MIME"text/plain"(), o)
-           print(io, " ")
-           show_proposition(io, q)
-           root && print(io, ")")
-       end
-
-julia> Evaluation(::typeof(ampersand), p, q) = Lazy();
-
-julia> evaluate(::typeof(ampersand), p, q) = p ∧ q;
-
-julia> dual(::typeof(ampersand)) = ∨;
-
-julia> FoldDirection(::typeof(ampersand)) = Right();
-
-julia> initial_value(::typeof(ampersand)) = Some(truth);
+```@repl 1
+symbol_of(::typeof(truth)) = "truth";
+truth
+truth()
 ```
 
-## Ternary Operator
+The error says to implement [`Evaluation`](@ref Interface.Evaluation). This function is used to specify whether an operator lazily or eagerly evaluates its arguments.
+
+```@repl 1
+Evaluation(::typeof(truth)) = Lazy();
+truth()
+```
+
+The error says to implement [`arity`](@ref Interface.arity). This function is used to construct a node in a syntax tree.
+
+```@repl 1
+arity(::typeof(truth)) = 0;
+```
 
 ```julia
-julia> const conditional = Operator{:conditional}();
+truth
+```
 
-julia> symbol_of(::typeof(conditional)) = "?";
+The error says to implement [`pretty_print`](@ref Interface.pretty_print). This function is used to represent a node of a syntax tree. The [`show_proposition`](@ref Interface.show_proposition) function is used to represent the propositions in a node.
 
-julia> arity(::typeof(conditional)) = 3;
+```@repl 1
+pretty_print(io, o::typeof(truth)) = show(io, MIME"text/plain"(), o);
+TruthTable([truth])
+```
 
-julia> show_proposition(::typeof(conditional)) =
-           (io, o, p, q, r) -> for x in ("(", p, " ", o, " ", q, " : ", r, ")")
-                x isa String ? print(io, x) : show(io, MIME"text/plain"(), x)
-           end
+The error says to implement [`evaluate`](@ref Interface.evaluate). This function is used to specify the semantics of an operator.
 
-julia> Evaluation(::typeof(conditional), p, q, r) = Lazy();
+```@repl 1
+evaluate(::typeof(truth)) = ⊤;
+TruthTable([truth])
+```
 
-julia> evaluate(::typeof(conditional), p, q, r) = (p → q) ∧ (p ∨ r);
+## Unary
 
-julia> conditional
-?
+This is an eagerly evaluated [`not`](@ref) operator.
 
-julia> @atomize conditional(p, q, r)
-(p ? q : r)
+```@repl 1
+const negate = Operator{:negate}();
+symbol_of(::typeof(negate)) = "negate";
+negate
+Evaluation(::typeof(negate), p) = Eager();
+evaluate(::typeof(negate), p) = evaluate(¬, p);
+@atomize negate(¬p)
+@atomize TruthTable([negate(p)])
+```
 
-julia> @atomize TruthTable([conditional(p, q, r)])
-┌───┬───┬───┬─────────────┐
-│ p │ q │ r │ (p ? q : r) │
-├───┼───┼───┼─────────────┤
-│ ⊤ │ ⊤ │ ⊤ │ ⊤           │
-│ ⊥ │ ⊤ │ ⊤ │ ⊤           │
-├───┼───┼───┼─────────────┤
-│ ⊤ │ ⊥ │ ⊤ │ ⊥           │
-│ ⊥ │ ⊥ │ ⊤ │ ⊤           │
-├───┼───┼───┼─────────────┤
-│ ⊤ │ ⊤ │ ⊥ │ ⊤           │
-│ ⊥ │ ⊤ │ ⊥ │ ⊥           │
-├───┼───┼───┼─────────────┤
-│ ⊤ │ ⊥ │ ⊥ │ ⊥           │
-│ ⊥ │ ⊥ │ ⊥ │ ⊥           │
-└───┴───┴───┴─────────────┘
+## Binary
+
+This is an [`imply`](@ref) operator represented by the `-->` symbol.
+
+```@repl 1
+const if_then = --> = Operator{:if_then}();
+symbol_of(::typeof(-->)) = "-->";
+-->
+Evaluation(::typeof(-->), p, q) = Lazy();
+arity(::typeof(-->)) = 2;
+function pretty_print(io, o::typeof(-->), p, q)
+    root = io[:root]
+    root || print(io, "(")
+    show_proposition(io, p)
+    print(io, " ")
+    show(io, MIME"text/plain"(), o)
+    print(io, " ")
+    show_proposition(io, q)
+    root || print(io, ")")
+end
+@atomize p --> q
+evaluate(::typeof(-->), p, q) = p → q;
+@atomize TruthTable([p --> q])
+@atomize fold(𝒾, (-->) => ())
+```
+
+This error says to implement [`Associativity`](@ref Interface.Associativity). This function is used to determine which direction to [`fold`](@ref).
+
+```@repl 1
+Associativity(::typeof(-->)) = Left();
+@atomize fold(𝒾, (-->) => ())
+```
+
+This error says to implement [`initial_value`](@ref). This function is used to determine the `init` parameter when folding.
+
+```@repl 1
+initial_value(::typeof(-->)) = Some(⊤);
+@atomize fold(𝒾, (-->) => ())
+@atomize fold(𝒾, (-->) => (p, q, r))
+```
+
+## Ternary
+
+This is a lazily evaluated conditional operator.
+
+```@repl 1
+const conditional = Operator{:conditional}();
+symbol_of(::typeof(conditional)) = "?";
+conditional
+Evaluation(::typeof(conditional), p, q, r) = Lazy();
+arity(::typeof(conditional)) = 3;
+function pretty_print(io, o::typeof(conditional), p, q, r)
+    root = io[:root]
+    root || print(io, "(")
+    show_proposition(io, p)
+    print(io, " ? ")
+    show_proposition(io, q)
+    print(io, " : ")
+    show_proposition(io, r)
+    root || print(io, ")")
+end;
+@atomize ¬conditional(p, q, r)
+evaluate(::typeof(conditional), p, q, r) = (p → q) ∧ (p ∨ r);
+@atomize TruthTable([conditional(p, q, r)])
 ```
 
 ```julia

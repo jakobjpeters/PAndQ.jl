@@ -101,45 +101,6 @@ end
 
 # Internals
 
-"""
-    name_of(::Operator)
-"""
-name_of(::Operator{S}) where S = S
-
-"""
-    minimize_io(io)
-"""
-minimize_io(io) = IOContext(io, map(key -> key => get(io, key, true), (:compact, :limit))...)
-
-_show_proposition(io, p::NullaryOperator) = show(io, MIME"text/plain"(), p)
-function _show_proposition(io, p::Constant)
-    print(io, "\$(")
-    show(io, p.value)
-    print(io, ")")
-end
-_show_proposition(io, p::Variable) = print(io, p.symbol)
-_show_proposition(io, p::Tree) = pretty_print(io, nodevalue(p), children(p)...)
-function _show_proposition(io, p::Union{Clause, Normal})
-    o, qs = nodevalue(p), children(p)
-    isempty(qs) ? pretty_print(io, something(initial_value(o))) : _pretty_print(io, o, qs)
-end
-
-"""
-    show_proposition(io, p)
-
-Represent the given proposition given the `IOContext` that `:root => false`.
-
-# Examples
-```jldoctest
-julia> @atomize show_proposition(stdout, ¬p)
-¬p
-
-julia> @atomize show_proposition(stdout, p ∧ q)
-(p ∧ q)
-```
-"""
-show_proposition(io, p) = _show_proposition(IOContext(io, :root => false), p)
-
 # `show`
 
 """
@@ -155,25 +116,25 @@ show(io::IO, ::MIME"text/plain", o::Operator) = print(io, symbol_of(o))
 Represent the given [`Proposition`](@ref) as a [propositional formula]
 (https://en.wikipedia.org/wiki/Propositional_formula).
 
-The value of a [`Constant`](@ref) is shown with
-`IOContext(io, :compact => get(io, :compact, true), :limit => get(io, :limit, true))`.
+The value of a [`Constant`](@ref PAndQ.Constant) is shown with an `IOContext` whose
+`:compact` and `:limit` keys are individually set to `true` if they have not already been set.
 
 # Examples
 ```jldoctest
-julia> @atomize show(stdout, MIME"text/plain"(), p ↔ q)
-p ↔ q
+julia> @atomize show(stdout, MIME"text/plain"(), p ∧ q)
+p ∧ q
 
-julia> @atomize show(stdout, MIME"text/plain"(), normalize(∧, p ↔ q))
-(¬p ∨ q) ∧ (¬q ∨ p)
+julia> @atomize show(stdout, MIME"text/plain"(), (p ∨ q) ∧ (r ∨ s))
+(p ∨ q) ∧ (r ∨ s)
 ```
 """
 show(io::IO, ::MIME"text/plain", p::Proposition) =
-    _show_proposition(IOContext(minimize_io(io), :root => true), p)
+    _show_proposition(IOContext(io, :root => true, map(key -> key => get(io, key, true), (:compact, :limit))...), p)
 
 """
     show(::IO, ::MIME"text/plain", ::TruthTable)
 
-See also [`TruthTable`](@ref).
+Represent the [`TruthTable`](@ref) in its default format.
 
 # Examples
 ```julia
@@ -202,13 +163,10 @@ function __show(f, g, io, ps)
     if !root print(io, ")") end
 end
 
-show_atom(io, p::Constant) = show(minimize_io(io), p.value)
-show_atom(io, p::Variable) = show(io, p.symbol)
-
 """
     show(::IO, ::Proposition)
 
-Show the given [`Proposition`](@ref) with verbose [`Atom`](@ref)s.
+Represent the [`Proposition`](@ref PAndQ.Proposition) verbosely.
 
 # Examples
 ```jldoctest
@@ -221,7 +179,7 @@ p ∧ q
 """
 function show(io::IO, p::Atom)
     print(io, typeof(p), "(")
-    show_atom(io, p)
+    show(io, getfield(p, 1))
     print(io, ")")
 end
 show(io::IO, p::Tree{typeof(𝒾)}) = show(io, child(p))

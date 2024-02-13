@@ -473,8 +473,8 @@ for o in (:⊤, :⊥, :𝒾, :¬, :∧, :↑, :↓, :∨, :↮, :↔, :→, :↛
     @eval symbol_of(::typeof($o)) = $(string(o))
 end
 
-FoldDirection(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔, →, ↚))) = Left()
-FoldDirection(::union_typeof((↛, ←))) = Right()
+Associativity(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔, →, ↚))) = Left()
+Associativity(::union_typeof((↛, ←))) = Right()
 
 dual(o::UnaryOperator) = o
 eval_doubles(:dual, (
@@ -511,6 +511,7 @@ evaluate(o::NullaryOperator) = o
 evaluate(::typeof(𝒾), p) = p
 evaluate(::typeof(¬), p::Bool) = !p
 evaluate(::typeof(¬), p::NullaryOperator) = dual(p)
+evaluate(::typeof(¬), p::Atom) = ¬p
 evaluate(::typeof(¬), p::Tree{typeof(𝒾)}) = ¬child(p)
 evaluate(::typeof(¬), p::Tree{typeof(¬)}) = child(p)
 evaluate(::typeof(¬), p::Tree) = dual(nodevalue(p))(map(¬, p.nodes)...)
@@ -581,3 +582,18 @@ function pretty_print(io, ::typeof(¬), p)
     show_proposition(io, p)
 end
 pretty_print(io, o::BinaryOperator, p, q) = _pretty_print(io, o, (p, q))
+
+_show_proposition(io, p::NullaryOperator) = show(io, MIME"text/plain"(), p)
+function _show_proposition(io, p::Constant)
+    print(io, "\$(")
+    show(io, p.value)
+    print(io, ")")
+end
+_show_proposition(io, p::Variable) = print(io, p.symbol)
+_show_proposition(io, p::Tree) = pretty_print(io, nodevalue(p), children(p)...)
+function _show_proposition(io, p::Union{Clause, Normal})
+    o, qs = nodevalue(p), children(p)
+    isempty(qs) ? pretty_print(io, something(initial_value(o))) : _pretty_print(io, o, qs)
+end
+
+show_proposition(io, p) = _show_proposition(IOContext(io, :root => false), p)

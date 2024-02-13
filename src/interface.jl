@@ -3,19 +3,18 @@ module Interface
 
 import Base: showerror
 using Base: isexpr
+using PAndQ
 
 export
-    Operator, arity,
-    Evaluation, Eager, Lazy, evaluate,
-    FoldDirection, Left, Right, initial_value,
-    symbol_of, pretty_print,
-    is_associative, is_commutative,
-    dual, converse
+    Associativity, Eager, Evaluation, Lazy, Left, Operator, Right,
+    arity, converse, dual, evaluate, initial_value, is_associative,
+    is_commutative, name_of, pretty_print, show_proposition, symbol_of
 
 # Internals
 
 """
     InterfaceError{F, T} <: Exception
+    InterfaceError(::F, ::T)
 """
 struct InterfaceError{F, T} <: Exception
     f::F
@@ -31,28 +30,59 @@ showerror(io::IO, e::InterfaceError) =
     print(io, "InterfaceError: implement `$(e.f)` for `$(e.x)`")
 
 """
-    @interface(xs...)
+    @interface(f, xs...)
 """
-macro interface(xs...)
+macro interface(f, xs...)
     esc(:(
-        $(Expr(:call, map(x -> x == :o ? Expr(Symbol("::"), x, :Operator) : x, xs)...))
-    = throw(InterfaceError($(first(xs)), o))))
+        $(Expr(:call, f, map(x -> x == :o ? Expr(Symbol("::"), x, :Operator) : x, xs)...))
+    = throw(InterfaceError($f, o))))
 end
 
-"""
-    Operator{S}
-    Operator{S}()
+# Methods
 
-Instantiate a logical operator named `S`.
+"""
+    Operator{O}
+    Operator{O}()
+
+Return an operator named `O`.
 
 Operators are uniquely identified by their name.
+If possible, an operator should be defined as
+`const o = ℴ = Operator{:o}()` where [`symbol_of`](@ref Interface.symbol_of)`(ℴ) == "ℴ"`.
+
+This method is required to instantiate an operator.
 """
-struct Operator{S} end
+struct Operator{O} end
+
+"""
+    arity(::Operator)
+
+Return the number of propositions accepted by the [`Operator`](@ref Interface.Operator).
+
+This method is required for [`Lazy`](@ref Interface.Lazy) operators.
+
+# Examples
+```jldoctest
+julia> Interface.arity(⊤)
+0
+
+julia> Interface.arity(¬)
+1
+
+julia> Interface.arity(∧)
+2
+```
+"""
+@interface arity o
+
+## Evaluation
 
 """
     Evaluation(::Operator, ps...)
 
-A trait to specify the behavior of calling an [`Operator`](@ref Interface.Operator) with the given parameters.
+A trait to specify the behavior of calling an [`Operator`](@ref Interface.Operator) with the given propositions.
+
+This method is required to call the given operator.
 
 Supertype of [`Eager`](@ref) and [`Lazy`](@ref).
 
@@ -69,33 +99,11 @@ abstract type Evaluation end
 @interface Evaluation o ps...
 
 """
-    Eager <: Evaluation
-    Eager()
-
-A trait to specify that an [`Operator`](@ref Interface.Operator) is eagerly evaluated.
-
-Eagerly evaluated operators return the expression specified by [`evaluate`](@ref).
-
-Subtype of [`Evaluation`](@ref).
-"""
-struct Eager <: Evaluation end
-
-"""
-    Lazy <: Evaluation
-    Lazy()
-
-A trait to specify that an [`Operator`](@ref Interface.Operator) is lazily evaluated.
-
-Lazily evaluated operators return a syntax [`Tree`](@ref PAndQ.Tree).
-
-Subtype of [`Evaluation`](@ref).
-"""
-struct Lazy <: Evaluation end
-
-"""
     evaluate(::Operator, ps...)
 
-Defines the semantics of the given [`Operator`](@ref Interface.Operator).
+Define the semantics of the [`Operator`](@ref Interface.Operator).
+
+This method is required to [`normalize`](@ref) a proposition containing the given operator.
 
 # Examples
 ```jldoctest
@@ -108,31 +116,85 @@ julia> @atomize Interface.evaluate(→, p, q)
 """
 @interface evaluate o ps...
 
-"""
-    arity(::Operator)
+## Folding
 
-Return the number of parameters accepted by the given [`Operator`](@ref Interface.Operator).
+"""
+    Associativity(ℴ::Operator)
+
+A trait to specify the associativity of an [`Operator`](@ref Interface.Operator).
+
+!!! note
+    This trait is used internally and does not override how expressions are parsed.
+
+This method is required for calling `fold` over `ℴ`.
+
+Supertype of [`Left`](@ref) and [`Right`](@ref).
 
 # Examples
 ```jldoctest
-julia> Interface.arity(⊤)
-0
+julia> Interface.Associativity(→)
+PAndQ.Interface.Left()
 
-julia> Interface.arity(¬)
-1
-
-julia> Interface.arity(∧)
-2
+julia> Interface.Associativity(←)
+PAndQ.Interface.Right()
 ```
 """
-@interface arity o
+abstract type Associativity end
+@interface Associativity o
 
 """
-    symbol_of(::Operator)
+    initial_value(ℴ::Operator)
 
-Return the Unicode symbol of the given [`Operator`](@ref).
+Specify a neutral value, `v`, of a binary [`Operator`](@ref Interface.Operator) such that `ℴ(v, p) == p`.
 
-This symbol is used to represent the operator when calling `show(::IO, ::MIME"text/plain", ::Operator)`.
+To distinguish between an initial value and the absense of a neutral value,
+return `Some(v)` or `nothing`, respectively.
+
+This method is required for calling `fold` over `ℴ`.
+
+See also [`==`](@ref).
+
+# Examples
+```jldoctest
+julia> Interface.initial_value(∧)
+Some(PAndQ.Interface.Operator{:tautology}())
+
+julia> Interface.initial_value(∨)
+Some(PAndQ.Interface.Operator{:contradiction}())
+
+julia> Interface.initial_value(↑)
+```
+"""
+@interface initial_value o
+
+## Printing
+
+"""
+    pretty_print(io, ::Operator, ps...)
+
+Represent the node of a syntax tree containing the [`Operator`](@ref Interface.Operator) and its propositions.
+
+Nodes of a syntax tree may either be a root or a branch.
+Some branches need to be parenthesized to avoid ambiguity.
+This context can be obtained using `io[:root]`.
+
+Each proposition should be represented using [`show_proposition`](@ref).
+
+This method is required for calling `show(::IO, ::MIME"text/plain, p)`
+for a proposition `p` containing the given operator.
+"""
+@interface pretty_print io o ps...
+
+"""
+    symbol_of(ℴ::Operator)
+
+Return the Unicode symbol of the [`Operator`](@ref).
+
+If possible, this should be implemented as `symbol_of(::typeof(ℴ)) = "ℴ"`.
+
+This method is required for calling `show(::IO, ::MIME"text/plain", ::typeof(ℴ))`.
+
+See also [`show`](@ref).
 
 # Examples
 ```jldoctest
@@ -148,87 +210,111 @@ julia> Interface.symbol_of(∧)
 """
 @interface symbol_of o
 
-"""
-    pretty_print(io, ::Operator, ps...)
+# Utilities
 
-Represent the syntax tree of the given [`Operator`](@ref Interface.Operator) and its parameters.
-
-Nodes of a syntax tree may either be a root or a branch.
-Some branches need to be parenthesized to avoid ambiguity.
-This context can be obtained using `io[:root]`.
-
-Each parameter should be represented using [`show_proposition`](@ref).
-"""
-@interface pretty_print io o ps...
-
-## Fold
+## Evaluation
 
 """
-    initial_value(::Operator)
+    Eager <: Evaluation
+    Eager()
 
-Specify a neutral value to be used in [`fold`](@ref) when there are no elements to fold over.
+A trait to specify that an [`Operator`](@ref Interface.Operator) is eagerly evaluated.
 
-An [`Operator`](@ref Interface.Operator) without an intial value should return `nothing`,
-wheras one with an intial value should wrap it in `Some`.
+Eagerly evaluated operators return the expression specified by [`evaluate`](@ref Interface.evaluate).
+
+Subtype of [`Evaluation`](@ref).
+"""
+struct Eager <: Evaluation end
+
+"""
+    Lazy <: Evaluation
+    Lazy()
+
+A trait to specify that an [`Operator`](@ref Interface.Operator) is lazily evaluated.
+
+Lazily evaluated operators return a syntax tree.
+
+Subtype of [`Evaluation`](@ref Interface.Evaluation).
+"""
+struct Lazy <: Evaluation end
+
+## Folding
+
+"""
+    Left <: Associativity
+
+A trait to specify that an [`Operator`](@ref Interface.Operator) is left-associative.
+
+Subtype of [`Associativity`](@ref Interface.Associativity).
+"""
+struct Left <: Associativity end
+
+"""
+    Right <: Associativity
+
+A trait to specify that an [`Operator`](@ref Interface.Operator) is right-associative.
+
+Subtype of [`Associativity`](@ref Interface.Associativity).
+"""
+struct Right <: Associativity end
+
+## Printing
+
+"""
+    name_of(::Operator{O})
+
+Return `O`, the name of an [`Operator`](@ref Interface.Operator).
+"""
+name_of(::Operator{O}) where O = O
+
+"""
+    show_proposition(io, p)
+
+Represent the given proposition with the `IOContext` that `:root => false`.
+
+Should be called from [`pretty_print`](@ref Interface.pretty_print).
 
 # Examples
 ```jldoctest
-julia> Interface.initial_value(∧)
-Some(PAndQ.Interface.Operator{:tautology}())
+julia> @atomize show_proposition(stdout, ¬p)
+¬p
 
-julia> Interface.initial_value(∨)
-Some(PAndQ.Interface.Operator{:contradiction}())
-
-julia> Interface.initial_value(↑)
+julia> @atomize show_proposition(stdout, p ∧ q)
+(p ∧ q)
 ```
 """
-@interface initial_value o
-
-"""
-    FoldDirection(::Operator)
-
-A trait to indicate the associativity of an [`Operator`](@ref Interface.Operator) used in [`fold`](@ref).
-
-Supertype of [`Left`](@ref) and [`Right`](@ref).
-
-# Examples
-```jldoctest
-julia> Interface.FoldDirection(→)
-PAndQ.Interface.Left()
-
-julia> Interface.FoldDirection(←)
-PAndQ.Interface.Right()
-```
-"""
-abstract type FoldDirection end
-@interface FoldDirection o
-
-"""
-    Left <: FoldDirection
-
-A trait to indicate that an [`Operator`](@ref Interface.Operator) is left-associative when used in [`fold`](@ref).
-
-Subtype of [`FoldDirection`](@ref).
-"""
-struct Left <: FoldDirection end
-
-"""
-    Right <: FoldDirection
-
-A trait to indicate that an [`Operator`](@ref Interface.Operator) is right-associative when used in [`fold`](@ref).
-
-Subtype of [`FoldDirection`](@ref).
-"""
-struct Right <: FoldDirection end
+function show_proposition end
 
 ## Properties
 
 """
-    dual(::Operator)
+    converse(ℴ::Operator)
 
-Returns the [`Operator`](@ref Interface.Operator) that is the [dual]
-(https://en.wikipedia.org/wiki/Boolean_algebra#Duality_principle)
-of the given operator.
+Return a function, `𝒸`, such that `converse(ℴ)(p, q) == 𝒸(q, p)`.
+
+If possible, this method should be overloaded to return an [`Operator`](@ref Interface.Operator).
+
+See also [`==`](@ref).
+
+# Examples
+```jldoctest
+julia> Interface.converse(∧)
+∧
+
+julia> Interface.converse(→)
+←
+```
+"""
+converse(o::Operator) = (p, q) -> o(q, p)
+
+"""
+    dual(ℴ::Operator)
+
+Return a function, `𝒹`, such that `¬ℴ(ps...) == 𝒹(map(¬, ps)...)`.
+
+If possible, this method should be overloaded to return an [`Operator`](@ref Interface.Operator).
+
+See also [`not`](@ref) and [`==`](@ref).
 
 # Examples
 ```jldoctest
@@ -241,31 +327,15 @@ julia> Interface.dual(imply)
 """
 dual(o::Operator) = (ps...) -> map(¬, ¬normalize(∧, o(ps...)))
 
-"""
-    converse(::Operator)
-
-Returns the [`Operator`](@ref Interface.Operator) that is the
-[converse](https://en.wikipedia.org/wiki/Converse_(logic))
-of the given operator.
-
-# Examples
-```jldoctest
-julia> Interface.converse(∧)
-∧
-
-julia> Interface.converse(→)
-←
-```
-"""
-@interface converse o
-
-## Predicates
+### Predicates
 
 """
-    is_associative(::Operator)
+    is_associative(ℴ::Operator)
 
-Return a boolean indicating whether the given [`Operator`](@ref Interface.Operator) has the
-[associative property](https://en.wikipedia.org/wiki/Associative_property).
+Return a boolean indicating whether has the associative property
+such that `ℴ(ℴ(p, q), r) == ℴ(p, ℴ(q, r))`.
+
+See also [`==`](@ref).
 
 # Examples
 ```jldoctest
@@ -276,13 +346,18 @@ julia> Interface.is_associative(→)
 false
 ```
 """
-@interface is_associative o
+function is_associative(o::Operator)
+    p, q, r = map(Variable, (:p, :q, :r))
+    ℴ(ℴ(p, q), r) == ℴ(p, ℴ(q, r))
+end
 
 """
-    is_commutative(::Operator)
+    is_commutative(ℴ::Operator)
 
-Return a boolean indicating whether the given [`Operator`](@ref Interface.Operator) has the
-[commutative property](https://en.wikipedia.org/wiki/Commutative_property).
+Return a boolean indicating whether has the commutative property
+such that `ℴ(p, q) == ℴ(q, p)`.
+
+See also [`==`](@ref).
 
 # Examples
 ```jldoctest
@@ -293,6 +368,9 @@ julia> Interface.is_commutative(→)
 false
 ```
 """
-@interface is_commutative o
+function is_commutative(o::Operator)
+    p, q = map(Variable, (:p, :q))
+    o(p, q) == o(q, p)
+end
 
 end

@@ -13,10 +13,10 @@ include("PicoSAT.jl")
 include("interface.jl")
 
 import .Interface:
-    Evaluation, FoldDirection,
+    Associativity, Evaluation,
     arity, converse, dual, evaluate, initial_value,
-    is_associative, is_commutative, pretty_print, symbol_of
-using .Interface: Eager, Lazy, Left, Operator, Right
+    is_associative, is_commutative, pretty_print, show_proposition, symbol_of
+using .Interface: Eager, Lazy, Left, Operator, Right, name_of
 export Interface
 
 include("operators.jl")

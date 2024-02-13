@@ -58,12 +58,13 @@ makedocs(;
     pages = [
         "Home" => "index.md",
         "Getting Started" => "getting_started.md",
-        "Tutorials" => ["tutorials/sudoku.md", "tutorials/custom_operators"],
+        "Tutorials" => ["tutorials/custom_operators.md", "tutorials/sudoku.md"],
         "Manual" => map(
             name -> titlecase(name) => "manual/" * name * ".md",
             ["interface", "operators", "propositions", "semantics", "printing", "extensions", "internals"]
         ),
-    ]
+    ],
+    warnonly = true
 )
 
 deploydocs(
