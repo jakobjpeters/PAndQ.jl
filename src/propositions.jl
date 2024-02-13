@@ -643,6 +643,7 @@ function normalize(::typeof(∧), p::Tree)
     q ∧ first(flatten(something(fold(r -> distribute(normalize(¬, r)), (∧) => rs))))
 end
 normalize(::typeof(∨), p) = ¬normalize(∧, ¬p)
+normalize(::AO, p::Normal{AO}) where AO <: AndOr = p
 normalize(o, p) = normalize(o, Tree(p))
 
 _tseytin(p::Union{Atom, Tree{typeof(𝒾), <:Atom}}) = p
