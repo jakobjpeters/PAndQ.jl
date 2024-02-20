@@ -144,11 +144,8 @@ julia> map(collect, solutions(⊥))
 Any[]
 ```
 """
-function solutions(p::Normal{typeof(∧)})
-    atoms = p.atoms
-    Iterators.map(solution -> Iterators.map(
-        literal -> atoms[abs(literal)] => !signbit(literal), solution), Solutions(p.clauses))
-end
+solutions(p::Normal{typeof(∧)}) = Iterators.map(solution -> Iterators.map(
+        literal -> p.atoms[abs(literal)] => !signbit(literal), solution), Solutions(p.clauses))
 function solutions(p)
     q, rs = flatten(p)
     Iterators.map(solution -> Iterators.filter(

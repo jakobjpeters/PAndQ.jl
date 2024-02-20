@@ -64,7 +64,6 @@ makedocs(;
             ["interface", "operators", "propositions", "semantics", "printing", "extensions", "internals"]
         ),
     ],
-    warnonly = true
 )
 
 deploydocs(

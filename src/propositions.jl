@@ -2,7 +2,7 @@
 import AbstractTrees: HasNodeType, NodeType, children, nodetype, nodevalue, printnode
 import Base: map
 using AbstractTrees: Leaves, PreOrderDFS, childtype, nodevalues
-using Base.Iterators: Stateful, flatmap
+using Base.Iterators: Stateful
 using Base: isexpr, parse
 using ReplMaker: complete_julia, initrepl
 using .PicoSAT: PicoSAT, initialize, picosat_print, picosat_reset
@@ -44,8 +44,8 @@ abstract type Compound <: Proposition end
 ### Concrete
 
 """
-    Constant{T} <: Atom
-    Constant(::T)
+    Constant <: Atom
+    Constant(value)
 
 An [atomic sentence](https://en.wikipedia.org/wiki/Atomic_sentence).
 
@@ -60,8 +60,8 @@ julia> PAndQ.Constant("Logic is fun")
 \$("Logic is fun")
 ```
 """
-struct Constant{T} <: Atom
-    value::T
+struct Constant <: Atom
+    value
 end
 
 """
@@ -451,34 +451,44 @@ macro variables(ps...) esc(quote
 end) end
 
 """
-    constants(xs)
+    constants(f = 𝒾, xs)
 
-Instantiate each element as a [`Constant`](@ref).
+Apply `f` and then instantiate each element as a [`Constant`](@ref).
+
+See also [`identical`](@ref).
 
 # Examples
 ```jldoctest
 julia> constants(1:2)
-2-element Vector{PAndQ.Constant{Int64}}:
+2-element Vector{PAndQ.Constant}:
  \$(1)
  \$(2)
 
-julia> constants([[1,2], [3,4]])
-2-element Vector{PAndQ.Constant{Vector{Int64}}}:
- \$([1, 2])
- \$([3, 4])
+julia> constants(string, 1:2)
+2-element Vector{PAndQ.Constant}:
+ \$("1")
+ \$("2")
 ```
 """
-constants(xs) = map(Constant, xs)
+constants(f, xs) = map(Constant ∘ f, xs)
+constants(xs) = constants(𝒾, xs)
 
 # Utility
 
 """
-    value(p)
+    value(p, T = Any)
 
 If `p` is logically equivalent to a [`Constant`](@ref), return that value wrapped in `Some`.
 Otherwise, return nothing.
 
 Values wrapped in `Some` can be unwrapped using the `something` function.
+
+!!! tip
+    To reduce compilation latency, constants do not store the type of the wrapped value.
+    Therefore, the type of this value cannot be inferred and can result in run-time dispatch.
+    If this type is known at compile-time, pass it as the second parameter.
+    See also [Annotate values taken from untyped locations]
+    (https://docs.julialang.org/en/v1/manual/performance-tips/#Annotate-values-taken-from-untyped-locations).
 
 # Examples
 ```jldoctest
@@ -487,16 +497,16 @@ julia> @atomize value(p)
 julia> @atomize value(\$1)
 Some(1)
 
-julia> @atomize something(value(\$2))
+julia> @atomize something(value(\$2, Int))
 2
 ```
 """
-function value(p)
+function value(p, T = Any)
     _atoms = atoms(p)
     if isempty(_atoms) nothing
     else
         atom = first(_atoms)
-        atom isa Constant && atom == p ? Some(atom.value) : nothing
+        atom isa Constant && atom == p ? Some(atom.value::T) : nothing
     end
 end
 
