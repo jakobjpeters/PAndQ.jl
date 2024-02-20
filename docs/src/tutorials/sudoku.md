@@ -46,7 +46,7 @@ one = fold((∧) => 1:9, (∧) => 1:9, (∨) => 1:9) do i, n, j
 end;
 ```
 
-2\. Each column contains each number from `1` to `9`. This proposition can be read as "for each column and for each number, one of the cells of that column contains that number".
+2\. Each column contains each number from `1` to `9`. This proposition can be read as "for each column and for each number, one of the cells in that column contains that number".
 
 ```math
 \bigwedge\limits_{j = 1}^9 \bigwedge\limits_{n = 1}^9 \bigvee\limits_{i = 1}^9 P(i, j, n) \\
@@ -58,7 +58,7 @@ two = fold((∧) => 1:9, (∧) => 1:9, (∨) => 1:9) do j, n, i
 end;
 ```
 
-3\. Each 3x3 subgrid contains each number from `1` to `9`. This proposition can be read as "for each 3x3 subgrid and for each number, one of the cells of that subgrid contains that number".
+3\. Each 3x3 subgrid contains each number from `1` to `9`. This proposition can be read as "for each 3x3 subgrid and for each number, one of the cells in that subgrid contains that number".
 
 ```math
 \bigwedge\limits_{r = 0}^2 \bigwedge\limits_{c = 0}^2 \bigwedge\limits_{n = 1}^9 \bigvee\limits_{i = 1}^3 \bigvee\limits_{j = 1}^3 P(3r + i, 3c + j, n) \\
@@ -72,7 +72,7 @@ three = fold(
 end;
 ```
 
-4\. Each cell contains a single number. This proposition can be read as "for each cell and for pair of unique numbers, that cell does not contain both numbers".
+4\. Each cell contains a single number. This proposition can be read as "for each cell and for each pair of unique numbers, that cell does not contain both numbers".
 
 ```math
 \bigwedge\limits_{i = 1}^9 \bigwedge\limits_{j = 1}^9 \bigwedge\limits_{n = 1}^8 \bigwedge\limits_{m = n + 1}^9 ¬P(i, j, n) ∨ ¬P(i, j, m)

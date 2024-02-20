@@ -59,7 +59,7 @@ arity(::typeof(truth)) = 0;
 ```
 
 ```julia
-truth
+truth()
 ```
 
 The error says to implement [`pretty_print`](@ref Interface.pretty_print). This function is used to represent a node of a syntax tree. The [`show_proposition`](@ref Interface.show_proposition) function is used to represent the propositions in a node.
@@ -154,9 +154,4 @@ end;
 @atomize ¬conditional(p, q, r)
 evaluate(::typeof(conditional), p, q, r) = (p → q) ∧ (p ∨ r);
 @atomize TruthTable([conditional(p, q, r)])
-```
-
-```julia
-julia> @atomize ❓(truth, negate(p), ampersand(p, q))
-(true ❓ !p : p & q)
 ```
