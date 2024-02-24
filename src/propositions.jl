@@ -120,7 +120,6 @@ struct Tree{O <: Operator, P <: Proposition, N} <: Compound
     nodes::NTuple{N, P}
 
     Tree(o::UO, node::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, A, 1}((node,))
-    # Tree(o::O, nodes::Tree...) where {N, O <: Operator{N}} = new{O, eltype(nodes), arity(o)}(nodes)
     Tree(o::O, nodes::Tree...) where O <: Operator = new{O, Tree, arity(o)}(nodes)
 end
 

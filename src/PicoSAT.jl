@@ -101,29 +101,23 @@ function initialize(clauses)
 end
 
 """
-    finalize!(solutions)
-
-If the argument has not been finalized, call [`picosat_reset`](@ref)
-on its PicoSAT pointer and then set the pointer equal to `C_NULL`.
-"""
-function finalize!(solutions)
-    pico_sat = solutions.pico_sat
-    if pico_sat != C_NULL
-        solutions.pico_sat = C_NULL
-        picosat_reset(pico_sat)
-    end
-end
-
-"""
     Solutions
     Solutions(clauses)
 
 A stateful iterator of valuations that satisfy the given proposition.
+
+Calling `finalize` on this iterator will first check whether it has already been finalized.
+If not, it will call [`picosat_reset`](@ref) on its PicoSAT pointer and set the pointer equal to `C_NULL`.
 """
 mutable struct Solutions
     pico_sat::Ptr{Cvoid}
 
-    Solutions(clauses) = finalizer(finalize!, new(initialize(clauses)))
+    Solutions(clauses) = finalizer(new(initialize(clauses))) do solutions
+        pico_sat = solutions.pico_sat
+        pico_sat == C_NULL && return
+        solutions.pico_sat = C_NULL
+        picosat_reset(pico_sat)
+    end
 end
 
 """
@@ -170,7 +164,7 @@ isdone(solutions::Solutions, pico_sat = solutions.pico_sat) = pico_sat == C_NULL
 
 If the status of `pico_sat` [`is_satisfiable`](@ref),
 return a `Tuple` of the current solution and `pico_sat`.
-Otherwise, [`finalize!`](@ref) the `solutions` and return `nothing`.
+Otherwise, `finalize` the `solutions` and return `nothing`.
 """
 iterate(solutions::Solutions, pico_sat = solutions.pico_sat) = if !isdone(solutions)
     atoms_truths = enumerate(Iterators.filter(!=(0), map(

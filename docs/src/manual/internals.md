@@ -28,7 +28,6 @@ PAndQ.PicoSAT.picosat_deref
 ```@docs
 PAndQ.PicoSAT.add_clause
 PAndQ.PicoSAT.initialize
-PAndQ.PicoSAT.finalize!
 PAndQ.PicoSAT.Solutions
 PAndQ.PicoSAT.eltype
 PAndQ.PicoSAT.IteratorSize
