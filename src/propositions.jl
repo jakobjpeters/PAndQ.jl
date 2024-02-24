@@ -611,8 +611,7 @@ function normalize(::typeof(¬), p::Tree)
         else
             o = nodevalue(q)
             nodes = q.nodes
-            if q isa Literal push!(output_stack, q)
-            elseif o isa AndOr
+            if o isa AndOr
                 push!(operator_stack, length(input_stack) => o)
                 append!(input_stack, nodes)
             else push!(input_stack, evaluate(o, nodes...))
@@ -655,7 +654,7 @@ tseytin!(pairs, substitution, ::Union{Atom, Tree{typeof(𝒾), <:Atom}}) = pairs
 function tseytin!(pairs, substitution, p)
     nodes = p.nodes
     substitutions = map(_tseytin, nodes)
-    push!(pairs, (substitution, nodevalue(p)(map(_tseytin, substitutions)...)))
+    push!(pairs, (substitution, nodevalue(p)(substitutions...)))
     for (substitution, node) in zip(substitutions, nodes)
         tseytin!(pairs, substitution, node)
     end
