@@ -6,8 +6,7 @@ This tutorial will demonstrate how to solve a Sudoku puzzle by encoding the rule
 ## Setup
 
 ```@repl 1
-using PAndQ
-using PrettyTables: pretty_table
+using PAndQ, PrettyTables
 ```
 
 ## Creating a Grid

@@ -45,10 +45,6 @@ not
 
 ## [Binary Operators](@id binary_operators)
 
-!!! tip
-    Each binary operator `bo` has been [curried](https://en.wikipedia.org/wiki/Currying)
-    such that `bo(p) = Base.Fix2(bo, p)` and `bo(p)(q) == bo(q, p)`.
-
 ```@docs
 and
 or

@@ -19,8 +19,7 @@ Implementing an operator requires defining methods for that operator. To do so, 
 import PAndQ:
     Associativity, Evaluation,
     arity, dual, evaluate, initial_value, pretty_print, symbol_of
-using PAndQ
-using .Interface
+using PAndQ, .Interface
 ```
 
 ## Nullary
@@ -129,6 +128,13 @@ This error says to implement [`initial_value`](@ref Interface.initial_value). Th
 initial_value(::typeof(-->)) = Some(⊤);
 @atomize fold(𝒾, (-->) => ())
 @atomize fold(𝒾, (-->) => (p, q, r))
+```
+
+```@repl 1
+Evaluation(::typeof(-->), p) = Eager();
+evaluate(::typeof(-->), p) = Base.Fix2(-->, p);
+@atomize -->(q)
+@atomize -->(q)(p)
 ```
 
 ## Ternary

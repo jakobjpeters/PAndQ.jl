@@ -388,10 +388,10 @@ A generalization of `mapreduce` with an arbitrary number of nested folds
 and traits to determine the [`Associativity`](@ref Interface.Associativity) and [`initial_value`](@ref Interface.initial_value).
 
 The function `f` must accept as many arguments as there are `pairs`.
-Each pair must be an two element iterable where the first element is a
+Each pair must be a two element iterable where the first element is a
 binary operator and the second element is an iterable.
 
-Given a single pair, this function is similar to `mapreduce` and other related functions.
+Given a single pair, this function is similar to `mapreduce` and other similar functions.
 Giving additional pairs will generalize the following pattern:
 
 ```julia
@@ -405,7 +405,7 @@ end
 This can be rewritten as:
 
 ```julia
-fold(a => xs, b => ys, ...) do (x, y, ...)
+fold(a => xs, b => ys, ...) do x, y, ...
     ...
 end
 ```
