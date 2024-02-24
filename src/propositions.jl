@@ -82,14 +82,6 @@ q
 """
 struct Variable <: Atom
     symbol::Symbol
-
-    function Variable(symbol)
-        s = string(symbol)
-        isempty(s) && throw(ArgumentError("The symbol must be non-empty"))
-        all(c -> isprint(c) && !isspace(c), s) ||
-            throw(ArgumentError("The symbol must contain only printable non-space characters"))
-        new(symbol)
-    end
 end
 
 """
