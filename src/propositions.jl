@@ -301,26 +301,24 @@ If `isexpr(x, :\$)`, return an expression that instantiates it as a [`Constant`]
 If `x` is a different expression, traverse it with recursive calls to `atomize`.
 Otherise, return x.
 """
-atomize(x::Symbol) = :((@isdefined $x) ? $x : $(Variable(x)))
-function atomize(x::Expr)
-    if length(x.args) == 0 x
-    elseif isexpr(x, :$)
-        value = only(x.args)
-        :(
-            if @isdefined PAndQ; PAndQ.Constant($value)
-            elseif @isdefined Constant; Constant($value)
-            else error("either `PAndQ` or `PAndQ.Constant` must be loaded")
+atomize(x) =
+    if x isa Symbol; :((@isdefined $x) ? $x : $(Variable(x)))
+    elseif x isa Expr
+        if length(x.args) == 0 || (isexpr(x, :macrocall) && first(x.args) == Symbol("@atomize")) x
+        elseif isexpr(x, :$); :((@isdefined PAndQ) ? PAndQ.Constant($(only(x.args))) : error("`PAndQ` must be loaded"))
+        elseif isexpr(x, :kw) Expr(x.head, x.args[1], atomize(x.args[2]))
+        elseif isexpr(x, (:struct, :where)) x # TODO
+        else # TODO
+            y = Expr(x.head)
+            b = isexpr(x, (:<:, :(=), :->, :function))
+            b && push!(y.args, x.args[1])
+            for arg in x.args[1 + b:end]
+                push!(y.args, atomize(arg))
             end
-        )
-    elseif isexpr(x, (:kw, :<:)) Expr(x.head, x.args[1], atomize(x.args[2]))
-    elseif isexpr(x, (:struct, :where)) x # TODO
-    else Expr(x.head, # TODO
-        (isexpr(x, (:(=), :->, :function)) ? 𝒾 : atomize)(x.args[1]),
-        map(atomize, x.args[2:end])...
-    )
+            y
+        end
+    else x
     end
-end
-atomize(x) = x
 
 ___distribute(p::Tree{typeof(∧)}, q) = distribute(p ∨ q)
 ___distribute(p, q) = p ∨ q
@@ -412,8 +410,8 @@ julia> @atomize \$1 ∧ \$(1 + 1)
 \$(1) ∧ \$(2)
 ```
 """
-macro atomize(expression)
-    esc(:($(atomize(expression))))
+macro atomize(x)
+    esc(:($(atomize(x))))
 end
 
 """
