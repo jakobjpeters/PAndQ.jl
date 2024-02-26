@@ -318,27 +318,35 @@ atomize(x) =
     else x
     end
 
-___distribute(p::Tree{typeof(∧)}, q) = distribute(p ∨ q)
-___distribute(p, q) = p ∨ q
+function _distribute(f, ao, stack)
+    _initial_value = something(initial_value(ao))
+    p, not_initial_value = Tree(_initial_value), dual(_initial_value)
 
-__distribute(p::Tree{typeof(∧)}, q) = distribute(p ∨ q)
-__distribute(p, q) = ___distribute(distribute(q), p)
+    while !isempty(stack)
+        q = pop!(stack)
+        o, rs = nodevalue(q), children(q)
 
-_distribute(p::Literal, q::Literal) = p ∨ q
-function _distribute(p::Tree{typeof(∧)}, q)
-    (r, s), t = p.nodes, distribute(q)
-    distribute(distribute(r) ∨ t) ∧ distribute(distribute(s) ∨ t)
+        if o == not_initial_value return Tree(not_initial_value)
+        elseif o isa UnaryOperator p = evaluate(ao, p, q)
+        elseif o == ao append!(stack, rs)
+        else p = f(p, rs, stack)
+        end
+    end
+
+    p
 end
-_distribute(p::Tree{typeof(∨)}, q) = __distribute(distribute(p), q)
-_distribute(p, q) = distribute(q ∨ p)
 
 """
     distribute(p)
+
+Given a proposition in negated normal form, return that proposition to conjunction normal form.
 """
-distribute(p::Union{NullaryOperator, Atom, Literal}) = p
-distribute(p::Tree{<:NullaryOperator}) = nodevalue(p)
-distribute(p::Tree{typeof(∧)}) = ∧(map(distribute, p.nodes)...)
-distribute(p::Tree{typeof(∨)}) = _distribute(p.nodes...)
+distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(∧, q, _distribute(∨, Tree[rs...]) do s, ts, disjuncts
+    u = evaluate(∨, s, fold(𝒾, (∨) => disjuncts))
+    empty!(disjuncts)
+    append!(conjuncts, map(t -> t ∨ u, ts))
+    Tree(⊤)
+end), ∧, Tree[p])
 
 _flatten!(literals, qs, ::Union{typeof(⊥), Tree{typeof(⊥)}}) = literals, qs
 _flatten!(literals, qs, p::Literal) = push!(literals, p), qs
