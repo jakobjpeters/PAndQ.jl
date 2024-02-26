@@ -113,6 +113,6 @@ PAndQ.flatten
 
 ```@docs
 PAndQ.eval_doubles
-convert(::Type{PAndQ.Atom}, ::PAndQ.Literal{typeof(𝒾)})
+convert
 promote_rule
 ```

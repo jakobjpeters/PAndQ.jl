@@ -171,9 +171,9 @@ Represent the [`Proposition`](@ref PAndQ.Proposition) verbosely.
 # Examples
 ```jldoctest
 julia> @atomize show(stdout, p ∧ q)
-and(PAndQ.Variable(:p), PAndQ.Variable(:q))
+and(identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q)))
 
-julia> and(PAndQ.Variable(:p), PAndQ.Variable(:q))
+julia> and(identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q)))
 p ∧ q
 ```
 """
@@ -182,10 +182,8 @@ function show(io::IO, p::Atom)
     show(io, getfield(p, 1))
     print(io, ")")
 end
-show(io::IO, p::Tree{typeof(𝒾)}) = show(io, child(p))
 function show(io::IO, p::Tree)
-    o = nodevalue(p)
-    print(io, name_of(o), "(")
+    print(io, name_of(nodevalue(p)), "(")
     __show(io -> print(io, ", "), show, io, children(p))
     print(io, ")")
 end
@@ -343,12 +341,12 @@ julia> @atomize print_tree(normalize(∧, p ∧ q ∨ ¬s))
 │  ├─ ¬
 │  │  └─ s
 │  └─ 𝒾
-│     └─ p
+│     └─ q
 └─ ∨
    ├─ ¬
    │  └─ s
    └─ 𝒾
-      └─ q
+      └─ p
 ```
 """
 print_tree

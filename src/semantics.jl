@@ -424,18 +424,15 @@ Normal(::AO, p) where AO = convert(Normal{AO}, p)
 
 convert(::Type{Bool}, ::typeof(⊤)) = true
 convert(::Type{Bool}, ::typeof(⊥)) = false
-convert(::Type{Bool}, p::Tree{<:NullaryOperator}) = Bool(nodevalue(p))
 
 """
     convert(::Type{<:Proposition}, p)
 
 See also [`Proposition`](@ref).
 """
-convert(::Type{Atom}, p::Literal{typeof(𝒾)}) = child(p)
-convert(::Type{Literal}, p::Atom) = Tree(p)
 convert(::Type{Tree}, p::NullaryOperator) = Tree(p)
 convert(::Type{Tree}, p::Atom) = Tree(𝒾, p)
-convert(::Type{Tree}, p::Normal) = normalize(¬, map(𝒾, p))
+convert(::Type{Tree}, p::Union{Clause, Normal}) = normalize(¬, map(𝒾, p))
 convert(::Type{Normal{AO}}, p::Union{NullaryOperator, Proposition}) where AO =
     normalize(AO.instance, p)
 convert(::Type{Proposition}, p::NullaryOperator) = Tree(p)
@@ -445,7 +442,8 @@ convert(::Type{Proposition}, p::NullaryOperator) = Tree(p)
 """
 promote_rule(::Type{Bool}, ::Type{<:NullaryOperator}) = Bool
 promote_rule(::Type{<:Atom}, ::Type{<:Atom}) = Atom
-promote_rule(::Type{<:Union{NullaryOperator, Proposition}}, ::Type{<:Union{NullaryOperator, Proposition}}) = Tree
+promote_rule(::Type{NullaryOperator}, ::Type{Proposition}) = Tree
+promote_rule(::Type{Proposition}, ::Type{Proposition}) = Tree
 
 # Interface Implementation
 
@@ -492,26 +490,33 @@ is_commutative(::union_typeof((→, ↛, ←, ↚))) = false
 is_associative(::union_typeof((∧, ∨, ↮, ↔))) = true
 is_associative(::union_typeof((↑, ↓, →, ↛, ←, ↚))) = false
 
-___evaluate(::typeof(∧), ::typeof(⊤), q) = q
-___evaluate(::typeof(∧), ::typeof(⊥), q) = ⊥
-___evaluate(::typeof(∨), ::typeof(⊤), q) = ⊤
-___evaluate(::typeof(∨), ::typeof(⊥), q) = q
-___evaluate(o, p::Tree{<:NullaryOperator}, q) = ___evaluate(o, nodevalue(p), q)
+evaluate_not(::typeof(¬), p) = p
+evaluate_not(o, ps...) = dual(o)(map(¬, ps)...)
 
-__evaluate(o, p::Union{NullaryOperator, Tree{<:NullaryOperator}}, q) = ___evaluate(o, p, q)
-__evaluate(o, p, q) = o(p, q)
+____evaluate_and_or(ao, o::NullaryOperator, ps, q) = evaluate(ao, o, q)
+____evaluate_and_or(ao, o, ps, q) = ao(q, o(ps...))
 
-_evaluate(o, p::Union{NullaryOperator, Tree{<:NullaryOperator}}, q) = ___evaluate(o, p, q)
-_evaluate(o, p, q) = __evaluate(o, q, p)
+___evaluate_and_or(ao, p::Atom, q) = ao(q, p)
+___evaluate_and_or(ao, p, q) = ____evaluate_and_or(ao, nodevalue(p), children(p), q)
+
+__evaluate_and_or(ao, o::NullaryOperator, ps, q) = evaluate(ao, o, q)
+__evaluate_and_or(ao, o, ps, q) = ___evaluate_and_or(ao, q, o(ps...))
+
+_evaluate_and_or(ao, p::Atom, q) = ___evaluate_and_or(ao, q, p)
+_evaluate_and_or(ao, p, q) = __evaluate_and_or(ao, nodevalue(p), children(p), q)
+
+evaluate_and_or(::typeof(∧), ::typeof(⊤), q) = q
+evaluate_and_or(::typeof(∧), ::typeof(⊥), q) = ⊥
+evaluate_and_or(::typeof(∨), ::typeof(⊤), q) = ⊤
+evaluate_and_or(::typeof(∨), ::typeof(⊥), q) = q
+evaluate_and_or(ao, p, q) = _evaluate_and_or(ao, p, q)
 
 evaluate(o::NullaryOperator) = o
 evaluate(::typeof(𝒾), p) = p
 evaluate(::typeof(¬), p::Bool) = !p
 evaluate(::typeof(¬), p::NullaryOperator) = dual(p)
 evaluate(::typeof(¬), p::Atom) = ¬p
-evaluate(::typeof(¬), p::Tree{typeof(𝒾)}) = ¬child(p)
-evaluate(::typeof(¬), p::Tree{typeof(¬)}) = child(p)
-evaluate(::typeof(¬), p::Tree) = dual(nodevalue(p))(map(¬, p.nodes)...)
+evaluate(::typeof(¬), p::Tree) = evaluate_not(nodevalue(p), children(p)...)
 evaluate(::typeof(¬), p::Normal) =
     Normal(dual(nodevalue(p)), p.atoms, Set(Iterators.map(clause -> Set(Iterators.map(-, clause)), p.clauses)))
 evaluate(::typeof(∧), p::Bool, q::Bool) = p && q
@@ -533,7 +538,7 @@ function evaluate(o::AO, p::Normal{AO}, q::Normal{AO}) where AO <: AndOr
     q.clauses))
 end
 evaluate(o::AndOr, p::Normal, q::Normal) = o(Normal(o, p), Normal(o, q))
-evaluate(o::AndOr, p, q) = _evaluate(o, p, q)
+evaluate(o::AndOr, p, q) = evaluate_and_or(o, p, q)
 evaluate(::typeof(→), p, q) = ¬p ∨ q
 evaluate(::typeof(↮), p, q) = (p ∨ q) ∧ (p ↑ q)
 evaluate(::typeof(←), p, q) = p ∨ ¬q

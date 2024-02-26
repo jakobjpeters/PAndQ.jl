@@ -214,7 +214,7 @@ julia> @atomize PAndQ.children(¬p)
 (PAndQ.Variable(:p),)
 
 julia> @atomize PAndQ.children(p ∧ q)
-(PAndQ.Variable(:p), PAndQ.Variable(:q))
+(identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q)))
 ```
 """
 children(p::Tree) = p.nodes
@@ -348,34 +348,39 @@ distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(∧, q, _distribute(�
     Tree(⊤)
 end), ∧, Tree[p])
 
-_flatten!(literals, qs, ::Union{typeof(⊥), Tree{typeof(⊥)}}) = literals, qs
-_flatten!(literals, qs, p::Literal) = push!(literals, p), qs
-_flatten!(literals, qs, p::Tree{typeof(∨)}) = literals, append!(qs, p.nodes)
-_flatten!(literals, qs, p) = literals, qs, p
+function flatten!(mapping, clauses, qs, p)
+    x = nodevalue(p)
 
-flatten!(mapping, clauses, qs, ::Union{typeof(⊤), Tree{typeof(⊤)}}) = mapping, clauses, qs
-function flatten!(mapping, clauses, qs, p::Union{typeof(⊥), Atom, Literal, Tree{<:Union{typeof(⊥), typeof(∨)}}})
-    clause, rs = Literal[], Tree[p]
-    while !isempty(rs)
-        x = last(_flatten!(clause, rs, pop!(rs)))
-        x isa Tree && return mapping, clauses, push!(qs, p)
+    if x isa typeof(⊤)
+    elseif x isa Union{typeof(⊥), UnaryOperator, typeof(∨), Atom}
+        clause, rs = Tree[], Tree[p]
+        while !isempty(rs)
+            r = pop!(rs)
+            o, ss = nodevalue(r), children(r)
+
+            if o isa typeof(⊥)
+            elseif o isa UnaryOperator && only(ss) isa Atom push!(clause, r)
+            elseif o isa typeof(∨) append!(rs, ss)
+            else return mapping, clauses, push!(qs, p)
+            end
+        end
+
+        _clause = Set{Int}()
+        for literal in clause
+            _literal = (nodevalue(literal) == 𝒾 ? 1 : -1) * get!(() -> length(mapping) + 1, mapping, child(literal))
+            -_literal in _clause ? (return mapping, clauses, push!(qs, p)) : push!(_clause, _literal)
+        end
+
+        push!(clauses, _clause)
+    elseif x isa typeof(∧)
+        for node in p.nodes
+            flatten!(mapping, clauses, qs, node)
+        end
+    else push!(qs, p)
     end
 
-    _clause = Set{Int}()
-    for literal in clause
-        _literal = (nodevalue(literal) == 𝒾 ? 1 : -1) * get!(() -> length(mapping) + 1, mapping, child(literal))
-        -_literal in _clause ? (return mapping, clauses, push!(qs, p)) : push!(_clause, _literal)
-    end
-
-    mapping, push!(clauses, _clause), qs
-end
-function flatten!(mapping, clauses, qs, p::Tree{typeof(∧)})
-    for node in p.nodes
-        flatten!(mapping, clauses, qs, node)
-    end
     mapping, clauses, qs
 end
-flatten!(mapping, clauses, qs, p) = mapping, clauses, push!(qs, p)
 
 """
     flatten(p)
@@ -611,15 +616,13 @@ function normalize(::typeof(¬), p::Tree)
 
     while !isempty(input_stack)
         q = pop!(input_stack)
-        if typeof(q) <: Union{Tree{<:NullaryOperator}, Literal} push!(output_stack, q)
-        else
-            o = nodevalue(q)
-            nodes = q.nodes
-            if o isa AndOr
-                push!(operator_stack, length(input_stack) => o)
-                append!(input_stack, nodes)
-            else push!(input_stack, evaluate(o, nodes...))
-            end
+        o, rs = nodevalue(q), children(q)
+
+        if o isa NullaryOperator || (o isa UnaryOperator && only(rs) isa Atom) push!(output_stack, q)
+        elseif o isa AndOr
+            push!(operator_stack, length(input_stack) => o)
+            append!(input_stack, rs)
+        else push!(input_stack, evaluate(o, rs...))
         end
     end
 
@@ -651,17 +654,25 @@ normalize(::typeof(∨), p) = ¬normalize(∧, ¬p)
 normalize(::AO, p::Normal{AO}) where AO <: AndOr = p
 normalize(o, p) = normalize(o, Tree(p))
 
-_tseytin(p::Union{Atom, Tree{typeof(𝒾), <:Atom}}) = p
-_tseytin(p) = Variable(gensym())
+__tseytin(::typeof(𝒾), p::Atom) = Tree(𝒾, p)
+__tseytin(o, ps...) = Variable(gensym())
 
-tseytin!(pairs, substitution, ::Union{Atom, Tree{typeof(𝒾), <:Atom}}) = pairs
+_tseytin(p::Atom) = p
+_tseytin(p) = __tseytin(nodevalue(p), children(p)...)
+
 function tseytin!(pairs, substitution, p)
-    nodes = p.nodes
-    substitutions = map(_tseytin, nodes)
-    push!(pairs, (substitution, nodevalue(p)(substitutions...)))
-    for (substitution, node) in zip(substitutions, nodes)
-        tseytin!(pairs, substitution, node)
+    if !isa(p, Atom)
+        o, qs = nodevalue(p), children(p)
+        if !(o isa typeof(𝒾) && only(qs) isa Atom)
+            substitutions = map(_tseytin, qs)
+            push!(pairs, (substitution, o(substitutions...)))
+
+            for (substitution, q) in zip(substitutions, qs)
+                tseytin!(pairs, substitution, q)
+            end
+        end
     end
+
     pairs
 end
 
@@ -690,7 +701,7 @@ true
 ```
 """
 function tseytin(p::Tree)
-    pairs = tseytin!(NTuple{2, Tree}[], Variable(gensym()), Tree(p))
+    pairs = tseytin!(NTuple{2, Tree}[], Variable(gensym()), p)
     normalize(∧, isempty(pairs) ? p : first(first(pairs)) ∧ ⋀(map(splat(↔), pairs)))
 end
 tseytin(p) = tseytin(Tree(p))
