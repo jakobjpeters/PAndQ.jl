@@ -83,7 +83,7 @@ This is an eagerly evaluated [`not`](@ref) operator.
 const negate = Operator{:negate}();
 symbol_of(::typeof(negate)) = "negate";
 negate
-Evaluation(::typeof(negate), p) = Eager();
+Evaluation(::typeof(negate)) = Eager();
 evaluate(::typeof(negate), p) = evaluate(¬, p);
 @atomize negate(¬p)
 @atomize TruthTable([negate(p)])
@@ -97,7 +97,7 @@ This is an [`imply`](@ref) operator represented by the `-->` symbol.
 const if_then = --> = Operator{:if_then}();
 symbol_of(::typeof(-->)) = "-->";
 -->
-Evaluation(::typeof(-->), p, q) = Lazy();
+Evaluation(::typeof(-->)) = Lazy();
 arity(::typeof(-->)) = 2;
 function pretty_print(io, o::typeof(-->), p, q)
     root = io[:root]
@@ -131,7 +131,7 @@ initial_value(::typeof(-->)) = Some(⊤);
 ```
 
 ```@repl 1
-Evaluation(::typeof(-->), p) = Eager();
+Evaluation(::typeof(-->)) = Eager();
 evaluate(::typeof(-->), p) = Base.Fix2(-->, p);
 @atomize -->(q)
 @atomize -->(q)(p)
@@ -145,7 +145,7 @@ This is a lazily evaluated conditional operator.
 const conditional = Operator{:conditional}();
 symbol_of(::typeof(conditional)) = "?";
 conditional
-Evaluation(::typeof(conditional), p, q, r) = Lazy();
+Evaluation(::typeof(conditional)) = Lazy();
 arity(::typeof(conditional)) = 3;
 function pretty_print(io, o::typeof(conditional), p, q, r)
     root = io[:root]

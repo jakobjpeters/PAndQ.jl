@@ -77,7 +77,7 @@ picosat_deref(pico_sat, atom) =
 """
     add_clause(pico_sat, clause)
 
-Modify the `pico_sat` instance's proposition to be the
+Mutate the `pico_sat` instance's proposition to be the
 conjunction of itself and the disjunctive `clause`.
 """
 function add_clause(pico_sat, clause)

@@ -135,8 +135,8 @@ julia> @atomize PAndQ.Literal(¬, p)
 const Literal = Tree{<:Operator, <:Atom, 1}
 
 """
-    Clause{AO <: AndOr, A <: AbstractVector{<:Atom}, L <: AbstractVector{Int}} <: Compound
-    Clause(::AO, ::A, ::L)
+    Clause{AO <: AndOr} <: Compound
+    Clause(::AO, ::Vector{Atom}, ::Set{Int})
 
 A proposition represented as either a [conjunction or disjunction of literals]
 (https://en.wikipedia.org/wiki/Clause_(logic)).
@@ -160,17 +160,16 @@ julia> @atomize PAndQ.Clause(∨, [p, q], Set((1, -2)))
 ¬q ∨ p
 ```
 """
-struct Clause{AO <: AndOr, A <: Atom} <: Compound
-    atoms::Vector{A}
+struct Clause{AO <: AndOr} <: Compound
+    atoms::Vector{Atom}
     literals::Set{Int}
 
-    Clause(::AO, atoms::Vector{A}, literals) where {AO <: AndOr, A <: Atom} =
-        new{AO, A}(atoms, literals)
+    Clause(::AO, atoms::Vector{<:Atom}, literals) where AO <: AndOr = new{AO}(atoms, literals)
 end
 
 """
-    Normal{AO <: AndOr, A <: Atom, C <: AbstractVector{<:AbstractVector{Int}}} <: Compound
-    Normal(::AO, ::A, ::C)
+    Normal{AO <: AndOr} <: Compound
+    Normal(::AO, ::Vector{Atom}, ::Set{Set{Int}})
 
 A [`Proposition`](@ref) represented in [conjunctive]
 (https://en.wikipedia.org/wiki/Conjunctive_normal_form) or [disjunctive]
@@ -192,12 +191,11 @@ julia> @atomize PAndQ.Normal(∧, [p, q], Set(map(Set, ((1, 2), (-1, -2)))))
 (¬p ∨ ¬q) ∧ (p ∨ q)
 ```
 """
-struct Normal{AO <: AndOr, A <: Atom} <: Compound
-    atoms::Vector{A}
+struct Normal{AO <: AndOr} <: Compound
+    atoms::Vector{Atom}
     clauses::Set{Set{Int}}
 
-    Normal(::AO, atoms::Vector{A}, clauses) where {AO <: AndOr, A <: Atom} =
-        new{AO, A}(atoms, clauses)
+    Normal(::AO, atoms::Vector{<:Atom}, clauses) where AO = new{AO}(atoms, clauses)
 end
 
 ## AbstractTrees.jl

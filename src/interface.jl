@@ -78,9 +78,9 @@ julia> Interface.arity(∧)
 ## Evaluation
 
 """
-    Evaluation(::Operator, ps...)
+    Evaluation(::Operator)
 
-A trait to specify the behavior of calling an [`Operator`](@ref Interface.Operator) with the given propositions.
+A trait to specify the behavior of calling an [`Operator`](@ref Interface.Operator).
 
 This method is required to call the given operator.
 
@@ -88,15 +88,15 @@ Supertype of [`Eager`](@ref) and [`Lazy`](@ref).
 
 # Examples
 ```jldoctest
-julia> @atomize Interface.Evaluation(𝒾, p)
+julia> @atomize Interface.Evaluation(𝒾)
 PAndQ.Interface.Eager()
 
-julia> @atomize Interface.Evaluation(¬, p)
+julia> @atomize Interface.Evaluation(¬)
 PAndQ.Interface.Lazy()
 ```
 """
 abstract type Evaluation end
-@interface Evaluation o ps...
+@interface Evaluation o
 
 """
     evaluate(::Operator, ps...)

@@ -328,7 +328,7 @@ is_equisatisfiable(p, q) = is_satisfiable(p) == is_satisfiable(q)
 Return a boolean indicating whether `p` and `q` are [logically equivalent]
 (https://en.wikipedia.org/wiki/Logical_equivalence).
 
-[`Constant`](@ref)s are equivalent only if their values are equivalent.
+[`Constant`](@ref)s are equivalent only if their [`value`](@ref)s are equivalent.
 
 !!! info
     The `≡` symbol is sometimes used to represent logical equivalence.
@@ -552,19 +552,11 @@ _evaluation(o, ps...) = _evaluation(o, map(Tree, ps)...)
 evaluation(::Eager, o, ps...) = evaluate(o, ps...)
 evaluation(::Lazy, o, ps...) = _evaluation(o, ps...)
 
-__Evaluation(::Bool...) = Eager()
-__Evaluation(ps...) = Lazy()
+Evaluation(::Union{typeof(𝒾), NaryOperator}) = Eager()
+Evaluation(::Union{NullaryOperator, typeof(¬), BinaryOperator}) = Lazy()
 
-_Evaluation(::typeof(𝒾), p) = Eager()
-_Evaluation(::typeof(¬), ::Normal) = Eager()
-_Evaluation(::BinaryOperator, ::Normal, ::Normal) = Eager()
-_Evaluation(::NaryOperator, ps) = Eager()
-_Evaluation(o, ps...) = __Evaluation(ps...)
-
-Evaluation(o::Union{NullaryOperator, UnaryOperator, BinaryOperator, NaryOperator}, ps...) =
-    _Evaluation(o, ps...)
-
-(o::Operator)(ps...) = evaluation(Evaluation(o, ps...), o, ps...)
+(o::Operator)(ps::BN...) where BN <: Union{Bool, Normal} = evaluate(o, ps...)
+(o::Operator)(ps...) = evaluation(Evaluation(o), o, ps...)
 
 _pretty_print(io, o, ps) = __show(show_proposition, io, ps) do io
     print(io, " ")
