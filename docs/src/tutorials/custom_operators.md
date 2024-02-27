@@ -47,7 +47,7 @@ truth()
 The error says to implement [`Evaluation`](@ref Interface.Evaluation). This function is used to specify whether an operator lazily or eagerly evaluates its arguments.
 
 ```@repl 1
-Evaluation(::typeof(truth)) = Lazy();
+Evaluation(::typeof(truth)) = Lazy;
 truth()
 ```
 
@@ -83,7 +83,7 @@ This is an eagerly evaluated [`not`](@ref) operator.
 const negate = Operator{:negate}();
 symbol_of(::typeof(negate)) = "negate";
 negate
-Evaluation(::typeof(negate)) = Eager();
+Evaluation(::typeof(negate)) = Eager;
 evaluate(::typeof(negate), p) = evaluate(¬, p);
 @atomize negate(¬p)
 @atomize TruthTable([negate(p)])
@@ -97,7 +97,7 @@ This is an [`imply`](@ref) operator represented by the `-->` symbol.
 const if_then = --> = Operator{:if_then}();
 symbol_of(::typeof(-->)) = "-->";
 -->
-Evaluation(::typeof(-->)) = Lazy();
+Evaluation(::typeof(-->)) = Lazy;
 arity(::typeof(-->)) = 2;
 function pretty_print(io, o::typeof(-->), p, q)
     root = io[:root]
@@ -118,7 +118,7 @@ evaluate(::typeof(-->), p, q) = p → q;
 This error says to implement [`Associativity`](@ref Interface.Associativity). This function is used to determine which direction to [`fold`](@ref).
 
 ```@repl 1
-Associativity(::typeof(-->)) = Left();
+Associativity(::typeof(-->)) = Left;
 @atomize fold(𝒾, (-->) => ())
 ```
 
@@ -131,7 +131,7 @@ initial_value(::typeof(-->)) = Some(⊤);
 ```
 
 ```@repl 1
-Evaluation(::typeof(-->)) = Eager();
+Evaluation(::typeof(-->)) = Eager;
 evaluate(::typeof(-->), p) = Base.Fix2(-->, p);
 @atomize -->(q)
 @atomize -->(q)(p)
@@ -145,7 +145,7 @@ This is a lazily evaluated conditional operator.
 const conditional = Operator{:conditional}();
 symbol_of(::typeof(conditional)) = "?";
 conditional
-Evaluation(::typeof(conditional)) = Lazy();
+Evaluation(::typeof(conditional)) = Lazy;
 arity(::typeof(conditional)) = 3;
 function pretty_print(io, o::typeof(conditional), p, q, r)
     root = io[:root]

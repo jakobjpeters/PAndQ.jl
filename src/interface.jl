@@ -89,10 +89,10 @@ Supertype of [`Eager`](@ref) and [`Lazy`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize Interface.Evaluation(𝒾)
-PAndQ.Interface.Eager()
+PAndQ.Interface.Eager
 
 julia> @atomize Interface.Evaluation(¬)
-PAndQ.Interface.Lazy()
+PAndQ.Interface.Lazy
 ```
 """
 abstract type Evaluation end
@@ -133,10 +133,10 @@ Supertype of [`Left`](@ref) and [`Right`](@ref).
 # Examples
 ```jldoctest
 julia> Interface.Associativity(→)
-PAndQ.Interface.Left()
+PAndQ.Interface.Left
 
 julia> Interface.Associativity(←)
-PAndQ.Interface.Right()
+PAndQ.Interface.Right
 ```
 """
 abstract type Associativity end
@@ -216,7 +216,6 @@ julia> Interface.symbol_of(∧)
 
 """
     Eager <: Evaluation
-    Eager()
 
 A trait to specify that an [`Operator`](@ref Interface.Operator) is eagerly evaluated.
 
@@ -228,7 +227,6 @@ struct Eager <: Evaluation end
 
 """
     Lazy <: Evaluation
-    Lazy()
 
 A trait to specify that an [`Operator`](@ref Interface.Operator) is lazily evaluated.
 

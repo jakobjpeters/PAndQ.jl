@@ -465,8 +465,8 @@ for o in (:⊤, :⊥, :𝒾, :¬, :∧, :↑, :↓, :∨, :↮, :↔, :→, :↛
     @eval symbol_of(::typeof($o)) = $(string(o))
 end
 
-Associativity(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔, →, ↚))) = Left()
-Associativity(::union_typeof((↛, ←))) = Right()
+Associativity(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔, →, ↚))) = Left
+Associativity(::union_typeof((↛, ←))) = Right
 
 dual(o::UnaryOperator) = o
 eval_doubles(:dual, (
@@ -554,11 +554,11 @@ _evaluation(o, ps...) = _evaluation(o, map(Tree, ps)...)
 evaluation(::Eager, o, ps...) = evaluate(o, ps...)
 evaluation(::Lazy, o, ps...) = _evaluation(o, ps...)
 
-Evaluation(::Union{typeof(𝒾), NaryOperator}) = Eager()
-Evaluation(::Union{NullaryOperator, typeof(¬), BinaryOperator}) = Lazy()
+Evaluation(::Union{typeof(𝒾), NaryOperator}) = Eager
+Evaluation(::Union{NullaryOperator, typeof(¬), BinaryOperator}) = Lazy
 
 (o::Operator)(ps::BN...) where BN <: Union{Bool, Normal} = evaluate(o, ps...)
-(o::Operator)(ps...) = evaluation(Evaluation(o), o, ps...)
+(o::Operator)(ps...) = evaluation(Evaluation(o)(), o, ps...)
 
 _pretty_print(io, o, ps) = __show(show_proposition, io, ps) do io
     print(io, " ")
