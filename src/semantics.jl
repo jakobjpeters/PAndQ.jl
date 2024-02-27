@@ -497,13 +497,13 @@ ____evaluate_and_or(ao, o::NullaryOperator, ps, q) = evaluate(ao, o, q)
 ____evaluate_and_or(ao, o, ps, q) = ao(q, o(ps...))
 
 ___evaluate_and_or(ao, p::Atom, q) = ao(q, p)
-___evaluate_and_or(ao, p, q) = ____evaluate_and_or(ao, nodevalue(p), children(p), q)
+___evaluate_and_or(ao, p, q) = ____evaluate_and_or(ao, deconstruct(p)..., q)
 
 __evaluate_and_or(ao, o::NullaryOperator, ps, q) = evaluate(ao, o, q)
 __evaluate_and_or(ao, o, ps, q) = ___evaluate_and_or(ao, q, o(ps...))
 
 _evaluate_and_or(ao, p::Atom, q) = ___evaluate_and_or(ao, q, p)
-_evaluate_and_or(ao, p, q) = __evaluate_and_or(ao, nodevalue(p), children(p), q)
+_evaluate_and_or(ao, p, q) = __evaluate_and_or(ao, deconstruct(p)..., q)
 
 evaluate_and_or(::typeof(∧), ::typeof(⊤), q) = q
 evaluate_and_or(::typeof(∧), ::typeof(⊥), q) = ⊥
@@ -586,7 +586,7 @@ end
 _show_proposition(io, p::Variable) = print(io, p.symbol)
 _show_proposition(io, p::Tree) = pretty_print(io, nodevalue(p), children(p)...)
 function _show_proposition(io, p::Union{Clause, Normal})
-    o, qs = nodevalue(p), children(p)
+    o, qs = deconstruct(p)
     isempty(qs) ? pretty_print(io, something(initial_value(o))) : _pretty_print(io, o, qs)
 end
 

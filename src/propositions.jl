@@ -225,8 +225,6 @@ nodevalue(::Union{Clause{O}, Normal{O}}) where O = O.instance
 
 _printnode(p::Union{Operator, Atom}) = p
 _printnode(p::Tree) = nodevalue(p)
-_printnode(p::Union{Clause, Normal}) =
-    (isempty(children(p)) ? something ∘ initial_value : 𝒾)(nodevalue(p))
 
 """
     printnode(::IO, ::Union{NullaryOperator, Proposition}; kwargs...)
@@ -243,6 +241,10 @@ julia> @atomize PAndQ.printnode(stdout, p ∧ q)
 ∧
 ```
 """
+function printnode(io::IO, p::Union{Clause, Normal})
+    o = nodevalue(p)
+    isempty(children(p)) ? show(io, MIME"text/plain"(), something(initial_value(o))) : show(io, MIME"text/plain"(), o)
+end
 printnode(io::IO, p::Union{Operator, Proposition}; kwargs...) =
     show(io, MIME"text/plain"(), _printnode(p))
 
@@ -263,13 +265,34 @@ nodetype(::Type{A}) where A <: Atom = A
 ## Utilities
 
 """
+    deconstruct(p)
+
+Return `(nodevalue(p), children(p))`.
+
+See also [`nodevalue`](@ref) and [`children`](@ref).
+
+# Examples
+```jldoctest
+julia> @atomize PAndQ.deconstruct(p)
+(PAndQ.Variable(:p), ())
+
+julia> @atomize PAndQ.deconstruct(¬p)
+(PAndQ.Interface.Operator{:not}(), (PAndQ.Variable(:p),))
+
+julia> @atomize PAndQ.deconstruct(p ∧ q)
+(PAndQ.Interface.Operator{:and}(), (identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q))))
+```
+"""
+deconstruct(p) = nodevalue(p), children(p)
+
+"""
     child(x)
 
 Equivalent to `only ∘ children`
 
 See also [`children`](@ref).
 """
-const child = only ∘ children
+child(x) = only(children(x))
 
 """
     atomize(x)
@@ -305,7 +328,7 @@ function _distribute(f, ao, stack)
 
     while !isempty(stack)
         q = pop!(stack)
-        o, rs = nodevalue(q), children(q)
+        o, rs = deconstruct(q)
 
         if o == not_initial_value return Tree(not_initial_value)
         elseif o isa UnaryOperator p = evaluate(ao, p, q)
@@ -337,7 +360,7 @@ function flatten!(mapping, clauses, qs, p)
         clause, rs = Tree[], Tree[p]
         while !isempty(rs)
             r = pop!(rs)
-            o, ss = nodevalue(r), children(r)
+            o, ss = deconstruct(r)
 
             if o isa typeof(⊥)
             elseif o isa UnaryOperator && only(ss) isa Atom push!(clause, r)
@@ -597,7 +620,7 @@ function normalize(::typeof(¬), p::Tree)
 
     while !isempty(input_stack)
         q = pop!(input_stack)
-        o, rs = nodevalue(q), children(q)
+        o, rs = deconstruct(q)
 
         if o isa NullaryOperator || (o isa UnaryOperator && only(rs) isa Atom) push!(output_stack, q)
         elseif o isa AndOr
@@ -643,7 +666,7 @@ _tseytin(p) = __tseytin(nodevalue(p), children(p)...)
 
 function tseytin!(pairs, substitution, p)
     if !isa(p, Atom)
-        o, qs = nodevalue(p), children(p)
+        o, qs = deconstruct(p)
         if !(o isa typeof(𝒾) && only(qs) isa Atom)
             substitutions = map(_tseytin, qs)
             push!(pairs, (substitution, o(substitutions...)))

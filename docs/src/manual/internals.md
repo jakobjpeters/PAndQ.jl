@@ -83,7 +83,6 @@ PAndQ.Compound
 PAndQ.Constant
 PAndQ.Variable
 PAndQ.Tree
-PAndQ.Literal
 PAndQ.Clause
 PAndQ.Normal
 ```
@@ -101,6 +100,7 @@ PAndQ.nodetype
 ### Utility
 
 ```@docs
+PAndQ.deconstruct
 PAndQ.child
 PAndQ.atomize
 PAndQ.distribute
