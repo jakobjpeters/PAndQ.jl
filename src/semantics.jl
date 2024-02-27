@@ -410,13 +410,10 @@ Bool(o::NullaryOperator) = convert(Bool, o)
 
 # Constructors
 
-Literal(uo, p::Atom) = Tree(uo, p)
-
 Tree(::typeof(¬), p::Tree{typeof(𝒾)}) = Tree(¬, child(p))
 
-for P in (:Atom, :Literal, :Tree)
-    @eval $P(p) = convert($P, p)
-end
+Atom(p) = convert(Atom, p)
+Tree(p) = convert(Tree, p)
 
 Normal(::AO, p) where AO = convert(Normal{AO}, p)
 
