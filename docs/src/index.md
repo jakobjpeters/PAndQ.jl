@@ -33,9 +33,7 @@ PAndQ.jl is a [computer algebra system](https://en.wikipedia.org/wiki/Computer_a
 
 #### Planned
 
-- Interfaces
-    - Operators
-    - Propositions
+- Interface for custom propositions
 - Simplification
 - Substitution
 - Proofs
