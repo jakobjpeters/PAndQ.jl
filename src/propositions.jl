@@ -85,8 +85,8 @@ struct Variable <: Atom
 end
 
 """
-    Tree{O <: Operator, AT <: Union{Atom, Tree}, N} <: Compound
-    Tree(::NullaryOperator, ::Atom)
+    Tree{N, AT <: Union{Atom, Tree}} <: Compound
+    Tree(::UnaryOperator, ::Atom)
     Tree(::Operator, ::Tree...)
     Tree(::Proposition)
 
@@ -108,31 +108,13 @@ julia> @atomize PAndQ.Tree(and, PAndQ.Tree(p), PAndQ.Tree(q))
 p ∧ q
 ```
 """
-struct Tree{O <: Operator, P <: Proposition, N} <: Compound
-    nodes::NTuple{N, P}
+struct Tree{N, P <: Proposition} <: Compound
+    operator::Operator
+    propositions::NTuple{N, P}
 
-    Tree(o::UO, node::A) where {UO <: UnaryOperator, A <: Atom} = new{UO, A, 1}((node,))
-    Tree(o::O, nodes::Tree...) where O <: Operator = new{O, Tree, arity(o)}(nodes)
+    Tree(o::UnaryOperator, p::A) where A <: Atom = new{1, A}(o, (p,))
+    Tree(o::O, ps::Tree...) where O <: Operator = new{arity(o), Tree}(o, ps)
 end
-
-"""
-    Literal <: Tree{<:Operator, <:Atom, 1}
-
-A proposition represented by [an atomic formula or its negation]
-(https://en.wikipedia.org/wiki/Literal_(mathematical_logic)).
-
-See also [`Operator`](@ref), [`Atom`](@ref), and [`Tree`](@ref).
-
-# Examples
-```jldoctest
-julia> @atomize PAndQ.Literal(𝒾, p)
-p
-
-julia> @atomize PAndQ.Literal(¬, p)
-¬p
-```
-"""
-const Literal = Tree{<:Operator, <:Atom, 1}
 
 """
     Clause{AO <: AndOr} <: Compound
@@ -146,7 +128,7 @@ A proposition represented as either a [conjunction or disjunction of literals]
     neutral element of it's binary operator.
 
 Subtype of [`Compound`](@ref).
-See also [`Atom`](@ref), [`Literal`](@ref), [`AndOr`](@ref), and [`NullaryOperator`](@ref).
+See also [`Atom`](@ref), [`AndOr`](@ref), and [`NullaryOperator`](@ref).
 
 # Examples
 ```jldoctest
@@ -217,19 +199,17 @@ julia> @atomize PAndQ.children(p ∧ q)
 (identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q)))
 ```
 """
-children(p::Tree) = p.nodes
-children(p::Clause) = Iterators.map(i -> Literal(signbit(i) ? (¬) : 𝒾, p.atoms[abs(i)]), p.literals)
+children(p::Tree) = p.propositions
+children(p::Clause) = Iterators.map(i -> Tree(signbit(i) ? (¬) : 𝒾, p.atoms[abs(i)]), p.literals)
 children(p::Normal) = Iterators.map(p.clauses) do clause
     atoms = p.atoms[collect(Iterators.map(abs, clause))]
     Clause(dual(nodevalue(p)), atoms, Set(Iterators.map(literal -> sign(literal) * findfirst(==(p.atoms[abs(literal)]), atoms), clause)))
 end
 
 """
-    nodevalue(::Union{Tree{O}, Clause{O}, Normal{O}}) where O
+    nodevalue(::Union{Tree, Clause, Normal})
 
-Return `O.instance`.
-
-See also [`Compound`](@ref).
+See also [`Tree`](@ref), [`Clause`](@ref), and [`Normal`](@ref).
 
 # Examples
 ```jldoctest
@@ -240,9 +220,10 @@ julia> @atomize PAndQ.nodevalue(p ∧ q)
 ∧
 ```
 """
-nodevalue(::Union{Tree{O}, Clause{O}, Normal{O}}) where O = O.instance
+nodevalue(p::Tree) = p.operator
+nodevalue(::Union{Clause{O}, Normal{O}}) where O = O.instance
 
-_printnode(p::Union{NullaryOperator, Atom}) = p
+_printnode(p::Union{Operator, Atom}) = p
 _printnode(p::Tree) = nodevalue(p)
 _printnode(p::Union{Clause, Normal}) =
     (isempty(children(p)) ? something ∘ initial_value : 𝒾)(nodevalue(p))
@@ -262,7 +243,7 @@ julia> @atomize PAndQ.printnode(stdout, p ∧ q)
 ∧
 ```
 """
-printnode(io::IO, p::Union{NullaryOperator, Proposition}; kwargs...) =
+printnode(io::IO, p::Union{Operator, Proposition}; kwargs...) =
     show(io, MIME"text/plain"(), _printnode(p))
 
 """
@@ -373,8 +354,8 @@ function flatten!(mapping, clauses, qs, p)
 
         push!(clauses, _clause)
     elseif x isa typeof(∧)
-        for node in p.nodes
-            flatten!(mapping, clauses, qs, node)
+        for r in children(p)
+            flatten!(mapping, clauses, qs, r)
         end
     else push!(qs, p)
     end

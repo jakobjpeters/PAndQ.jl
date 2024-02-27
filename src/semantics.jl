@@ -174,7 +174,7 @@ true
 ```
 """
 is_tautology(::typeof(⊤)) = true
-is_tautology(::Union{typeof(⊥), Atom, Literal}) = false
+is_tautology(::Union{typeof(⊥), Atom}) = false
 is_tautology(p) = is_contradiction(¬p)
 
 """
@@ -221,7 +221,7 @@ false
 ```
 """
 is_truth(::NullaryOperator) = true
-is_truth(::Union{Atom, Literal}) = false
+is_truth(::Atom) = false
 is_truth(p) = is_tautology(p) || is_contradiction(p)
 
 """
