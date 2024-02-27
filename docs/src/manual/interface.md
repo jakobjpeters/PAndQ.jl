@@ -30,7 +30,7 @@ Interface.initial_value
 
 ```@docs
 Interface.pretty_print
-Interface.symbol_of
+Interface.symbol
 ```
 
 ## Utilities
@@ -54,7 +54,7 @@ Interface.Right
 ### Printing
 
 ```@docs
-Interface.name_of
+Interface.name
 Interface.show_proposition
 ```
 

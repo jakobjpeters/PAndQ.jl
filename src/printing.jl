@@ -106,9 +106,9 @@ end
 """
     show(::IO, ::MIME"text/plain", ::Operator)
 
-Represent the given [`Operator`](@ref) as specified by [`symbol_of`](@ref Interface.symbol_of)
+Represent the given [`Operator`](@ref) as specified by [`symbol`](@ref Interface.symbol)
 """
-show(io::IO, ::MIME"text/plain", o::Operator) = print(io, symbol_of(o))
+show(io::IO, ::MIME"text/plain", o::Operator) = print(io, symbol(o))
 
 """
     show(::IO, ::MIME"text/plain", ::Proposition)
@@ -183,7 +183,7 @@ function show(io::IO, p::Atom)
     print(io, ")")
 end
 function show(io::IO, p::Tree)
-    print(io, name_of(nodevalue(p)), "(")
+    print(io, name(nodevalue(p)), "(")
     __show(io -> print(io, ", "), show, io, children(p))
     print(io, ")")
 end

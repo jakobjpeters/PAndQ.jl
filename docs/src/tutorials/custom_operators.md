@@ -18,7 +18,7 @@ Implementing an operator requires defining methods for that operator. To do so, 
 ```@repl 1
 import PAndQ:
     Associativity, Evaluation,
-    arity, dual, evaluate, initial_value, pretty_print, symbol_of
+    arity, dual, evaluate, initial_value, pretty_print, symbol
 using PAndQ, .Interface
 ```
 
@@ -29,17 +29,17 @@ This is a renamed [`tautology`](@ref) operator. First, define an [`Operator`](@r
 ```julia
 julia> const truth = Operator{:truth}()
 Error showing value of type Operator{:truth}:
-ERROR: InterfaceError: implement `symbol_of` for `Operator{:truth}()`
+ERROR: InterfaceError: implement `symbol` for `Operator{:truth}()`
 ```
 
-If a required method is not implemented, a runtime error will display the function and operator that a method must be implemented for. The error says to implement [`symbol_of`](@ref Interface.symbol_of). This function is used to represent an operator.
+If a required method is not implemented, a runtime error will display the function and operator that a method must be implemented for. The error says to implement [`symbol`](@ref Interface.symbol). This function is used to represent an operator.
 
 ```@setup 1
 const truth = Operator{:truth}()
 ```
 
 ```@repl 1
-symbol_of(::typeof(truth)) = "truth";
+symbol(::typeof(truth)) = "truth";
 truth
 truth()
 ```
@@ -81,7 +81,7 @@ This is an eagerly evaluated [`not`](@ref) operator.
 
 ```@repl 1
 const negate = Operator{:negate}();
-symbol_of(::typeof(negate)) = "negate";
+symbol(::typeof(negate)) = "negate";
 negate
 Evaluation(::typeof(negate)) = Eager;
 evaluate(::typeof(negate), p) = evaluate(¬, p);
@@ -95,7 +95,7 @@ This is an [`imply`](@ref) operator represented by the `-->` symbol.
 
 ```@repl 1
 const if_then = --> = Operator{:if_then}();
-symbol_of(::typeof(-->)) = "-->";
+symbol(::typeof(-->)) = "-->";
 -->
 Evaluation(::typeof(-->)) = Lazy;
 arity(::typeof(-->)) = 2;
@@ -143,7 +143,7 @@ This is a lazily evaluated conditional operator.
 
 ```@repl 1
 const conditional = Operator{:conditional}();
-symbol_of(::typeof(conditional)) = "?";
+symbol(::typeof(conditional)) = "?";
 conditional
 Evaluation(::typeof(conditional)) = Lazy;
 arity(::typeof(conditional)) = 3;

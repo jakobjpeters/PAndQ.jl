@@ -8,7 +8,7 @@ using PAndQ
 export
     Associativity, Eager, Evaluation, Lazy, Left, Operator, Right,
     arity, converse, dual, evaluate, initial_value, is_associative,
-    is_commutative, name_of, pretty_print, show_proposition, symbol_of
+    is_commutative, name, pretty_print, show_proposition, symbol
 
 # Internals
 
@@ -48,7 +48,7 @@ Return an operator named `O`.
 
 Operators are uniquely identified by their name.
 If possible, an operator should be defined as
-`const o = ℴ = Operator{:o}()` where [`symbol_of`](@ref Interface.symbol_of)`(ℴ) == "ℴ"`.
+`const o = ℴ = Operator{:o}()` where [`symbol`](@ref Interface.symbol)`(ℴ) == "ℴ"`.
 
 This method is required to instantiate an operator.
 """
@@ -186,11 +186,11 @@ for a proposition `p` containing the given operator.
 @interface pretty_print io o ps...
 
 """
-    symbol_of(ℴ::Operator)
+    symbol(ℴ::Operator)
 
 Return the Unicode symbol of the [`Operator`](@ref).
 
-If possible, this should be implemented as `symbol_of(::typeof(ℴ)) = "ℴ"`.
+If possible, this should be implemented as `symbol(::typeof(ℴ)) = "ℴ"`.
 
 This method is required for calling `show(::IO, ::MIME"text/plain", ::typeof(ℴ))`.
 
@@ -198,17 +198,17 @@ See also [`show`](@ref).
 
 # Examples
 ```jldoctest
-julia> Interface.symbol_of(⊤)
+julia> Interface.symbol(⊤)
 "⊤"
 
-julia> Interface.symbol_of(¬)
+julia> Interface.symbol(¬)
 "¬"
 
-julia> Interface.symbol_of(∧)
+julia> Interface.symbol(∧)
 "∧"
 ```
 """
-@interface symbol_of o
+@interface symbol o
 
 # Utilities
 
@@ -259,11 +259,11 @@ struct Right <: Associativity end
 ## Printing
 
 """
-    name_of(::Operator{O})
+    name(::Operator{O})
 
 Return `O`, the name of an [`Operator`](@ref Interface.Operator).
 """
-name_of(::Operator{O}) where O = O
+name(::Operator{O}) where O = O
 
 """
     show_proposition(io, p)

@@ -462,7 +462,7 @@ initial_value(::union_typeof((∨, ↮, ↚, ↛))) = Some(⊥)
 initial_value(::union_typeof((↑, ↓))) = nothing
 
 for o in (:⊤, :⊥, :𝒾, :¬, :∧, :↑, :↓, :∨, :↮, :↔, :→, :↛, :←, :↚, :⋀, :⋁)
-    @eval symbol_of(::typeof($o)) = $(string(o))
+    @eval symbol(::typeof($o)) = $(string(o))
 end
 
 Associativity(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔, →, ↚))) = Left
