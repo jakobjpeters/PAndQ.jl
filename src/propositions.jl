@@ -478,7 +478,7 @@ constants(xs) = constants(𝒾, xs)
 # Utility
 
 """
-    value(p, T = Any)
+    value(T = Any, p)
 
 If `p` is logically equivalent to a [`Constant`](@ref), return that value wrapped in `Some`.
 Otherwise, return nothing.
@@ -488,7 +488,7 @@ Values wrapped in `Some` can be unwrapped using the `something` function.
 !!! tip
     To reduce compilation latency, constants do not store the type of the wrapped value.
     Therefore, the type of this value cannot be inferred and can result in run-time dispatch.
-    If this type is known at compile-time, pass it as the second parameter.
+    If this type is known at compile-time, pass it as the first parameter.
     See also [Annotate values taken from untyped locations]
     (https://docs.julialang.org/en/v1/manual/performance-tips/#Annotate-values-taken-from-untyped-locations).
 
@@ -499,11 +499,11 @@ julia> @atomize value(p)
 julia> @atomize value(\$1)
 Some(1)
 
-julia> @atomize something(value(\$2, Int))
+julia> @atomize something(value(Int, \$2))
 2
 ```
 """
-function value(p, T = Any)
+function value(T, p)
     _atoms = atoms(p)
     if isempty(_atoms) nothing
     else
@@ -511,6 +511,7 @@ function value(p, T = Any)
         atom isa Constant && atom == p ? Some(atom.value::T) : nothing
     end
 end
+value(p) = value(Any, p)
 
 """
     atoms(p)
