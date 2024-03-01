@@ -85,10 +85,8 @@ struct Variable <: Atom
 end
 
 """
-    Tree{N, AT <: Union{Atom, Tree}} <: Compound
-    Tree(::UnaryOperator, ::Atom)
-    Tree(::Operator, ::Tree...)
-    Tree(::Proposition)
+    Tree <: Compound
+    Tree(::Operator, ::Union{Atom, Tree}...)
 
 A [`Proposition`](@ref) represented by an [abstract syntax tree]
 (https://en.wikipedia.org/wiki/Abstract_syntax_tree).
@@ -108,12 +106,11 @@ julia> @atomize PAndQ.Tree(and, PAndQ.Tree(p), PAndQ.Tree(q))
 p ∧ q
 ```
 """
-struct Tree{N, P <: Proposition} <: Compound
+struct Tree{N} <: Compound
     operator::Operator
-    propositions::NTuple{N, P}
+    propositions::NTuple{N, Union{Atom, Tree}}
 
-    Tree(o::UnaryOperator, p::A) where A <: Atom = new{1, A}(o, (p,))
-    Tree(o::O, ps::Tree...) where O <: Operator = new{arity(o), Tree}(o, ps)
+    Tree(o::O, ps...) where O <: Operator = new{arity(o)}(o, ps)
 end
 
 """
