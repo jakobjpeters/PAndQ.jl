@@ -3,6 +3,9 @@
 
 This interface is used to implement the [built-in operators](@ref operators_operators) and can be used to implement [custom operators](@ref custom_operators).
 
+!!! warning
+    This interface is incomplete and will be changed in v0.4.
+
 ## Methods
 
 These methods are required to be implemented for some functionalities. If a required method is not implemented, a runtime error will display the function and operator that a method must be implemented for. Default implementations of are not provided so as to avoid correctness bugs.

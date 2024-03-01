@@ -11,6 +11,9 @@ This tutorial will demonstrate how to implement custom operators using the opera
 - Pretty printing
 - Side-effects
 
+!!! warning
+    This tutorial is not yet polished. This interface is incomplete and will be changed in v0.4.
+
 ## Setup
 
 Implementing an operator requires defining methods for that operator. To do so, their function names must be imported or prefixed by the `Interface` module. This module also exports several other required and useful functions.
