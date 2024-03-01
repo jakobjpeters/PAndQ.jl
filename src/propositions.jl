@@ -200,7 +200,10 @@ julia> @atomize PAndQ.children(p ∧ q)
 ```
 """
 children(p::Tree) = p.propositions
-children(p::Clause) = Iterators.map(i -> Tree(signbit(i) ? (¬) : 𝒾, p.atoms[abs(i)]), p.literals)
+function children(p::Clause)
+    atoms = p.atoms
+    Iterators.map(literal -> (signbit(literal) ? (¬) : Tree)(atoms[abs(literal)]), p.literals)
+end
 children(p::Normal) = Iterators.map(p.clauses) do clause
     atoms = p.atoms[collect(Iterators.map(abs, clause))]
     Clause(dual(nodevalue(p)), atoms, Set(Iterators.map(literal -> sign(literal) * findfirst(==(p.atoms[abs(literal)]), atoms), clause)))
@@ -225,6 +228,8 @@ nodevalue(::Union{Clause{O}, Normal{O}}) where O = O.instance
 
 _printnode(p::Union{Operator, Atom}) = p
 _printnode(p::Tree) = nodevalue(p)
+_printnode(p::Union{Clause, Normal}) =
+    (isempty(children(p)) ? something ∘ initial_value : identity)(nodevalue(p))
 
 """
     printnode(::IO, ::Union{NullaryOperator, Proposition}; kwargs...)
@@ -241,12 +246,7 @@ julia> @atomize PAndQ.printnode(stdout, p ∧ q)
 ∧
 ```
 """
-function printnode(io::IO, p::Union{Clause, Normal})
-    o = nodevalue(p)
-    isempty(children(p)) ? show(io, MIME"text/plain"(), something(initial_value(o))) : show(io, MIME"text/plain"(), o)
-end
-printnode(io::IO, p::Union{Operator, Proposition}; kwargs...) =
-    show(io, MIME"text/plain"(), _printnode(p))
+printnode(io::IO, p::Union{Operator, Proposition}) = show(io, MIME"text/plain"(), _printnode(p))
 
 """
     NodeType(::Type{<:Atom})

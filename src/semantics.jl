@@ -388,7 +388,7 @@ p::Bool < q::Union{NullaryOperator, Proposition} = p ? false : is_satisfiable(q)
 p::NullaryOperator < q::Union{Bool, NullaryOperator, Proposition} = Bool(p) < q
 p::Proposition < q::Union{Bool, NullaryOperator} = ¬q < ¬p
 p::Proposition < q::Proposition =
-    is_contradiction(p) ? is_satisfiable(q) : !is_tautology(p) && is_tautology(q)
+    is_contradiction(p) ? is_satisfiable(q) : is_falsifiable(p) && is_tautology(q)
 
 # Operators
 
