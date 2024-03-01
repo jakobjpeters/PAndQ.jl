@@ -410,8 +410,6 @@ Bool(o::NullaryOperator) = convert(Bool, o)
 
 # Constructors
 
-Tree(::typeof(¬), p::Tree{typeof(𝒾)}) = Tree(¬, child(p))
-
 Atom(p) = convert(Atom, p)
 Tree(p) = convert(Tree, p)
 
@@ -547,6 +545,10 @@ evaluate(::typeof(↚), p, q) = ¬p ∧ q
 evaluate(::typeof(⋀), ps) = fold(𝒾, (∧) => ps)
 evaluate(::typeof(⋁), ps) = fold(𝒾, (∨) => ps)
 
+__evaluation(::typeof(𝒾), p) = ¬p
+__evaluation(o, ps...) = Tree(¬, Tree(o(ps...)))
+
+_evaluation(::typeof(¬), p::Tree) = __evaluation(nodevalue(p), children(p)...)
 _evaluation(o::UnaryOperator, p::Atom) = Tree(o, p)
 _evaluation(o, ps::Tree...) = Tree(o, ps...)
 _evaluation(o, ps...) = _evaluation(o, map(Tree, ps)...)
