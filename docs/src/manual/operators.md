@@ -1,7 +1,11 @@
 
 # [Operators](@id operators_operators)
 
-Operators accept `Bool`s, [Nullary Operators](@ref nullary_operators), and [`Proposition`](@ref PAndQ.Proposition)s. Operations on symbolic expressions are not simplified.
+Operators accept `Bool`s, [Nullary Operators](@ref nullary_operators), and [`Proposition`](@ref PAndQ.Proposition)s. However, boolean values cannot interoperate with truth values and propositions. Operations on boolean values is always eagerly evaluated, whereas operations on truth values and propositions is evaluated according to the operator's [`Evaluation`](@ref Interface.Evaluation) trait.
+
+!!! info
+    Operations on propositions that have been [`normalize`](@ref)d eagerly evaluate to another normalized proposition.
+    This behavior is likely to be removed in v0.4.
 
 Typing symbols with tab completion is performed by typing `\`, followed by the given characters, and then the `[TAB]` key. For example, `⊤` is typed with `\top[TAB]`. See also [Tab Completion](https://docs.julialang.org/en/v1/stdlib/REPL/#Tab-completion) and [Unicode Input](https://docs.julialang.org/en/v1/manual/unicode-input/).
 

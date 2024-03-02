@@ -332,14 +332,17 @@ const not_converse_imply = ↚ = Operator{:not_converse_imply}()
     conjunction(ps)
     ⋀(ps)
 
-Equivalent to `something(foldl(∧, ps; init = Some(⊤)))`.
+Equivalent to `fold(𝒾, (∧) => ps)`.
 
 `⋀` can be typed by `\\bigwedge[TAB]`.
 
-See also [`and`](@ref) and [`tautology`](@ref).
+See also [`identical`](@ref), [`and`](@ref), and [`fold`](@ref).
 
 # Examples
 ```jldoctest
+julia> ⋀(())
+⊤
+
 julia> @atomize ⋀((p, q, r, s))
 ((p ∧ q) ∧ r) ∧ s
 ```
@@ -350,14 +353,17 @@ const conjunction = ⋀ = Operator{:conjunction}()
     disjunction(ps)
     ⋁(ps)
 
-Equivalent to `something(foldl(∨, ps; init = Some(⊥)))`.
+Equivalent to `fold(𝒾, (∨) => ps)`.
 
 `⋁` can be typed by `\\bigvee[TAB]`.
 
-See also [`or`](@ref) and [`contradiction`](@ref).
+See also [`identical`](@ref), [`or`](@ref), and [`fold`](@ref).
 
 # Examples
 ```jldoctest
+julia> ⋁(())
+⊥
+
 julia> @atomize ⋁((p, q, r, s))
 ((p ∨ q) ∨ r) ∨ s
 ```
@@ -387,7 +393,7 @@ _fold((o, xs), pairs...) = __fold(_fold(pairs...), o, xs)
 A generalization of `mapreduce` with an arbitrary number of nested folds
 and traits to determine the [`Associativity`](@ref Interface.Associativity) and [`initial_value`](@ref Interface.initial_value).
 
-The function `f` must accept as many arguments as there are `pairs`.
+The function `f` must accept as many parameters as there are `pairs`.
 Each pair must be a two element iterable where the first element is a
 binary operator and the second element is an iterable.
 

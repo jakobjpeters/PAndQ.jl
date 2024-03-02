@@ -11,7 +11,7 @@ This page demonstrates the basic functionality of this package. For additional f
 
 [Operators](@ref operators_operators) are functions represented by a symbol that return a symbolic expression.
 
-The operators [`tautology`](@ref) and [`contradiction`](@ref) are similar to the boolean values `true` and `false`, respectively. These operators are represented with the symbols `⊤` and `⊥` and return themselves when called.
+The operators [`tautology`](@ref) and [`contradiction`](@ref) are truth values similar to the boolean values `true` and `false`, respectively. These operators are represented with the symbols `⊤` and `⊥` and return themselves when called.
 
 ```jldoctest
 julia> ⊤()
@@ -79,13 +79,10 @@ julia> p ∧ q
 p ∧ q
 ```
 
-The `tautology` and `contradiction` operators can interoperate with both booleans and propositions. However, booleans and propositions cannot interoperate.
+Operators always eagerly evaluate boolean values. Boolean values cannot interoperate with truth values and propositions.
 
-```julia
-julia> Bool(⊤)
-true
-
-julia> true ∧ ⊤
+```jldoctest 1
+julia> true ∧ true
 true
 
 julia> ⊤ ∧ p

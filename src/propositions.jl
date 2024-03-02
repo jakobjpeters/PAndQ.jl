@@ -480,7 +480,7 @@ constants(xs) = constants(𝒾, xs)
 """
     value(T = Any, p)
 
-If `p` is logically equivalent to a [`Constant`](@ref), return that value wrapped in `Some`.
+If `p` is logically equivalent to a [`Constant`](@ref), return that constant's value wrapped in `Some`.
 Otherwise, return nothing.
 
 Values wrapped in `Some` can be unwrapped using the `something` function.
@@ -591,10 +591,11 @@ In other words, a collection of literals is a clause and
 a proposition in conjunctive or disjunctive normal form is a conjunction of
 disjunctive clauses or a disjunction of conjunctive clauses, respectively.
 
-Conjunctive and disjunctive, but not negation, normal forms are called *canonical*.
+Conjunction and disjunction, but not negation, normal forms are called *canonical*.
 Distributing an operator during conversion increases the size of the syntax tree exponentially.
 Therefore, it is not possible to compute the canonical form for sufficiently large propositions.
-Use the [`tseytin`](@ref) transformation to find a proposition in conjunctive normal form which [`is_equisatisfiable`](@ref).
+Use the [`tseytin`](@ref) transformation to find a proposition in conjunctive normal form which
+[`is_equisatisfiable`](@ref) to the given proposition.
 
 Operations between canonical propositions return another canonical proposition,
 while operations between canonical and non-canonical propositions return a non-canonical proposition.
@@ -684,7 +685,7 @@ end
 Apply the [Tseytin transformation](https://en.wikipedia.org/wiki/Tseytin_transformation)
 to the given proposition.
 
-The transformed proposition is [`normalize`](@ref)d to conjunction form,
+The transformed proposition is [`normalize`](@ref)d to conjunction normal form,
 contains introduced [`Variable`](@ref)s,
 and [`is_equisatisfiable`](@ref) to `p`.
 The [`valuations`](@ref) of the transformed proposition that result
@@ -710,6 +711,11 @@ tseytin(p) = tseytin(Tree(p))
 
 """
     dimacs(io = stdout, p)
+
+Write the DIMACS format of `p` to `io`.
+
+The `io` can be an `IO` or file path `String` to write to
+or the `String` type to return a string.
 
 # Examples
 ```jldoctest
