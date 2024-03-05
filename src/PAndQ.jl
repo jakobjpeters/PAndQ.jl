@@ -15,7 +15,7 @@ include("interface.jl")
 import .Interface:
     Associativity, Evaluation,
     arity, converse, dual, evaluate, initial_value,
-    is_associative, is_commutative, pretty_print, show_proposition, symbol
+    is_associative, is_commutative, print_expression, print_proposition, symbol
 using .Interface: Eager, Lazy, Left, Operator, Right, name
 export Interface
 
@@ -61,9 +61,9 @@ include("printing.jl")
 export
     TruthTable,
     formatter,
-    pretty_table,
-    print_tree,
-    show_proposition
+    print_proposition,
+    print_table,
+    print_tree
 
 __init__() = @compile_workload begin
     @variables p q
@@ -71,7 +71,7 @@ __init__() = @compile_workload begin
     ps = (⊤, ⊥, p, ¬p, map(BO -> BO.instance(p, q), uniontypes(BinaryOperator))...)
     qs = (ps..., conjunction(ps), disjunction(ps))
 
-    pretty_table(String, TruthTable(qs))
+    print_table(String, TruthTable(qs))
 
     for r in qs
         interpret(p => ⊤, r)
@@ -89,7 +89,7 @@ __init__() = @compile_workload begin
             f(r)
         end
 
-        for args in ((show,), (show, MIME"text/plain"()), (pretty_table,), (print_tree,))
+        for args in ((show,), (show, MIME"text/plain"()), (print_table,), (print_tree,))
             sprint(args..., r)
         end
     end

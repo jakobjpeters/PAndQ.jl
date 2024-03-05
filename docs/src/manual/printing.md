@@ -3,8 +3,8 @@
 
 ```@docs
 TruthTable
-show
 formatter
-pretty_table(::IO, ::TruthTable)
+print_table
 print_tree
+show
 ```

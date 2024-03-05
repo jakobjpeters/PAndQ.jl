@@ -11,7 +11,7 @@ Logical [true](https://en.wikipedia.org/wiki/Tautology_(logic)) operator.
 
 # Examples
 ```jldoctest
-julia> TruthTable([⊤])
+julia> print_table(⊤)
 ┌───┐
 │ ⊤ │
 ├───┤
@@ -31,7 +31,7 @@ Logical [false](https://en.wikipedia.org/wiki/Contradiction) operator.
 
 # Examples
 ```jldoctest
-julia> TruthTable([⊥])
+julia> print_table(⊥)
 ┌───┐
 │ ⊥ │
 ├───┤
@@ -51,7 +51,7 @@ Logical [identity](https://en.wikipedia.org/wiki/Law_of_identity) operator.
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable([𝒾(p)])
+julia> @atomize print_table(𝒾(p))
 ┌───┐
 │ p │
 ├───┤
@@ -72,7 +72,7 @@ Logical [negation](https://en.wikipedia.org/wiki/Negation) operator.
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable([¬p])
+julia> @atomize print_table(¬p)
 ┌───┬────┐
 │ p │ ¬p │
 ├───┼────┤
@@ -95,7 +95,7 @@ Logical [conjunction](https://en.wikipedia.org/wiki/Logical_conjunction) operato
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable([p ∧ q])
+julia> @atomize print_table(p ∧ q)
 ┌───┬───┬───────┐
 │ p │ q │ p ∧ q │
 ├───┼───┼───────┤
@@ -119,7 +119,7 @@ Logical [disjunction](https://en.wikipedia.org/wiki/Logical_disjunction) operato
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable([p ∨ q])
+julia> @atomize print_table(p ∨ q)
 ┌───┬───┬───────┐
 │ p │ q │ p ∨ q │
 ├───┼───┼───────┤
@@ -143,7 +143,7 @@ Logical [implication](https://en.wikipedia.org/wiki/Material_conditional) operat
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable([p → q])
+julia> @atomize print_table(p → q)
 ┌───┬───┬───────┐
 │ p │ q │ p → q │
 ├───┼───┼───────┤
@@ -167,7 +167,7 @@ Logical [exclusive disjunction](https://en.wikipedia.org/wiki/Exclusive_or) oper
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable([p ↮ q])
+julia> @atomize print_table(p ↮ q)
 ┌───┬───┬───────┐
 │ p │ q │ p ↮ q │
 ├───┼───┼───────┤
@@ -191,7 +191,7 @@ Logical [converse implication](https://en.wikipedia.org/wiki/Converse_(logic)#Im
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable([p ← q])
+julia> @atomize print_table(p ← q)
 ┌───┬───┬───────┐
 │ p │ q │ p ← q │
 ├───┼───┼───────┤
@@ -215,7 +215,7 @@ Logical [non-conjunction](https://en.wikipedia.org/wiki/Sheffer_stroke) operator
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable([p ↑ q])
+julia> @atomize print_table(p ↑ q)
 ┌───┬───┬───────┐
 │ p │ q │ p ↑ q │
 ├───┼───┼───────┤
@@ -239,7 +239,7 @@ Logical [non-disjunction](https://en.wikipedia.org/wiki/Logical_NOR) operator.
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable([p ↓ q])
+julia> @atomize print_table(p ↓ q)
 ┌───┬───┬───────┐
 │ p │ q │ p ↓ q │
 ├───┼───┼───────┤
@@ -264,7 +264,7 @@ Logical [exclusive non-disjunction]
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable([p ↔ q])
+julia> @atomize print_table(p ↔ q)
 ┌───┬───┬───────┐
 │ p │ q │ p ↔ q │
 ├───┼───┼───────┤
@@ -288,7 +288,7 @@ Logical [non-implication](https://en.wikipedia.org/wiki/Material_nonimplication)
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable([p ↛ q])
+julia> @atomize print_table(p ↛ q)
 ┌───┬───┬───────┐
 │ p │ q │ p ↛ q │
 ├───┼───┼───────┤
@@ -312,7 +312,7 @@ Logical [converse non-implication](https://en.wikipedia.org/wiki/Converse_nonimp
 
 # Examples
 ```jldoctest
-julia> @atomize TruthTable([p ↚ q])
+julia> @atomize print_table(p ↚ q)
 ┌───┬───┬───────┐
 │ p │ q │ p ↚ q │
 ├───┼───┼───────┤

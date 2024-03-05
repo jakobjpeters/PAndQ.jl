@@ -8,7 +8,7 @@ using PAndQ
 export
     Associativity, Eager, Evaluation, Lazy, Left, Operator, Right,
     arity, converse, dual, evaluate, initial_value, is_associative,
-    is_commutative, name, pretty_print, show_proposition, symbol
+    is_commutative, name, print_expression, print_proposition, symbol
 
 # Internals
 
@@ -170,7 +170,7 @@ julia> Interface.initial_value(↑)
 ## Printing
 
 """
-    pretty_print(io, ::Operator, ps...)
+    print_expression(io, ::Operator, ps...)
 
 Represent the node of a syntax tree containing the [`Operator`](@ref Interface.Operator) and its propositions.
 
@@ -178,12 +178,12 @@ Nodes of a syntax tree may either be a root or a branch.
 Some branches need to be parenthesized to avoid ambiguity.
 This context can be obtained using `io[:root]`.
 
-Each proposition should be represented using [`show_proposition`](@ref).
+Each proposition should be represented using [`print_proposition`](@ref).
 
 This method is required for calling `show(::IO, ::MIME"text/plain, p)`
 for a proposition `p` containing the given operator.
 """
-@interface pretty_print io o ps...
+@interface print_expression io o ps...
 
 """
     symbol(ℴ::Operator)
@@ -266,22 +266,22 @@ Return `O`, the name of an [`Operator`](@ref Interface.Operator).
 name(::Operator{O}) where O = O
 
 """
-    show_proposition(io, p)
+    print_proposition(io, p)
 
 Represent the given proposition with the `IOContext` that `:root => false`.
 
-Should be called from [`pretty_print`](@ref Interface.pretty_print).
+Should be called from [`print_expression`](@ref Interface.print_expression).
 
 # Examples
 ```jldoctest
-julia> @atomize show_proposition(stdout, ¬p)
+julia> @atomize print_proposition(stdout, ¬p)
 ¬p
 
-julia> @atomize show_proposition(stdout, p ∧ q)
+julia> @atomize print_proposition(stdout, p ∧ q)
 (p ∧ q)
 ```
 """
-function show_proposition end
+function print_proposition end
 
 ## Properties
 
@@ -310,7 +310,7 @@ converse(o::Operator) = (p, q) -> o(q, p)
 
 Return a function, `𝒹`, such that `¬ℴ(ps...) == 𝒹(map(¬, ps)...)`.
 
-If possible, this method should be overloaded to return an [`Operator`](@ref Interface.Operator).
+If possible, this method should be implemented to return an [`Operator`](@ref Interface.Operator).
 
 See also [`not`](@ref) and [`==`](@ref).
 
@@ -330,7 +330,7 @@ dual(o::Operator) = (ps...) -> map(¬, ¬normalize(∧, o(ps...)))
 """
     is_associative(ℴ::Operator)
 
-Return a boolean indicating whether has the associative property
+Return a `Bool` indicating whether has the associative property
 such that `ℴ(ℴ(p, q), r) == ℴ(p, ℴ(q, r))`.
 
 See also [`==`](@ref).
@@ -352,7 +352,7 @@ end
 """
     is_commutative(ℴ::Operator)
 
-Return a boolean indicating whether has the commutative property
+Return a `Bool` indicating whether has the commutative property
 such that `ℴ(p, q) == ℴ(q, p)`.
 
 See also [`==`](@ref).

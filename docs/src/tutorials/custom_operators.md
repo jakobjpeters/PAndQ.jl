@@ -21,7 +21,7 @@ Implementing an operator requires defining methods for that operator. To do so, 
 ```@repl 1
 import PAndQ:
     Associativity, Evaluation,
-    arity, dual, evaluate, initial_value, pretty_print, symbol
+    arity, dual, evaluate, initial_value, print_expression, symbol
 using PAndQ, .Interface
 ```
 
@@ -64,10 +64,10 @@ arity(::typeof(truth)) = 0;
 truth()
 ```
 
-The error says to implement [`pretty_print`](@ref Interface.pretty_print). This function is used to represent a node of a syntax tree. The [`show_proposition`](@ref Interface.show_proposition) function is used to represent the propositions in a node.
+The error says to implement [`print_expression`](@ref Interface.print_expression). This function is used to represent a node of a syntax tree. The [`print_proposition`](@ref Interface.print_proposition) function is used to represent the propositions in a node.
 
 ```@repl 1
-pretty_print(io, o::typeof(truth)) = show(io, MIME"text/plain"(), o);
+print_expression(io, o::typeof(truth)) = show(io, MIME"text/plain"(), o);
 TruthTable([truth])
 ```
 
@@ -102,14 +102,14 @@ symbol(::typeof(-->)) = "-->";
 -->
 Evaluation(::typeof(-->)) = Lazy;
 arity(::typeof(-->)) = 2;
-function pretty_print(io, o::typeof(-->), p, q)
+function print_expression(io, o::typeof(-->), p, q)
     root = io[:root]
     root || print(io, "(")
-    show_proposition(io, p)
+    print_proposition(io, p)
     print(io, " ")
     show(io, MIME"text/plain"(), o)
     print(io, " ")
-    show_proposition(io, q)
+    print_proposition(io, q)
     root || print(io, ")")
 end
 @atomize p --> q
@@ -150,14 +150,14 @@ symbol(::typeof(conditional)) = "?";
 conditional
 Evaluation(::typeof(conditional)) = Lazy;
 arity(::typeof(conditional)) = 3;
-function pretty_print(io, o::typeof(conditional), p, q, r)
+function print_expression(io, o::typeof(conditional), p, q, r)
     root = io[:root]
     root || print(io, "(")
-    show_proposition(io, p)
+    print_proposition(io, p)
     print(io, " ? ")
-    show_proposition(io, q)
+    print_proposition(io, q)
     print(io, " : ")
-    show_proposition(io, r)
+    print_proposition(io, r)
     root || print(io, ")")
 end;
 @atomize ¬conditional(p, q, r)

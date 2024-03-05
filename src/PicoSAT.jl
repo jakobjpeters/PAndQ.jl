@@ -183,8 +183,10 @@ p cnf 2 2
 -1 -2 0
 1 2 0
 
-julia> PAndQ.PicoSAT.dimacs(String, ((1, -2), (-1, 2)))
-"p cnf 2 2\\n1 -2 0\\n-1 2 0\\n"
+julia> PAndQ.PicoSAT.dimacs(stdout, ((1, -2), (-1, 2)))
+p cnf 2 2
+1 -2 0
+-1 2 0
 ```
 """
 function dimacs(io::IO, clauses)
@@ -196,7 +198,6 @@ function dimacs(io::IO, clauses)
     write(io, _read)
     nothing
 end
-dimacs(::Type{String}, clauses) = sprint(dimacs, clauses)
 dimacs(path::String, clauses) = open(file -> dimacs(file, clauses), path; truncate = true)
 
 end # module

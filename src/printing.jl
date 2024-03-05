@@ -1,21 +1,17 @@
 
-import AbstractTrees: print_tree
 import Base: Stateful, show
-import PrettyTables: pretty_table
-using AbstractTrees: print_child_key
+using AbstractTrees: AbstractTrees, print_child_key
 using Base.Docs: HTML
+using PrettyTables: pretty_table
 
 """
-    TruthTable(::Vector{String}, ::Matrix{Bool})
     TruthTable(ps)
 
 Construct a [truth table](https://en.wikipedia.org/wiki/Truth_table)
 for the given [`Proposition`](@ref)s.
 
-The `header` is a vector containing vectors of logically equivalent propositions.
-The `body` is a matrix where the rows contain [`interpretations`](@ref) of each proposition in the given column.
-
-See also [Nullary Operators](@ref nullary_operators).
+The each cell in the header is a list of logically equivalent propositions.
+The body is a matrix where the rows contain [`interpretations`](@ref) of each proposition in the given column.
 
 # Examples
 ```jldoctest
@@ -49,57 +45,204 @@ julia> @atomize TruthTable([p ∧ ¬p, p → q, ¬p ∨ q])
 struct TruthTable
     header::Vector{String}
     body::Matrix{Bool}
+
+    function TruthTable(ps)
+        ps = map(p -> p isa Proposition ? p : Tree(p), ps)
+        _atoms = unique(Iterators.flatmap(atoms, ps))
+        ps = union(_atoms, ps)
+        _valuations = valuations(_atoms)
+        _interpretations = Iterators.map(p -> vec(map(
+            valuation -> Bool(interpret(a -> Dict(valuation)[a], normalize(¬, p))),
+        _valuations)), ps)
+    
+        truths_interpretations, atoms_interpretations, compounds_interpretations =
+            Vector{Bool}[], Vector{Bool}[], Vector{Bool}[]
+    
+        grouped_truths = Dict(map(truth -> repeat([truth], length(_valuations)) => Proposition[], (true, false)))
+        grouped_atoms = Dict(map(
+            p -> map(Bool, interpretations(_valuations, p)) => Proposition[],
+            _atoms
+        ))
+        grouped_compounds = Dict{Vector{Bool}, Vector{Proposition}}()
+    
+        for (p, interpretation) in zip(ps, _interpretations)
+            _union! = (key, group) -> begin
+                union!(key, [interpretation])
+                union!(get!(group, interpretation, Proposition[]), [p])
+            end
+    
+            if interpretation in keys(grouped_truths) _union!(truths_interpretations, grouped_truths)
+            elseif interpretation in keys(grouped_atoms) _union!(atoms_interpretations, grouped_atoms)
+            else _union!(compounds_interpretations, grouped_compounds)
+            end
+        end
+    
+        header = String[]
+        body = Vector{Bool}[]
+        for (_interpretations, group) in (
+            truths_interpretations => grouped_truths,
+            atoms_interpretations => grouped_atoms,
+            compounds_interpretations => grouped_compounds
+        )
+            for interpretation in _interpretations
+                xs = get(group, interpretation, Proposition[])
+                push!(header, join(unique!(map(x -> repr("text/plain", x), xs)), ", "))
+                push!(body, interpretation)
+            end
+        end
+    
+        new(header, reduce(hcat, body))
+    end
 end
 
-function TruthTable(ps)
-    ps = map(p -> p isa Proposition ? p : Tree(p), ps)
-    _atoms = unique(Iterators.flatmap(atoms, ps))
-    ps = union(_atoms, ps)
-    _valuations = valuations(_atoms)
-    _interpretations = Iterators.map(p -> vec(map(
-        valuation -> Bool(interpret(a -> Dict(valuation)[a], normalize(¬, p))),
-    _valuations)), ps)
-
-    truths_interpretations, atoms_interpretations, compounds_interpretations =
-        Vector{Bool}[], Vector{Bool}[], Vector{Bool}[]
-
-    grouped_truths = Dict(map(truth -> repeat([truth], length(_valuations)) => Proposition[], (true, false)))
-    grouped_atoms = Dict(map(
-        p -> map(Bool, interpretations(_valuations, p)) => Proposition[],
-        _atoms
-    ))
-    grouped_compounds = Dict{Vector{Bool}, Vector{Proposition}}()
-
-    for (p, interpretation) in zip(ps, _interpretations)
-        _union! = (key, group) -> begin
-            union!(key, [interpretation])
-            union!(get!(group, interpretation, Proposition[]), [p])
-        end
-
-        if interpretation in keys(grouped_truths) _union!(truths_interpretations, grouped_truths)
-        elseif interpretation in keys(grouped_atoms) _union!(atoms_interpretations, grouped_atoms)
-        else _union!(compounds_interpretations, grouped_compounds)
-        end
-    end
-
-    header = String[]
-    body = Vector{Bool}[]
-    for (_interpretations, group) in (
-        truths_interpretations => grouped_truths,
-        atoms_interpretations => grouped_atoms,
-        compounds_interpretations => grouped_compounds
-    )
-        for interpretation in _interpretations
-            xs = get(group, interpretation, Proposition[])
-            push!(header, join(unique!(map(x -> repr("text/plain", x), xs)), ", "))
-            push!(body, interpretation)
-        end
-    end
-
-    TruthTable(header, reduce(hcat, body))
+for (T, f) in (
+    NullaryOperator => v -> v ? "⊤" : "⊥",
+    String => v -> nameof(v ? "tautology" : "contradiction"),
+    Char => v -> v == ⊤ ? "T" : "F",
+    Bool => string ∘ 𝒾,
+    Int => string ∘ Int
+)
+    @eval formatter(::Type{$T}) = (v, _, _) -> $f(v)
 end
 
-# Internals
+"""
+    formatter(T)
+
+Use as the `formatters` keyword parameter in [`print_table`](@ref).
+
+| `T`               | `formatter(T)(true, _, _)` | `formatter(T)(false, _, _)` |
+| :---------------- | :------------------------- | :-------------------------- |
+| `NullaryOperator` | `"⊤"`                      | `"⊥"`                       |
+| `String`          | `"tautology"`              | `"contradiction"`           |
+| `Char`            | `"T"`                      | `"F"`                       |
+| `Bool`            | `"true"`                   | `"false"`                   |
+| `Int`             | `"1"`                      | `"0"`                       |
+
+See also [Nullary Operators](@ref nullary_operators).
+
+# Examples
+```jldoctest
+julia> @atomize print_table(p ∧ q; formatters = formatter(Bool))
+┌───────┬───────┬───────┐
+│ p     │ q     │ p ∧ q │
+├───────┼───────┼───────┤
+│ true  │ true  │ true  │
+│ false │ true  │ false │
+├───────┼───────┼───────┤
+│ true  │ false │ false │
+│ false │ false │ false │
+└───────┴───────┴───────┘
+
+julia> @atomize print_table(p ∧ q; formatters = formatter(Int))
+┌───┬───┬───────┐
+│ p │ q │ p ∧ q │
+├───┼───┼───────┤
+│ 1 │ 1 │ 1     │
+│ 0 │ 1 │ 0     │
+├───┼───┼───────┤
+│ 1 │ 0 │ 0     │
+│ 0 │ 0 │ 0     │
+└───┴───┴───────┘
+```
+"""
+formatter
+
+___print_table(backend::Val{:latex}, io, body; vlines = :all, kwargs...) =
+    pretty_table(io, body; backend, vlines, kwargs...)
+___print_table(backend::Val{:text}, io, body; kwargs...) =
+    pretty_table(io, body; backend, kwargs...)
+
+__print_table(
+    backend::Union{Val{:text}, Val{:latex}}, io, body;
+    body_hlines = collect(0:2:size(body, 1)), kwargs...
+) = ___print_table(backend, io, body; body_hlines, kwargs...)
+__print_table(backend::Union{Val{:markdown}, Val{:html}}, io, body; kwargs...) =
+    pretty_table(io, body; backend, kwargs...)
+
+_print_table(backend, io, t; formatters = formatter(NullaryOperator), kwargs...) =
+    __print_table(backend, io, t.body; header = t.header, formatters, kwargs...)
+
+"""
+    print_table(::IO = stdout, xs...; kwargs...)
+
+Print a [`TruthTable`](@ref).
+
+The parameter can be a `TruthTable`, iterable of propositions, or sequence of propositions.
+
+Keyword parameters are passed to [`PrettyTables.pretty_table`]
+(https://ronisbr.github.io/PrettyTables.jl/stable/lib/library/#PrettyTables.pretty_table-Tuple{Any}).
+
+# Examples
+```jldoctest
+julia> print_table(TruthTable([⊤]))
+┌───┐
+│ ⊤ │
+├───┤
+│ ⊤ │
+└───┘
+
+julia> @atomize print_table([p])
+┌───┐
+│ p │
+├───┤
+│ ⊤ │
+│ ⊥ │
+└───┘
+
+julia> @atomize print_table(p ∧ q)
+┌───┬───┬───────┐
+│ p │ q │ p ∧ q │
+├───┼───┼───────┤
+│ ⊤ │ ⊤ │ ⊤     │
+│ ⊥ │ ⊤ │ ⊥     │
+├───┼───┼───────┤
+│ ⊤ │ ⊥ │ ⊥     │
+│ ⊥ │ ⊥ │ ⊥     │
+└───┴───┴───────┘
+```
+"""
+print_table(io::IO, t::TruthTable; backend = Val(:text), alignment = :l, kwargs...) =
+    _print_table(backend, io, t; alignment, kwargs...)
+print_table(io::IO, ps; kwargs...) = print_table(io, TruthTable(ps); kwargs...)
+print_table(io::IO, @nospecialize(ps::Union{Operator, Proposition}...); kwargs...) = print_table(io, collect(ps); kwargs...)
+print_table(@nospecialize(xs...); kwargs...) = print_table(stdout, xs...; kwargs...)
+
+"""
+    print_tree(io::Union{IO, Type{String}} = stdout, p; kwargs...)
+
+Prints a tree diagram of the given proposition.
+
+Keyword parameters are passed to [`AbstractTrees.print_tree`]
+(https://github.com/JuliaCollections/AbstractTrees.jl/blob/master/src/printing.jl).
+
+```jldoctest
+julia> @atomize print_tree(p ∧ q ∨ ¬s)
+∨
+├─ ∧
+│  ├─ 𝒾
+│  │  └─ p
+│  └─ 𝒾
+│     └─ q
+└─ ¬
+   └─ s
+
+julia> @atomize print_tree(normalize(∧, p ∧ q ∨ ¬s))
+∧
+├─ ∨
+│  ├─ ¬
+│  │  └─ s
+│  └─ 𝒾
+│     └─ q
+└─ ∨
+   ├─ ¬
+   │  └─ s
+   └─ 𝒾
+      └─ p
+```
+"""
+print_tree(io, p; kwargs...) = AbstractTrees.print_tree(io, p; kwargs...)
+print_tree(::Type{String}, p; kwargs...) = sprint(io -> print_tree(io, p; kwargs...))
+print_tree(p; kwargs...) = print_tree(stdout, p; kwargs...)
 
 # `show`
 
@@ -129,7 +272,7 @@ julia> @atomize show(stdout, MIME"text/plain"(), (p ∨ q) ∧ (r ∨ s))
 ```
 """
 show(io::IO, ::MIME"text/plain", p::Proposition) =
-    _show_proposition(IOContext(io, :root => true, map(key -> key => get(io, key, true), (:compact, :limit))...), p)
+    _print_proposition(IOContext(io, :root => true, map(key -> key => get(io, key, true), (:compact, :limit))...), p)
 
 """
     show(::IO, ::MIME"text/plain", ::TruthTable)
@@ -151,7 +294,7 @@ julia> @atomize show(stdout, MIME"text/plain"(), TruthTable([p ∧ q]))
 ```
 """
 show(io::IO, ::MIME"text/plain", tt::TruthTable) =
-    pretty_table(io, tt; newline_at_end = false)
+    print_table(io, tt; newline_at_end = false)
 
 function __show(f, g, io, ps)
     qs, root = Stateful(ps), get(io, :root, true)
@@ -187,166 +330,3 @@ function show(io::IO, p::Tree)
     __show(io -> print(io, ", "), show, io, children(p))
     print(io, ")")
 end
-
-for (T, f) in (
-    NullaryOperator => v -> v ? "⊤" : "⊥",
-    String => v -> nameof(v ? "tautology" : "contradiction"),
-    Char => v -> v == ⊤ ? "T" : "F",
-    Bool => 𝒾,
-    Int => Int
-)
-    @eval formatter(::Type{$T}) = (v, _, _) -> string($f(v))
-end
-
-"""
-    formatter(type)
-
-Use as the `formatters` keyword argument in [`pretty_table`](@ref).
-
-| `type`            | `formatter(type)(true, _, _)` | `formatter(type)(false, _, _)` |
-| :---------------- | :---------------------------- | :----------------------------- |
-| `NullaryOperator` | `"⊤"`                         | `"⊥"`                          |
-| `String`          | `"tautology"`                 | `"contradiction"`              |
-| `Char`            | `"T"`                         | `"F"`                          |
-| `Bool`            | `"true"`                      | `"false"`                      |
-| `Int`             | `"1"`                         | `"0"`                          |
-
-See also [Nullary Operators](@ref nullary_operators).
-
-# Examples
-```jldoctest
-julia> @atomize pretty_table(p ∧ q; formatters = formatter(Int))
-┌───┬───┬───────┐
-│ p │ q │ p ∧ q │
-├───┼───┼───────┤
-│ 1 │ 1 │ 1     │
-│ 0 │ 1 │ 0     │
-├───┼───┼───────┤
-│ 1 │ 0 │ 0     │
-│ 0 │ 0 │ 0     │
-└───┴───┴───────┘
-```
-"""
-formatter
-
-___pretty_table(backend::Val{:latex}, io, body; vlines = :all, kwargs...) =
-    pretty_table(io, body; backend, vlines, kwargs...)
-___pretty_table(backend::Val{:text}, io, body; crop = :none, kwargs...) =
-    pretty_table(io, body; backend, crop, kwargs...)
-
-__pretty_table(
-    backend::Union{Val{:text}, Val{:latex}}, io, body;
-    body_hlines = collect(0:2:size(body, 1)), kwargs...
-) = ___pretty_table(backend, io, body; body_hlines, kwargs...)
-__pretty_table(backend::Union{Val{:markdown}, Val{:html}}, io, body; kwargs...) =
-    pretty_table(io, body; backend, kwargs...)
-
-_pretty_table(backend, io, tt; formatters = formatter(NullaryOperator), kwargs...) =
-    __pretty_table(backend, io, tt.body; header = tt.header, formatters, kwargs...)
-
-"""
-    pretty_table(
-        ::Union{IO, Type{<:Union{String, Docs.HTML}}} = stdout,
-        ::Union{NullaryOperator, Proposition, TruthTable};
-        formatters = formatter(NullaryOperator),
-        kwargs...
-    )
-
-See also [Nullary Operators](@ref nullary_operators), [`Proposition`](@ref),
-[`TruthTable`](@ref), [`formatter`](@ref), and [`PrettyTables.pretty_table`]
-(https://ronisbr.github.io/PrettyTables.jl/stable/lib/library/#PrettyTables.pretty_table-Tuple{Any}).
-
-# Examples
-```jldoctest
-julia> @atomize pretty_table(p ∧ q)
-┌───┬───┬───────┐
-│ p │ q │ p ∧ q │
-├───┼───┼───────┤
-│ ⊤ │ ⊤ │ ⊤     │
-│ ⊥ │ ⊤ │ ⊥     │
-├───┼───┼───────┤
-│ ⊤ │ ⊥ │ ⊥     │
-│ ⊥ │ ⊥ │ ⊥     │
-└───┴───┴───────┘
-
-julia> @atomize pretty_table(p ∧ q; backend = Val(:markdown))
-| **p** | **q** | **p ∧ q** |
-|:------|:------|:----------|
-| ⊤     | ⊤     | ⊤         |
-| ⊥     | ⊤     | ⊥         |
-| ⊤     | ⊥     | ⊥         |
-| ⊥     | ⊥     | ⊥         |
-
-julia> @atomize print(pretty_table(String, p ∧ q; backend = Val(:html)))
-<table>
-  <thead>
-    <tr class = "header headerLastRow">
-      <th style = "text-align: left;">p</th>
-      <th style = "text-align: left;">q</th>
-      <th style = "text-align: left;">p ∧ q</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style = "text-align: left;">⊤</td>
-      <td style = "text-align: left;">⊤</td>
-      <td style = "text-align: left;">⊤</td>
-    </tr>
-    <tr>
-      <td style = "text-align: left;">⊥</td>
-      <td style = "text-align: left;">⊤</td>
-      <td style = "text-align: left;">⊥</td>
-    </tr>
-    <tr>
-      <td style = "text-align: left;">⊤</td>
-      <td style = "text-align: left;">⊥</td>
-      <td style = "text-align: left;">⊥</td>
-    </tr>
-    <tr>
-      <td style = "text-align: left;">⊥</td>
-      <td style = "text-align: left;">⊥</td>
-      <td style = "text-align: left;">⊥</td>
-    </tr>
-  </tbody>
-</table>
-```
-"""
-pretty_table(io::IO, tt::TruthTable; backend = Val(:text), alignment = :l, kwargs...) =
-    _pretty_table(backend, io, tt; alignment, kwargs...)
-pretty_table(io::IO, p::Union{NullaryOperator, Proposition}; kwargs...) =
-    pretty_table(io, TruthTable((p,)); kwargs...)
-
-"""
-    print_tree(::IO = stdout, ::Proposition; kwargs...)
-
-Prints a tree diagram of the given [`Proposition`](@ref).
-
-See also [`AbstractTrees.print_tree`]
-(https://github.com/JuliaCollections/AbstractTrees.jl/blob/master/src/printing.jl).
-
-```jldoctest
-julia> @atomize print_tree(p ∧ q ∨ ¬s)
-∨
-├─ ∧
-│  ├─ 𝒾
-│  │  └─ p
-│  └─ 𝒾
-│     └─ q
-└─ ¬
-   └─ s
-
-julia> @atomize print_tree(normalize(∧, p ∧ q ∨ ¬s))
-∧
-├─ ∨
-│  ├─ ¬
-│  │  └─ s
-│  └─ 𝒾
-│     └─ q
-└─ ∨
-   ├─ ¬
-   │  └─ s
-   └─ 𝒾
-      └─ p
-```
-"""
-print_tree

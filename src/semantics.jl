@@ -562,31 +562,31 @@ Evaluation(::Union{NullaryOperator, typeof(¬), BinaryOperator}) = Lazy
 (o::Operator)(ps::BN...) where BN <: Union{Bool, Normal} = evaluate(o, ps...)
 (o::Operator)(ps...) = evaluation(Evaluation(o)(), o, ps...)
 
-_pretty_print(io, o, ps) = __show(show_proposition, io, ps) do io
+_print_expression(io, o, ps) = __show(print_proposition, io, ps) do io
     print(io, " ")
     show(io, MIME"text/plain"(), o)
     print(io, " ")
 end
 
-pretty_print(io, p::NullaryOperator) = show_proposition(io, p)
-pretty_print(io, ::typeof(𝒾), p) = show_proposition(io, p)
-function pretty_print(io, ::typeof(¬), p)
+print_expression(io, p::NullaryOperator) = print_proposition(io, p)
+print_expression(io, ::typeof(𝒾), p) = print_proposition(io, p)
+function print_expression(io, ::typeof(¬), p)
     show(io, MIME"text/plain"(), ¬)
-    show_proposition(io, p)
+    print_proposition(io, p)
 end
-pretty_print(io, o::BinaryOperator, p, q) = _pretty_print(io, o, (p, q))
+print_expression(io, o::BinaryOperator, p, q) = _print_expression(io, o, (p, q))
 
-_show_proposition(io, p::NullaryOperator) = show(io, MIME"text/plain"(), p)
-function _show_proposition(io, p::Constant)
+_print_proposition(io, p::NullaryOperator) = show(io, MIME"text/plain"(), p)
+function _print_proposition(io, p::Constant)
     print(io, "\$(")
     show(io, p.value)
     print(io, ")")
 end
-_show_proposition(io, p::Variable) = print(io, p.symbol)
-_show_proposition(io, p::Tree) = pretty_print(io, nodevalue(p), children(p)...)
-function _show_proposition(io, p::Union{Clause, Normal})
+_print_proposition(io, p::Variable) = print(io, p.symbol)
+_print_proposition(io, p::Tree) = print_expression(io, nodevalue(p), children(p)...)
+function _print_proposition(io, p::Union{Clause, Normal})
     o, qs = deconstruct(p)
-    isempty(qs) ? pretty_print(io, something(initial_value(o))) : _pretty_print(io, o, qs)
+    isempty(qs) ? print_expression(io, something(initial_value(o))) : _print_expression(io, o, qs)
 end
 
-show_proposition(io, p) = _show_proposition(IOContext(io, :root => false), p)
+print_proposition(io, p) = _print_proposition(IOContext(io, :root => false), p)

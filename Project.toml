@@ -12,11 +12,9 @@ libpicosat_jll = "6b231c3b-13f8-5ced-86ae-8860c7f75d86"
 
 [weakdeps]
 Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
 [extensions]
 LatexifyExtension = "Latexify"
-MarkdownExtension = "Markdown"
 
 [compat]
 AbstractTrees = "0.4"

@@ -113,10 +113,10 @@ false
 
 ## Printing
 
-[`TruthTable`](@ref)s are used to enumerate the interpretations of propositions. The header contains propositions and the atoms composing them. Each column corresponds to the truth values of the proposition in the header. Each row represents an interpretation.
+[`TruthTable`](@ref)s are used to enumerate the interpretations of propositions. The header contains propositions and the atoms composing them. Each column corresponds to the truth values of the proposition in the header. Each row represents an interpretation. Use the [`print_table`](@ref) function to print a truth table.
 
 ```jldoctest 1
-julia> TruthTable([⊤, ¬p, p ∧ q])
+julia> print_table(⊤, ¬p, p ∧ q)
 ┌───┬───┬───┬────┬───────┐
 │ ⊤ │ p │ q │ ¬p │ p ∧ q │
 ├───┼───┼───┼────┼───────┤

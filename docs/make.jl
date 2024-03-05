@@ -2,7 +2,6 @@
 using Base: get_extension
 using Documenter: DocMeta.setdocmeta!, HTML, deploydocs, makedocs
 using Latexify
-using Markdown
 using PAndQ
 using PAndQ: PicoSAT
 
