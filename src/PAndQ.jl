@@ -1,7 +1,7 @@
 
 module PAndQ
 
-using PrecompileTools: @compile_workload, @setup_workload
+using PrecompileTools: @compile_workload
 
 """
     union_typeof(xs)
