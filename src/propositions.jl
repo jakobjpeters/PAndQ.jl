@@ -292,6 +292,11 @@ See also [`children`](@ref).
 child(x) = only(children(x))
 
 """
+    load_or_error(x)
+"""
+load_or_error(x) = :((@isdefined PAndQ) ? $x : error("`PAndQ` must be loaded"))
+
+"""
     atomize(x)
 
 If `x` is a symbol, return an expression that instantiates it as a
@@ -304,7 +309,7 @@ atomize(x) =
     if x isa Symbol; :((@isdefined $x) ? $x : $(Variable(x)))
     elseif x isa Expr
         if length(x.args) == 0 || (isexpr(x, :macrocall) && first(x.args) == Symbol("@atomize")) x
-        elseif isexpr(x, :$); :((@isdefined PAndQ) ? PAndQ.Constant($(only(x.args))) : error("`PAndQ` must be loaded"))
+        elseif isexpr(x, :$); load_or_error(:(PAndQ.Constant($(only(x.args)))))
         elseif isexpr(x, :kw) Expr(x.head, x.args[1], atomize(x.args[2]))
         elseif isexpr(x, (:struct, :where)) x # TODO
         else # TODO
@@ -449,7 +454,7 @@ q
 """
 macro variables(ps...) esc(quote
     $(map(p -> :($p = $(Variable(p))), ps)...)
-    [$(ps...)]
+    $(load_or_error(:(PAndQ.Variable[$(ps...)])))
 end) end
 
 """

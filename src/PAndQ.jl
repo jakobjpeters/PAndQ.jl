@@ -1,7 +1,7 @@
 
 module PAndQ
 
-using PrecompileTools: @compile_workload
+using PrecompileTools: @compile_workload, @setup_workload
 
 """
     union_typeof(xs)
@@ -65,34 +65,30 @@ export
     print_table,
     print_tree
 
-__init__() = @compile_workload begin
-    @variables p q
+@compile_workload for (p, q) in (@atomize([$:p, $:q]), @variables p q) redirect_stdout(Pipe()) do
+    rs = Tree[⊤, ⊥, 𝒾(p), ¬p, p ∧ q, p ∨ q, p → q, p ↮ q, p ← q, p ↑ q, p ↓ q, p ↛ q, p ↔ q, p ↚ q]
 
-    ps = (⊤, ⊥, p, ¬p, map(BO -> BO.instance(p, q), uniontypes(BinaryOperator))...)
-    qs = (ps..., conjunction(ps), disjunction(ps))
+    conjunction(rs)
+    disjunction(rs)
+    print_table(rs)
 
-    print_table(String, TruthTable(qs))
+    for r in rs
+        collect(operators(r))
+        normalize(¬, r)
+        normalize(∨, r)
+        tseytin(r)
+        dimacs(r)
+        print_tree(r)
+        print(r)
 
-    for r in qs
-        interpret(p => ⊤, r)
-        interpret(p => ⊥, r)
-
-        for iterator in map(f -> f(r), (atoms, operators, solutions))
-            collect(iterator)
+        for solution in solutions(r)
+            collect(solution)
         end
 
-        for f in (
-            is_tautology, is_contradiction,
-            is_truth, is_contingency,
-            is_satisfiable, is_falsifiable
-        )
+        for f in (is_tautology, is_contradiction, is_truth, is_contingency, is_satisfiable, is_falsifiable)
             f(r)
         end
-
-        for args in ((show,), (show, MIME"text/plain"()), (print_table,), (print_tree,))
-            sprint(args..., r)
-        end
     end
-end
+end end
 
 end
