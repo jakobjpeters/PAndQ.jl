@@ -23,5 +23,4 @@ install_atomize_mode
 ```@docs
 normalize
 tseytin
-dimacs
 ```

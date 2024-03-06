@@ -174,22 +174,22 @@ iterate(solutions::Solutions, pico_sat = solutions.pico_sat) = if !isdone(soluti
 end
 
 """
-    dimacs(io, clauses)
+    print_dimacs(io, clauses)
 
 # Examples
 ```jldoctest
-julia> PAndQ.PicoSAT.dimacs(stdout, ((-1, -2), (1, 2)))
+julia> PAndQ.PicoSAT.print_dimacs(stdout, ((-1, -2), (1, 2)))
 p cnf 2 2
 -1 -2 0
 1 2 0
 
-julia> PAndQ.PicoSAT.dimacs(stdout, ((1, -2), (-1, 2)))
+julia> PAndQ.PicoSAT.print_dimacs(stdout, ((1, -2), (-1, 2)))
 p cnf 2 2
 1 -2 0
 -1 2 0
 ```
 """
-function dimacs(io::IO, clauses)
+function print_dimacs(io::IO, clauses)
     _read, _write = pipe = Pipe()
     pico_sat = initialize(clauses)
     redirect_stdout(() -> picosat_print(pico_sat, FILE(RawFD(1), "w")), pipe)
@@ -198,6 +198,6 @@ function dimacs(io::IO, clauses)
     write(io, _read)
     nothing
 end
-dimacs(path::String, clauses) = open(file -> dimacs(file, clauses), path; truncate = true)
+print_dimacs(path::String, clauses) = open(file -> dimacs(file, clauses), path; truncate = true)
 
 end # module

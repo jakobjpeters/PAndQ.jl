@@ -208,7 +208,7 @@ print_table(io::IO, @nospecialize(ps::Union{Operator, Proposition}...); kwargs..
 print_table(@nospecialize(xs...); kwargs...) = print_table(stdout, xs...; kwargs...)
 
 """
-    print_tree(io::Union{IO, Type{String}} = stdout, p; kwargs...)
+    print_tree(::IO = stdout, p; kwargs...)
 
 Prints a tree diagram of the given proposition.
 
@@ -241,8 +241,31 @@ julia> @atomize print_tree(normalize(∧, p ∧ q ∨ ¬s))
 ```
 """
 print_tree(io, p; kwargs...) = AbstractTrees.print_tree(io, p; kwargs...)
-print_tree(::Type{String}, p; kwargs...) = sprint(io -> print_tree(io, p; kwargs...))
 print_tree(p; kwargs...) = print_tree(stdout, p; kwargs...)
+
+"""
+    print_dimacs(io = stdout, p)
+
+Write the DIMACS format of `p` to `io`.
+
+The `io` can be an `IO` or file path `String` to write to.
+
+# Examples
+```jldoctest
+julia> @atomize print_dimacs(p ∧ q)
+p cnf 2 2
+1 0
+2 0
+
+julia> @atomize print_dimacs(p ↔ q)
+p cnf 2 2
+1 -2 0
+-1 2 0
+```
+"""
+print_dimacs(io, p::Normal{typeof(∧)}) = PicoSAT.print_dimacs(io, p.clauses)
+print_dimacs(io, p) = print_dimacs(io, normalize(∧, p))
+print_dimacs(p) = print_dimacs(stdout, p)
 
 # `show`
 

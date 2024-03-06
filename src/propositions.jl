@@ -713,28 +713,3 @@ function tseytin(p::Tree)
     normalize(∧, isempty(pairs) ? p : first(first(pairs)) ∧ ⋀(map(splat(↔), pairs)))
 end
 tseytin(p) = tseytin(Tree(p))
-
-"""
-    dimacs(io = stdout, p)
-
-Write the DIMACS format of `p` to `io`.
-
-The `io` can be an `IO` or file path `String` to write to
-or the `String` type to return a string.
-
-# Examples
-```jldoctest
-julia> @atomize dimacs((p ∧ q))
-p cnf 2 2
-1 0
-2 0
-
-julia> @atomize dimacs(p ↔ q)
-p cnf 2 2
-1 -2 0
--1 2 0
-```
-"""
-dimacs(io, p::Normal{typeof(∧)}) = PicoSAT.dimacs(io, p.clauses)
-dimacs(io, p) = dimacs(io, normalize(∧, p))
-dimacs(p) = dimacs(stdout, p)

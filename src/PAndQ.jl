@@ -45,7 +45,7 @@ include("propositions.jl")
 export
     @atomize, @variables, constants,
     value, atoms, operators, install_atomize_mode,
-    normalize, tseytin, dimacs
+    normalize, tseytin
 
 include("semantics.jl")
 
@@ -63,7 +63,8 @@ export
     formatter,
     print_proposition,
     print_table,
-    print_tree
+    print_tree,
+    print_dimacs
 
 @compile_workload for (p, q) in (@atomize([$:p, $:q]), @variables p q) redirect_stdout(Pipe()) do
     rs = Tree[⊤, ⊥, 𝒾(p), ¬p, p ∧ q, p ∨ q, p → q, p ↮ q, p ← q, p ↑ q, p ↓ q, p ↛ q, p ↔ q, p ↚ q]
@@ -77,7 +78,7 @@ export
         normalize(¬, r)
         normalize(∨, r)
         tseytin(r)
-        dimacs(r)
+        print_dimacs(r)
         print_tree(r)
         print(r)
 
