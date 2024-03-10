@@ -96,7 +96,7 @@ rules = ⋀((one, two, three, four));
 
 ## Finding a Solution
 
-Given a proposition, [`valuations`](@ref) that result in a true interpretation can be found using the [`solutions`](@ref) function. Since the encoding does not specify any initial values of the cells, there will be many possible solutions to the proposition. Each solution contains 729 assignments of a [`Constant`](@ref PAndQ.Constant)s to a `Bool`, which makes sense because the 9x9 grid has 81 cells and each cell contains one of 9 possible numbers.
+Given a proposition, [`valuations`](@ref) that result in a true interpretation can be found using the [`solutions`](@ref) function. Since the encoding does not specify any initial values of the cells, there will be many possible solutions to the proposition. Each solution contains 729 assignments of a [`Constant`](@ref PAndQ.Constant) to a `Bool`, which makes sense because the 9x9 grid has 81 cells and each cell contains one of 9 possible numbers.
 
 ```@repl 1
 first_solution(p) = collect(first(solutions(p)));

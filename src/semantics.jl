@@ -1,6 +1,6 @@
 
 import Base: Bool, Fix2, convert, promote_rule, ==, <
-using Base: Iterators.product, uniontypes
+using Base.Iterators: product, repeated
 using .PicoSAT: Solutions
 
 # Truths
@@ -34,7 +34,7 @@ julia> @atomize collect(valuations(p ∧ q))
 function valuations(atoms)
     unique_atoms = unique(atoms)
     Iterators.map(valuation -> map(Pair, unique_atoms, valuation),
-        Iterators.product(Iterators.repeated([true, false], length(unique_atoms))...)
+        product(repeated([true, false], length(unique_atoms))...)
     )
 end
 valuations(p::Union{NullaryOperator, Proposition}) = valuations(collect(atoms(p)))
@@ -564,19 +564,19 @@ Evaluation(::Union{NullaryOperator, typeof(¬), BinaryOperator}) = Lazy
 
 _print_expression(io, o, ps) = __show(print_proposition, io, ps) do io
     print(io, " ")
-    show(io, MIME"text/plain"(), o)
+    show(io, "text/plain", o)
     print(io, " ")
 end
 
 print_expression(io, p::NullaryOperator) = print_proposition(io, p)
 print_expression(io, ::typeof(𝒾), p) = print_proposition(io, p)
 function print_expression(io, ::typeof(¬), p)
-    show(io, MIME"text/plain"(), ¬)
+    show(io, "text/plain", ¬)
     print_proposition(io, p)
 end
 print_expression(io, o::BinaryOperator, p, q) = _print_expression(io, o, (p, q))
 
-_print_proposition(io, p::NullaryOperator) = show(io, MIME"text/plain"(), p)
+_print_proposition(io, p::NullaryOperator) = show(io, "text/plain", p)
 function _print_proposition(io, p::Constant)
     print(io, "\$(")
     show(io, p.value)

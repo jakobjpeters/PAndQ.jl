@@ -66,7 +66,7 @@ export
     print_tree,
     print_dimacs
 
-@compile_workload for (p, q) in (@atomize([$:p, $:q]), @variables p q) redirect_stdout(Pipe()) do
+@compile_workload for (p, q) in (@atomize([$:p, $:q]), @variables p q) redirect_stdout(devnull) do
     rs = Tree[⊤, ⊥, 𝒾(p), ¬p, p ∧ q, p ∨ q, p → q, p ↮ q, p ← q, p ↑ q, p ↓ q, p ↛ q, p ↔ q, p ↚ q]
 
     conjunction(rs)
@@ -84,10 +84,6 @@ export
 
         for solution in solutions(r)
             collect(solution)
-        end
-
-        for f in (is_tautology, is_contradiction, is_truth, is_contingency, is_satisfiable, is_falsifiable)
-            f(r)
         end
     end
 end end

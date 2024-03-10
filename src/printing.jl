@@ -2,6 +2,7 @@
 import Base: Stateful, show
 using AbstractTrees: AbstractTrees, print_child_key
 using Base.Docs: HTML
+using Base.Iterators: flatmap
 using PrettyTables: pretty_table
 
 """
@@ -46,37 +47,37 @@ struct TruthTable
     header::Vector{String}
     body::Matrix{Bool}
 
-    function TruthTable(ps)
-        ps = map(p -> p isa Proposition ? p : Tree(p), ps)
-        _atoms = unique(Iterators.flatmap(atoms, ps))
+    function TruthTable(@nospecialize ps)
+        ps = collect(Tree, ps)
+        _atoms = unique(flatmap(atoms, ps))
         ps = union(_atoms, ps)
-        _valuations = valuations(_atoms)
+        _valuations = vec(collect(valuations(_atoms)))
         _interpretations = Iterators.map(p -> vec(map(
             valuation -> Bool(interpret(a -> Dict(valuation)[a], normalize(¬, p))),
         _valuations)), ps)
-    
+
         truths_interpretations, atoms_interpretations, compounds_interpretations =
             Vector{Bool}[], Vector{Bool}[], Vector{Bool}[]
-    
+
         grouped_truths = Dict(map(truth -> repeat([truth], length(_valuations)) => Proposition[], (true, false)))
         grouped_atoms = Dict(map(
-            p -> map(Bool, interpretations(_valuations, p)) => Proposition[],
+            p -> vec(map(Bool, interpretations(_valuations, p))) => Proposition[],
             _atoms
         ))
         grouped_compounds = Dict{Vector{Bool}, Vector{Proposition}}()
-    
+
         for (p, interpretation) in zip(ps, _interpretations)
             _union! = (key, group) -> begin
                 union!(key, [interpretation])
                 union!(get!(group, interpretation, Proposition[]), [p])
             end
-    
+
             if interpretation in keys(grouped_truths) _union!(truths_interpretations, grouped_truths)
             elseif interpretation in keys(grouped_atoms) _union!(atoms_interpretations, grouped_atoms)
             else _union!(compounds_interpretations, grouped_compounds)
             end
         end
-    
+
         header = String[]
         body = Vector{Bool}[]
         for (_interpretations, group) in (
@@ -90,7 +91,7 @@ struct TruthTable
                 push!(body, interpretation)
             end
         end
-    
+
         new(header, reduce(hcat, body))
     end
 end
@@ -204,7 +205,7 @@ julia> @atomize print_table(p ∧ q)
 print_table(io::IO, t::TruthTable; backend = Val(:text), alignment = :l, kwargs...) =
     _print_table(backend, io, t; alignment, kwargs...)
 print_table(io::IO, ps; kwargs...) = print_table(io, TruthTable(ps); kwargs...)
-print_table(io::IO, @nospecialize(ps::Union{Operator, Proposition}...); kwargs...) = print_table(io, collect(ps); kwargs...)
+print_table(io::IO, @nospecialize(ps::Union{Operator, Proposition}...); kwargs...) = print_table(io, collect(Tree, ps); kwargs...)
 print_table(@nospecialize(xs...); kwargs...) = print_table(stdout, xs...; kwargs...)
 
 """
@@ -287,10 +288,10 @@ The value of a [`Constant`](@ref PAndQ.Constant) is shown with an `IOContext` wh
 
 # Examples
 ```jldoctest
-julia> @atomize show(stdout, MIME"text/plain"(), p ∧ q)
+julia> @atomize show(stdout, "text/plain", p ∧ q)
 p ∧ q
 
-julia> @atomize show(stdout, MIME"text/plain"(), (p ∨ q) ∧ (r ∨ s))
+julia> @atomize show(stdout, "text/plain", (p ∨ q) ∧ (r ∨ s))
 (p ∨ q) ∧ (r ∨ s)
 ```
 """
@@ -303,8 +304,8 @@ show(io::IO, ::MIME"text/plain", p::Proposition) =
 Represent the [`TruthTable`](@ref) in its default format.
 
 # Examples
-```julia
-julia> @atomize show(stdout, MIME"text/plain"(), TruthTable([p ∧ q]))
+```jldoctest
+julia> @atomize show(stdout, "text/plain", TruthTable([p ∧ q]))
 ┌───┬───┬───────┐
 │ p │ q │ p ∧ q │
 ├───┼───┼───────┤
@@ -316,8 +317,7 @@ julia> @atomize show(stdout, MIME"text/plain"(), TruthTable([p ∧ q]))
 └───┴───┴───────┘
 ```
 """
-show(io::IO, ::MIME"text/plain", tt::TruthTable) =
-    print_table(io, tt; newline_at_end = false)
+show(io::IO, ::MIME"text/plain", t::TruthTable) = print_table(io, t; newline_at_end = false)
 
 function __show(f, g, io, ps)
     qs, root = Stateful(ps), get(io, :root, true)
