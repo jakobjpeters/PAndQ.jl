@@ -24,45 +24,6 @@ If you like propositional logic, then you've come to the right place!
 
 PAndQ.jl is a [computer algebra system](https://en.wikipedia.org/wiki/Computer_algebra_system) for propositional logic.
 
-### Features
-
-- First-class propositions
-    - Syntax and pretty-printing corresponding to written logic
-    - Easy instantiation
-        - Custom REPL mode
-- Normalization
-    - Negated, conjunctive, and disjunctive forms
-    - Tseytin transformation
-    - DIMACS format
-- Interface for custom operators
-- Satisfiability solving
-- Logical equivalence
-- Partial interpretation
-- Diagrams
-    - Syntax trees
-    - Truth tables
-        - Plain text, Markdown, HTML, and LaTeX formats
-- Format propositions as LaTeX
-
-#### Planned
-
-- Interface for custom propositions
-- Simplification
-- Substitution
-- Proofs
-- Generate propositions
-- Normal forms
-    - Algebraic, Blake
-    - Minimization
-- Diagrams
-    - Decision trees
-    - Circuits
-- Modal logic
-- First order logic
-- Lambda calculus
-- Electronic circuits
-- Satisfiability modulo theories
-
 ## Installation
 
 ```julia
@@ -79,8 +40,8 @@ julia> using PAndQ
 julia> ¬⊤
 ¬⊤
 
-julia> @atomize p ∧ q → $1
-(p ∧ q) → $(1)
+julia> @atomize p ∧ q → $1 ∨ $2
+(p ∧ q) → ($(1) ∨ $(2))
 
 julia> @variables p q
 2-element Vector{PAndQ.Variable}:
@@ -93,20 +54,17 @@ p ↔ q
 julia> interpret(p => ⊤, r)
 ⊤ ↔ q
 
-julia> valuation = collect(only(solutions(p ∧ q)))
+julia> collect(only(solutions(p ∧ q)))
 2-element Vector{Pair{PAndQ.Variable, Bool}}:
  PAndQ.Variable(:p) => 1
  PAndQ.Variable(:q) => 1
-
-julia> interpret(valuation, p ∧ q)
-true
 
 julia> s = normalize(∧, r)
 (¬p ∨ q) ∧ (¬q ∨ p)
 
 julia> print_table(p ∧ ¬p, ¬p, r, s)
 ┌────────┬───┬───┬────┬────────────────────────────┐
-│ p ∧ ¬p │ p │ q │ ¬p │ p ↔ q, (¬p ∨ q) ∧ (¬q ∨ p) │
+│ p ∧ ¬p │ p │ q │ ¬p │ p ↔ q, (p ∨ ¬q) ∧ (q ∨ ¬p) │
 ├────────┼───┼───┼────┼────────────────────────────┤
 │ ⊥      │ ⊤ │ ⊤ │ ⊥  │ ⊤                          │
 │ ⊥      │ ⊥ │ ⊤ │ ⊤  │ ⊥                          │
@@ -116,30 +74,80 @@ julia> print_table(p ∧ ¬p, ¬p, r, s)
 └────────┴───┴───┴────┴────────────────────────────┘
 ```
 
+## Features
+
+- Operators
+    - Interface for custom operators
+- Propositions
+    - Syntax and pretty-printing corresponding to written logic
+    - Simple instantiation
+        - Custom REPL mode
+    - Normalization
+        - Negated, conjunctive, and disjunctive forms
+        - Tseytin transformation
+    - Functor map
+- Semantics
+    - Satisfiability solving
+    - Logical equivalence
+        - Strict partial ordering
+    - Partial interpretation
+- Printing
+    - Diagrams
+        - Syntax trees
+        - Truth tables
+            - Plain text, Markdown, HTML, and LaTeX formats
+    - DIMACS and LaTeX formats
+
+### Planned
+
+- Propositions
+    - Simplification
+    - Substitution
+    - Random generation
+    - Normal forms
+        - Algebraic, Blake
+        - Minimization
+            - Quine-McCluskey algorithm
+- Semantics
+    - Proofs
+- Printing
+    - Diagrams
+        - Decision trees
+        - Circuits
+    - Typst format
+    - Parse DIMACS
+- Languages
+    - Modal logic
+    - First order logic
+    - Lambda calculus
+    - Electronic circuits
+    - Satisfiability modulo theories
+
 ## Related Packages
 
 ### Logic
 
 - [Julog.jl](https://github.com/ztangent/Julog.jl)
     - Implements a Prolog-like logic programming language for propositional and first-order logic
+- [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl)
+    - Implements several logics and algebras
+- [Satifsiability.jl](https://github.com/elsoroka/Satisfiability.jl)
+    - An interface to satisfiability modulo theory solvers
+    - Solvers must be installed on the user's system
 - [LogicCircuits.jl](https://github.com/Juice-jl/LogicCircuits.jl)
     - Implements propositional logic with support for SIMD and CUDA
-- [SoleLogics.jl](https://github.com/aclai-lab/SoleLogics.jl)
-    - Implements propositional and modal logic
 - [TruthTables.jl](https://github.com/eliascarv/TruthTables.jl)
     - Implements a macro that prints a truth table
     - PAndQ.jl implements a superset of the features in this package
 - [MathematicalPredicates.jl](https://github.com/JuliaReach/MathematicalPredicates.jl)
     - Implements propositional logic
     - PAndQ.jl, Julog.jl, and SoleLogics.jl implement a superset of the features in this package
-- [Satifsiability.jl](https://github.com/elsoroka/Satisfiability.jl)
-    - An interface to satisfiability modulo theory solvers
-    - Solvers must be installed on the user's system
 
 #### Wrappers
 
 - [PicoSat.jl](https://github.com/sisl/PicoSAT.jl)
     - An interface to the [PicoSAT](https://fmv.jku.at/picosat/) solver using PicoSAT_jll.jl
+    - Does not support the Windows operating system
 - [Z3.jl](https://github.com/ahumenberger/Z3.jl)
     - An interface to the [Z3 Theorem Prover](https://github.com/Z3Prover/z3) using z3_jll.jl
     - Commits [type piracy](https://docs.julialang.org/en/v1/manual/style-guide/#Avoid-type-piracy)
