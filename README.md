@@ -41,8 +41,8 @@ PAndQ.jl is a [computer algebra system](https://en.wikipedia.org/wiki/Computer_a
 - Diagrams
     - Syntax trees
     - Truth tables
-        - Plain text, HTML, Markdown, and LaTeX output
-- Convert propositions to LaTeX
+        - Plain text, Markdown, HTML, and LaTeX formats
+- Format propositions as LaTeX
 
 #### Planned
 
