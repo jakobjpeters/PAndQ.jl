@@ -516,6 +516,26 @@ function value(T, p)
 end
 value(p) = value(Any, p)
 
+_map(f, p) = map(child -> map(f, child), children(p))
+
+"""
+    map(f, p)
+
+Apply the function `f` to each atom in `p`.
+
+# Examples
+```jldoctest
+julia> @atomize map(¬, p ∧ q)
+¬p ∧ ¬q
+
+julia> @atomize map(atom -> \$(something(value(atom)) + 1), \$1 ∧ \$2)
+\$(2) ∧ \$(3)
+```
+"""
+map(f, p::Atom) = f(p)
+map(f, p::Union{NullaryOperator, Tree}) = nodevalue(p)(_map(f, p)...)
+map(f, p::Union{Clause, Normal}) = fold(𝒾, nodevalue(p) => _map(f, p))
+
 """
     atoms(p)
 

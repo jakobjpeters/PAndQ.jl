@@ -10,7 +10,7 @@ Equivalent to `Union{map(typeof, xs)...}`.
 
 # Examples
 ```jldoctest
-julia> PAndQ.union_typeof((⊤, 𝒾 , ∧))
+julia> PAndQ.union_typeof((⊤, 𝒾, ∧))
 Union{PAndQ.Interface.Operator{:tautology}, PAndQ.Interface.Operator{:identical}, PAndQ.Interface.Operator{:and}}
 ```
 """

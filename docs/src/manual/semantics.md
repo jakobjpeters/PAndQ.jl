@@ -5,7 +5,6 @@
 
 ```@docs
 valuations
-map
 interpret
 interpretations
 solutions

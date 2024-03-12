@@ -13,6 +13,7 @@ constants
 
 ```@docs
 value
+map
 atoms
 operators
 install_atomize_mode
