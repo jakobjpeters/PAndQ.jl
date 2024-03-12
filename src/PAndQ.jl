@@ -5,6 +5,14 @@ using PrecompileTools: @compile_workload
 
 """
     union_typeof(xs)
+
+Equivalent to `Union{map(typeof, xs)...}`.
+
+# Examples
+```jldoctest
+julia> PAndQ.union_typeof((⊤, 𝒾 , ∧))
+Union{PAndQ.Interface.Operator{:tautology}, PAndQ.Interface.Operator{:identical}, PAndQ.Interface.Operator{:and}}
+```
 """
 union_typeof(xs) = Union{map(typeof, xs)...}
 

@@ -7,12 +7,11 @@ using .PicoSAT: Solutions
 
 """
     valuations(atoms)
-    valuations(::Union{NullaryOperator, Proposition})
+    valuations(p)
 
 Return an iterator of every possible [valuation]
-(https://en.wikipedia.org/wiki/Valuation_(logic)).
-
-See also [Nullary Operators](@ref nullary_operators) and [`Proposition`](@ref).
+(https://en.wikipedia.org/wiki/Valuation_(logic))
+of the given `atoms` or the atoms contained in `p`.
 
 # Examples
 ```jldoctest
@@ -42,18 +41,14 @@ valuations(p::Union{NullaryOperator, Proposition}) = valuations(collect(atoms(p)
 _map(f, p) = map(child -> map(f, child), children(p))
 
 """
-    map(::Function, ::Union{NullaryOperator, Proposition})
+    map(f, p)
 
-Apply the given function to each [`Atom`](@ref) in the given argument.
-
-Alternatively, propositions are callable with the function as an argument.
-
-See also [Nullary Operators](@ref nullary_operators) and [`Proposition`](@ref).
+Apply the function `f` to each atom in `p`.
 
 # Examples
 ```jldoctest
-julia> @atomize map(atom -> ⊤, p ↔ q)
-⊤ ↔ ⊤
+julia> @atomize map(¬, p ∧ q)
+¬p ∧ ¬q
 
 julia> @atomize map(atom -> \$(something(value(atom)) + 1), \$1 ∧ \$2)
 \$(2) ∧ \$(3)
@@ -66,21 +61,16 @@ map(f, p::Union{Clause, Normal}) = fold(𝒾, nodevalue(p) => _map(f, p))
 """
     interpret(valuation, p)
 
-Substitute each [`Atom`](@ref) in the given
-[`Proposition`](@ref) with values from the `valuation`.
+Substitute each atom in `p` with values given by the `valuation`.
 
-The `valuation` can be a `Function` with the signature
-`valuation(::Atom)::Union{Bool, NullaryOperator, Proposition}`,
-a `Dict`, or an iterable that can construct a `Dict`.
-No substitution is performed if an [`Atom`](@ref) from the
-[`Proposition`](@ref) is not one of the dictionary's keys.
-
-See also [Nullary Operators](@ref nullary_operators).
+The `valuation` can be a `Function` that accepts an atom and returns a logical value,
+a `Dict`ionary mapping from atoms to logical values, or an iterable that can construct such a dictionary.
+No substitution is performed if an atom is not one of the dictionary's keys.
 
 # Examples
 ```jldoctest
-julia> @atomize interpret(p -> true, ¬p)
-false
+julia> @atomize interpret(atom -> ⊤, ¬p)
+¬⊤
 
 julia> @atomize interpret(p => ⊤, p ∧ q)
 ⊤ ∧ q
@@ -94,8 +84,8 @@ interpret(valuation, p) = interpret(Dict(valuation), p)
     interpretations(valuations, p)
     interpretations(p)
 
-Return an iterator of truth values given by [`interpret`](@ref)ing
-`p` with each valuation in [`valuations`](@ref).
+Return an `Array{Bool}` given by [`interpret`](@ref)ing
+`p` with each of the [`valuations`](@ref).
 
 # Examples
 ```jldoctest
@@ -158,7 +148,7 @@ end
 """
     is_tautology(p)
 
-Return a boolean indicating whether the given proposition
+Return a `Bool`ean indicating whether the given proposition
 is logically equivalent to a [`tautology`](@ref).
 
 # Examples
@@ -180,7 +170,7 @@ is_tautology(p) = is_contradiction(¬p)
 """
     is_contradiction(p)
 
-Return a boolean indicating whether the given proposition
+Return a `Bool`ean indicating whether the given proposition
 is logically equivalent to a [`contradiction`](@ref).
 
 # Examples
@@ -200,10 +190,8 @@ is_contradiction(p) = isempty(solutions(p))
 """
     is_truth(p)
 
-Return a boolean indicating whether given proposition is logically
-equivalent to a [nullary operator](@ref nullary_operators).
-
-See also [`Proposition`](@ref).
+Return a `Bool`ean indicating whether given proposition is logically
+equivalent to a [truth value](@ref nullary_operators).
 
 # Examples
 ```jldoctest
@@ -227,11 +215,9 @@ is_truth(p) = is_tautology(p) || is_contradiction(p)
 """
     is_contingency(p)
 
-Return a boolean indicating whether `p` is a
+Return a `Bool`ean indicating whether `p` is a
 [contingency](https://en.wikipedia.org/wiki/Contingency_(philosophy))
-(not logically equivalent to a [nullary operator](@ref nullary_operators)).
-
-See also [`Proposition`](@ref).
+(not logically equivalent to a [truth value](@ref nullary_operators)).
 
 # Examples
 ```jldoctest
@@ -253,11 +239,9 @@ is_contingency(p) = !is_truth(p)
 """
     is_satisfiable(p)
 
-Return a boolean indicating whether `p` is
+Return a `Bool`ean indicating whether `p` is
 [satisfiable](https://en.wikipedia.org/wiki/Satisfiability)
 (not logically equivalent to a [`contradiction`](@ref)).
-
-See also [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -279,11 +263,9 @@ is_satisfiable(p) = !is_contradiction(p)
 """
     is_falsifiable(p)
 
-Returns a boolean indicating whether `p` is
+Returns a `Bool`ean indicating whether `p` is
 [falsifiable](https://en.wikipedia.org/wiki/Falsifiability)
-(not logica equivalent to a [`tautology`](@ref)).
-
-See also [`Proposition`](@ref).
+(not logically equivalent to a [`tautology`](@ref)).
 
 # Examples
 ```jldoctest
@@ -305,7 +287,7 @@ is_falsifiable(p) = !is_tautology(p)
 """
     is_equisatisfiable(p, q)
 
-Return a boolean indicating whether the predicate [`is_satisfiable`](@ref)
+Return a `Bool`ean indicating whether the predicate [`is_satisfiable`](@ref)
 is congruent for both propositions.
 
 # Examples
@@ -322,20 +304,18 @@ is_equisatisfiable(p, q) = is_satisfiable(p) == is_satisfiable(q)
 ## Ordering
 
 """
-    ==(::Union{Bool, NullaryOperator, Proposition}, ::Union{Bool, NullaryOperator, Proposition})
+    ==(p, q)
     p == q
 
-Return a boolean indicating whether `p` and `q` are [logically equivalent]
+Return a `Bool`ean indicating whether `p` and `q` are [logically equivalent]
 (https://en.wikipedia.org/wiki/Logical_equivalence).
 
-[`Constant`](@ref)s are equivalent only if their [`value`](@ref)s are equivalent.
+Constants are equivalent only if their [`value`](@ref)s are equivalent.
 
 !!! info
     The `≡` symbol is sometimes used to represent logical equivalence.
     However, Julia uses `≡` as an alias for the builtin function `===`
     which cannot have methods added to it.
-
-See also [Nullary Operators](@ref nullary_operators) and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -361,13 +341,12 @@ p::Proposition == q::Union{Bool, NullaryOperator} = q == p
 p::Proposition == q::Proposition = is_contradiction(p ↮ q)
 
 """
-    <(::Union{Bool, NullaryOperator, Proposition}, ::Union{Bool, NullaryOperator, Proposition})
+    <(p, q)
+    p < q
 
-Return a boolean indicating whether the arguments are ordered such that
+Return a `Bool`ean indicating whether the arguments are ordered such that
 `p < q < r`, where `p`, `q`, and `r` satisfy [`is_contradiction`](@ref),
 [`is_contingency`](@ref), and [`is_tautology`](@ref), respectively.
-
-See also [Nullary Operators](@ref nullary_operators) and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -556,10 +535,10 @@ _evaluation(o, ps...) = _evaluation(o, map(Tree, ps)...)
 evaluation(::Eager, o, ps...) = evaluate(o, ps...)
 evaluation(::Lazy, o, ps...) = _evaluation(o, ps...)
 
-Evaluation(::Union{typeof(𝒾), NaryOperator}) = Eager
-Evaluation(::Union{NullaryOperator, typeof(¬), BinaryOperator}) = Lazy
+Evaluation(::Union{NullaryOperator, typeof(𝒾), NaryOperator}) = Eager
+Evaluation(::Union{typeof(¬), BinaryOperator}) = Lazy
 
-(o::Operator)(ps::BN...) where BN <: Union{Bool, Normal} = evaluate(o, ps...)
+(o::Operator)(p::BN, qs::BN...) where BN <: Union{Bool, Normal} = evaluate(o, p, qs...)
 (o::Operator)(ps...) = evaluation(Evaluation(o)(), o, ps...)
 
 _print_expression(io, o, ps) = __show(print_proposition, io, ps) do io

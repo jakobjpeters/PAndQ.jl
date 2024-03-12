@@ -29,7 +29,7 @@ using PAndQ, .Interface
 
 This is a renamed [`tautology`](@ref) operator. First, define an [`Operator`](@ref Interface.Operator). If possible, this should be a `const`ant whose name corresponds to the operator name.
 
-```julia
+```
 julia> const truth = Operator{:truth}()
 Error showing value of type Operator{:truth}:
 ERROR: InterfaceError: implement `symbol` for `Operator{:truth}()`
@@ -56,26 +56,30 @@ truth()
 
 The error says to implement [`arity`](@ref Interface.arity). This function is used to construct a node in a syntax tree.
 
-```@repl 1
-arity(::typeof(truth)) = 0;
+```@setup 1
+arity(::typeof(truth)) = 0
 ```
 
-```julia
-truth()
+```
+julia> arity(::typeof(truth)) = 0;
+
+julia> truth()
+Error showing value of type PAndQ.Tree{0}:
+ERROR: InterfaceError: implement `print_expression` for `Operator{:truth}()` with `0` propositions
 ```
 
-The error says to implement [`print_expression`](@ref Interface.print_expression). This function is used to represent a node of a syntax tree. The [`print_proposition`](@ref Interface.print_proposition) function is used to represent the propositions in a node.
+The error says to implement [`print_expression`](@ref Interface.print_expression). This function is used to represent a node of a syntax tree.
 
 ```@repl 1
-print_expression(io, o::typeof(truth)) = show(io, MIME"text/plain"(), o);
-TruthTable([truth])
+print_expression(io, o::typeof(truth)) = show(io, "text/plain", o);
+print_table(truth())
 ```
 
 The error says to implement [`evaluate`](@ref Interface.evaluate). This function is used to specify the semantics of an operator.
 
 ```@repl 1
 evaluate(::typeof(truth)) = ⊤;
-TruthTable([truth])
+print_table(truth())
 ```
 
 ## Unary
@@ -89,7 +93,7 @@ negate
 Evaluation(::typeof(negate)) = Eager;
 evaluate(::typeof(negate), p) = evaluate(¬, p);
 @atomize negate(¬p)
-@atomize TruthTable([negate(p)])
+@atomize print_table(negate(p))
 ```
 
 ## Binary
@@ -102,19 +106,24 @@ symbol(::typeof(-->)) = "-->";
 -->
 Evaluation(::typeof(-->)) = Lazy;
 arity(::typeof(-->)) = 2;
+```
+
+The `root` `IOContext` is used to determine whether a node in a syntax tree is the root, in which case it may not be necessary to surround the node by parentheses. The [`print_proposition`](@ref Interface.print_proposition) function is used to represent the propositions in a node.
+
+```@repl 1
 function print_expression(io, o::typeof(-->), p, q)
     root = io[:root]
     root || print(io, "(")
     print_proposition(io, p)
     print(io, " ")
-    show(io, MIME"text/plain"(), o)
+    show(io, "text/plain", o)
     print(io, " ")
     print_proposition(io, q)
     root || print(io, ")")
-end
+end;
 @atomize p --> q
 evaluate(::typeof(-->), p, q) = p → q;
-@atomize TruthTable([p --> q])
+@atomize print_table(p --> q)
 @atomize fold(𝒾, (-->) => ())
 ```
 
@@ -131,13 +140,6 @@ This error says to implement [`initial_value`](@ref Interface.initial_value). Th
 initial_value(::typeof(-->)) = Some(⊤);
 @atomize fold(𝒾, (-->) => ())
 @atomize fold(𝒾, (-->) => (p, q, r))
-```
-
-```@repl 1
-Evaluation(::typeof(-->)) = Eager;
-evaluate(::typeof(-->), p) = Base.Fix2(-->, p);
-@atomize -->(q)
-@atomize -->(q)(p)
 ```
 
 ## Ternary
@@ -160,7 +162,7 @@ function print_expression(io, o::typeof(conditional), p, q, r)
     print_proposition(io, r)
     root || print(io, ")")
 end;
-@atomize ¬conditional(p, q, r)
+@atomize conditional(p, q, r)
 evaluate(::typeof(conditional), p, q, r) = (p → q) ∧ (p ∨ r);
-@atomize TruthTable([conditional(p, q, r)])
+@atomize print_table(conditional(p, q, r))
 ```

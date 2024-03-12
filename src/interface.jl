@@ -10,36 +10,6 @@ export
     arity, converse, dual, evaluate, initial_value, is_associative,
     is_commutative, name, print_expression, print_proposition, symbol
 
-# Internals
-
-"""
-    InterfaceError{F, T} <: Exception
-    InterfaceError(::F, ::T)
-"""
-struct InterfaceError{F, T} <: Exception
-    f::F
-    x::T
-
-    InterfaceError(f::F, x::T) where {F, T} = new{F, T}(f, x)
-end
-
-"""
-    showerror(::IO, ::InterfaceError)
-"""
-showerror(io::IO, e::InterfaceError) =
-    print(io, "InterfaceError: implement `$(e.f)` for `$(e.x)`")
-
-"""
-    @interface(f, xs...)
-"""
-macro interface(f, xs...)
-    esc(:(
-        $(Expr(:call, f, map(x -> x == :o ? Expr(Symbol("::"), x, :Operator) : x, xs)...))
-    = throw(InterfaceError($f, o))))
-end
-
-# Methods
-
 """
     Operator{O}
     Operator{O}()
@@ -53,6 +23,44 @@ If possible, an operator should be defined as
 This method is required to instantiate an operator.
 """
 struct Operator{O} end
+
+# Internals
+
+"""
+    InterfaceError{F <: Function, O <: Operator, N <: Union{Nothing, Int}} <: Exception
+    InterfaceError(::F, ::O, ::N)
+
+An `Exception` indicating that the function of type `F` has not been implemented for the value of type `T`.
+"""
+struct InterfaceError{F <: Function, O <: Operator, N <: Union{Nothing, Int}} <: Exception
+    f::F
+    o::O
+    n::N
+end
+
+"""
+    showerror(::IO, ::InterfaceError)
+
+Print a message indicating to implement a method of an interface.
+"""
+function showerror(io::IO, e::InterfaceError)
+    n = e.n
+    print(io, "InterfaceError: implement `", e.f, "` for `", e.o, "`")
+    if !isnothing(n)
+        print(io, " with `", n, "` propositions")
+    end
+end
+
+"""
+    @interface(f, xs...)
+"""
+macro interface(f, xs...)
+    esc(:(
+        $(Expr(:call, f, map(x -> x == :o ? Expr(Symbol("::"), x, :Operator) : x, xs)...))
+    = throw(InterfaceError($f, o, $(:(ps...) in xs ? :(length(ps)) : nothing)))))
+end
+
+# Methods
 
 """
     arity(::Operator)
@@ -119,14 +127,14 @@ julia> @atomize Interface.evaluate(→, p, q)
 ## Folding
 
 """
-    Associativity(ℴ::Operator)
+    Associativity(::Operator)
 
 A trait to specify the associativity of an [`Operator`](@ref Interface.Operator).
 
 !!! note
     This trait is used internally and does not override how expressions are parsed.
 
-This method is required for calling `fold` over `ℴ`.
+This method is required for calling `fold` over the operator.
 
 Supertype of [`Left`](@ref) and [`Right`](@ref).
 
@@ -147,10 +155,10 @@ abstract type Associativity end
 
 Specify a neutral value, `v`, of a binary [`Operator`](@ref Interface.Operator) such that `ℴ(v, p) == p`.
 
-To distinguish between an initial value and the absense of a neutral value,
+To distinguish between an initial value and the absense thereof,
 return `Some(v)` or `nothing`, respectively.
 
-This method is required for calling `fold` over `ℴ`.
+This method is required for calling `fold` over the operator.
 
 See also [`==`](@ref).
 
@@ -172,7 +180,7 @@ julia> Interface.initial_value(↑)
 """
     print_expression(io, ::Operator, ps...)
 
-Represent the node of a syntax tree containing the [`Operator`](@ref Interface.Operator) and its propositions.
+Print the node of a syntax tree containing the [`Operator`](@ref Interface.Operator) and its propositions.
 
 Nodes of a syntax tree may either be a root or a branch.
 Some branches need to be parenthesized to avoid ambiguity.
@@ -268,7 +276,7 @@ name(::Operator{O}) where O = O
 """
     print_proposition(io, p)
 
-Represent the given proposition with the `IOContext` that `:root => false`.
+Print the given proposition with the `IOContext` that `:root => false`.
 
 Should be called from [`print_expression`](@ref Interface.print_expression).
 
@@ -288,9 +296,9 @@ function print_proposition end
 """
     converse(ℴ::Operator)
 
-Return a function, `𝒸`, such that `converse(ℴ)(p, q) == 𝒸(q, p)`.
+Return a function such that `converse(ℴ)(p, q) == ℴ(q, p)`.
 
-If possible, this method should be overloaded to return an [`Operator`](@ref Interface.Operator).
+If possible, this method should be implemented to return another [`Operator`](@ref Interface.Operator).
 
 See also [`==`](@ref).
 
@@ -308,9 +316,9 @@ converse(o::Operator) = (p, q) -> o(q, p)
 """
     dual(ℴ::Operator)
 
-Return a function, `𝒹`, such that `¬ℴ(ps...) == 𝒹(map(¬, ps)...)`.
+Return a function such that `dual(ℴ)(ps...) == ¬(ℴ(map(¬, ps...)))`.
 
-If possible, this method should be implemented to return an [`Operator`](@ref Interface.Operator).
+If possible, this method should be implemented to return another [`Operator`](@ref Interface.Operator).
 
 See also [`not`](@ref) and [`==`](@ref).
 
@@ -330,7 +338,7 @@ dual(o::Operator) = (ps...) -> map(¬, ¬normalize(∧, o(ps...)))
 """
     is_associative(ℴ::Operator)
 
-Return a `Bool` indicating whether has the associative property
+Return a `Bool`ean indicating whether the operator has the associative property
 such that `ℴ(ℴ(p, q), r) == ℴ(p, ℴ(q, r))`.
 
 See also [`==`](@ref).
@@ -352,7 +360,7 @@ end
 """
     is_commutative(ℴ::Operator)
 
-Return a `Bool` indicating whether has the commutative property
+Return a `Bool`ean indicating whether operator has the commutative property
 such that `ℴ(p, q) == ℴ(q, p)`.
 
 See also [`==`](@ref).

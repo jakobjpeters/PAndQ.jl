@@ -28,8 +28,8 @@ is_equisatisfiable
 Propositions and their truth values have a [strict partial order](https://en.wikipedia.org/wiki/Partially_ordered_set#strict_partial_order).
 The truth values [`tautology`](@ref) and [`contradiction`](@ref) are the top and bottom of this order, respectively.
 A proposition that satisfies the predicate [`is_tautology`](@ref) or [`is_contradiction`](@ref) is also at the top or bottom of the order, respectively.
-Propositions that satisfy the predicate `is_contingency` occupy the middle of this order.
-More specifically, `⊥ <= p <= ⊤` for some proposition `p`.
+Propositions that satisfy the predicate [`is_contingency`](@ref) occupy the middle of this order.
+In other words, `⊥ < ⊤`, `⊥ <= p`, and `p <= ⊤` for some proposition `p`.
 The ordering is partial because the predicates [`==`](@ref) and [`is_truth`](@ref) may both be false for two given propositions.
 
 !!! note
@@ -38,7 +38,8 @@ The ordering is partial because the predicates [`==`](@ref) and [`is_truth`](@re
 
 !!! warning
     The assumption that `isequal(p, q)` implies `hash(p) == hash(q)` is currently being violated.
-    The implementation of `hash` for propositions is in-progress.
+    A future version will implement the Quine–McCluskey algorithm to minimize propositions,
+    which will enable `hash` to be defined for propositions.
 
 ```@docs
 ==

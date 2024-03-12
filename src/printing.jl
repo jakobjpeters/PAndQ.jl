@@ -9,10 +9,15 @@ using PrettyTables: pretty_table
     TruthTable(ps)
 
 Construct a [truth table](https://en.wikipedia.org/wiki/Truth_table)
-for the given [`Proposition`](@ref)s.
+for the given propositions.
 
-The each cell in the header is a list of logically equivalent propositions.
-The body is a matrix where the rows contain [`interpretations`](@ref) of each proposition in the given column.
+The header is a sequence of propositions.
+The body is a matrix where the rows contain [`interpretations`](@ref) of each proposition in the header.
+
+Propositions logically equivalent to a [truth value](@ref nullary_operators) will be grouped on the left,
+followed by those equivalent to an atomic proposition and then by all other propositions.
+Logically equivalent propositions will be grouped together.
+Propositions that have the same text representation will only be shown once.
 
 # Examples
 ```jldoctest
@@ -168,7 +173,7 @@ _print_table(backend, io, t; formatters = formatter(NullaryOperator), kwargs...)
 
 Print a [`TruthTable`](@ref).
 
-The parameter can be a `TruthTable`, iterable of propositions, or sequence of propositions.
+The parameters can be a `TruthTable`, iterable of propositions, or sequence of propositions.
 
 Keyword parameters are passed to [`PrettyTables.pretty_table`]
 (https://ronisbr.github.io/PrettyTables.jl/stable/lib/library/#PrettyTables.pretty_table-Tuple{Any}).
@@ -211,7 +216,7 @@ print_table(@nospecialize(xs...); kwargs...) = print_table(stdout, xs...; kwargs
 """
     print_tree(::IO = stdout, p; kwargs...)
 
-Prints a tree diagram of the given proposition.
+Print a tree diagram of the given proposition.
 
 Keyword parameters are passed to [`AbstractTrees.print_tree`]
 (https://github.com/JuliaCollections/AbstractTrees.jl/blob/master/src/printing.jl).
@@ -247,7 +252,7 @@ print_tree(p; kwargs...) = print_tree(stdout, p; kwargs...)
 """
     print_dimacs(io = stdout, p)
 
-Write the DIMACS format of `p` to `io`.
+Print the DIMACS format of `p`.
 
 The `io` can be an `IO` or file path `String` to write to.
 
@@ -273,18 +278,29 @@ print_dimacs(p) = print_dimacs(stdout, p)
 """
     show(::IO, ::MIME"text/plain", ::Operator)
 
-Represent the given [`Operator`](@ref) as specified by [`symbol`](@ref Interface.symbol)
+Print the operator's [`symbol`](@ref Interface.symbol).
+
+# Examples
+```jldoctest
+julia> show(stdout, "text/plain", ⊤)
+⊤
+
+julia> show(stdout, "text/plain", ¬)
+¬
+
+julia> show(stdout, "text/plain", ∧)
+∧
+```
 """
 show(io::IO, ::MIME"text/plain", o::Operator) = print(io, symbol(o))
 
 """
-    show(::IO, ::MIME"text/plain", ::Proposition)
+    show(::IO, ::MIME"text/plain", p)
 
-Represent the given [`Proposition`](@ref) as a [propositional formula]
-(https://en.wikipedia.org/wiki/Propositional_formula).
+Print the proposition in a logical syntax format.
 
-The value of a [`Constant`](@ref PAndQ.Constant) is shown with an `IOContext` whose
-`:compact` and `:limit` keys are individually set to `true` if they have not already been set.
+The value of a constant is shown with an `IOContext` whose `:compact` and `:limit`
+keys are individually set to `true` if they have not already been set.
 
 # Examples
 ```jldoctest
@@ -301,7 +317,7 @@ show(io::IO, ::MIME"text/plain", p::Proposition) =
 """
     show(::IO, ::MIME"text/plain", ::TruthTable)
 
-Represent the [`TruthTable`](@ref) in its default format.
+Print the [`TruthTable`](@ref)'s default format.
 
 # Examples
 ```jldoctest
@@ -330,9 +346,9 @@ function __show(f, g, io, ps)
 end
 
 """
-    show(::IO, ::Proposition)
+    show(::IO, p)
 
-Represent the [`Proposition`](@ref PAndQ.Proposition) verbosely.
+Print the proposition verbosely.
 
 # Examples
 ```jldoctest

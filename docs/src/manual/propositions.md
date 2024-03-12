@@ -1,5 +1,5 @@
 
-# Propositions
+# [Propositions](@id propositions)
 
 ## Instantiation
 

@@ -20,7 +20,7 @@ julia> formatter(Latexify.LaTeXString)(false, nothing, nothing)
 L"\$\\bot\$"
 ```
 """
-formatter(::Type{LaTeXString}) = (v, _, _) -> string(latexify(v ? "⊤" : "⊥"))
+formatter(::Type{LaTeXString}) = (v, _, _) -> latexify(v ? "⊤" : "⊥")
 
 _print_table(backend::Val{:latex}, io, t; formatters = formatter(LaTeXString), kwargs...) =
     __print_table(backend, io, t.body; header = map(latexify ∘ Symbol, t.header), formatters, kwargs...)

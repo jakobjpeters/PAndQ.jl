@@ -9,7 +9,7 @@ This page demonstrates the basic functionality of this package. For additional f
 
 ## Operators
 
-[Operators](@ref operators_operators) are functions represented by a symbol that return a symbolic expression.
+[Operators](@ref operators_operators) are functions represented by a symbol that return a logical value.
 
 The operators [`tautology`](@ref) and [`contradiction`](@ref) are truth values similar to the boolean values `true` and `false`, respectively. These operators are represented with the symbols `⊤` and `⊥` and return themselves when called.
 
@@ -39,7 +39,7 @@ julia> ⊤ ∧ ⊥
 
 ## Propositions
 
-A proposition is a statement that can be either true or false. For example, "Logic is fun". This proposition has a known value, so it is a constant. Note that the proposition exists independently of whether it is known to be true or false. Constants can be instantiated inline with the [`@atomize`](@ref) macro and unwrapped with the [`value`](@ref) function.
+[Propositions](@ref propositions) are statements that can be either `true` or `false`. For example, "Logic is fun". This proposition has a known value, so it is a constant. Note that the proposition exists independently of whether it is known to be true or false. Constants can be instantiated inline with the [`@atomize`](@ref) macro and unwrapped with the [`value`](@ref) function.
 
 ```jldoctest 1
 julia> p = @atomize $"Logic is fun"
@@ -64,7 +64,7 @@ julia> p ∧ q
 $("Logic is fun") ∧ $("Julia is awesome")
 ```
 
-Variables represent a proposition with an arbitrary value. Use the `@atomize` macro to instantiate them inline or the [`@variables`](@ref) macro to define multiple variables at once.
+Variables represent a proposition with an unknown value. Use the `@atomize` macro to instantiate them inline or the [`@variables`](@ref) macro to define multiple variables at once.
 
 ```jldoctest 1
 julia> @variables p q
@@ -91,7 +91,7 @@ julia> ⊤ ∧ p
 
 ## Semantics
 
-Constants and variables are atomic propositions. Operators construct compound propositions from one or more atomic propositions. Each atom in a proposition can be assigned the valuation true or false. This results in an interpretation, which determines the truth value of the overall proposition. For example, assigning the valuation `true` to the atomic proposition "Logic is fun" determines that the compound proposition "Logic is not fun" is interpreted as `false`. Use the [`interpret`](@ref) function to assign truth values to atomic propositions.
+Constants and variables are atomic propositions. Operators construct compound propositions from one or more atomic propositions. Each atom in a proposition can be assigned the valuation `true` or `false`. This results in an interpretation, which determines the truth value of the overall proposition. For example, assigning the valuation `true` to the atomic proposition "Logic is fun" determines that the compound proposition "Logic is not fun" is interpreted as `false`. Use the [`interpret`](@ref) function to assign truth values to atomic propositions.
 
 ```jldoctest 1
 julia> interpret(p => ⊤, p ∧ q)
@@ -99,6 +99,19 @@ julia> interpret(p => ⊤, p ∧ q)
 
 julia> interpret([p => ⊤, q => ⊥], p ∧ q)
 ⊤ ∧ ⊥
+```
+
+The [`solutions`](@ref) of a proposition are the [`valuations`](@ref) that result in a `true` interpretation.
+
+```jldoctest 1
+julia> collect(valuations(p ∧ q))
+2×2 Matrix{Vector{Pair{PAndQ.Variable, Bool}}}:
+ [Variable(:p)=>1, Variable(:q)=>1]  [Variable(:p)=>1, Variable(:q)=>0]
+ [Variable(:p)=>0, Variable(:q)=>1]  [Variable(:p)=>0, Variable(:q)=>0]
+
+julia> map(collect, solutions(p ∧ q))
+1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
+ [PAndQ.Variable(:p) => 1, PAndQ.Variable(:q) => 1]
 ```
 
 Two propositions are logically equivalent if their interpretation is equivalent for every possible valuation. Use [`==`](@ref) to check if two propositions are logically equivalent.
