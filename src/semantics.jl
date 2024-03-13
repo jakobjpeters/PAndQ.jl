@@ -352,9 +352,9 @@ p::Proposition < q::Proposition =
 # Operators
 
 """
-    Bool(nullary_operator)
+    Bool(truth_value)
 
-Return a `Bool` corresponding to the given [nullary operator](@ref nullary_operators).
+Return a `Bool` corresponding to the given [truth value](@ref nullary_operators).
 
 # Examples
 ```jldoctest
@@ -402,10 +402,12 @@ promote_rule(::Type{Proposition}, ::Type{Proposition}) = Tree
 # Interface Implementation
 
 """
-    eval_doubles(f, doubles)
+    eval_pairs(f, pairs)
+
+Define `f(::typeof(left)) = right` and `f(::typeof(right)) = left` for each pair `left` and `right` in `pairs`.
 """
-eval_doubles(f, doubles) = for double in doubles
-    for (left, right) in (double, reverse(double))
+eval_pairs(f, pairs) = for pair in pairs
+    for (left, right) in (pair, reverse(pair))
         @eval $f(::typeof($left)) = $right
     end
 end
@@ -426,7 +428,7 @@ Associativity(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔, →, ↚))) = Left
 Associativity(::union_typeof((↛, ←))) = Right
 
 dual(o::UnaryOperator) = o
-eval_doubles(:dual, (
+eval_pairs(:dual, (
     (⊤, ⊥),
     (∧, ∨),
     (↑, ↓),
@@ -436,7 +438,7 @@ eval_doubles(:dual, (
 ))
 
 converse(o::union_typeof((∧, ∨, ↑, ↓, ↔, ↮))) = o
-eval_doubles(:converse, ((→, ←), (↛, ↚)))
+eval_pairs(:converse, ((→, ←), (↛, ↚)))
 
 is_commutative(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔))) = true
 is_commutative(::union_typeof((→, ↛, ←, ↚))) = false
@@ -521,7 +523,7 @@ Evaluation(::Union{typeof(¬), BinaryOperator}) = Lazy
 (o::Operator)(p::BN, qs::BN...) where BN <: Union{Bool, Normal} = evaluate(o, p, qs...)
 (o::Operator)(ps...) = evaluation(Evaluation(o)(), o, ps...)
 
-_print_expression(io, o, ps) = __show(print_proposition, io, ps) do io
+_print_expression(io, o, ps) = _show(print_proposition, io, ps) do io
     print(io, " ")
     show(io, "text/plain", o)
     print(io, " ")

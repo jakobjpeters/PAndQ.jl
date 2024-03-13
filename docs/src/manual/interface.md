@@ -58,6 +58,8 @@ Interface.Right
 
 ```@docs
 Interface.name
+Interface.is_root
+Interface.parenthesize
 Interface.print_proposition
 ```
 

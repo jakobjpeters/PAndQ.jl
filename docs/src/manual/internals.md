@@ -113,7 +113,7 @@ PAndQ.flatten
 ## Semantics
 
 ```@docs
-PAndQ.eval_doubles
+PAndQ.eval_pairs
 convert
 promote_rule
 ```

@@ -38,7 +38,7 @@ The ordering is partial because the predicates [`==`](@ref) and [`is_truth`](@re
 !!! warning
     The assumption that `isequal(p, q)` implies `hash(p) == hash(q)` is currently being violated.
     A future version will implement the Quine–McCluskey algorithm to minimize propositions,
-    which will enable `hash` to be defined for propositions.
+    which will enable `hash` to be defined too.
 
 ```@docs
 ==

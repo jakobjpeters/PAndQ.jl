@@ -12,10 +12,10 @@ Construct a [truth table](https://en.wikipedia.org/wiki/Truth_table)
 for the given propositions.
 
 The header is a sequence of propositions.
-The body is a matrix where the rows contain [`interpretations`](@ref) of each proposition in the header.
+The body is a matrix where the rows are [`interpretations`](@ref) of each proposition in the header.
 
 Propositions logically equivalent to a [truth value](@ref nullary_operators) will be grouped on the left,
-followed by those equivalent to an atomic proposition and then by all other propositions.
+followed by those equivalent to an atomic proposition, and then by all other propositions.
 Logically equivalent propositions will be grouped together.
 Propositions that have the same text representation will only be shown once.
 
@@ -297,7 +297,7 @@ show(io::IO, ::MIME"text/plain", o::Operator) = print(io, symbol(o))
 """
     show(::IO, ::MIME"text/plain", p)
 
-Print the proposition in a logical syntax format.
+Print the proposition in logical syntax format.
 
 The value of a constant is shown with an `IOContext` whose `:compact` and `:limit`
 keys are individually set to `true` if they have not already been set.
@@ -335,14 +335,12 @@ julia> @atomize show(stdout, "text/plain", TruthTable([p ∧ q]))
 """
 show(io::IO, ::MIME"text/plain", t::TruthTable) = print_table(io, t; newline_at_end = false)
 
-function __show(f, g, io, ps)
-    qs, root = Stateful(ps), get(io, :root, true)
-    root || print(io, "(")
+_show(f, g, io, ps) = parenthesize(io) do
+    qs = Stateful(ps)
     for q in qs
         g(io, q)
         isempty(qs) || f(io)
     end
-    if !root print(io, ")") end
 end
 
 """
@@ -366,6 +364,6 @@ function show(io::IO, p::Atom)
 end
 function show(io::IO, p::Tree)
     print(io, name(nodevalue(p)), "(")
-    __show(io -> print(io, ", "), show, io, children(p))
+    _show(io -> print(io, ", "), show, io, children(p))
     print(io, ")")
 end

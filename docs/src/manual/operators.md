@@ -15,7 +15,7 @@ Operator associativity determines how operators with the same precedence group t
     This associativity is determined by Julia's parser and is distinct from the [`Associativity`](@ref) trait used to specify the direction an operator [`fold`](@ref)s.
 
 !!! info
-    `==` has a precedence of 7, which is higher than that of several binary operators. For those cases, you may need to use parentheses. For example, `@atomize p → q == r` parses as `@atomize p → (q == r)` rather than `@atomize (p → q) == r`.
+    `==` has a precedence of 7, which is higher than that of several binary operators. For those cases, you may need to use parentheses. For example, `p → q == r` parses as `p → (q == r)` rather than `(p → q) == r`.
 
 | Name                         | Symbol | Tab Completion    | Associativity | Precedence |
 |:-----------------------------|:-------|:------------------|:--------------|:-----------|

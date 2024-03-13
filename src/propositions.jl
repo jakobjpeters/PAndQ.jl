@@ -85,14 +85,14 @@ struct Variable <: Atom
 end
 
 """
-    Tree <: Compound
+    Tree{N} <: Compound
     Tree(::Operator, ::Union{Atom, Tree}...)
 
 A [`Proposition`](@ref) represented by an [abstract syntax tree]
 (https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 
 Subtype of [`Compound`](@ref).
-See also [`Atom`](@ref), [`NullaryOperator`](@ref), and [`Operator`](@ref).
+See also [`Operator`](@ref) and [`Atom`](@ref).
 
 # Examples
 ```jldoctest
@@ -115,17 +115,17 @@ end
 
 """
     Clause{AO <: AndOr} <: Compound
-    Clause(::AO, ::Vector{Atom}, ::Set{Int})
+    Clause(::AO, ::Vector{<:Atom}, ::Set{Int})
 
 A proposition represented as either a [conjunction or disjunction of literals]
 (https://en.wikipedia.org/wiki/Clause_(logic)).
 
 !!! info
     An empty `Clause` is [logically equivalent](@ref ==) to the
-    neutral element of it's binary operator.
+    [`initial_value`](@ref Interface.initial_value) of it's binary operator.
 
 Subtype of [`Compound`](@ref).
-See also [`Atom`](@ref), [`AndOr`](@ref), and [`NullaryOperator`](@ref).
+See also [`AndOr`](@ref) and [`Atom`](@ref).
 
 # Examples
 ```jldoctest
@@ -156,10 +156,10 @@ A [`Proposition`](@ref) represented in [conjunctive]
 
 !!! info
     An empty `Normal` is [logically equivalent](@ref ==) to the
-    neutral element of it's binary operator.
+    [`initial_value`](@ref Interface.initial_value) of it's binary operator.
 
 Subtype of [`Compound`](@ref).
-See also [`Clause`](@ref), [`AndOr`](@ref), and [`NullaryOperator`](@ref).
+See also [`AndOr`](@ref) and [`Clause`](@ref).
 
 # Examples
 ```jldoctest
@@ -180,9 +180,11 @@ end
 ## AbstractTrees.jl
 
 """
-    children(::Proposition)
+    children(::Union{Tree, Clause, Normal})
 
-Return an iterator over the child nodes of the given [`Proposition`](@ref).
+Return an iterator over the child nodes of the given proposition.
+
+See also [`Tree`](@ref), [`Clause`](@ref), and [`Normal`](@ref).
 
 # Examples
 ```jldoctest
@@ -209,6 +211,8 @@ end
 """
     nodevalue(::Union{Tree, Clause, Normal})
 
+Return the [`Operator`](@ref Interface.Operator) of the proposition's root node.
+
 See also [`Tree`](@ref), [`Clause`](@ref), and [`Normal`](@ref).
 
 # Examples
@@ -223,15 +227,16 @@ julia> @atomize PAndQ.nodevalue(p ∧ q)
 nodevalue(p::Tree) = p.operator
 nodevalue(::Union{Clause{O}, Normal{O}}) where O = O.instance
 
-_printnode(p::Union{Operator, Atom}) = p
-_printnode(p::Tree) = nodevalue(p)
+_printnode(p::Union{Operator, Atom, Tree}) = nodevalue(p)
 _printnode(p::Union{Clause, Normal}) =
     (isempty(children(p)) ? something ∘ initial_value : identity)(nodevalue(p))
 
 """
-    printnode(::IO, ::Union{NullaryOperator, Proposition}; kwargs...)
+    printnode(::IO, ::Union{Operator, Proposition}; kwargs...)
 
-See also [`Proposition`](@ref).
+Print the representation of the proposition's root node.
+
+See also [`Operator`](@ref Interface.Operator) and [`Proposition`](@ref).
 
 # Examples
 ```jldoctest
@@ -249,6 +254,12 @@ printnode(io::IO, p::Union{Operator, Proposition}) = show(io, MIME"text/plain"()
     NodeType(::Type{<:Atom})
 
 See also [`Atom`](@ref).
+
+# Examples
+```jldoctest
+julia> PAndQ.NodeType(PAndQ.Atom)
+AbstractTrees.HasNodeType()
+```
 """
 NodeType(::Type{<:Atom}) = HasNodeType()
 
@@ -256,6 +267,11 @@ NodeType(::Type{<:Atom}) = HasNodeType()
     nodetype(::Type{<:Atom})
 
 See also [`Atom`](@ref).
+
+```jldoctest
+julia> PAndQ.nodetype(PAndQ.Atom)
+PAndQ.Atom
+```
 """
 nodetype(::Type{A}) where A <: Atom = A
 
@@ -285,7 +301,7 @@ deconstruct(p) = nodevalue(p), children(p)
 """
     child(x)
 
-Equivalent to `only ∘ children`
+Equivalent to `only ∘ children`.
 
 See also [`children`](@ref).
 """
@@ -293,6 +309,8 @@ child(x) = only(children(x))
 
 """
     load_or_error(x)
+
+Return an expression that when `eval`uated returns `x` if `PAndQ` is defined and throws an `Exception` otherwise.
 """
 load_or_error(x) = :((@isdefined PAndQ) ? $x : error("`PAndQ` must be loaded"))
 
@@ -400,7 +418,7 @@ flatten(p) = flatten(Tree(p))
 # Instantiation
 
 """
-    @atomize(expression)
+    @atomize(x)
 
 Instantiate constants and variables inline.
 
@@ -410,7 +428,7 @@ Variables are instantiated with previously undefined symbols.
 !!! warning
     This macro attempts to ignore symbols that are being assigned a value.
     For example, `@atomize f(; x = p) = x ∧ q` should be equivalent to
-    `f(; x = @atomize p)) = x ∧ @atomize q`.
+    `f(; x = @atomize p) = x ∧ @atomize q`.
     However, this feature is in-progress and only works in some cases.
     The implementation is cautious to skip the parts
     of the expression that it cannot yet handle.
@@ -483,7 +501,7 @@ constants(xs) = constants(𝒾, xs)
 """
     value(T = Any, p)
 
-If `p` is logically equivalent to a constant`, return that constant's value wrapped in `Some`.
+If `p` is logically equivalent to a constant, return that constant's value wrapped in `Some`.
 Otherwise, return `nothing`.
 
 Values wrapped in `Some` can be unwrapped using the `something` function.
@@ -492,7 +510,7 @@ Values wrapped in `Some` can be unwrapped using the `something` function.
     To reduce compilation latency, constants do not store the type of the wrapped value.
     Therefore, the type of this value cannot be inferred and can result in run-time dispatch.
     If this type is known at compile-time, pass it as the first parameter.
-    See also [Annotate values taken from untyped locations]
+    See also the performance tip to [Annotate values taken from untyped locations]
     (https://docs.julialang.org/en/v1/manual/performance-tips/#Annotate-values-taken-from-untyped-locations).
 
 # Examples
@@ -582,7 +600,6 @@ Install the `atomize` REPL mode, where input implicitly begins with [`@atomize`]
 Keyword arguments are passed to [`ReplMaker.initrepl`](https://github.com/MasonProtter/ReplMaker.jl).
 The default start keys are pressing both the \\[Meta\\] (also known as [Alt]) and [a] keys at the same time.
 The available `prompt_color`s are in `Base.text_colors`.
-```
 """
 function install_atomize_mode(; start_key = "\\M-a", prompt_text = "atomize> ", prompt_color = :cyan, kwargs...)
     initrepl(atomize ∘ Meta.parse;
@@ -708,8 +725,9 @@ to the given proposition.
 
 Using the [`normalize`](@ref) function to convert a proposition to conjunction normal form
 may result in an exponentially larger proposition, which can be intractable for sufficiently large propositions.
-The Tseytin transformation results in a linearly larger proposition that is in conjunction normal form.
-However, this proposition contains introduced variables and yields a subset of the [`solutions`](@ref) to the original proposition.
+The Tseytin transformation results in a linearly larger proposition that is in conjunction normal form
+and [`is_equisatisfiable`](@ref) to the original.
+However, it contains introduced variables and yields a subset of the [`solutions`](@ref) to the original proposition.
 
 # Examples
 ```jldoctest

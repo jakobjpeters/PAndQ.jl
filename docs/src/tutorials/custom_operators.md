@@ -20,8 +20,8 @@ Implementing an operator requires defining methods for that operator. To do so, 
 
 ```@repl 1
 import PAndQ:
-    Associativity, Evaluation,
-    arity, dual, evaluate, initial_value, print_expression, symbol
+    Associativity, Evaluation, arity, dual, evaluate,
+    initial_value, parenthesize, print_expression, symbol
 using PAndQ, .Interface
 ```
 
@@ -35,7 +35,7 @@ Error showing value of type Operator{:truth}:
 ERROR: InterfaceError: implement `symbol` for `Operator{:truth}()`
 ```
 
-If a required method is not implemented, a runtime error will display the function and operator that a method must be implemented for. The error says to implement [`symbol`](@ref Interface.symbol). This function is used to represent an operator.
+If a required method is not implemented, a runtime error will display the function and operator that a method must be implemented for. The error says to implement [`symbol`](@ref Interface.symbol). This function is used to print an operator.
 
 ```@setup 1
 const truth = Operator{:truth}()
@@ -68,7 +68,7 @@ Error showing value of type PAndQ.Tree{0}:
 ERROR: InterfaceError: implement `print_expression` for `Operator{:truth}()` with `0` propositions
 ```
 
-The error says to implement [`print_expression`](@ref Interface.print_expression). This function is used to represent a node of a syntax tree.
+The error says to implement [`print_expression`](@ref Interface.print_expression). This function is used to print a node of a syntax tree.
 
 ```@repl 1
 print_expression(io, o::typeof(truth)) = show(io, "text/plain", o);
@@ -108,18 +108,15 @@ Evaluation(::typeof(-->)) = Lazy;
 arity(::typeof(-->)) = 2;
 ```
 
-The `root` `IOContext` is used to determine whether a node in a syntax tree is the root, in which case it may not be necessary to surround the node by parentheses. The [`print_proposition`](@ref Interface.print_proposition) function is used to represent the propositions in a node.
+If a node in a syntax tree is not the root node, it may be necessary to parenthesize it to avoid ambiguity. The [`parenthesize`](@ref Interface.parenthesize) function is used to print parentheses around a node if it is not the root node. The [`print_proposition`](@ref Interface.print_proposition) function is used to print the propositions in a node.
 
 ```@repl 1
-function print_expression(io, o::typeof(-->), p, q)
-    root = io[:root]
-    root || print(io, "(")
+print_expression(io, o::typeof(-->), p, q) = parenthesize(io) do
     print_proposition(io, p)
     print(io, " ")
     show(io, "text/plain", o)
     print(io, " ")
     print_proposition(io, q)
-    root || print(io, ")")
 end;
 @atomize p --> q
 evaluate(::typeof(-->), p, q) = p → q;
@@ -152,15 +149,12 @@ symbol(::typeof(conditional)) = "?";
 conditional
 Evaluation(::typeof(conditional)) = Lazy;
 arity(::typeof(conditional)) = 3;
-function print_expression(io, o::typeof(conditional), p, q, r)
-    root = io[:root]
-    root || print(io, "(")
+print_expression(io, o::typeof(conditional), p, q, r) = parenthesize(io) do
     print_proposition(io, p)
     print(io, " ? ")
     print_proposition(io, q)
     print(io, " : ")
     print_proposition(io, r)
-    root || print(io, ")")
 end;
 @atomize conditional(p, q, r)
 evaluate(::typeof(conditional), p, q, r) = (p → q) ∧ (p ∨ r);

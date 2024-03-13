@@ -32,7 +32,7 @@ struct Operator{O} end
 
 An `Exception` indicating that the function of type `F` has not been implemented for the value of type `T`.
 """
-struct InterfaceError{F <: Function, O <: Operator, N <: Union{Nothing, Int}} <: Exception
+struct InterfaceError{F, O <: Operator, N <: Union{Nothing, Int}} <: Exception
     f::F
     o::O
     n::N
@@ -53,6 +53,8 @@ end
 
 """
     @interface(f, xs...)
+
+Define a fallback method that throws an [`InterfaceError`](@ref Interface.InterfaceError).
 """
 macro interface(f, xs...)
     esc(:(
@@ -131,10 +133,10 @@ julia> @atomize Interface.evaluate(→, p, q)
 
 A trait to specify the associativity of an [`Operator`](@ref Interface.Operator).
 
+This method is required for calling `fold` over the operator.
+
 !!! note
     This trait is used internally and does not override how expressions are parsed.
-
-This method is required for calling `fold` over the operator.
 
 Supertype of [`Left`](@ref) and [`Right`](@ref).
 
@@ -184,12 +186,24 @@ Print the node of a syntax tree containing the [`Operator`](@ref Interface.Opera
 
 Nodes of a syntax tree may either be a root or a branch.
 Some branches need to be parenthesized to avoid ambiguity.
-This context can be obtained using `io[:root]`.
+This context can be obtained using [`is_root`](@ref Interface.is_root).
 
 Each proposition should be represented using [`print_proposition`](@ref).
 
 This method is required for calling `show(::IO, ::MIME"text/plain, p)`
 for a proposition `p` containing the given operator.
+
+# Examples
+```jldoctest
+julia> @atomize Interface.print_expression(stdout, ⊤)
+⊤
+
+julia> @atomize Interface.print_expression(stdout, ¬, p)
+¬p
+
+julia> @atomize Interface.print_expression(stdout, ∧, p, q)
+p ∧ q
+```
 """
 @interface print_expression io o ps...
 
@@ -238,7 +252,7 @@ struct Eager <: Evaluation end
 
 A trait to specify that an [`Operator`](@ref Interface.Operator) is lazily evaluated.
 
-Lazily evaluated operators return a syntax tree.
+Lazily evaluated operators return a syntax tree with the operator and its propositions as the root node.
 
 Subtype of [`Evaluation`](@ref Interface.Evaluation).
 """
@@ -270,8 +284,41 @@ struct Right <: Associativity end
     name(::Operator{O})
 
 Return `O`, the name of an [`Operator`](@ref Interface.Operator).
+
+# Examples
+```jldoctest
+julia> Interface.name(⊤)
+:tautology
+
+julia> Interface.name(¬)
+:not
+
+julia> Interface.name(∧)
+:and
+```
 """
 name(::Operator{O}) where O = O
+
+"""
+    is_root(io)
+
+Return a `Bool`ean indicating whether the node being printed is the root of a syntax tree.
+"""
+is_root(io) = get(io, :root, true)
+
+"""
+    parenthesize(f, io)
+
+Call `f`. If not [`is_root`](@ref Interface.is_root),
+print opening and closing parentheses before and after, respectively.
+"""
+function parenthesize(f, io)
+    root = is_root(io)
+    root || print(io, "(")
+    f()
+    root || print(io, ")")
+    nothing
+end
 
 """
     print_proposition(io, p)

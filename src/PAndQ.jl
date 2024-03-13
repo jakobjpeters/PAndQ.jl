@@ -10,8 +10,8 @@ Equivalent to `Union{map(typeof, xs)...}`.
 
 # Examples
 ```jldoctest
-julia> PAndQ.union_typeof((⊤, 𝒾, ∧))
-Union{PAndQ.Interface.Operator{:tautology}, PAndQ.Interface.Operator{:identical}, PAndQ.Interface.Operator{:and}}
+julia> PAndQ.union_typeof((⊤, ¬, ∧))
+Union{PAndQ.Interface.Operator{:tautology}, PAndQ.Interface.Operator{:not}, PAndQ.Interface.Operator{:and}}
 ```
 """
 union_typeof(xs) = Union{map(typeof, xs)...}
@@ -24,7 +24,7 @@ import .Interface:
     Associativity, Evaluation,
     arity, converse, dual, evaluate, initial_value,
     is_associative, is_commutative, print_expression, print_proposition, symbol
-using .Interface: Eager, Lazy, Left, Operator, Right, name
+using .Interface: Eager, Lazy, Left, Operator, Right, name, parenthesize
 export Interface
 
 include("operators.jl")
