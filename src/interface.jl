@@ -7,8 +7,8 @@ using PAndQ
 
 export
     Associativity, Eager, Evaluation, Lazy, Left, Operator, Right,
-    arity, converse, dual, evaluate, initial_value, is_associative,
-    is_commutative, name, print_expression, print_proposition, symbol
+    arity, converse, dual, evaluate, initial_value, is_associative, is_commutative,
+    is_root, name, parenthesize, print_expression, print_proposition, symbol
 
 """
     Operator{O}
