@@ -429,7 +429,7 @@ julia> @atomize fold(↔, (∧) => (p, q), (∨) => (r, s))
 ((p ↔ r) ∨ (p ↔ s)) ∧ ((q ↔ r) ∨ (q ↔ s))
 ```
 """
-fold(f::Union{Function, Operator}, pairs::Pair...) = _fold(pairs...)(f)()
+fold(f, pairs...) = _fold(pairs...)(f)()
 
 # Internals
 
