@@ -157,7 +157,7 @@ is_satisfiable(pico_sat) = picosat_sat(pico_sat, -1) == 10
 """
     isdone(solutions::Solutions, pico_sat = solutions.pico_sat)
 
-Return whether the `pico_sat` instance can yield any more solutions
+Return a `Bool`ean whether the `pico_sat` instance can yield any more solutions
 without advancing the [`Solutions`](@ref PicoSAT.Solutions) iterator.
 
 Finalize the iterator if it has not yet been finalized and is done.
@@ -191,12 +191,12 @@ The `io` can be an `IO` or file path `String` to write to.
 
 # Examples
 ```jldoctest
-julia> PAndQ.PicoSAT.print_dimacs(stdout, ((-1, -2), (1, 2)))
+julia> PAndQ.PicoSAT.print_dimacs(stdout, [[-1, -2], [1, 2]])
 p cnf 2 2
 -1 -2 0
 1 2 0
 
-julia> PAndQ.PicoSAT.print_dimacs(stdout, ((1, -2), (-1, 2)))
+julia> PAndQ.PicoSAT.print_dimacs(stdout, [[1, -2], [-1, 2]])
 p cnf 2 2
 1 -2 0
 -1 2 0

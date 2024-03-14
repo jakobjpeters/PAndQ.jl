@@ -1,4 +1,8 @@
 
+```@meta
+DocTestSetup = :(using PAndQ)
+```
+
 # Extensions
 
 ## Latexify
@@ -6,7 +10,7 @@
 This extension defines a [`@latexrecipe`](https://korsbo.github.io/Latexify.jl/stable/tutorials/recipes/) for [operators](@ref operators_operators), [propositions](@ref propositions), and [`TruthTable`](@ref)s. Further, calling [`print_table`](@ref) with the LaTeX backend will [`latexify`](https://korsbo.github.io/Latexify.jl/stable/functions/latexify/#Latexify.latexify) the truth table.
 
 ```jldoctest
-julia> using PAndQ, Latexify
+julia> using Latexify
 
 julia> @atomize latexify(p ∧ q)
 L"$p \wedge q$"

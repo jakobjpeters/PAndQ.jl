@@ -11,7 +11,7 @@ This page demonstrates the basic functionality of this package. For additional f
 
 [Operators](@ref operators_operators) are functions represented by a symbol that return a logical value.
 
-The operators [`tautology`](@ref) and [`contradiction`](@ref) are truth values similar to the boolean values `true` and `false`, respectively. These operators are represented with the symbols `⊤` and `⊥` and return themselves when called.
+The [`tautology`](@ref) and [`contradiction`](@ref) operators are truth values similar to the `Bool`ean values `true` and `false`, respectively. These operators are represented with the symbols `⊤` and `⊥` and return themselves when called.
 
 ```jldoctest
 julia> ⊤()
@@ -39,7 +39,7 @@ julia> ⊤ ∧ ⊥
 
 ## Propositions
 
-[Propositions](@ref propositions) are statements that can be either `true` or `false`. For example, "Logic is fun". This proposition has a known value, so it is a constant. Note that the proposition exists independently of whether it is known to be true or false. Constants can be instantiated inline with the [`@atomize`](@ref) macro and unwrapped with the [`value`](@ref) function.
+[Propositions](@ref propositions) are statements that can be either `true` or `false`. For example, "Logic is fun". This proposition has a known value, so it is a constant. Note that the proposition exists independently of whether it is known to be `true` or `false`. Constants can be instantiated inline with the [`@atomize`](@ref) macro and unwrapped with the [`value`](@ref) function.
 
 ```jldoctest 1
 julia> p = @atomize $"Logic is fun"
@@ -54,7 +54,7 @@ julia> map(something ∘ value, [p, q])
  "Julia is awesome"
 ```
 
-A proposition can be negated, such as "Logic is not fun". Propositions can be connected, such as "Logic is fun and Julia is awesome".
+A proposition can be negated, such as "Logic is not fun". Multiple propositions can be connected, such as "Logic is fun and Julia is awesome".
 
 ```jldoctest 1
 julia> ¬p
@@ -109,9 +109,10 @@ julia> collect(valuations(p ∧ q))
  [Variable(:p)=>1, Variable(:q)=>1]  [Variable(:p)=>1, Variable(:q)=>0]
  [Variable(:p)=>0, Variable(:q)=>1]  [Variable(:p)=>0, Variable(:q)=>0]
 
-julia> map(collect, solutions(p ∧ q))
-1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
- [PAndQ.Variable(:p) => 1, PAndQ.Variable(:q) => 1]
+julia> collect(only(solutions(p ∧ q)))
+2-element Vector{Pair{PAndQ.Variable, Bool}}:
+ PAndQ.Variable(:p) => 1
+ PAndQ.Variable(:q) => 1
 ```
 
 Two propositions are logically equivalent if their interpretation is equivalent for every possible valuation. Use [`==`](@ref) to check if two propositions are logically equivalent.

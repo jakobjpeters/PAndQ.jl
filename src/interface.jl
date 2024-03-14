@@ -31,6 +31,9 @@ struct Operator{O} end
     InterfaceError(::F, ::O, ::N)
 
 An `Exception` indicating that the function of type `F` has not been implemented for the value of type `T`.
+
+If `N` is `Nothing`, then the function does not accept any propositions.
+Otherwise, `N` is the number of propositions given.
 """
 struct InterfaceError{F, O <: Operator, N <: Union{Nothing, Int}} <: Exception
     f::F
@@ -133,7 +136,7 @@ julia> @atomize Interface.evaluate(→, p, q)
 
 A trait to specify the associativity of an [`Operator`](@ref Interface.Operator).
 
-This method is required for calling `fold` over the operator.
+This method is required for calling [`fold`](@ref) over the operator.
 
 !!! note
     This trait is used internally and does not override how expressions are parsed.
@@ -160,7 +163,7 @@ Specify a neutral value, `v`, of a binary [`Operator`](@ref Interface.Operator) 
 To distinguish between an initial value and the absense thereof,
 return `Some(v)` or `nothing`, respectively.
 
-This method is required for calling `fold` over the operator.
+This method is required for calling [`fold`](@ref) over the operator.
 
 See also [`==`](@ref).
 
@@ -184,8 +187,7 @@ julia> Interface.initial_value(↑)
 
 Print the node of a syntax tree containing the [`Operator`](@ref Interface.Operator) and its propositions.
 
-Nodes of a syntax tree may either be a root or a branch.
-Some branches need to be parenthesized to avoid ambiguity.
+If a node in a syntax tree is not the root node, it may be necessary to parenthesize it to avoid ambiguity.
 This context can be obtained using [`is_root`](@ref Interface.is_root).
 
 Each proposition should be represented using [`print_proposition`](@ref).
@@ -283,7 +285,7 @@ struct Right <: Associativity end
 """
     name(::Operator{O})
 
-Return `O`, the name of an [`Operator`](@ref Interface.Operator).
+Return `O`, the name of the [`Operator`](@ref Interface.Operator).
 
 # Examples
 ```jldoctest
@@ -363,7 +365,7 @@ converse(o::Operator) = (p, q) -> o(q, p)
 """
     dual(ℴ::Operator)
 
-Return a function such that `dual(ℴ)(ps...) == ¬(ℴ(map(¬, ps...)))`.
+Return a function such that `dual(ℴ)(ps...) == ¬(ℴ(map(¬, ps)...))`.
 
 If possible, this method should be implemented to return another [`Operator`](@ref Interface.Operator).
 

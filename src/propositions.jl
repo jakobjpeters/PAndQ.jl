@@ -135,7 +135,7 @@ julia> PAndQ.Clause(∧, PAndQ.Atom[], Set{Int}())
 julia> @atomize PAndQ.Clause(∧, [p], Set(1))
 p
 
-julia> @atomize PAndQ.Clause(∨, [p, q], Set((1, -2)))
+julia> @atomize PAndQ.Clause(∨, [p, q], Set([1, -2]))
 ¬q ∨ p
 ```
 """
@@ -363,7 +363,7 @@ end
 """
     distribute(p)
 
-Given a proposition in negated normal form, return that proposition to conjunction normal form.
+Given a proposition in negation normal form, return that proposition in conjunction normal form.
 """
 distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(∧, q, _distribute(∨, Tree[rs...]) do s, ts, disjuncts
     u = evaluate(∨, s, fold(𝒾, (∨) => disjuncts))
@@ -452,7 +452,7 @@ end
 """
     @variables(ps...)
 
-Define variables and return a vector containing them.
+Define variables and return a `Vector` containing them.
 
 Examples
 ```jldoctest
@@ -476,7 +476,7 @@ end) end
 """
     constants(f = 𝒾, xs)
 
-Apply `f` and then instantiate each element as a constant.
+Equivalent to `map(x -> @atomize \$(f(x)), xs)`.
 
 See also [`identical`](@ref).
 

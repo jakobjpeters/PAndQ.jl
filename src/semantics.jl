@@ -325,7 +325,7 @@ p::Proposition == q::Proposition = is_contradiction(p ↮ q)
     p < q
 
 Return a `Bool`ean indicating whether the arguments are ordered such that
-`p < q < r`, where `p`, `q`, and `r` satisfy [`is_contradiction`](@ref),
+`r < s < t`, where `r`, `s`, and `t` satisfy [`is_contradiction`](@ref),
 [`is_contingency`](@ref), and [`is_tautology`](@ref), respectively.
 
 # Examples
@@ -336,10 +336,10 @@ true
 julia> @atomize p ∧ ¬p < p < p ∨ ¬p
 true
 
-julia> ⊤ < ⊥
+julia> @atomize p < p
 false
 
-julia> @atomize p < p
+julia> ⊤ < ⊥
 false
 ```
 """

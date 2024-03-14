@@ -1,7 +1,7 @@
 
 # Sudoku
 
-This tutorial will demonstrate how to solve a Sudoku puzzle by encoding the rules sudoku into propositional logic. Although it is more computationally efficient to frame Sudoku as an optimization problem, it is a good example of a non-trivial logic problem.
+This tutorial will demonstrate how to solve a Sudoku puzzle by encoding its rules into propositional logic, which is a good example of a non-trivial logic problem.
 
 ## Setup
 
