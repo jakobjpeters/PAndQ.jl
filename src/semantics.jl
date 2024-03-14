@@ -243,7 +243,7 @@ is_satisfiable(p) = !is_contradiction(p)
 """
     is_falsifiable(p)
 
-Returns a `Bool`ean indicating whether `p` is
+Return a `Bool`ean indicating whether `p` is
 [falsifiable](https://en.wikipedia.org/wiki/Falsifiability)
 (not logically equivalent to a [`tautology`](@ref)).
 
@@ -354,7 +354,7 @@ p::Proposition < q::Proposition =
 """
     Bool(truth_value)
 
-Return a `Bool` corresponding to the given [truth value](@ref nullary_operators).
+Return a `Bool`ean corresponding to the given [truth value](@ref nullary_operators).
 
 # Examples
 ```jldoctest
