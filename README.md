@@ -22,7 +22,7 @@
 
 If you like propositional logic, then you've come to the right place!
 
-PAndQ.jl is a [computer algebra system](https://en.wikipedia.org/wiki/Computer_algebra_system) for propositional logic.
+PAndQ.jl is a computer algebra system for propositional logic.
 
 ## Installation
 
@@ -40,7 +40,7 @@ julia> using PAndQ
 julia> ¬⊤
 ¬⊤
 
-julia> @atomize p ∧ q → $1 ∨ $2
+julia> @atomize p ∧ q → $1 ∨ $(1 + 1)
 (p ∧ q) → ($(1) ∨ $(2))
 
 julia> @variables p q
@@ -83,7 +83,7 @@ julia> print_table(p ∧ ¬p, ¬p, r, s)
     - Simple instantiation
         - Custom REPL mode
     - Normalization
-        - Negated, conjunctive, and disjunctive forms
+        - Negation, conjunction, and disjunction forms
         - Tseytin transformation
     - Functor map
 - Semantics
