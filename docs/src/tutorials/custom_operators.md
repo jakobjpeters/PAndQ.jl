@@ -20,7 +20,7 @@ Implementing an operator requires defining methods for that operator. To do so, 
 
 ```@repl 1
 import PAndQ:
-    Associativity, Evaluation, arity, dual, evaluate,
+    Associativity, Evaluation, dual, evaluate,
     initial_value, parenthesize, print_expression, symbol
 using PAndQ, .Interface
 ```
@@ -49,19 +49,12 @@ truth()
 
 The error says to implement [`Evaluation`](@ref Interface.Evaluation). This function is used to specify whether an operator lazily or eagerly evaluates its arguments.
 
-```@repl 1
-Evaluation(::typeof(truth)) = Lazy;
-truth()
-```
-
-The error says to implement [`arity`](@ref Interface.arity). This function is used to construct a node in a syntax tree.
-
 ```@setup 1
-arity(::typeof(truth)) = 0
+Evaluation(::typeof(truth)) = Lazy
 ```
 
 ```
-julia> arity(::typeof(truth)) = 0;
+julia> Evaluation(::typeof(truth)) = Lazy;
 
 julia> truth()
 Error showing value of type PAndQ.Tree{0}:
@@ -71,14 +64,15 @@ ERROR: InterfaceError: implement `print_expression` for `Operator{:truth}()` wit
 The error says to implement [`print_expression`](@ref Interface.print_expression). This function is used to print a node of a syntax tree.
 
 ```@repl 1
-print_expression(io, o::typeof(truth)) = show(io, "text/plain", o);
+print_expression(io, o::typeof(truth), ps) = show(io, "text/plain", o);
+truth()
 print_table(truth())
 ```
 
 The error says to implement [`evaluate`](@ref Interface.evaluate). This function is used to specify the semantics of an operator.
 
 ```@repl 1
-evaluate(::typeof(truth)) = ⊤;
+evaluate(::typeof(truth), ps) = ⊤;
 print_table(truth())
 ```
 
@@ -91,7 +85,7 @@ const negate = Operator{:negate}();
 symbol(::typeof(negate)) = "negate";
 negate
 Evaluation(::typeof(negate)) = Eager;
-evaluate(::typeof(negate), p) = evaluate(¬, p);
+evaluate(::typeof(negate), ps) = evaluate(¬, ps);
 @atomize negate(¬p)
 @atomize print_table(negate(p))
 ```
@@ -105,21 +99,20 @@ const if_then = --> = Operator{:if_then}();
 symbol(::typeof(-->)) = "-->";
 -->
 Evaluation(::typeof(-->)) = Lazy;
-arity(::typeof(-->)) = 2;
 ```
 
 If a node in a syntax tree is not the root node, it may be necessary to parenthesize it to avoid ambiguity. The [`parenthesize`](@ref Interface.parenthesize) function is used to print parentheses around a node if it is not the root node. The [`print_proposition`](@ref Interface.print_proposition) function is used to print the propositions in a node.
 
 ```@repl 1
-print_expression(io, o::typeof(-->), p, q) = parenthesize(io) do
-    print_proposition(io, p)
+print_expression(io, o::typeof(-->), ps) = parenthesize(io) do
+    print_proposition(io, first(ps))
     print(io, " ")
     show(io, "text/plain", o)
     print(io, " ")
-    print_proposition(io, q)
+    print_proposition(io, last(ps))
 end;
 @atomize p --> q
-evaluate(::typeof(-->), p, q) = p → q;
+evaluate(::typeof(-->), ps) = first(ps) → last(ps);
 @atomize print_table(p --> q)
 @atomize fold(𝒾, (-->) => ())
 ```
@@ -148,15 +141,17 @@ const conditional = Operator{:conditional}();
 symbol(::typeof(conditional)) = "?";
 conditional
 Evaluation(::typeof(conditional)) = Lazy;
-arity(::typeof(conditional)) = 3;
-print_expression(io, o::typeof(conditional), p, q, r) = parenthesize(io) do
-    print_proposition(io, p)
+print_expression(io, o::typeof(conditional), ps) = parenthesize(io) do
+    print_proposition(io, ps[1])
     print(io, " ? ")
-    print_proposition(io, q)
+    print_proposition(io, ps[2])
     print(io, " : ")
-    print_proposition(io, r)
+    print_proposition(io, ps[3])
 end;
 @atomize conditional(p, q, r)
-evaluate(::typeof(conditional), p, q, r) = (p → q) ∧ (p ∨ r);
+function evaluate(::typeof(conditional), ps)
+    p, q, r = ps
+    (p → q) ∧ (p ∨ r)
+end;
 @atomize print_table(conditional(p, q, r))
 ```

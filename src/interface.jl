@@ -27,18 +27,14 @@ struct Operator{O} end
 # Internals
 
 """
-    InterfaceError{F <: Function, O <: Operator, N <: Union{Nothing, Int}} <: Exception
-    InterfaceError(::F, ::O, ::N)
+    InterfaceError{F <: Function, O <: Operator} <: Exception
+    InterfaceError(::F, ::O)
 
 An `Exception` indicating that the function of type `F` has not been implemented for the value of type `T`.
-
-If `N` is `Nothing`, then the function does not accept any propositions.
-Otherwise, `N` is the number of propositions given.
 """
-struct InterfaceError{F, O <: Operator, N <: Union{Nothing, Int}} <: Exception
+struct InterfaceError{F, O <: Operator} <: Exception
     f::F
     o::O
-    n::N
 end
 
 """
@@ -46,14 +42,7 @@ end
 
 Print a message indicating to implement a method of an interface.
 """
-function showerror(io::IO, e::InterfaceError)
-    n = e.n
-    print(io, "InterfaceError: implement `", e.f, "` for `", e.o, "`")
-    if !isnothing(n)
-        print(io, " with `", n, "` proposition")
-        n == 1 || print(io, "s")
-    end
-end
+showerror(io::IO, e::InterfaceError) = print(io, "InterfaceError: implement `", e.f, "` for `", e.o, "`")
 
 """
     @interface(f, xs...)
@@ -63,31 +52,10 @@ Define a fallback method that throws an [`InterfaceError`](@ref Interface.Interf
 macro interface(f, xs...)
     esc(:(
         $(Expr(:call, f, map(x -> x == :o ? Expr(Symbol("::"), x, :Operator) : x, xs)...))
-    = throw(InterfaceError($f, o, $(:(ps...) in xs ? :(length(ps)) : nothing)))))
+    = throw(InterfaceError($f, o))))
 end
 
 # Methods
-
-"""
-    arity(::Operator)
-
-Return the number of propositions accepted by the [`Operator`](@ref Interface.Operator).
-
-This method is required for [`Lazy`](@ref Interface.Lazy) operators.
-
-# Examples
-```jldoctest
-julia> Interface.arity(⊤)
-0
-
-julia> Interface.arity(¬)
-1
-
-julia> Interface.arity(∧)
-2
-```
-"""
-@interface arity o
 
 ## Evaluation
 
@@ -113,7 +81,7 @@ abstract type Evaluation end
 @interface Evaluation o
 
 """
-    evaluate(::Operator, ps...)
+    evaluate(::Operator, ps)
 
 Define the semantics of the [`Operator`](@ref Interface.Operator).
 
@@ -121,14 +89,14 @@ This method is required to [`normalize`](@ref) a proposition containing the give
 
 # Examples
 ```jldoctest
-julia> @atomize Interface.evaluate(¬, ¬p)
+julia> @atomize Interface.evaluate(¬, [¬p])
 p
 
-julia> @atomize Interface.evaluate(→, p, q)
+julia> @atomize Interface.evaluate(→, [p, q])
 ¬p ∨ q
 ```
 """
-@interface evaluate o ps...
+@interface evaluate o ps
 
 ## Folding
 
@@ -184,7 +152,7 @@ julia> Interface.initial_value(↑)
 ## Printing
 
 """
-    print_expression(io, ::Operator, ps...)
+    print_expression(io, ::Operator, ps)
 
 Print the node of a syntax tree containing the [`Operator`](@ref Interface.Operator) and its propositions.
 
@@ -198,17 +166,17 @@ for a proposition `p` containing the given operator.
 
 # Examples
 ```jldoctest
-julia> @atomize Interface.print_expression(stdout, ⊤)
+julia> @atomize Interface.print_expression(stdout, ⊤, [])
 ⊤
 
-julia> @atomize Interface.print_expression(stdout, ¬, p)
+julia> @atomize Interface.print_expression(stdout, ¬, [p])
 ¬p
 
-julia> @atomize Interface.print_expression(stdout, ∧, p, q)
+julia> @atomize Interface.print_expression(stdout, ∧, [p, q])
 p ∧ q
 ```
 """
-@interface print_expression io o ps...
+@interface print_expression io o ps
 
 """
     symbol(ℴ::Operator)
@@ -342,6 +310,25 @@ julia> @atomize print_proposition(stdout, p ∧ q)
 function print_proposition end
 
 ## Properties
+
+"""
+    arity(::Operator)
+
+Return the number of propositions accepted by the [`Operator`](@ref Interface.Operator).
+
+# Examples
+```jldoctest
+julia> Interface.arity(⊤)
+0
+
+julia> Interface.arity(¬)
+1
+
+julia> Interface.arity(∧)
+2
+```
+"""
+@interface arity o
 
 """
     converse(ℴ::Operator)

@@ -85,8 +85,8 @@ struct Variable <: Atom
 end
 
 """
-    Tree{N} <: Compound
-    Tree(::Operator, ::Union{Atom, Tree}...)
+    Tree <: Compound
+    Tree(::Operator, ::Union{Atom, Tree})
 
 A [`Proposition`](@ref) represented by an [abstract syntax tree]
 (https://en.wikipedia.org/wiki/Abstract_syntax_tree).
@@ -99,19 +99,21 @@ See also [`Operator`](@ref) and [`Atom`](@ref).
 julia> PAndQ.Tree(⊤)
 ⊤
 
-julia> @atomize PAndQ.Tree(¬, p)
+julia> @atomize PAndQ.Tree(¬, [p])
 ¬p
 
-julia> @atomize PAndQ.Tree(and, PAndQ.Tree(p), PAndQ.Tree(q))
+julia> @atomize PAndQ.Tree(and, [PAndQ.Tree(p), PAndQ.Tree(q)])
 p ∧ q
 ```
 """
-struct Tree{N} <: Compound
+struct Tree <: Compound
     operator::Operator
-    propositions::NTuple{N, Union{Atom, Tree}}
+    propositions::Vector{<:Union{Atom, Tree}}
 
-    Tree(o::O, ps...) where O <: Operator = new{arity(o)}(o, ps)
+    Tree(o, ps::Vector{<:Union{Atom, Tree}}) = new(o, ps)
 end
+
+Tree(o, ps) = Tree(o, map(Tree, ps))
 
 """
     Clause{AO <: AndOr} <: Compound
@@ -192,16 +194,19 @@ julia> @atomize PAndQ.children(p)
 ()
 
 julia> @atomize PAndQ.children(¬p)
-(PAndQ.Variable(:p),)
+1-element Vector{PAndQ.Variable}:
+ p
 
 julia> @atomize PAndQ.children(p ∧ q)
-(identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q)))
+2-element Vector{PAndQ.Tree}:
+ p
+ q
 ```
 """
 children(p::Tree) = p.propositions
 function children(p::Clause)
     atoms = p.atoms
-    Iterators.map(literal -> (signbit(literal) ? (¬) : Tree)(atoms[abs(literal)]), p.literals)
+    Iterators.map(literal -> Tree(signbit(literal) ? (¬) : 𝒾, [atoms[abs(literal)]]), p.literals)
 end
 children(p::Normal) = Iterators.map(p.clauses) do clause
     atoms = p.atoms[collect(Iterators.map(abs, clause))]
@@ -248,7 +253,7 @@ julia> @atomize PAndQ.printnode(stdout, p ∧ q)
 ∧
 ```
 """
-printnode(io::IO, p::Union{Operator, Proposition}) = show(io, MIME"text/plain"(), _printnode(p))
+printnode(io::IO, p::Union{Operator, Proposition}) = show(io, "text/plain", _printnode(p))
 
 """
     NodeType(::Type{<:Atom})
@@ -290,10 +295,10 @@ julia> @atomize PAndQ.deconstruct(p)
 (PAndQ.Variable(:p), ())
 
 julia> @atomize PAndQ.deconstruct(¬p)
-(PAndQ.Interface.Operator{:not}(), (PAndQ.Variable(:p),))
+(PAndQ.Interface.Operator{:not}(), PAndQ.Variable[PAndQ.Variable(:p)])
 
 julia> @atomize PAndQ.deconstruct(p ∧ q)
-(PAndQ.Interface.Operator{:and}(), (identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q))))
+(PAndQ.Interface.Operator{:and}(), PAndQ.Tree[identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q))])
 ```
 """
 deconstruct(p) = nodevalue(p), children(p)
@@ -351,7 +356,7 @@ function _distribute(f, ao, stack)
         o, rs = deconstruct(q)
 
         if o == not_initial_value return Tree(not_initial_value)
-        elseif o isa UnaryOperator p = evaluate(ao, p, q)
+        elseif o isa UnaryOperator p = evaluate(ao, [p, q])
         elseif o == ao append!(stack, rs)
         else p = f(p, rs, stack)
         end
@@ -365,12 +370,12 @@ end
 
 Given a proposition in negation normal form, return that proposition in conjunction normal form.
 """
-distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(∧, q, _distribute(∨, Tree[rs...]) do s, ts, disjuncts
-    u = evaluate(∨, s, fold(𝒾, (∨) => disjuncts))
+distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(∧, [q, _distribute(∨, map(Tree, rs)) do s, ts, disjuncts
+    u = evaluate(∨, [s, fold(identity, (∨) => disjuncts)])
     empty!(disjuncts)
     append!(conjuncts, map(t -> t ∨ u, ts))
     Tree(⊤)
-end), ∧, Tree[p])
+end]), ∧, Tree[p])
 
 function flatten!(mapping, clauses, qs, p)
     x = nodevalue(p)
@@ -474,7 +479,7 @@ macro variables(ps...) esc(quote
 end) end
 
 """
-    constants(f = 𝒾, xs)
+    constants(f = identity, xs)
 
 Equivalent to `map(x -> @atomize \$(f(x)), xs)`.
 
@@ -494,7 +499,7 @@ julia> constants(string, 1:2)
 ```
 """
 constants(f, xs) = map(Constant ∘ f, xs)
-constants(xs) = constants(𝒾, xs)
+constants(xs) = constants(identity, xs)
 
 # Utility
 
@@ -551,8 +556,8 @@ julia> @atomize map(atom -> \$(something(value(atom)) + 1), \$1 ∧ \$2)
 ```
 """
 map(f, p::Atom) = f(p)
-map(f, p::Union{NullaryOperator, Tree}) = nodevalue(p)(_map(f, p)...)
-map(f, p::Union{Clause, Normal}) = fold(𝒾, nodevalue(p) => _map(f, p))
+map(f, p::Union{NullaryOperator, Tree}) = evaluation(nodevalue(p), _map(f, p))
+map(f, p::Union{Clause, Normal}) = fold(identity, nodevalue(p) => _map(f, p))
 
 """
     atoms(p)
@@ -663,7 +668,7 @@ function normalize(::typeof(¬), p::Tree)
         elseif o isa AndOr
             push!(operator_stack, length(input_stack) => o)
             append!(input_stack, rs)
-        else push!(input_stack, evaluate(o, rs...))
+        else push!(input_stack, evaluate(o, rs))
         end
     end
 
@@ -680,7 +685,7 @@ function normalize(::typeof(¬), p::Tree)
         push!(input_stack,
             if _arity == 0 o()
             elseif _arity == 1 o(pop!(input_stack))
-            else evaluate(o, pop!(input_stack), pop!(input_stack))
+            else evaluate(o, [pop!(input_stack), pop!(input_stack)])
             end
         )
     end
@@ -695,18 +700,12 @@ normalize(::typeof(∨), p) = ¬normalize(∧, ¬p)
 normalize(::AO, p::Normal{AO}) where AO <: AndOr = p
 normalize(o, p) = normalize(o, Tree(p))
 
-__tseytin(::typeof(𝒾), p::Atom) = Tree(𝒾, p)
-__tseytin(o, ps...) = Variable(gensym())
-
-_tseytin(p::Atom) = p
-_tseytin(p) = __tseytin(nodevalue(p), children(p)...)
-
 function tseytin!(pairs, substitution, p)
     if !isa(p, Atom)
         o, qs = deconstruct(p)
         if !(o isa typeof(𝒾) && only(qs) isa Atom)
-            substitutions = map(_tseytin, qs)
-            push!(pairs, (substitution, o(substitutions...)))
+            substitutions = map(q -> q isa Atom || (nodevalue(q) == 𝒾 && child(q) isa Atom) ? Tree(q) : Variable(gensym()), qs)
+            push!(pairs, (substitution, Tree(o, substitutions)))
 
             for (substitution, q) in zip(substitutions, qs)
                 tseytin!(pairs, substitution, q)
@@ -743,6 +742,6 @@ true
 """
 function tseytin(p::Tree)
     pairs = tseytin!(NTuple{2, Tree}[], Variable(gensym()), p)
-    normalize(∧, isempty(pairs) ? p : first(first(pairs)) ∧ ⋀(map(splat(↔), pairs)))
+    normalize(∧, isempty(pairs) ? p : first(first(pairs)) ∧ fold(identity, (∧) => map(splat(↔), pairs)))
 end
 tseytin(p) = tseytin(Tree(p))

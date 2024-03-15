@@ -88,7 +88,7 @@ end;
 The [`conjunction`](@ref) of these rules represent the encoding.
 
 ```@repl 1
-rules = ⋀((one, two, three, four));
+rules = ⋀(one, two, three, four);
 ```
 
 !!! note

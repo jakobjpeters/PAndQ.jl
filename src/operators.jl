@@ -329,8 +329,8 @@ const not_converse_imply = ↚ = Operator{:not_converse_imply}()
 # Nary Operators
 
 """
-    conjunction(ps)
-    ⋀(ps)
+    conjunction(ps...)
+    ⋀(ps...)
 
 Equivalent to `fold(𝒾, (∧) => ps)`.
 
@@ -340,18 +340,18 @@ See also [`identical`](@ref), [`and`](@ref), and [`fold`](@ref).
 
 # Examples
 ```jldoctest
-julia> ⋀(())
+julia> ⋀()
 ⊤
 
-julia> @atomize ⋀((p, q, r, s))
+julia> @atomize ⋀(p, q, r, s)
 ((p ∧ q) ∧ r) ∧ s
 ```
 """
 const conjunction = ⋀ = Operator{:conjunction}()
 
 """
-    disjunction(ps)
-    ⋁(ps)
+    disjunction(ps...)
+    ⋁(ps...)
 
 Equivalent to `fold(𝒾, (∨) => ps)`.
 
@@ -361,10 +361,10 @@ See also [`identical`](@ref), [`or`](@ref), and [`fold`](@ref).
 
 # Examples
 ```jldoctest
-julia> ⋁(())
+julia> ⋁()
 ⊥
 
-julia> @atomize ⋁((p, q, r, s))
+julia> @atomize ⋁(p, q, r, s)
 ((p ∨ q) ∨ r) ∨ s
 ```
 """
@@ -377,14 +377,14 @@ ____fold(::Right) = mapfoldr
 
 ___fold(mapfold, f, o, xs, ::Nothing) = mapfold(f, o, xs)
 ___fold(mapfold, f, o, xs, initial_value::Some) =
-    isempty(xs) ? something(initial_value) : mapfold(f, o, xs)
+    isempty(xs) ? Tree(something(initial_value)) : mapfold(f, o, xs)
 
 __fold(f, o, xs) = g -> (args...) -> ___fold(
     ____fold(Associativity(o)()), x -> f(g)(args..., x),
 o, xs, initial_value(o))
 
-_fold() = 𝒾
-_fold((o, xs)) = __fold(𝒾, o, xs)
+_fold() = identity
+_fold((o, xs)) = __fold(identity, o, xs)
 _fold((o, xs), pairs...) = __fold(_fold(pairs...), o, xs)
 
 """
