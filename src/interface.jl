@@ -50,7 +50,8 @@ function showerror(io::IO, e::InterfaceError)
     n = e.n
     print(io, "InterfaceError: implement `", e.f, "` for `", e.o, "`")
     if !isnothing(n)
-        print(io, " with `", n, "` propositions")
+        print(io, " with `", n, "` proposition")
+        n == 1 || print(io, "s")
     end
 end
 
