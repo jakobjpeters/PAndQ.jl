@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Sudoku · PAndQ.jl</title><meta name="title" content="Sudoku · PAndQ.jl"/><meta property="og:title" content="Sudoku · PAndQ.jl"/><meta property="twitter:title" content="Sudoku · PAndQ.jl"/><meta name="description" content="Documentation for PAndQ.jl."/><meta property="og:description" content="Documentation for PAndQ.jl."/><meta property="twitter:description" content="Documentation for PAndQ.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.svg" alt="PAndQ.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">PAndQ.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><a class="tocitem" href="../../getting_started/">Getting Started</a></li><li><span class="tocitem">Tutorials</span><ul><li class="is-active"><a class="tocitem" href>Sudoku</a><ul class="internal"><li><a class="tocitem" href="#Setup"><span>Setup</span></a></li><li><a class="tocitem" href="#Creating-a-Grid"><span>Creating a Grid</span></a></li><li><a class="tocitem" href="#Encoding-the-Rules"><span>Encoding the Rules</span></a></li><li><a class="tocitem" href="#Finding-a-Solution"><span>Finding a Solution</span></a></li><li><a class="tocitem" href="#Creating-a-Puzzle"><span>Creating a Puzzle</span></a></li></ul></li><li><a class="tocitem" href="../custom_operators/">Custom Operators</a></li></ul></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="../../manual/operators/">Operators</a></li><li><a class="tocitem" href="../../manual/propositions/">Propositions</a></li><li><a class="tocitem" href="../../manual/semantics/">Semantics</a></li><li><a class="tocitem" href="../../manual/printing/">Printing</a></li><li><a class="tocitem" href="../../manual/extensions/">Extensions</a></li><li><a class="tocitem" href="../../manual/interface/">Interface</a></li><li><a class="tocitem" href="../../manual/internals/">Internals</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Sudoku</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Sudoku</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/jakobjpeters/PAndQ.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/jakobjpeters/PAndQ.jl/blob/main/docs/src/tutorials/sudoku.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Sudoku"><a class="docs-heading-anchor" href="#Sudoku">Sudoku</a><a id="Sudoku-1"></a><a class="docs-heading-anchor-permalink" href="#Sudoku" title="Permalink"></a></h1><p>This tutorial will demonstrate how to solve a Sudoku puzzle by encoding its rules into propositional logic, which is a good example of a non-trivial logic problem.</p><h2 id="Setup"><a class="docs-heading-anchor" href="#Setup">Setup</a><a id="Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Setup" title="Permalink"></a></h2><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using PAndQ, PrettyTables</code><code class="nohighlight hljs ansi" style="display:block;"></code></pre><h2 id="Creating-a-Grid"><a class="docs-heading-anchor" href="#Creating-a-Grid">Creating a Grid</a><a id="Creating-a-Grid-1"></a><a class="docs-heading-anchor-permalink" href="#Creating-a-Grid" title="Permalink"></a></h2><p>Sudoku is traditionally played on a 9x9 grid.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; lines = collect(0:3:9);</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; grid = zeros(Int, 9, 9);</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; print_grid(grid) = pretty_table(
+           map(cell -&gt; cell == 0 ? &quot;⋅&quot; : string(cell), grid);
+           vlines = lines, hlines = lines, show_header = false
+       );</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; print_grid(grid)</code><code class="nohighlight hljs ansi" style="display:block;">┌─────────┬─────────┬─────────┐
+│ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │
+│ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │
+│ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │
+├─────────┼─────────┼─────────┤
+│ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │
+│ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │
+│ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │
+├─────────┼─────────┼─────────┤
+│ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │
+│ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │
+│ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │ ⋅  ⋅  ⋅ │
+└─────────┴─────────┴─────────┘</code></pre><h2 id="Encoding-the-Rules"><a class="docs-heading-anchor" href="#Encoding-the-Rules">Encoding the Rules</a><a id="Encoding-the-Rules-1"></a><a class="docs-heading-anchor-permalink" href="#Encoding-the-Rules" title="Permalink"></a></h2><p>The grid is currently empty. Placing random numbers in some of the cells has a very high probability of generating an unsolvable board. Knowing which numbers to place in each cell requires the same functionality that it takes to solve the board in the first place. Encoding the rules of Sudoku into a proposition means that any solution to that proposition can be decoded into a solution of Sudoku.</p><p>Given the predicate <code>p(row, column, number)</code> is true when the given <code>row</code> and <code>column</code> of the grid contains the given <code>number</code>:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; p(row, column, number) = @atomize $((row, column) =&gt; number);</code><code class="nohighlight hljs ansi" style="display:block;"></code></pre><p>1. Each row contains each number from <code>1</code> to <code>9</code>. This proposition can be read as &quot;for each row and for each number, one of the cells in that row contains that number&quot;.</p><p class="math-container">\[\bigwedge\limits_{i = 1}^9 \bigwedge\limits_{n = 1}^9 \bigvee\limits_{j = 1}^9 P(i, j, n) \\\]</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; one = fold((∧) =&gt; 1:9, (∧) =&gt; 1:9, (∨) =&gt; 1:9) do i, n, j
+           p(i, j, n)
+       end;</code><code class="nohighlight hljs ansi" style="display:block;"></code></pre><p>2. Each column contains each number from <code>1</code> to <code>9</code>. This proposition can be read as &quot;for each column and for each number, one of the cells in that column contains that number&quot;.</p><p class="math-container">\[\bigwedge\limits_{j = 1}^9 \bigwedge\limits_{n = 1}^9 \bigvee\limits_{i = 1}^9 P(i, j, n) \\\]</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; two = fold((∧) =&gt; 1:9, (∧) =&gt; 1:9, (∨) =&gt; 1:9) do j, n, i
+           p(i, j, n)
+       end;</code><code class="nohighlight hljs ansi" style="display:block;"></code></pre><p>3. Each 3x3 subgrid contains each number from <code>1</code> to <code>9</code>. This proposition can be read as &quot;for each 3x3 subgrid and for each number, one of the cells in that subgrid contains that number&quot;.</p><p class="math-container">\[\bigwedge\limits_{r = 0}^2 \bigwedge\limits_{c = 0}^2 \bigwedge\limits_{n = 1}^9 \bigvee\limits_{i = 1}^3 \bigvee\limits_{j = 1}^3 P(3r + i, 3c + j, n) \\\]</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; three = fold(
+           (∧) =&gt; 0:2, (∧) =&gt; 0:2, (∧) =&gt; 1:9, (∨) =&gt; 1:3, (∨) =&gt; 1:3
+       ) do r, c, n, i, j
+           p(3r + i, 3c + j, n)
+       end;</code><code class="nohighlight hljs ansi" style="display:block;"></code></pre><p>4. Each cell contains a single number. This proposition can be read as &quot;for each cell and for each pair of unique numbers, that cell does not contain both numbers&quot;.</p><p class="math-container">\[\bigwedge\limits_{i = 1}^9 \bigwedge\limits_{j = 1}^9 \bigwedge\limits_{n = 1}^8 \bigwedge\limits_{m = n + 1}^9 ¬P(i, j, n) ∨ ¬P(i, j, m)\]</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; four = fold((∧) =&gt; 1:9, (∧) =&gt; 1:9, (∧) =&gt; 1:8) do i, j, n
+           fold((∧) =&gt; n + 1:9) do m
+               ¬p(i, j, n) ∨ ¬p(i, j, m)
+           end
+       end;</code><code class="nohighlight hljs ansi" style="display:block;"></code></pre><p>The <a href="../../manual/operators/#PAndQ.conjunction"><code>conjunction</code></a> of these rules represent the encoding.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; rules = ⋀((one, two, three, four));</code><code class="nohighlight hljs ansi" style="display:block;"></code></pre><div class="admonition is-info"><header class="admonition-header">Note</header><div class="admonition-body"><p>See also <a href="../../manual/propositions/#PAndQ.@atomize"><code>@atomize</code></a>, <a href="../../manual/operators/#PAndQ.fold"><code>fold</code></a>, <a href="../../manual/operators/#PAndQ.conjunction"><code>conjunction</code></a>, <a href="../../manual/operators/#PAndQ.and"><code>and</code></a>, and <a href="../../manual/operators/#PAndQ.or"><code>or</code></a>.</p></div></div><h2 id="Finding-a-Solution"><a class="docs-heading-anchor" href="#Finding-a-Solution">Finding a Solution</a><a id="Finding-a-Solution-1"></a><a class="docs-heading-anchor-permalink" href="#Finding-a-Solution" title="Permalink"></a></h2><p>Given a proposition, <a href="../../manual/semantics/#PAndQ.valuations"><code>valuations</code></a> that result in a true interpretation can be found using the <a href="../../manual/semantics/#PAndQ.solutions"><code>solutions</code></a> function. Since the encoding does not specify any initial values of the cells, there will be many possible solutions to the proposition. Each solution contains 729 assignments of a constant to a <code>Bool</code>, which makes sense because the 9x9 grid has 81 cells and each cell contains one of 9 possible numbers.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; first_solution(p) = collect(first(solutions(p)));</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; solution = first_solution(rules)</code><code class="nohighlight hljs ansi" style="display:block;">729-element Vector{Pair{PAndQ.Constant, Bool}}:
+ PAndQ.Constant((1, 9) =&gt; 1) =&gt; 1
+ PAndQ.Constant((1, 8) =&gt; 1) =&gt; 0
+ PAndQ.Constant((1, 7) =&gt; 1) =&gt; 0
+ PAndQ.Constant((1, 6) =&gt; 1) =&gt; 0
+ PAndQ.Constant((1, 5) =&gt; 1) =&gt; 0
+ PAndQ.Constant((1, 4) =&gt; 1) =&gt; 0
+ PAndQ.Constant((1, 3) =&gt; 1) =&gt; 0
+ PAndQ.Constant((1, 2) =&gt; 1) =&gt; 0
+ PAndQ.Constant((1, 1) =&gt; 1) =&gt; 0
+ PAndQ.Constant((1, 9) =&gt; 2) =&gt; 0
+                             ⋮
+ PAndQ.Constant((9, 9) =&gt; 9) =&gt; 0
+ PAndQ.Constant((9, 8) =&gt; 9) =&gt; 0
+ PAndQ.Constant((9, 7) =&gt; 9) =&gt; 0
+ PAndQ.Constant((9, 6) =&gt; 9) =&gt; 0
+ PAndQ.Constant((9, 5) =&gt; 9) =&gt; 0
+ PAndQ.Constant((9, 4) =&gt; 9) =&gt; 0
+ PAndQ.Constant((9, 3) =&gt; 9) =&gt; 0
+ PAndQ.Constant((9, 2) =&gt; 9) =&gt; 0
+ PAndQ.Constant((9, 1) =&gt; 9) =&gt; 1</code></pre><p>The assignments from a constant to <code>true</code> correspond to cells that contain the given numbers. There are 81 such constants, with each <a href="../../manual/propositions/#PAndQ.value"><code>value</code></a> corresponding to a cell in the grid.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; extract(solution) = map(something ∘ value ∘ first, filter(last, solution));</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; cells = extract(solution)</code><code class="nohighlight hljs ansi" style="display:block;">81-element Vector{Pair{Tuple{Int64, Int64}, Int64}}:
+ (1, 9) =&gt; 1
+ (1, 3) =&gt; 2
+ (1, 7) =&gt; 3
+ (1, 2) =&gt; 4
+ (1, 8) =&gt; 5
+ (1, 1) =&gt; 6
+ (1, 5) =&gt; 7
+ (1, 4) =&gt; 8
+ (1, 6) =&gt; 9
+ (2, 2) =&gt; 1
+        ⋮
+ (9, 8) =&gt; 1
+ (9, 9) =&gt; 2
+ (9, 6) =&gt; 3
+ (9, 5) =&gt; 4
+ (9, 4) =&gt; 5
+ (9, 3) =&gt; 6
+ (9, 7) =&gt; 7
+ (9, 2) =&gt; 8
+ (9, 1) =&gt; 9</code></pre><p>Each cell is a <code>Pair</code> in the form <code>(row, column) =&gt; number</code>, which maps from the row and column of the grid to its corresponding number.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; function decode!(grid, cells)
+           for ((row, column), value) in cells
+               grid[row, column] = value
+           end
+       
+           grid
+       end;</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; print_grid(decode!(grid, cells))</code><code class="nohighlight hljs ansi" style="display:block;">┌─────────┬─────────┬─────────┐
+│ 6  4  2 │ 8  7  9 │ 3  5  1 │
+│ 5  1  8 │ 4  3  2 │ 9  7  6 │
+│ 7  9  3 │ 1  6  5 │ 2  4  8 │
+├─────────┼─────────┼─────────┤
+│ 4  2  9 │ 3  5  8 │ 1  6  7 │
+│ 1  3  5 │ 7  2  6 │ 4  8  9 │
+│ 8  6  7 │ 9  1  4 │ 5  2  3 │
+├─────────┼─────────┼─────────┤
+│ 2  5  1 │ 6  9  7 │ 8  3  4 │
+│ 3  7  4 │ 2  8  1 │ 6  9  5 │
+│ 9  8  6 │ 5  4  3 │ 7  1  2 │
+└─────────┴─────────┴─────────┘</code></pre><h2 id="Creating-a-Puzzle"><a class="docs-heading-anchor" href="#Creating-a-Puzzle">Creating a Puzzle</a><a id="Creating-a-Puzzle-1"></a><a class="docs-heading-anchor-permalink" href="#Creating-a-Puzzle" title="Permalink"></a></h2><p>Now that a solution has been found, it can be used to create a puzzle by removing some of the known values.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; print_grid(grid .*= rand(Bool, 9, 9))</code><code class="nohighlight hljs ansi" style="display:block;">┌─────────┬─────────┬─────────┐
+│ ⋅  4  ⋅ │ 8  7  ⋅ │ ⋅  ⋅  1 │
+│ ⋅  ⋅  8 │ ⋅  ⋅  2 │ ⋅  ⋅  ⋅ │
+│ ⋅  ⋅  3 │ ⋅  ⋅  ⋅ │ ⋅  4  ⋅ │
+├─────────┼─────────┼─────────┤
+│ 4  2  ⋅ │ 3  ⋅  8 │ 1  6  ⋅ │
+│ 1  3  ⋅ │ ⋅  ⋅  6 │ ⋅  ⋅  ⋅ │
+│ ⋅  6  ⋅ │ ⋅  1  ⋅ │ ⋅  2  3 │
+├─────────┼─────────┼─────────┤
+│ ⋅  ⋅  1 │ 6  9  ⋅ │ 8  ⋅  ⋅ │
+│ 3  ⋅  ⋅ │ 2  ⋅  ⋅ │ 6  9  ⋅ │
+│ 9  8  6 │ ⋅  4  ⋅ │ ⋅  1  2 │
+└─────────┴─────────┴─────────┘</code></pre><p>Since the <code>rules</code> represent an empty Sudoku grid, finding a solution to this puzzle means encoding the initial values as additional rules and finding a solution to the combined ruleset. If a grid has no solutions, then it contains a contradiction to the rules.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; print_grid(decode!(grid, extract(first_solution(rules ∧ ⋀(map(
+           i -&gt; p(i.I..., grid[i]), filter(i -&gt; grid[i] != 0, CartesianIndices(grid))))))))</code><code class="nohighlight hljs ansi" style="display:block;">┌─────────┬─────────┬─────────┐
+│ 6  4  2 │ 8  7  9 │ 3  5  1 │
+│ 5  1  8 │ 4  3  2 │ 9  7  6 │
+│ 7  9  3 │ 1  6  5 │ 2  4  8 │
+├─────────┼─────────┼─────────┤
+│ 4  2  9 │ 3  5  8 │ 1  6  7 │
+│ 1  3  5 │ 7  2  6 │ 4  8  9 │
+│ 8  6  7 │ 9  1  4 │ 5  2  3 │
+├─────────┼─────────┼─────────┤
+│ 2  5  1 │ 6  9  7 │ 8  3  4 │
+│ 3  7  4 │ 2  8  1 │ 6  9  5 │
+│ 9  8  6 │ 5  4  3 │ 7  1  2 │
+└─────────┴─────────┴─────────┘</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../getting_started/">« Getting Started</a><a class="docs-footer-nextpage" href="../custom_operators/">Custom Operators »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.3.0 on <span class="colophon-date" title="Monday 18 March 2024 20:44">Monday 18 March 2024</span>. Using Julia version 1.10.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

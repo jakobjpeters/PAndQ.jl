@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Getting Started · PAndQ.jl</title><meta name="title" content="Getting Started · PAndQ.jl"/><meta property="og:title" content="Getting Started · PAndQ.jl"/><meta property="twitter:title" content="Getting Started · PAndQ.jl"/><meta name="description" content="Documentation for PAndQ.jl."/><meta property="og:description" content="Documentation for PAndQ.jl."/><meta property="twitter:description" content="Documentation for PAndQ.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.svg" alt="PAndQ.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">PAndQ.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li class="is-active"><a class="tocitem" href>Getting Started</a><ul class="internal"><li><a class="tocitem" href="#Operators"><span>Operators</span></a></li><li><a class="tocitem" href="#Propositions"><span>Propositions</span></a></li><li><a class="tocitem" href="#Semantics"><span>Semantics</span></a></li><li><a class="tocitem" href="#Printing"><span>Printing</span></a></li></ul></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../tutorials/sudoku/">Sudoku</a></li><li><a class="tocitem" href="../tutorials/custom_operators/">Custom Operators</a></li></ul></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="../manual/operators/">Operators</a></li><li><a class="tocitem" href="../manual/propositions/">Propositions</a></li><li><a class="tocitem" href="../manual/semantics/">Semantics</a></li><li><a class="tocitem" href="../manual/printing/">Printing</a></li><li><a class="tocitem" href="../manual/extensions/">Extensions</a></li><li><a class="tocitem" href="../manual/interface/">Interface</a></li><li><a class="tocitem" href="../manual/internals/">Internals</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Getting Started</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Getting Started</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/jakobjpeters/PAndQ.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/jakobjpeters/PAndQ.jl/blob/main/docs/src/getting_started.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Getting-Started"><a class="docs-heading-anchor" href="#Getting-Started">Getting Started</a><a id="Getting-Started-1"></a><a class="docs-heading-anchor-permalink" href="#Getting-Started" title="Permalink"></a></h1><p>This page demonstrates the basic functionality of this package. For additional features and documentation, see the Tutorials and Manual.</p><h2 id="Operators"><a class="docs-heading-anchor" href="#Operators">Operators</a><a id="Operators-1"></a><a class="docs-heading-anchor-permalink" href="#Operators" title="Permalink"></a></h2><p><a href="../manual/operators/#operators_operators">Operators</a> are functions represented by a symbol that return a logical value.</p><p>The <a href="../manual/operators/#PAndQ.tautology"><code>tautology</code></a> and <a href="../manual/operators/#PAndQ.contradiction"><code>contradiction</code></a> operators are truth values similar to the <code>Bool</code>ean values <code>true</code> and <code>false</code>, respectively. These operators are represented with the symbols <code>⊤</code> and <code>⊥</code> and return themselves when called.</p><pre><code class="language-julia-repl hljs">julia&gt; ⊤()
+⊤
+
+julia&gt; ⊥()
+⊥</code></pre><p>The symbols <code>!</code> and <code>¬</code> both represent the unary operator <a href="../manual/operators/#PAndQ.not"><code>not</code></a>. The symbols <code>&amp;</code> and <code>∧</code> represent the binary operator <a href="../manual/operators/#PAndQ.and"><code>and</code></a>.</p><pre><code class="language-julia-repl hljs">julia&gt; !true
+false
+
+julia&gt; true &amp; false
+false
+
+julia&gt; ¬⊤
+¬⊤
+
+julia&gt; ⊤ ∧ ⊥
+⊤ ∧ ⊥</code></pre><h2 id="Propositions"><a class="docs-heading-anchor" href="#Propositions">Propositions</a><a id="Propositions-1"></a><a class="docs-heading-anchor-permalink" href="#Propositions" title="Permalink"></a></h2><p><a href="../manual/propositions/#propositions">Propositions</a> are statements that can be either <code>true</code> or <code>false</code>. For example, &quot;Logic is fun&quot;. This proposition has a known value, so it is a constant. Note that the proposition exists independently of whether it is known to be <code>true</code> or <code>false</code>. Constants can be instantiated inline with the <a href="../manual/propositions/#PAndQ.@atomize"><code>@atomize</code></a> macro and unwrapped with the <a href="../manual/propositions/#PAndQ.value"><code>value</code></a> function.</p><pre><code class="language-julia-repl hljs">julia&gt; p = @atomize $&quot;Logic is fun&quot;
+$(&quot;Logic is fun&quot;)
+
+julia&gt; q = @atomize $&quot;Julia is awesome&quot;
+$(&quot;Julia is awesome&quot;)
+
+julia&gt; map(something ∘ value, [p, q])
+2-element Vector{String}:
+ &quot;Logic is fun&quot;
+ &quot;Julia is awesome&quot;</code></pre><p>A proposition can be negated, such as &quot;Logic is not fun&quot;. Multiple propositions can be connected, such as &quot;Logic is fun and Julia is awesome&quot;.</p><pre><code class="language-julia-repl hljs">julia&gt; ¬p
+¬$(&quot;Logic is fun&quot;)
+
+julia&gt; p ∧ q
+$(&quot;Logic is fun&quot;) ∧ $(&quot;Julia is awesome&quot;)</code></pre><p>Variables represent a proposition with an unknown value. Use the <code>@atomize</code> macro to instantiate them inline or the <a href="../manual/propositions/#PAndQ.@variables"><code>@variables</code></a> macro to define multiple variables at once.</p><pre><code class="language-julia-repl hljs">julia&gt; @variables p q
+2-element Vector{PAndQ.Variable}:
+ p
+ q
+
+julia&gt; ¬p
+¬p
+
+julia&gt; p ∧ q
+p ∧ q</code></pre><p>Operators always eagerly evaluate boolean values. Boolean values cannot interoperate with truth values and propositions.</p><pre><code class="language-julia-repl hljs">julia&gt; true ∧ true
+true
+
+julia&gt; ⊤ ∧ p
+⊤ ∧ p</code></pre><h2 id="Semantics"><a class="docs-heading-anchor" href="#Semantics">Semantics</a><a id="Semantics-1"></a><a class="docs-heading-anchor-permalink" href="#Semantics" title="Permalink"></a></h2><p>Constants and variables are atomic propositions. Operators construct compound propositions from one or more atomic propositions. Each atom in a proposition can be assigned the valuation <code>true</code> or <code>false</code>. This results in an interpretation, which determines the truth value of the overall proposition. For example, assigning the valuation <code>true</code> to the atomic proposition &quot;Logic is fun&quot; determines that the compound proposition &quot;Logic is not fun&quot; is interpreted as <code>false</code>. Use the <a href="../manual/semantics/#PAndQ.interpret"><code>interpret</code></a> function to assign truth values to atomic propositions.</p><pre><code class="language-julia-repl hljs">julia&gt; interpret(p =&gt; ⊤, p ∧ q)
+⊤ ∧ q
+
+julia&gt; interpret([p =&gt; ⊤, q =&gt; ⊥], p ∧ q)
+⊤ ∧ ⊥</code></pre><p>The <a href="../manual/semantics/#PAndQ.solutions"><code>solutions</code></a> of a proposition are the <a href="../manual/semantics/#PAndQ.valuations"><code>valuations</code></a> that result in a <code>true</code> interpretation.</p><pre><code class="language-julia-repl hljs">julia&gt; collect(valuations(p ∧ q))
+2×2 Matrix{Vector{Pair{PAndQ.Variable, Bool}}}:
+ [Variable(:p)=&gt;1, Variable(:q)=&gt;1]  [Variable(:p)=&gt;1, Variable(:q)=&gt;0]
+ [Variable(:p)=&gt;0, Variable(:q)=&gt;1]  [Variable(:p)=&gt;0, Variable(:q)=&gt;0]
+
+julia&gt; collect(only(solutions(p ∧ q)))
+2-element Vector{Pair{PAndQ.Variable, Bool}}:
+ PAndQ.Variable(:p) =&gt; 1
+ PAndQ.Variable(:q) =&gt; 1</code></pre><p>Two propositions are logically equivalent if their interpretation is equivalent for every possible valuation. Use <a href="../manual/semantics/#Base.:=="><code>==</code></a> to check if two propositions are logically equivalent.</p><pre><code class="language-julia-repl hljs">julia&gt; p ∧ ¬p == ⊥
+true
+
+julia&gt; p ∧ ¬p === ⊥
+false</code></pre><h2 id="Printing"><a class="docs-heading-anchor" href="#Printing">Printing</a><a id="Printing-1"></a><a class="docs-heading-anchor-permalink" href="#Printing" title="Permalink"></a></h2><p><a href="../manual/printing/#PAndQ.TruthTable"><code>TruthTable</code></a>s are used to enumerate the interpretations of propositions. The header contains propositions and the atoms composing them. Each column corresponds to the truth values of the proposition in the header. Each row represents an interpretation. Use the <a href="../manual/printing/#PAndQ.print_table"><code>print_table</code></a> function to print a truth table.</p><pre><code class="language-julia-repl hljs">julia&gt; print_table(⊤, ¬p, p ∧ q)
+┌───┬───┬───┬────┬───────┐
+│ ⊤ │ p │ q │ ¬p │ p ∧ q │
+├───┼───┼───┼────┼───────┤
+│ ⊤ │ ⊤ │ ⊤ │ ⊥  │ ⊤     │
+│ ⊤ │ ⊥ │ ⊤ │ ⊤  │ ⊥     │
+├───┼───┼───┼────┼───────┤
+│ ⊤ │ ⊤ │ ⊥ │ ⊥  │ ⊥     │
+│ ⊤ │ ⊥ │ ⊥ │ ⊤  │ ⊥     │
+└───┴───┴───┴────┴───────┘</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../tutorials/sudoku/">Sudoku »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.3.0 on <span class="colophon-date" title="Monday 18 March 2024 20:44">Monday 18 March 2024</span>. Using Julia version 1.10.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
