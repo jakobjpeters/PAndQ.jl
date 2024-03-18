@@ -350,7 +350,7 @@ function _distribute(f, ao, stack)
         q = pop!(stack)
         o, rs = deconstruct(q)
 
-        if o == not_initial_value return Tree(not_initial_value)
+        if o isa NullaryOperator return Tree(o)
         elseif o isa UnaryOperator p = evaluate(ao, p, q)
         elseif o == ao append!(stack, rs)
         else p = f(p, rs, stack)
@@ -689,7 +689,7 @@ function normalize(::typeof(¬), p::Tree)
 end
 function normalize(::typeof(∧), p::Tree)
     q, rs = flatten(p)
-    q ∧ first(flatten(something(fold(r -> distribute(normalize(¬, r)), (∧) => rs))))
+    q ∧ first(flatten(fold(r -> distribute(normalize(¬, r)), (∧) => rs)))
 end
 normalize(::typeof(∨), p) = ¬normalize(∧, ¬p)
 normalize(::AO, p::Normal{AO}) where AO <: AndOr = p
