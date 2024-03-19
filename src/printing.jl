@@ -105,7 +105,7 @@ for (T, f) in (
     NullaryOperator => v -> v ? "⊤" : "⊥",
     String => v -> nameof(v ? "tautology" : "contradiction"),
     Char => v -> v == ⊤ ? "T" : "F",
-    Bool => string ∘ 𝒾,
+    Bool => string,
     Int => string ∘ Int
 )
     @eval formatter(::Type{$T}) = (v, _, _) -> $f(v)

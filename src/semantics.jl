@@ -384,8 +384,8 @@ convert(::Type{Bool}, ::typeof(⊥)) = false
 
 See also [`Proposition`](@ref).
 """
-convert(::Type{Tree}, p::NullaryOperator) = Tree(p)
-convert(::Type{Tree}, p::Atom) = Tree(𝒾, p)
+convert(::Type{Tree}, p::NullaryOperator) = Tree(p, Union{}[])
+convert(::Type{Tree}, p::Atom) = Tree(𝒾, [p])
 convert(::Type{Tree}, p::Union{Clause, Normal}) = normalize(¬, map(𝒾, p))
 convert(::Type{Normal{AO}}, p::Union{NullaryOperator, Proposition}) where AO =
     normalize(AO.instance, p)
@@ -446,17 +446,17 @@ is_commutative(::union_typeof((→, ↛, ←, ↚))) = false
 is_associative(::union_typeof((∧, ∨, ↮, ↔))) = true
 is_associative(::union_typeof((↑, ↓, →, ↛, ←, ↚))) = false
 
-evaluate_not(::typeof(¬), p) = p
-evaluate_not(o, ps...) = dual(o)(map(¬, ps)...)
+evaluate_not(::typeof(¬), ps) = only(ps)
+evaluate_not(o, ps) = Tree(dual(o), map(¬, ps))
 
-____evaluate_and_or(ao, o::NullaryOperator, ps, q) = evaluate(ao, o, q)
-____evaluate_and_or(ao, o, ps, q) = ao(q, o(ps...))
+____evaluate_and_or(ao, o::NullaryOperator, ps, q) = _evaluate(ao, o, q)
+____evaluate_and_or(ao, o, ps, q) = ao(q, Tree(o, ps))
 
 ___evaluate_and_or(ao, p::Atom, q) = ao(q, p)
 ___evaluate_and_or(ao, p, q) = ____evaluate_and_or(ao, deconstruct(p)..., q)
 
-__evaluate_and_or(ao, o::NullaryOperator, ps, q) = evaluate(ao, o, q)
-__evaluate_and_or(ao, o, ps, q) = ___evaluate_and_or(ao, q, o(ps...))
+__evaluate_and_or(ao, o::NullaryOperator, ps, q) = _evaluate(ao, o, q)
+__evaluate_and_or(ao, o, ps, q) = ___evaluate_and_or(ao, q, Tree(o, ps))
 
 _evaluate_and_or(ao, p::Atom, q) = ___evaluate_and_or(ao, q, p)
 _evaluate_and_or(ao, p, q) = __evaluate_and_or(ao, deconstruct(p)..., q)
@@ -467,17 +467,17 @@ evaluate_and_or(::typeof(∨), ::typeof(⊤), q) = ⊤
 evaluate_and_or(::typeof(∨), ::typeof(⊥), q) = q
 evaluate_and_or(ao, p, q) = _evaluate_and_or(ao, p, q)
 
-evaluate(o::NullaryOperator) = o
-evaluate(::typeof(𝒾), p) = p
-evaluate(::typeof(¬), p::Bool) = !p
-evaluate(::typeof(¬), p::NullaryOperator) = dual(p)
-evaluate(::typeof(¬), p::Atom) = ¬p
-evaluate(::typeof(¬), p::Tree) = evaluate_not(nodevalue(p), children(p)...)
-evaluate(::typeof(¬), p::Normal) =
+_evaluate(o::NullaryOperator) = o
+_evaluate(::typeof(𝒾), p) = p
+_evaluate(::typeof(¬), p::Bool) = !p
+_evaluate(::typeof(¬), p::NullaryOperator) = dual(p)
+_evaluate(::typeof(¬), p::Atom) = ¬p
+_evaluate(::typeof(¬), p::Tree) = evaluate_not(nodevalue(p), children(p))
+_evaluate(::typeof(¬), p::Normal) =
     Normal(dual(nodevalue(p)), p.atoms, Set(Iterators.map(clause -> Set(Iterators.map(-, clause)), p.clauses)))
-evaluate(::typeof(∧), p::Bool, q::Bool) = p && q
-evaluate(::typeof(∨), p::Bool, q::Bool) = p || q
-function evaluate(o::AO, p::Normal{AO}, q::Normal{AO}) where AO <: AndOr
+_evaluate(::typeof(∧), p::Bool, q::Bool) = p && q
+_evaluate(::typeof(∨), p::Bool, q::Bool) = p || q
+function _evaluate(o::AO, p::Normal{AO}, q::Normal{AO}) where AO <: AndOr
     p_atoms, q_atoms = p.atoms, q.atoms
     atom_type = promote_type(eltype(p_atoms), eltype(q_atoms))
     mapping = Dict{atom_type, Int}(Iterators.map(reverse, pairs(p_atoms)))
@@ -493,49 +493,69 @@ function evaluate(o::AO, p::Normal{AO}, q::Normal{AO}) where AO <: AndOr
         end),
     q.clauses))
 end
-evaluate(o::AndOr, p::Normal, q::Normal) = o(Normal(o, p), Normal(o, q))
-evaluate(o::AndOr, p, q) = evaluate_and_or(o, p, q)
-evaluate(::typeof(→), p, q) = ¬p ∨ q
-evaluate(::typeof(↮), p, q) = (p ∨ q) ∧ (p ↑ q)
-evaluate(::typeof(←), p, q) = p ∨ ¬q
-evaluate(::typeof(↑), p, q) = ¬(p ∧ q)
-evaluate(::typeof(↓), p, q) = ¬p ∧ ¬q
-evaluate(::typeof(↛), p, q) = p ∧ ¬q
-evaluate(::typeof(↔), p, q) = (p ∧ q) ∨ (p ↓ q)
-evaluate(::typeof(↚), p, q) = ¬p ∧ q
+_evaluate(o::AndOr, p::Normal, q::Normal) = o(Normal(o, p), Normal(o, q))
+_evaluate(o::AndOr, p, q) = evaluate_and_or(o, p, q)
+_evaluate(::typeof(→), p, q) = ¬p ∨ q
+_evaluate(::typeof(↮), p, q) = (p ∨ q) ∧ (p ↑ q)
+_evaluate(::typeof(←), p, q) = p ∨ ¬q
+_evaluate(::typeof(↑), p, q) = ¬(p ∧ q)
+_evaluate(::typeof(↓), p, q) = ¬p ∧ ¬q
+_evaluate(::typeof(↛), p, q) = p ∧ ¬q
+_evaluate(::typeof(↔), p, q) = (p ∧ q) ∨ (p ↓ q)
+_evaluate(::typeof(↚), p, q) = ¬p ∧ q
+
+function dispatch(f, o, ps)
+    _arity = arity(o)
+    _arity == length(ps) || error("write this error")
+
+    if _arity == 0 f(o)
+    elseif _arity == 1 f(o, only(ps))
+    else f(o, first(ps), last(ps))
+    end
+end
+
+evaluate(o::Union{NullaryOperator, UnaryOperator, BinaryOperator,}, ps) = dispatch(_evaluate, o, ps)
 evaluate(::typeof(⋀), ps) = fold(𝒾, (∧) => ps)
 evaluate(::typeof(⋁), ps) = fold(𝒾, (∨) => ps)
 
-__evaluation(::typeof(𝒾), p) = ¬p
-__evaluation(o, ps...) = Tree(¬, Tree(o(ps...)))
+___evaluation(::Eager, o, ps) = evaluate(o, ps)
+___evaluation(::Lazy, o, ps) = _evaluation(o, ps)
 
-_evaluation(::typeof(¬), p::Tree) = __evaluation(nodevalue(p), children(p)...)
-_evaluation(o::UnaryOperator, p::Atom) = Tree(o, p)
-_evaluation(o, ps::Tree...) = Tree(o, ps...)
-_evaluation(o, ps...) = _evaluation(o, map(Tree, ps)...)
+__evaluation(::typeof(𝒾), ps) = ¬only(ps)
+__evaluation(o, ps) = Tree(¬, [Tree(o, ps)])
 
-evaluation(::Eager, o, ps...) = evaluate(o, ps...)
-evaluation(::Lazy, o, ps...) = _evaluation(o, ps...)
+function _evaluation(::typeof(¬), ps::Vector{Tree})
+    q = only(ps)
+    __evaluation(nodevalue(q), children(q))
+end
+_evaluation(o::UnaryOperator, ps::Vector{<:Atom}) = Tree(o, [only(ps)])
+_evaluation(o, ps::Vector{Tree}) = Tree(o, ps)
+_evaluation(o, ps) = _evaluation(o, map(Tree, ps))
 
 Evaluation(::Union{NullaryOperator, typeof(𝒾), NaryOperator}) = Eager
 Evaluation(::Union{typeof(¬), BinaryOperator}) = Lazy
 
-(o::Operator)(p::BN, qs::BN...) where BN <: Union{Bool, Normal} = evaluate(o, p, qs...)
-(o::Operator)(ps...) = evaluation(Evaluation(o)(), o, ps...)
+evaluation(o, ps::Vector{<:Union{Bool, Normal}}) = evaluate(o, ps)
+evaluation(o, ps) = ___evaluation(Evaluation(o)(), o, ps)
 
-_print_expression(io, o, ps) = _show(print_proposition, io, ps) do io
+(o::Operator)(ps...) = evaluation(o, [ps...])
+
+__print_expression(io, o, ps) = _show(print_proposition, io, ps) do io
     print(io, " ")
     show(io, "text/plain", o)
     print(io, " ")
 end
 
-print_expression(io, p::NullaryOperator) = print_proposition(io, p)
-print_expression(io, ::typeof(𝒾), p) = print_proposition(io, p)
-function print_expression(io, ::typeof(¬), p)
+_print_expression(io, p::NullaryOperator) = print_proposition(io, p)
+_print_expression(io, ::typeof(𝒾), p) = print_proposition(io, p)
+function _print_expression(io, ::typeof(¬), p)
     show(io, "text/plain", ¬)
     print_proposition(io, p)
 end
-print_expression(io, o::BinaryOperator, p, q) = _print_expression(io, o, (p, q))
+_print_expression(io, o::BinaryOperator, p, q) = __print_expression(io, o, (p, q))
+
+print_expression(io, o::Union{NullaryOperator, UnaryOperator, BinaryOperator, NaryOperator}, ps) =
+    dispatch((_o, qs...) -> _print_expression(io, _o, qs...), o, ps)
 
 _print_proposition(io, p::NullaryOperator) = show(io, "text/plain", p)
 function _print_proposition(io, p::Constant)
@@ -544,10 +564,10 @@ function _print_proposition(io, p::Constant)
     print(io, ")")
 end
 _print_proposition(io, p::Variable) = print(io, p.symbol)
-_print_proposition(io, p::Tree) = print_expression(io, nodevalue(p), children(p)...)
+_print_proposition(io, p::Tree) = print_expression(io, nodevalue(p), children(p))
 function _print_proposition(io, p::Union{Clause, Normal})
     o, qs = deconstruct(p)
-    isempty(qs) ? print_expression(io, something(initial_value(o))) : _print_expression(io, o, qs)
+    isempty(qs) ? _print_expression(io, something(initial_value(o))) : __print_expression(io, o, qs)
 end
 
 print_proposition(io, p) = _print_proposition(IOContext(io, :root => false), p)

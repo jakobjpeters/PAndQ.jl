@@ -12,7 +12,6 @@ These methods are required to be implemented for some functionalities. If a requ
 
 ```@docs
 Interface.Operator
-Interface.arity
 ```
 
 ### Evaluation
@@ -66,6 +65,7 @@ Interface.print_proposition
 ### Properties
 
 ```@docs
+Interface.arity
 Interface.converse
 Interface.dual
 ```
