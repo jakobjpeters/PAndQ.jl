@@ -11,10 +11,10 @@ on:
       - main
   pull_request:
       paths:
-      - 'HEADER.md'
-      - 'docs/src/index.md'
-      - 'docs/src/assets/**'
-      - '.github/workflows/readme.yml'
+        - 'HEADER.md'
+        - 'docs/src/index.md'
+        - 'docs/src/assets/**'
+        - '.github/workflows/readme.yml'
 jobs:
   build:
     runs-on: ubuntu-latest
