@@ -41,10 +41,10 @@ p ↔ q
 julia> interpret(p => ⊤, r)
 ⊤ ↔ q
 
-julia> collect(only(solutions(p ∧ q)))
-2-element Vector{Pair{PAndQ.Variable, Bool}}:
- PAndQ.Variable(:p) => 1
- PAndQ.Variable(:q) => 1
+julia> collect(only(solutions(p ∧ q)[2]))
+2-element Vector{Bool}:
+ 1
+ 1
 
 julia> s = normalize(∧, r)
 (¬p ∨ q) ∧ (¬q ∨ p)

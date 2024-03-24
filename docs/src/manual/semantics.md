@@ -35,11 +35,6 @@ The ordering is partial because the predicates [`==`](@ref) and [`is_truth`](@re
     The implementations for `==` and `<` also define the semantics of `isequal`, `>`, `<=`, and `>=`.
     This does not define the semantics of `isless`, which is used for [total orders](https://en.wikipedia.org/wiki/Total_order).
 
-!!! warning
-    The assumption that `isequal(p, q)` implies `hash(p) == hash(q)` is currently being violated.
-    A future version will implement the Quine–McCluskey algorithm to minimize propositions,
-    which will enable `hash` to be defined too.
-
 ```@docs
 ==
 <

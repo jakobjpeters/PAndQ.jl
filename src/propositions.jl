@@ -620,8 +620,28 @@ end
 
 # Normalization
 
+function ___normalize(p)
+    q = normalize(∧, p)
+    _atoms = q.atoms
+    Normal(∨, _atoms, Set(Iterators.map(Set, Solutions(q.clauses, length(_atoms)))))
+end
+
+function __normalize(p::Normal{typeof(∨)})
+    n = length(p.atoms)
+    all(==(n) ∘ length, p.clauses) ? p : ___normalize(p)
+end
+__normalize(p) = ___normalize(p)
+
+_normalize(::typeof(∧), p::Normal{typeof(∧)}, canonical) = canonical ? ¬__normalize(¬p) : p
+function _normalize(::typeof(∧), p, canonical)
+    q, rs = flatten(p)
+    _normalize(∧, q ∧ first(flatten(fold(r -> distribute(normalize(¬, r)), (∧) => rs))), canonical)
+end
+_normalize(::typeof(∨), p, canonical) = canonical ? __normalize(p) : ¬_normalize(∧, ¬p, canonical)
+
 """
-    normalize(::Union{typeof(¬), typeof(∧), typeof(∨)}, p)
+    normalize(::typeof(¬), p)
+    normalize(::Union{typeof(∧), typeof(∨)}, p; canonical = false)
 
 Convert the given proposition to negation, conjunction, or disjunction normal form depending
 on whether the first argument is [`not`](@ref), [`and`](@ref), or [`or`](@ref), respectively.
@@ -656,7 +676,7 @@ julia> @atomize normalize(∨, p ↔ q)
 (¬q ∧ ¬p) ∨ (q ∧ p)
 ```
 """
-function normalize(::typeof(¬), p::Tree)
+function normalize(::typeof(¬), p)
     operator_stack, input_stack, output_stack = Pair{Int, Operator}[], Tree[p], Tree[]
 
     while !isempty(input_stack)
@@ -691,16 +711,10 @@ function normalize(::typeof(¬), p::Tree)
 
     only(input_stack)
 end
-function normalize(::typeof(∧), p::Tree)
-    q, rs = flatten(p)
-    q ∧ first(flatten(fold(r -> distribute(normalize(¬, r)), (∧) => rs)))
-end
-normalize(::typeof(∨), p) = ¬normalize(∧, ¬p)
-normalize(::AO, p::Normal{AO}) where AO <: AndOr = p
-normalize(o, p) = normalize(o, Tree(p))
+normalize(o::AndOr, p; canonical = false) = _normalize(o, p, canonical)
 
 function tseytin!(pairs, substitution, p)
-    if !isa(p, Atom)
+    if !(p isa Union{NullaryOperator, Atom})
         o, qs = deconstruct(p)
         if !(o isa typeof(𝒾) && only(qs) isa Atom)
             substitutions = map(q -> q isa Atom || (nodevalue(q) == 𝒾 && child(q) isa Atom) ? Tree(q) : Variable(gensym()), qs)

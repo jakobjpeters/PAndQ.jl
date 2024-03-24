@@ -109,10 +109,15 @@ julia> collect(valuations(p ∧ q))
  [Variable(:p)=>1, Variable(:q)=>1]  [Variable(:p)=>1, Variable(:q)=>0]
  [Variable(:p)=>0, Variable(:q)=>1]  [Variable(:p)=>0, Variable(:q)=>0]
 
-julia> collect(only(solutions(p ∧ q)))
-2-element Vector{Pair{PAndQ.Variable, Bool}}:
- PAndQ.Variable(:p) => 1
- PAndQ.Variable(:q) => 1
+julia> solutions(p ∧ q)[1]
+2-element Vector{PAndQ.Atom}:
+ p
+ q
+
+julia> collect(only(solutions(p ∧ q)[2]))
+2-element Vector{Bool}:
+ 1
+ 1
 ```
 
 Two propositions are logically equivalent if their interpretation is equivalent for every possible valuation. Use [`==`](@ref) to check if two propositions are logically equivalent.

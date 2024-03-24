@@ -86,6 +86,11 @@ julia> @atomize collect(interpretations(p ∧ q))
 interpretations(valuations, p) = Iterators.map(valuation -> interpret(valuation, p), valuations)
 interpretations(p) = Iterators.map(valuation -> Bool(interpret(a -> Dict(valuation)[a], normalize(¬, p))), valuations(p))
 
+function _solutions(p)
+    atoms = p.atoms
+    atoms, Solutions(p.clauses, length(atoms))
+end
+
 """
     solutions(p)
 
@@ -101,25 +106,34 @@ See also [`interpret`](@ref) and [`tautology`](@ref).
 
 # Examples
 ```jldoctest
-julia> map(collect, solutions(⊤))
-1-element Vector{Vector{Any}}:
- []
+julia> @atomize solutions(p ∧ q)[1]
+2-element Vector{PAndQ.Atom}:
+ p
+ q
 
-julia> @atomize map(collect, solutions(p))
-1-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
- [PAndQ.Variable(:p) => 1]
-
-julia> map(collect, solutions(⊥))
-Any[]
+julia> @atomize collect(only(solutions(p ∧ q)[2]))
+2-element Vector{Bool}:
+ 1
+ 1
 ```
 """
-solutions(p::Normal{typeof(∧)}) = Iterators.map(solution -> Iterators.map(
-        literal -> p.atoms[abs(literal)] => !signbit(literal), solution), Solutions(p.clauses, length(p.atoms)))
+function solutions(p::Normal{typeof(∧)})
+    _atoms, valuations = _solutions(p)
+    _atoms, Iterators.map(valuation -> map(!signbit, valuation), valuations)
+end
 function solutions(p)
     q, rs = flatten(p)
-    Iterators.map(solution -> Iterators.filter(
-        ((atom, _),) -> atom isa Constant || !startswith(string(atom.symbol), "##"),
-    solution), solutions(q ∧ normalize(∧, fold(tseytin, (∧) => rs))))
+    _atoms, _valuations = _solutions(q ∧ normalize(∧, fold(tseytin, (∧) => rs)))
+    __atoms, x = Atom[], Dict{Int, Int}()
+
+    for (i, atom) in enumerate(_atoms)
+        if atom isa Constant || !startswith(string(atom.symbol), "##")
+            push!(__atoms, atom)
+            x[i] = length(x) + 1
+        end
+    end
+
+    __atoms, Iterators.map(valuation -> map(!signbit, Iterators.filter(literal -> get(x, abs(literal), 0) != 0, valuation)), _valuations)
 end
 
 # Predicates
@@ -164,7 +178,7 @@ julia> @atomize is_contradiction(p ∧ ¬p)
 true
 ```
 """
-is_contradiction(p) = isempty(solutions(p))
+is_contradiction(p) = isempty(solutions(p)[2])
 
 """
     is_truth(p)
@@ -386,6 +400,7 @@ See also [`Proposition`](@ref).
 convert(::Type{Tree}, p::NullaryOperator) = Tree(p, Union{}[])
 convert(::Type{Tree}, p::Atom) = Tree(𝒾, [p])
 convert(::Type{Tree}, p::Union{Clause, Normal}) = normalize(¬, map(𝒾, p))
+convert(::Type{Normal{AO}}, p::Normal{AO}) where AO = p
 convert(::Type{Normal{AO}}, p::Union{NullaryOperator, Proposition}) where AO =
     normalize(AO.instance, p)
 convert(::Type{Proposition}, p::NullaryOperator) = Tree(p)
@@ -513,7 +528,7 @@ function dispatch(f, o, ps)
     end
 end
 
-evaluate(o::Union{NullaryOperator, UnaryOperator, BinaryOperator,}, ps) = dispatch(_evaluate, o, ps)
+evaluate(o::Union{NullaryOperator, UnaryOperator, BinaryOperator}, ps) = dispatch(_evaluate, o, ps)
 evaluate(::typeof(⋀), ps) = fold(𝒾, (∧) => ps)
 evaluate(::typeof(⋁), ps) = fold(𝒾, (∨) => ps)
 

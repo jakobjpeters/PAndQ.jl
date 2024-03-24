@@ -114,8 +114,8 @@ Each cell is a `Pair` in the form `(row, column) => number`, which maps from the
 
 ```@repl 1
 function decode!(grid, cells)
-    for ((row, column), value) in cells
-        grid[row, column] = value
+    for ((row, column), number) in cells
+        grid[row, column] = number
     end
 
     grid
