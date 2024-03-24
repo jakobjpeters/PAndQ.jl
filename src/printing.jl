@@ -250,11 +250,9 @@ print_tree(io, p; kwargs...) = AbstractTrees.print_tree(io, p; kwargs...)
 print_tree(p; kwargs...) = print_tree(stdout, p; kwargs...)
 
 """
-    print_dimacs(io = stdout, p)
+    print_dimacs(::IO = stdout, p)
 
 Print the DIMACS format of `p`.
-
-The `io` can be an `IO` or file path `String` to write to.
 
 # Examples
 ```jldoctest

@@ -211,6 +211,5 @@ function print_dimacs(io::IO, clauses)
     write(io, _read)
     nothing
 end
-print_dimacs(path::String, clauses) = open(file -> dimacs(file, clauses), path; truncate = true)
 
 end # module
