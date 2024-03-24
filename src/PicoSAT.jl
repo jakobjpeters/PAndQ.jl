@@ -148,13 +148,6 @@ Base.SizeUnknown()
 IteratorSize(::Type{Solutions}) = SizeUnknown()
 
 """
-    is_satisfiable(pico_sat)
-
-Return whether the `pico_sat` instance's status is currently satisfiable.
-"""
-is_satisfiable(pico_sat) = picosat_sat(pico_sat, -1) == 10
-
-"""
     isdone(solutions::Solutions, pico_sat = solutions.pico_sat)
 
 Return a `Bool`ean whether the `pico_sat` instance can yield any more solutions
@@ -163,9 +156,9 @@ without advancing the [`Solutions`](@ref PicoSAT.Solutions) iterator.
 Finalize the iterator if it has not yet been finalized and is done.
 """
 isdone(solutions::Solutions, pico_sat = solutions.pico_sat) = pico_sat == C_NULL ||
-    let _is_satisfiable = is_satisfiable(pico_sat)
-        _is_satisfiable || finalize(solutions)
-        !_is_satisfiable
+    let is_satisfiable = picosat_sat(pico_sat, -1) == 10
+        is_satisfiable || finalize(solutions)
+        !is_satisfiable
     end
 
 """

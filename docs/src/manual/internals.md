@@ -31,7 +31,6 @@ PAndQ.PicoSAT.initialize
 PAndQ.PicoSAT.Solutions
 PAndQ.PicoSAT.eltype
 PAndQ.PicoSAT.IteratorSize
-PAndQ.PicoSAT.is_satisfiable
 PAndQ.PicoSAT.isdone
 PAndQ.PicoSAT.iterate
 PAndQ.PicoSAT.print_dimacs
