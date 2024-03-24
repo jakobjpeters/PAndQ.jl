@@ -3,7 +3,6 @@ using Base: get_extension
 using Documenter: DocMeta.setdocmeta!, doctest
 using Latexify
 using PAndQ
-using PAndQ: PicoSAT
 using Test: @testset, @test, detect_ambiguities, detect_unbound_args
 
 @testset "`detect_ambiguities` and `detect_unbound_args`" all(

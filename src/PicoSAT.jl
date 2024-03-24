@@ -29,6 +29,12 @@ Destruct the `pico_sat` instance.
 picosat_reset(pico_sat) = @ccall libpicosat.picosat_reset(pico_sat::Ptr{Cvoid})::Cvoid
 
 """
+    picosat_adjust
+"""
+picosat_adjust(pico_sat, n) =
+    @ccall libpicosat.picosat_adjust(pico_sat::Ptr{Cvoid}, n::Cint)::Cvoid
+
+"""
     picosat_add(pico_sat, literal)
 
 Append the `literal` to the `pico_sat` instance's current disjunctive clause.
@@ -84,19 +90,23 @@ function add_clause(pico_sat, clause)
     for literal in clause
         picosat_add(pico_sat, literal)
     end
+
     picosat_add(pico_sat, 0)
 end
 
 """
-    initialize(clauses)
+    initialize(clauses, n)
 
 Return a PicoSAT pointer with its proposition being a conjunction of the disjunctive `clauses`.
 """
-function initialize(clauses)
+function initialize(clauses, n)
     pico_sat = picosat_init()
+    picosat_adjust(pico_sat, n)
+
     for clause in clauses
         add_clause(pico_sat, clause)
     end
+
     pico_sat
 end
 
@@ -112,7 +122,7 @@ If not, it will call [`picosat_reset`](@ref) on its PicoSAT pointer and set the 
 mutable struct Solutions
     pico_sat::Ptr{Cvoid}
 
-    Solutions(clauses) = finalizer(new(initialize(clauses))) do solutions
+    Solutions(clauses, n) = finalizer(new(initialize(clauses, n))) do solutions
         pico_sat = solutions.pico_sat
         pico_sat == C_NULL && return
         solutions.pico_sat = C_NULL
@@ -176,11 +186,9 @@ iterate(solutions::Solutions, pico_sat = solutions.pico_sat) = if !isdone(soluti
 end
 
 """
-    print_dimacs(io, clauses)
+    print_dimacs(io, clauses, n)
 
 Print the DIMACS format of the conjunctive `clauses`.
-
-The `io` can be an `IO` or file path `String` to write to.
 
 # Examples
 ```jldoctest
@@ -189,15 +197,15 @@ p cnf 2 2
 -1 -2 0
 1 2 0
 
-julia> PAndQ.PicoSAT.print_dimacs(stdout, [[1, -2], [-1, 2]])
+julia> PAndQ.PicoSAT.print_dimacs(stdout, [[1, -2], [-1, 2]], 2)
 p cnf 2 2
 1 -2 0
 -1 2 0
 ```
 """
-function print_dimacs(io::IO, clauses)
+function print_dimacs(io, clauses, n)
     _read, _write = pipe = Pipe()
-    pico_sat = initialize(clauses)
+    pico_sat = initialize(clauses, n)
     redirect_stdout(() -> picosat_print(pico_sat, FILE(RawFD(1), "w")), pipe)
     picosat_reset(pico_sat)
     close(_write)

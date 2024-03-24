@@ -5,7 +5,6 @@ using AbstractTrees: Leaves, PreOrderDFS, childtype, nodevalues
 using Base.Iterators: Stateful
 using Base: isexpr
 using ReplMaker: complete_julia, initrepl
-using .PicoSAT: PicoSAT, initialize, picosat_print, picosat_reset
 
 ## Types
 

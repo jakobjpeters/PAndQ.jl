@@ -1,7 +1,6 @@
 
 import Base: Bool, Fix2, convert, promote_rule, ==, <
 using Base.Iterators: product, repeated
-using .PicoSAT: Solutions
 
 # Truths
 
@@ -115,7 +114,7 @@ Any[]
 ```
 """
 solutions(p::Normal{typeof(∧)}) = Iterators.map(solution -> Iterators.map(
-        literal -> p.atoms[abs(literal)] => !signbit(literal), solution), Solutions(p.clauses))
+        literal -> p.atoms[abs(literal)] => !signbit(literal), solution), Solutions(p.clauses, length(p.atoms)))
 function solutions(p)
     q, rs = flatten(p)
     Iterators.map(solution -> Iterators.filter(

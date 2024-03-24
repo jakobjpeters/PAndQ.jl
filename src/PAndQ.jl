@@ -18,6 +18,8 @@ union_typeof(xs) = Union{map(typeof, xs)...}
 
 include("PicoSAT.jl")
 
+using .PicoSAT: Solutions
+
 include("interface.jl")
 
 import .Interface:

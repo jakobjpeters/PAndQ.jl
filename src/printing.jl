@@ -267,7 +267,7 @@ p cnf 2 2
 -1 2 0
 ```
 """
-print_dimacs(io, p::Normal{typeof(∧)}) = PicoSAT.print_dimacs(io, p.clauses)
+print_dimacs(io, p::Normal{typeof(∧)}) = PicoSAT.print_dimacs(io, p.clauses, length(p.atoms))
 print_dimacs(io, p) = print_dimacs(io, normalize(∧, p))
 print_dimacs(p) = print_dimacs(stdout, p)
 

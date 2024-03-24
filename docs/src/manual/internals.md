@@ -17,6 +17,7 @@ PAndQ.PicoSAT
 PAndQ.PicoSAT.picosat_init
 PAndQ.PicoSAT.picosat_reset
 PAndQ.PicoSAT.picosat_add
+PAndQ.PicoSAT.picosat_adjust
 PAndQ.PicoSAT.picosat_variables
 PAndQ.PicoSAT.picosat_print
 PAndQ.PicoSAT.picosat_sat
