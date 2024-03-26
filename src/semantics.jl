@@ -563,9 +563,23 @@ function _print_expression(io, ::typeof(¬), p)
     show(io, "text/plain", ¬)
     print_proposition(io, p)
 end
-_print_expression(io, o::BinaryOperator, p, q) = __print_expression(io, o, (p, q))
+function _print_expression(io, o::BinaryOperator, p, q)
+    rs, stack = Tree[], Tree[]
 
-print_expression(io, o::Union{NullaryOperator, UnaryOperator, BinaryOperator, NaryOperator}, ps) =
+    if is_associative(o)
+        push!(stack, q, p)
+
+        while !isempty(stack)
+            r = pop!(stack)
+            nodevalue(r) == o ? append!(stack, reverse(children(r))) : push!(rs, r)
+        end
+    else push!(rs, p, q)
+    end
+
+    __print_expression(io, o, rs)
+end
+
+print_expression(io, o::Union{NullaryOperator, UnaryOperator, BinaryOperator}, ps) =
     dispatch((_o, qs...) -> _print_expression(io, _o, qs...), o, ps)
 
 _print_proposition(io, p::NullaryOperator) = show(io, "text/plain", p)

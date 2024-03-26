@@ -344,7 +344,7 @@ julia> ⋀()
 ⊤
 
 julia> @atomize ⋀(p, q, r, s)
-((p ∧ q) ∧ r) ∧ s
+p ∧ q ∧ r ∧ s
 ```
 """
 const conjunction = ⋀ = Operator{:conjunction}()
@@ -365,7 +365,7 @@ julia> ⋁()
 ⊥
 
 julia> @atomize ⋁(p, q, r, s)
-((p ∨ q) ∨ r) ∨ s
+p ∨ q ∨ r ∨ s
 ```
 """
 const disjunction = ⋁ = Operator{:disjunction}()
