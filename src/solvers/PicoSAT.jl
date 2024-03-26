@@ -11,7 +11,7 @@ using Base: SizeUnknown
 using Base.Libc: FILE, RawFD
 using libpicosat_jll: libpicosat
 
-# libpicosat
+# Library
 
 """
     picosat_init()
@@ -178,9 +178,17 @@ return a `Tuple` of the current solution and `pico_sat`.
 Otherwise, `finalize` the `solutions` and return `nothing`.
 """
 iterate(solutions::Solutions, pico_sat = solutions.pico_sat) = if !isdone(solutions, pico_sat)
-    valuation = map(atom -> atom * picosat_deref(pico_sat, atom), 1:picosat_variables(pico_sat))
-    add_clause(pico_sat, Iterators.map(-, valuation))
-    valuation, pico_sat
+    n = picosat_variables(pico_sat)
+    assignments = Vector{Bool}(undef, n)
+
+    clause = map(1:n) do atom
+        literal = picosat_deref(pico_sat, atom)
+        assignments[atom] = !signbit(literal)
+        -atom * literal
+    end
+
+    add_clause(pico_sat, clause)
+    assignments, pico_sat
 end
 
 """
@@ -211,4 +219,4 @@ function print_dimacs(io, clauses, n)
     nothing
 end
 
-end # module
+end # PicoSAT

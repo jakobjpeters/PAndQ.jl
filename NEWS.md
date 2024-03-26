@@ -7,3 +7,4 @@
 - The interface function `arity` is no longer required to be implemented for an operator.
 - Implemented canonical conjunction and disjunction normal forms.
 - `solutions` returns a tuple where the first element is a `Vector` of atoms and the second element is an iterable of assignments. Each `Vector` of assignments is a sequence of `Bool`eans where the `i`th element corresponds to the `i`th atom.
+- Implemented a Z3 backend solver.

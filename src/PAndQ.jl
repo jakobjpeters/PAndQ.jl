@@ -16,9 +16,13 @@ Union{PAndQ.Interface.Operator{:tautology}, PAndQ.Interface.Operator{:not}, PAnd
 """
 union_typeof(xs) = Union{map(typeof, xs)...}
 
-include("PicoSAT.jl")
+include("solvers/PicoSAT.jl")
 
-using .PicoSAT: Solutions
+export PicoSAT
+
+include("solvers/Z3.jl")
+
+export Z3
 
 include("interface.jl")
 
@@ -98,4 +102,4 @@ export
     end
 end end
 
-end
+end # PAndQ

@@ -86,13 +86,8 @@ julia> @atomize collect(interpretations(p ∧ q))
 interpretations(valuations, p) = Iterators.map(valuation -> interpret(valuation, p), valuations)
 interpretations(p) = Iterators.map(valuation -> Bool(interpret(a -> Dict(valuation)[a], normalize(¬, p))), valuations(p))
 
-function _solutions(p)
-    atoms = p.atoms
-    atoms, Solutions(p.clauses, length(atoms))
-end
-
 """
-    solutions(p)
+    solutions(p; solver = Z3)
 
 Return a stateful iterator of [`valuations`](@ref)
 such that `interpret(valuation, p) == ⊤`.
@@ -101,6 +96,8 @@ To find every valuation that results in a true interpretation,
 convert the proposition to conjunctive normal form using [`normalize`](@ref).
 Otherwise, a subset of those valuations will be
 identified using the [`tseytin`](@ref) transformation.
+
+The `solver` can be either `Z3` or `PicoSAT`.
 
 See also [`interpret`](@ref) and [`tautology`](@ref).
 
@@ -117,23 +114,23 @@ julia> @atomize collect(only(solutions(p ∧ q)[2]))
  1
 ```
 """
-function solutions(p::Normal{typeof(∧)})
-    _atoms, valuations = _solutions(p)
-    _atoms, Iterators.map(valuation -> map(!signbit, valuation), valuations)
+function solutions(p::Normal{typeof(∧)}; solver = Z3)
+    atoms = p.atoms
+    atoms, solver.Solutions(p.clauses, length(atoms))
 end
-function solutions(p)
+function solutions(p; solver = Z3)
     q, rs = flatten(p)
-    _atoms, _valuations = _solutions(q ∧ normalize(∧, fold(tseytin, (∧) => rs)))
-    __atoms, x = Atom[], Dict{Int, Int}()
+    atoms, valuations = solutions(q ∧ normalize(∧, fold(tseytin, (∧) => rs)); solver)
+    _atoms, x = Atom[], Dict{Int, Int}()
 
-    for (i, atom) in enumerate(_atoms)
+    for (i, atom) in enumerate(atoms)
         if atom isa Constant || !startswith(string(atom.symbol), "##")
-            push!(__atoms, atom)
+            push!(_atoms, atom)
             x[i] = length(x) + 1
         end
     end
 
-    __atoms, Iterators.map(valuation -> map(!signbit, Iterators.filter(literal -> get(x, abs(literal), 0) != 0, valuation)), _valuations)
+    _atoms, Iterators.map(valuation -> map(last, Iterators.filter(((atom, assignment),) -> get(x, atom, 0) != 0, enumerate(valuation))), valuations)
 end
 
 # Predicates
