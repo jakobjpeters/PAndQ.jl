@@ -294,10 +294,10 @@ julia> @atomize PAndQ.deconstruct(p)
 (PAndQ.Variable(:p), ())
 
 julia> @atomize PAndQ.deconstruct(¬p)
-(PAndQ.Interface.Operator{:not}(), PAndQ.Variable[PAndQ.Variable(:p)])
+(not, PAndQ.Variable[PAndQ.Variable(:p)])
 
 julia> @atomize PAndQ.deconstruct(p ∧ q)
-(PAndQ.Interface.Operator{:and}(), PAndQ.Tree[identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q))])
+(and, PAndQ.Tree[identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q))])
 ```
 """
 deconstruct(p) = nodevalue(p), children(p)

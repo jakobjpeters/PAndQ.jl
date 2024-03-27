@@ -342,6 +342,11 @@ _show(f, g, io, ps) = parenthesize(io) do
 end
 
 """
+    show(::IO, ::Operator)
+"""
+show(io::IO, o::Operator) = print(io, name(o))
+
+"""
     show(::IO, p)
 
 Print the proposition verbosely.
@@ -361,7 +366,7 @@ function show(io::IO, p::Atom)
     print(io, ")")
 end
 function show(io::IO, p::Tree)
-    print(io, name(nodevalue(p)), "(")
+    print(io, nodevalue(p), "(")
     _show(io -> print(io, ", "), show, io, children(p))
     print(io, ")")
 end
