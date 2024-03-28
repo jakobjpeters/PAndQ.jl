@@ -3,10 +3,21 @@ using Base: get_extension
 using Documenter: DocMeta.setdocmeta!, HTML, deploydocs, makedocs
 using Latexify
 using PAndQ
-using PAndQ: PicoSAT
+using PAndQ: Z3, PicoSAT
+using Plots: bar, savefig
+
+include(joinpath("..", "benchmarks", "benchmarks.jl"))
+
+using .Benchmarks: benchmark, packages
 
 const directory = joinpath(@__DIR__, "src", "assets")
 const logo = joinpath(directory, "logo.svg")
+const modules = [PAndQ, Interface, Z3, PicoSAT]
+
+mkpath(directory)
+
+benchmark(joinpath(directory, "benchmarks.svg"))
+
 if !ispath(logo)
     using Luxor: readsvg, Drawing, placeimage, fontface, fontsize, text, Point, finish
 
@@ -17,14 +28,13 @@ if !ispath(logo)
     License
     https://github.com/JuliaLang/julia-logo-graphics/blob/master/LICENSE.md
 
-    Modifications
+    Modifications:
     `P ∧ Q` overlay
     =#
     const julia_dots = readsvg(download(
         "https://raw.githubusercontent.com/JuliaLang/julia-logo-graphics/b5551ca7946b4a25746c045c15fbb8806610f8d0/images/julia-dots.svg"
     ))
 
-    mkpath(directory)
     Drawing(julia_dots.width, julia_dots.height, :svg, logo)
     placeimage(julia_dots)
 
@@ -39,8 +49,6 @@ if !ispath(logo)
 
     finish()
 end
-
-const modules = [PicoSAT, Interface, PAndQ]
 
 setdocmeta!(PAndQ, :DocTestSetup, :(using PAndQ); recursive = true)
 
@@ -62,7 +70,8 @@ makedocs(;
             name -> titlecase(name) => "manual/" * name * ".md",
             ["operators", "propositions", "semantics", "printing", "extensions", "interface", "internals"]
         ),
-    ],
+        "Benchmarks" => "benchmarks.md"
+    ]
 )
 
 deploydocs(

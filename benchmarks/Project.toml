@@ -1,12 +1,11 @@
+name = "Benchmarks"
+
 [deps]
-AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 Julog = "5d8bcb5e-2b2c-4a96-a2b1-d40b3d3c344f"
-Latexify = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-Luxor = "ae8d54c2-7ccd-5906-9d76-62fc9837b5bc"
+PAndQ = "0e9bd771-5675-474a-ac7f-e6301f653425"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
 SimpleSudoku = "8f8cde19-4581-4697-bfbd-917306c72405"

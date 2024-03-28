@@ -36,7 +36,7 @@ A proposition composed from connecting [`Atom`](@ref)s
 with one or more [`Operator`](@ref)s.
 
 Subtype of [`Proposition`](@ref).
-Supertype of [`Tree`](@ref)1.
+Supertype of [`AbstractSyntaxTree`](@ref).
 """
 abstract type Compound <: Proposition end
 

@@ -5,13 +5,28 @@
 PAndQ.union_typeof
 ```
 
-## PicoSAT
+## Solvers
+
+### Z3
+
+```@docs
+PAndQ.Z3
+PAndQ.Z3.Library
+PAndQ.Z3.add_clause
+PAndQ.Z3.Solutions
+PAndQ.Z3.IteratorSize(::Type{PAndQ.Z3.Solutions})
+PAndQ.Z3.eltype(::Type{PAndQ.Z3.Solutions})
+PAndQ.Z3.isdone(::PAndQ.Z3.Solutions)
+PAndQ.Z3.iterate(::PAndQ.Z3.Solutions, ::Any)
+```
+
+### PicoSAT
 
 ```@docs
 PAndQ.PicoSAT
 ```
 
-### libpicosat
+#### Library
 
 ```@docs
 PAndQ.PicoSAT.picosat_init
@@ -24,16 +39,16 @@ PAndQ.PicoSAT.picosat_sat
 PAndQ.PicoSAT.picosat_deref
 ```
 
-### Utilities
+#### Utilities
 
 ```@docs
 PAndQ.PicoSAT.add_clause
 PAndQ.PicoSAT.initialize
 PAndQ.PicoSAT.Solutions
-PAndQ.PicoSAT.eltype
-PAndQ.PicoSAT.IteratorSize
-PAndQ.PicoSAT.isdone
-PAndQ.PicoSAT.iterate
+PAndQ.PicoSAT.eltype(::Type{PAndQ.PicoSAT.Solutions})
+PAndQ.PicoSAT.IteratorSize(::Type{PAndQ.PicoSAT.Solutions})
+PAndQ.PicoSAT.isdone(::PAndQ.PicoSAT.Solutions)
+PAndQ.PicoSAT.iterate(::PAndQ.PicoSAT.Solutions, ::Any)
 PAndQ.PicoSAT.print_dimacs
 ```
 
@@ -103,6 +118,8 @@ PAndQ.child
 PAndQ.load_or_error
 PAndQ.atomize
 PAndQ.distribute
+PAndQ.prune
+PAndQ.reconstruct
 ```
 
 ## Printing

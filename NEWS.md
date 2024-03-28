@@ -10,3 +10,4 @@
 - Implemented a Z3 backend solver.
 - Implemented two-parameter `show` for `Operator`
 - Stop parenthesizing sequential commutative operators
+- Implemented benchmarks
