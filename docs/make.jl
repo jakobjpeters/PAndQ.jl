@@ -6,7 +6,7 @@ using PAndQ
 using PAndQ: Z3, PicoSAT
 using Plots: bar, savefig
 
-include(joinpath("..", "benchmarks", "benchmarks.jl"))
+include(joinpath("..", "benchmarks", "Benchmarks.jl"))
 
 using .Benchmarks: benchmark, packages
 

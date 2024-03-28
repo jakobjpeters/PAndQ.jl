@@ -15,8 +15,8 @@ julia> using Latexify
 julia> @atomize latexify(p ∧ q)
 L"$p \wedge q$"
 
-julia> @atomize print_table(p ∧ q; backend = Val(:latex))
-\begin{tabular}{|l|l|l|}
+julia> @atomize latexify(TruthTable([p ∧ q]))
+L"\begin{tabular}{|l|l|l|}
   \hline
   \textbf{$p$} & \textbf{$q$} & \textbf{$p \wedge q$} \\\hline
   $\top$ & $\top$ & $\top$ \\
@@ -24,6 +24,7 @@ julia> @atomize print_table(p ∧ q; backend = Val(:latex))
   $\top$ & $\bot$ & $\bot$ \\
   $\bot$ & $\bot$ & $\bot$ \\\hline
 \end{tabular}
+"
 ```
 
 ```@docs
