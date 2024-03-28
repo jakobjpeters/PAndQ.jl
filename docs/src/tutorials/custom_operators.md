@@ -127,7 +127,7 @@ Associativity(::typeof(-->)) = Left;
 This error says to implement [`initial_value`](@ref Interface.initial_value). This function is used to determine the `init` parameter when [`fold`](@ref)ing.
 
 ```@repl 1
-initial_value(::typeof(-->)) = Some(⊤);
+initial_value(::typeof(-->)) = ⊤;
 @atomize fold(𝒾, (-->) => ())
 @atomize fold(𝒾, (-->) => (p, q, r))
 ```

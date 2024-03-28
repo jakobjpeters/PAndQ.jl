@@ -129,8 +129,7 @@ abstract type Associativity end
 
 Specify a neutral value, `v`, of a binary [`Operator`](@ref Interface.Operator) such that `ℴ(v, p) == p`.
 
-To distinguish between an initial value and the absense thereof,
-return `Some(v)` or `nothing`, respectively.
+If there is no such neutral value, return `nothing`.
 
 This method is required for calling [`fold`](@ref) over the operator.
 
@@ -139,10 +138,10 @@ See also [`==`](@ref).
 # Examples
 ```jldoctest
 julia> Interface.initial_value(∧)
-Some(tautology)
+⊤
 
 julia> Interface.initial_value(∨)
-Some(contradiction)
+⊥
 
 julia> Interface.initial_value(↑)
 ```

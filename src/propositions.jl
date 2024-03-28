@@ -270,7 +270,7 @@ atomize(x) =
     end
 
 function _distribute(f, ao, stack)
-    p = AbstractSyntaxTree(something(initial_value(ao)))
+    p = AbstractSyntaxTree(initial_value(ao))
 
     while !isempty(stack)
         q = pop!(stack)

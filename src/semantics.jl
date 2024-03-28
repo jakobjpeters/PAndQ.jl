@@ -418,8 +418,8 @@ arity(::NullaryOperator) = 0
 arity(::UnaryOperator) = 1
 arity(::BinaryOperator) = 2
 
-initial_value(::union_typeof((∧, ↔, →, ←))) = Some(⊤)
-initial_value(::union_typeof((∨, ↮, ↚, ↛))) = Some(⊥)
+initial_value(::union_typeof((∧, ↔, →, ←))) = ⊤
+initial_value(::union_typeof((∨, ↮, ↚, ↛))) = ⊥
 initial_value(::union_typeof((↑, ↓))) = nothing
 
 for o in (:⊤, :⊥, :𝒾, :¬, :∧, :↑, :↓, :∨, :↮, :↔, :→, :↛, :←, :↚, :⋀, :⋁)
