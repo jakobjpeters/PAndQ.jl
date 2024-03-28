@@ -84,8 +84,8 @@ struct Variable <: Atom
 end
 
 """
-    Tree <: Compound
-    Tree(::Operator, ::Union{Atom, Tree})
+    AbstractSyntaxTree <: Compound
+    AbstractSyntaxTree(::Operator, ::Union{Atom, AbstractSyntaxTree})
 
 A [`Proposition`](@ref) represented by an [abstract syntax tree]
 (https://en.wikipedia.org/wiki/Abstract_syntax_tree).
@@ -95,33 +95,33 @@ See also [`Operator`](@ref) and [`Atom`](@ref).
 
 # Examples
 ```jldoctest
-julia> PAndQ.Tree(⊤)
+julia> PAndQ.AbstractSyntaxTree(⊤)
 ⊤
 
-julia> @atomize PAndQ.Tree(¬, [p])
+julia> @atomize PAndQ.AbstractSyntaxTree(¬, [p])
 ¬p
 
-julia> @atomize PAndQ.Tree(and, [PAndQ.Tree(p), PAndQ.Tree(q)])
+julia> @atomize PAndQ.AbstractSyntaxTree(and, [PAndQ.AbstractSyntaxTree(p), PAndQ.AbstractSyntaxTree(q)])
 p ∧ q
 ```
 """
-struct Tree <: Compound
+struct AbstractSyntaxTree <: Compound
     operator::Operator
-    propositions::Vector{<:Union{Atom, Tree}}
+    propositions::Vector{<:Union{Atom, AbstractSyntaxTree}}
 
-    Tree(o, ps::Vector{<:Union{Atom, Tree}}) = new(o, ps)
+    AbstractSyntaxTree(o, ps::Vector{<:Union{Atom, AbstractSyntaxTree}}) = new(o, ps)
 end
 
-Tree(o, ps) = Tree(o, map(Tree, ps))
+AbstractSyntaxTree(o, ps) = AbstractSyntaxTree(o, map(AbstractSyntaxTree, ps))
 
 ## AbstractTrees.jl
 
 """
-    children(::Tree)
+    children(::AbstractSyntaxTree)
 
 Return an iterator over the child nodes of the given proposition.
 
-See also [`Tree`](@ref).
+See also [`AbstractSyntaxTree`](@ref).
 
 # Examples
 ```jldoctest
@@ -133,19 +133,19 @@ julia> @atomize PAndQ.children(¬p)
  p
 
 julia> @atomize PAndQ.children(p ∧ q)
-2-element Vector{PAndQ.Tree}:
+2-element Vector{PAndQ.AbstractSyntaxTree}:
  p
  q
 ```
 """
-children(p::Tree) = p.propositions
+children(p::AbstractSyntaxTree) = p.propositions
 
 """
-    nodevalue(::Tree)
+    nodevalue(::AbstractSyntaxTree)
 
 Return the [`Operator`](@ref Interface.Operator) of the proposition's root node.
 
-See also [`Tree`](@ref).
+See also [`AbstractSyntaxTree`](@ref).
 
 # Examples
 ```jldoctest
@@ -156,7 +156,7 @@ julia> @atomize PAndQ.nodevalue(p ∧ q)
 ∧
 ```
 """
-nodevalue(p::Tree) = p.operator
+nodevalue(p::AbstractSyntaxTree) = p.operator
 
 """
     printnode(::IO, ::Union{Operator, Proposition}; kwargs...)
@@ -220,7 +220,7 @@ julia> @atomize PAndQ.deconstruct(¬p)
 (not, PAndQ.Variable[PAndQ.Variable(:p)])
 
 julia> @atomize PAndQ.deconstruct(p ∧ q)
-(and, PAndQ.Tree[identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q))])
+(and, PAndQ.AbstractSyntaxTree[identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q))])
 ```
 """
 deconstruct(p) = nodevalue(p), children(p)
@@ -270,13 +270,13 @@ atomize(x) =
     end
 
 function _distribute(f, ao, stack)
-    p = Tree(something(initial_value(ao)))
+    p = AbstractSyntaxTree(something(initial_value(ao)))
 
     while !isempty(stack)
         q = pop!(stack)
         o, rs = deconstruct(q)
 
-        if o isa NullaryOperator return Tree(o)
+        if o isa NullaryOperator return AbstractSyntaxTree(o)
         elseif o isa UnaryOperator p = _evaluate(ao, p, q)
         elseif o == ao append!(stack, rs)
         else p = f(p, rs, stack)
@@ -291,12 +291,12 @@ end
 
 Given a proposition in negation normal form, return that proposition in conjunction normal form.
 """
-distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(∧, [q, _distribute(∨, map(Tree, rs)) do s, ts, disjuncts
+distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(∧, [q, _distribute(∨, map(AbstractSyntaxTree, rs)) do s, ts, disjuncts
     u = evaluate(∨, [s, fold(identity, (∨) => disjuncts)])
     empty!(disjuncts)
     append!(conjuncts, map(t -> t ∨ u, ts))
-    Tree(⊤)
-end]), ∧, Tree[normalize(¬, p)])
+    AbstractSyntaxTree(⊤)
+end]), ∧, AbstractSyntaxTree[normalize(¬, p)])
 
 function flatten(clauses)
     _clauses, atoms, mapping = Set{Set{Int}}(), Atom[], Dict{Atom, Int}()
@@ -323,7 +323,7 @@ end
     prune(p, atoms = Atom[], mapping = Dict{Atom, Int}())
 """
 function prune(p, atoms = Atom[], mapping = Dict{Atom, Int}())
-    clauses, qs, stack = Set{Set{Int}}(), Tree[], Tree[p]
+    clauses, qs, stack = Set{Set{Int}}(), AbstractSyntaxTree[], AbstractSyntaxTree[p]
 
     while !isempty(stack)
         r = pop!(stack)
@@ -336,7 +336,7 @@ function prune(p, atoms = Atom[], mapping = Dict{Atom, Int}())
             break
         elseif o == (∧) append!(stack, children(r))
         elseif o isa Union{UnaryOperator, typeof(∨)}
-            clause, _stack = Set{Int}(), Tree[r]
+            clause, _stack = Set{Int}(), AbstractSyntaxTree[r]
 
             while !isempty(_stack)
                 s = pop!(_stack)
@@ -512,7 +512,7 @@ julia> @atomize map(atom -> \$(something(value(atom)) + 1), \$1 ∧ \$2)
 ```
 """
 map(f, p::Atom) = f(p)
-map(f, p::Union{NullaryOperator, Tree}) =
+map(f, p::Union{NullaryOperator, AbstractSyntaxTree}) =
     evaluation(nodevalue(p), map(child -> map(f, child), children(p)))
 
 """
@@ -615,7 +615,7 @@ julia> @atomize normalize(∨, p ↔ q)
 ```
 """
 function normalize(::typeof(¬), p)
-    operator_stack, input_stack, output_stack = Pair{Int, Operator}[], Tree[p], Tree[]
+    operator_stack, input_stack, output_stack = Pair{Int, Operator}[], AbstractSyntaxTree[p], AbstractSyntaxTree[]
 
     while !isempty(input_stack)
         q = pop!(input_stack)
@@ -671,7 +671,7 @@ __tseytin(p) = (p isa Atom || (nodevalue(p) == 𝒾 && child(p) isa Atom)) ? p :
 
 function _tseytin(p)
     clauses, atoms, mapping, qs = prune(p)
-    stack = NTuple{2, Tree}[]
+    stack = NTuple{2, AbstractSyntaxTree}[]
     x = ⊤
 
     for q in qs
@@ -685,7 +685,7 @@ function _tseytin(p)
             o, ss = deconstruct(r)
             substitutions = map(__tseytin, ss)
             append!(stack, Iterators.filter(((s, substitution),) -> !(s isa Atom), zip(ss, substitutions)))
-            (o == 𝒾 && only(ss) isa Atom) || tseytin!(clauses, atoms, mapping, substitution ↔ Tree(o, substitutions))
+            (o == 𝒾 && only(ss) isa Atom) || tseytin!(clauses, atoms, mapping, substitution ↔ AbstractSyntaxTree(o, substitutions))
         end
     end
 

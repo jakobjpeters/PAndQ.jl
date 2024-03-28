@@ -53,7 +53,7 @@ struct TruthTable
     body::Matrix{Bool}
 
     function TruthTable(@nospecialize ps)
-        ps = collect(Tree, ps)
+        ps = collect(AbstractSyntaxTree, ps)
         _atoms = unique(flatmap(atoms, ps))
         ps = union(_atoms, ps)
         _valuations = vec(collect(valuations(_atoms)))
@@ -210,7 +210,7 @@ julia> @atomize print_table(p ∧ q)
 print_table(io::IO, t::TruthTable; backend = Val(:text), alignment = :l, kwargs...) =
     _print_table(backend, io, t; alignment, kwargs...)
 print_table(io::IO, ps; kwargs...) = print_table(io, TruthTable(ps); kwargs...)
-print_table(io::IO, @nospecialize(ps::Union{Operator, Proposition}...); kwargs...) = print_table(io, collect(Tree, ps); kwargs...)
+print_table(io::IO, @nospecialize(ps::Union{Operator, Proposition}...); kwargs...) = print_table(io, collect(AbstractSyntaxTree, ps); kwargs...)
 print_table(@nospecialize(xs...); kwargs...) = print_table(stdout, xs...; kwargs...)
 
 """
@@ -374,7 +374,7 @@ function show(io::IO, p::Atom)
     show(io, getfield(p, 1))
     print(io, ")")
 end
-function show(io::IO, p::Tree)
+function show(io::IO, p::AbstractSyntaxTree)
     print(io, nodevalue(p), "(")
     _show(io -> print(io, ", "), show, io, children(p))
     print(io, ")")

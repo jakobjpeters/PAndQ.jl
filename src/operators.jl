@@ -377,7 +377,7 @@ ____fold(::Right) = mapfoldr
 
 ___fold(mapfold, f, o, xs, ::Nothing) = mapfold(f, o, xs)
 ___fold(mapfold, f, o, xs, initial_value::Some) =
-    isempty(xs) ? Tree(something(initial_value)) : mapfold(f, o, xs)
+    isempty(xs) ? AbstractSyntaxTree(something(initial_value)) : mapfold(f, o, xs)
 
 __fold(f, o, xs) = g -> (args...) -> ___fold(
     ____fold(Associativity(o)()), x -> f(g)(args..., x),

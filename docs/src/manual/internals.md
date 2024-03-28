@@ -82,7 +82,7 @@ PAndQ.Compound
 ```@docs
 PAndQ.Constant
 PAndQ.Variable
-PAndQ.Tree
+PAndQ.AbstractSyntaxTree
 ```
 
 ### AbstractTrees.jl

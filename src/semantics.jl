@@ -377,7 +377,7 @@ Bool(o::NullaryOperator) = convert(Bool, o)
 # Constructors
 
 Atom(p) = convert(Atom, p)
-Tree(p) = convert(Tree, p)
+AbstractSyntaxTree(p) = convert(AbstractSyntaxTree, p)
 
 # Utilities
 
@@ -389,17 +389,17 @@ convert(::Type{Bool}, ::typeof(⊥)) = false
 
 See also [`Proposition`](@ref).
 """
-convert(::Type{Tree}, p::NullaryOperator) = Tree(p, Union{}[])
-convert(::Type{Tree}, p::Atom) = Tree(𝒾, [p])
-convert(::Type{Proposition}, p::NullaryOperator) = Tree(p)
+convert(::Type{AbstractSyntaxTree}, p::NullaryOperator) = AbstractSyntaxTree(p, Union{}[])
+convert(::Type{AbstractSyntaxTree}, p::Atom) = AbstractSyntaxTree(𝒾, [p])
+convert(::Type{Proposition}, p::NullaryOperator) = AbstractSyntaxTree(p)
 
 """
     promote_rule
 """
 promote_rule(::Type{Bool}, ::Type{<:NullaryOperator}) = Bool
 promote_rule(::Type{<:Atom}, ::Type{<:Atom}) = Atom
-promote_rule(::Type{NullaryOperator}, ::Type{Proposition}) = Tree
-promote_rule(::Type{Proposition}, ::Type{Proposition}) = Tree
+promote_rule(::Type{NullaryOperator}, ::Type{Proposition}) = AbstractSyntaxTree
+promote_rule(::Type{Proposition}, ::Type{Proposition}) = AbstractSyntaxTree
 
 # Interface Implementation
 
@@ -449,16 +449,16 @@ is_associative(::union_typeof((∧, ∨, ↮, ↔))) = true
 is_associative(::union_typeof((↑, ↓, →, ↛, ←, ↚))) = false
 
 evaluate_not(::typeof(¬), ps) = only(ps)
-evaluate_not(o, ps) = Tree(dual(o), map(¬, ps))
+evaluate_not(o, ps) = AbstractSyntaxTree(dual(o), map(¬, ps))
 
 ____evaluate_and_or(ao, o::NullaryOperator, ps, q) = _evaluate(ao, o, q)
-____evaluate_and_or(ao, o, ps, q) = ao(q, Tree(o, ps))
+____evaluate_and_or(ao, o, ps, q) = ao(q, AbstractSyntaxTree(o, ps))
 
 ___evaluate_and_or(ao, p::Atom, q) = ao(q, p)
 ___evaluate_and_or(ao, p, q) = ____evaluate_and_or(ao, deconstruct(p)..., q)
 
 __evaluate_and_or(ao, o::NullaryOperator, ps, q) = _evaluate(ao, o, q)
-__evaluate_and_or(ao, o, ps, q) = ___evaluate_and_or(ao, q, Tree(o, ps))
+__evaluate_and_or(ao, o, ps, q) = ___evaluate_and_or(ao, q, AbstractSyntaxTree(o, ps))
 
 _evaluate_and_or(ao, p::Atom, q) = ___evaluate_and_or(ao, q, p)
 _evaluate_and_or(ao, p, q) = __evaluate_and_or(ao, deconstruct(p)..., q)
@@ -474,7 +474,7 @@ _evaluate(::typeof(𝒾), p) = p
 _evaluate(::typeof(¬), p::Bool) = !p
 _evaluate(::typeof(¬), p::NullaryOperator) = dual(p)
 _evaluate(::typeof(¬), p::Atom) = ¬p
-_evaluate(::typeof(¬), p::Tree) = evaluate_not(nodevalue(p), children(p))
+_evaluate(::typeof(¬), p::AbstractSyntaxTree) = evaluate_not(nodevalue(p), children(p))
 _evaluate(::typeof(∧), p::Bool, q::Bool) = p && q
 _evaluate(::typeof(∨), p::Bool, q::Bool) = p || q
 _evaluate(o::AndOr, p, q) = evaluate_and_or(o, p, q)
@@ -505,15 +505,15 @@ ___evaluation(::Eager, o, ps) = evaluate(o, ps)
 ___evaluation(::Lazy, o, ps) = _evaluation(o, ps)
 
 __evaluation(::typeof(𝒾), ps) = ¬only(ps)
-__evaluation(o, ps) = Tree(¬, [Tree(o, ps)])
+__evaluation(o, ps) = AbstractSyntaxTree(¬, [AbstractSyntaxTree(o, ps)])
 
-function _evaluation(::typeof(¬), ps::Vector{Tree})
+function _evaluation(::typeof(¬), ps::Vector{AbstractSyntaxTree})
     q = only(ps)
     __evaluation(nodevalue(q), children(q))
 end
-_evaluation(o::UnaryOperator, ps::Vector{<:Atom}) = Tree(o, [only(ps)])
-_evaluation(o, ps::Vector{Tree}) = Tree(o, ps)
-_evaluation(o, ps) = _evaluation(o, map(Tree, ps))
+_evaluation(o::UnaryOperator, ps::Vector{<:Atom}) = AbstractSyntaxTree(o, [only(ps)])
+_evaluation(o, ps::Vector{AbstractSyntaxTree}) = AbstractSyntaxTree(o, ps)
+_evaluation(o, ps) = _evaluation(o, map(AbstractSyntaxTree, ps))
 
 Evaluation(::Union{NullaryOperator, typeof(𝒾), NaryOperator}) = Eager
 Evaluation(::Union{typeof(¬), BinaryOperator}) = Lazy
@@ -536,7 +536,7 @@ function _print_expression(io, ::typeof(¬), p)
     print_proposition(io, p)
 end
 function _print_expression(io, o::BinaryOperator, p, q)
-    rs, stack = Tree[], Tree[]
+    rs, stack = AbstractSyntaxTree[], AbstractSyntaxTree[]
 
     if is_associative(o)
         push!(stack, q, p)
@@ -561,6 +561,6 @@ function _print_proposition(io, p::Constant)
     print(io, ")")
 end
 _print_proposition(io, p::Variable) = print(io, p.symbol)
-_print_proposition(io, p::Tree) = print_expression(io, nodevalue(p), children(p))
+_print_proposition(io, p::AbstractSyntaxTree) = print_expression(io, nodevalue(p), children(p))
 
 print_proposition(io, p) = _print_proposition(IOContext(io, :root => false), p)
