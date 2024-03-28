@@ -298,27 +298,6 @@ distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(∧, [q, _distribute(
     AbstractSyntaxTree(⊤)
 end]), ∧, AbstractSyntaxTree[normalize(¬, p)])
 
-function flatten(clauses)
-    _clauses, atoms, mapping = Set{Set{Int}}(), Atom[], Dict{Atom, Int}()
-
-    for clause in clauses
-        _clause = Set{Int}()
-
-        for literal in clause
-            o = nodevalue(literal)
-            atom = child(literal)
-            push!(_clause, (o == 𝒾 ? 1 : -1) * get!(mapping, atom) do
-                push!(atoms, atom)
-                length(mapping) + 1
-            end)
-        end
-
-        push!(_clauses, _clause)
-    end
-
-    _clauses, atoms
-end
-
 """
     prune(p, atoms = Atom[], mapping = Dict{Atom, Int}())
 """
