@@ -105,8 +105,8 @@ See also [`interpret`](@ref) and [`tautology`](@ref).
 ```jldoctest
 julia> @atomize solutions(p ∧ q)[1]
 2-element Vector{PAndQ.Atom}:
- p
  q
+ p
 
 julia> @atomize collect(only(solutions(p ∧ q)[2]))
 2-element Vector{Bool}:
@@ -114,13 +114,9 @@ julia> @atomize collect(only(solutions(p ∧ q)[2]))
  1
 ```
 """
-function solutions(p::Normal{typeof(∧)}; solver = Z3)
-    atoms = p.atoms
-    atoms, solver.Solutions(p.clauses, length(atoms))
-end
 function solutions(p; solver = Z3)
-    q, rs = flatten(p)
-    atoms, valuations = solutions(q ∧ normalize(∧, fold(tseytin, (∧) => rs)); solver)
+    clauses, atoms = _tseytin(p)
+    valuations = solver.Solutions(clauses, length(atoms))
     _atoms, x = Atom[], Dict{Int, Int}()
 
     for (i, atom) in enumerate(atoms)
@@ -130,7 +126,8 @@ function solutions(p; solver = Z3)
         end
     end
 
-    _atoms, Iterators.map(valuation -> map(last, Iterators.filter(((atom, assignment),) -> get(x, atom, 0) != 0, enumerate(valuation))), valuations)
+    _atoms, Iterators.map(valuation -> map(last, Iterators.filter(
+        ((atom, assignment),) -> get(x, atom, 0) != 0, enumerate(valuation))), valuations)
 end
 
 # Predicates
@@ -382,8 +379,6 @@ Bool(o::NullaryOperator) = convert(Bool, o)
 Atom(p) = convert(Atom, p)
 Tree(p) = convert(Tree, p)
 
-Normal(::AO, p) where AO = convert(Normal{AO}, p)
-
 # Utilities
 
 convert(::Type{Bool}, ::typeof(⊤)) = true
@@ -396,10 +391,6 @@ See also [`Proposition`](@ref).
 """
 convert(::Type{Tree}, p::NullaryOperator) = Tree(p, Union{}[])
 convert(::Type{Tree}, p::Atom) = Tree(𝒾, [p])
-convert(::Type{Tree}, p::Union{Clause, Normal}) = normalize(¬, map(𝒾, p))
-convert(::Type{Normal{AO}}, p::Normal{AO}) where AO = p
-convert(::Type{Normal{AO}}, p::Union{NullaryOperator, Proposition}) where AO =
-    normalize(AO.instance, p)
 convert(::Type{Proposition}, p::NullaryOperator) = Tree(p)
 
 """
@@ -484,27 +475,8 @@ _evaluate(::typeof(¬), p::Bool) = !p
 _evaluate(::typeof(¬), p::NullaryOperator) = dual(p)
 _evaluate(::typeof(¬), p::Atom) = ¬p
 _evaluate(::typeof(¬), p::Tree) = evaluate_not(nodevalue(p), children(p))
-_evaluate(::typeof(¬), p::Normal) =
-    Normal(dual(nodevalue(p)), p.atoms, Set(Iterators.map(clause -> Set(Iterators.map(-, clause)), p.clauses)))
 _evaluate(::typeof(∧), p::Bool, q::Bool) = p && q
 _evaluate(::typeof(∨), p::Bool, q::Bool) = p || q
-function _evaluate(o::AO, p::Normal{AO}, q::Normal{AO}) where AO <: AndOr
-    p_atoms, q_atoms = p.atoms, q.atoms
-    atom_type = promote_type(eltype(p_atoms), eltype(q_atoms))
-    mapping = Dict{atom_type, Int}(Iterators.map(reverse, pairs(p_atoms)))
-    atoms = append!(atom_type[], p_atoms)
-
-    Normal(o, atoms, p.clauses ∪ Iterators.map(
-        clause -> Set(Iterators.map(clause) do literal
-            atom = q_atoms[abs(literal)]
-            sign(literal) * get!(mapping, atom) do
-                push!(atoms, atom)
-                lastindex(atoms)
-            end
-        end),
-    q.clauses))
-end
-_evaluate(o::AndOr, p::Normal, q::Normal) = o(Normal(o, p), Normal(o, q))
 _evaluate(o::AndOr, p, q) = evaluate_and_or(o, p, q)
 _evaluate(::typeof(→), p, q) = ¬p ∨ q
 _evaluate(::typeof(↮), p, q) = (p ∨ q) ∧ (p ↑ q)
@@ -546,7 +518,7 @@ _evaluation(o, ps) = _evaluation(o, map(Tree, ps))
 Evaluation(::Union{NullaryOperator, typeof(𝒾), NaryOperator}) = Eager
 Evaluation(::Union{typeof(¬), BinaryOperator}) = Lazy
 
-evaluation(o, ps::Vector{<:Union{Bool, Normal}}) = evaluate(o, ps)
+evaluation(o, ps::Vector{Bool}) = evaluate(o, ps)
 evaluation(o, ps) = ___evaluation(Evaluation(o)(), o, ps)
 
 (o::Operator)(ps...) = evaluation(o, [ps...])
@@ -590,9 +562,5 @@ function _print_proposition(io, p::Constant)
 end
 _print_proposition(io, p::Variable) = print(io, p.symbol)
 _print_proposition(io, p::Tree) = print_expression(io, nodevalue(p), children(p))
-function _print_proposition(io, p::Union{Clause, Normal})
-    o, qs = deconstruct(p)
-    isempty(qs) ? _print_expression(io, something(initial_value(o))) : __print_expression(io, o, qs)
-end
 
 print_proposition(io, p) = _print_proposition(IOContext(io, :root => false), p)

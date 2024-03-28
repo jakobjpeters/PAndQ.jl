@@ -235,10 +235,10 @@ julia> @atomize print_tree(p ∧ q ∨ ¬s)
 julia> @atomize print_tree(normalize(∧, p ∧ q ∨ ¬s))
 ∧
 ├─ ∨
-│  ├─ ¬
-│  │  └─ s
-│  └─ 𝒾
-│     └─ q
+│  ├─ 𝒾
+│  │  └─ q
+│  └─ ¬
+│     └─ s
 └─ ∨
    ├─ ¬
    │  └─ s
@@ -267,8 +267,17 @@ p cnf 2 2
 -1 2 0
 ```
 """
-print_dimacs(io, p::Normal{typeof(∧)}) = PicoSAT.print_dimacs(io, p.clauses, length(p.atoms))
-print_dimacs(io, p) = print_dimacs(io, normalize(∧, p))
+function print_dimacs(io, p)
+    clauses, atoms, mapping, qs = prune(p)
+
+    for q in qs
+        for clause in first(prune(distribute(q), atoms, mapping))
+            push!(clauses, clause)
+        end
+    end
+
+    PicoSAT.print_dimacs(io, clauses, length(atoms))
+end
 print_dimacs(p) = print_dimacs(stdout, p)
 
 # `show`

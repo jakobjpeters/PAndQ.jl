@@ -111,8 +111,8 @@ julia> collect(valuations(p ∧ q))
 
 julia> solutions(p ∧ q)[1]
 2-element Vector{PAndQ.Atom}:
- p
  q
+ p
 
 julia> collect(only(solutions(p ∧ q)[2]))
 2-element Vector{Bool}:

@@ -139,10 +139,10 @@ See also [`==`](@ref).
 # Examples
 ```jldoctest
 julia> Interface.initial_value(∧)
-Some(PAndQ.Interface.Operator{:tautology}())
+Some(tautology)
 
 julia> Interface.initial_value(∨)
-Some(PAndQ.Interface.Operator{:contradiction}())
+Some(contradiction)
 
 julia> Interface.initial_value(↑)
 ```

@@ -83,8 +83,6 @@ PAndQ.Compound
 PAndQ.Constant
 PAndQ.Variable
 PAndQ.Tree
-PAndQ.Clause
-PAndQ.Normal
 ```
 
 ### AbstractTrees.jl
