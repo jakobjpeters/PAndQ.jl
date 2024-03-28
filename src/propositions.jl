@@ -1,5 +1,5 @@
 
-import AbstractTrees: HasNodeType, NodeType, children, nodetype, nodevalue, printnode
+import AbstractTrees: children, nodevalue, printnode
 import Base: map
 using AbstractTrees: Leaves, PreOrderDFS, childtype, nodevalues
 using Base.Iterators: Stateful
@@ -8,6 +8,8 @@ using ReplMaker: complete_julia, initrepl
 
 ## Types
 
+const Atom = Union{Symbol, Some}
+
 ### Abstract
 
 """
@@ -15,83 +17,21 @@ using ReplMaker: complete_julia, initrepl
 
 A [proposition](https://en.wikipedia.org/wiki/Proposition).
 
-Supertype of [`Atom`](@ref) and [`Compound`](@ref).
-"""
-abstract type Proposition end
-
-"""
-    Atom <: Proposition
-
-A proposition with [no deeper propositional structure](https://en.wikipedia.org/wiki/Atomic_formula).
-
-Subtype of [`Proposition`](@ref).
-Supertype of [`Constant`](@ref) and [`Variable`](@ref).
-"""
-abstract type Atom <: Proposition end
-
-"""
-    Compound <: Proposition
-
-A proposition composed from connecting [`Atom`](@ref)s
-with one or more [`Operator`](@ref)s.
-
-Subtype of [`Proposition`](@ref).
 Supertype of [`AbstractSyntaxTree`](@ref).
 """
-abstract type Compound <: Proposition end
+abstract type Proposition end
 
 ### Concrete
 
 """
-    Constant <: Atom
-    Constant(value)
+    AbstractSyntaxTree <: Proposition
+    AbstractSyntaxTree(::Operator, ::AbstractSyntaxTree)
 
-An [atomic sentence](https://en.wikipedia.org/wiki/Atomic_sentence).
-
-Subtype of [`Atom`](@ref).
-
-# Examples
-```jldoctest
-julia> PAndQ.Constant(1)
-\$(1)
-
-julia> PAndQ.Constant("Logic is fun")
-\$("Logic is fun")
-```
-"""
-struct Constant <: Atom
-    value
-end
-
-"""
-    Variable <: Atom
-
-An [atomic formula](https://en.wikipedia.org/wiki/Atomic_formula).
-
-Subtype of [`Atom`](@ref).
-
-# Examples
-```jldoctest
-julia> PAndQ.Variable(:p)
-p
-
-julia> PAndQ.Variable(:q)
-q
-```
-"""
-struct Variable <: Atom
-    symbol::Symbol
-end
-
-"""
-    AbstractSyntaxTree <: Compound
-    AbstractSyntaxTree(::Operator, ::Union{Atom, AbstractSyntaxTree})
-
-A [`Proposition`](@ref) represented by an [abstract syntax tree]
+A proposition represented by an [abstract syntax tree]
 (https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 
-Subtype of [`Compound`](@ref).
-See also [`Operator`](@ref) and [`Atom`](@ref).
+Subtype of [`Proposition`](@ref).
+See also [`Operator`](@ref).
 
 # Examples
 ```jldoctest
@@ -105,7 +45,7 @@ julia> @atomize PAndQ.AbstractSyntaxTree(and, [PAndQ.AbstractSyntaxTree(p), PAnd
 p ∧ q
 ```
 """
-struct AbstractSyntaxTree <: Compound
+struct AbstractSyntaxTree <: Proposition
     operator::Operator
     propositions::Vector{<:Union{Atom, AbstractSyntaxTree}}
 
@@ -125,12 +65,9 @@ See also [`AbstractSyntaxTree`](@ref).
 
 # Examples
 ```jldoctest
-julia> @atomize PAndQ.children(p)
-()
-
 julia> @atomize PAndQ.children(¬p)
-1-element Vector{PAndQ.Variable}:
- p
+1-element Vector{Symbol}:
+ :p
 
 julia> @atomize PAndQ.children(p ∧ q)
 2-element Vector{PAndQ.AbstractSyntaxTree}:
@@ -168,7 +105,7 @@ See also [`Operator`](@ref Interface.Operator) and [`Proposition`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize PAndQ.printnode(stdout, p)
-p
+𝒾
 julia> @atomize PAndQ.printnode(stdout, ¬p)
 ¬
 julia> @atomize PAndQ.printnode(stdout, p ∧ q)
@@ -176,31 +113,6 @@ julia> @atomize PAndQ.printnode(stdout, p ∧ q)
 ```
 """
 printnode(io::IO, p::Union{Operator, Proposition}) = show(io, "text/plain", nodevalue(p))
-
-"""
-    NodeType(::Type{<:Atom})
-
-See also [`Atom`](@ref).
-
-# Examples
-```jldoctest
-julia> PAndQ.NodeType(PAndQ.Atom)
-AbstractTrees.HasNodeType()
-```
-"""
-NodeType(::Type{<:Atom}) = HasNodeType()
-
-"""
-    nodetype(::Type{<:Atom})
-
-See also [`Atom`](@ref).
-
-```jldoctest
-julia> PAndQ.nodetype(PAndQ.Atom)
-PAndQ.Atom
-```
-"""
-nodetype(::Type{A}) where A <: Atom = A
 
 ## Utilities
 
@@ -214,13 +126,13 @@ See also [`nodevalue`](@ref) and [`children`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize PAndQ.deconstruct(p)
-(PAndQ.Variable(:p), ())
+(identical, [:p])
 
 julia> @atomize PAndQ.deconstruct(¬p)
-(not, PAndQ.Variable[PAndQ.Variable(:p)])
+(not, [:p])
 
 julia> @atomize PAndQ.deconstruct(p ∧ q)
-(and, PAndQ.AbstractSyntaxTree[identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q))])
+(and, PAndQ.AbstractSyntaxTree[identical(PAndQ.Proposition(:p)), identical(PAndQ.Proposition(:q))])
 ```
 """
 deconstruct(p) = nodevalue(p), children(p)
@@ -245,16 +157,16 @@ load_or_error(x) = :((@isdefined PAndQ) ? $x : error("`PAndQ` must be loaded"))
     atomize(x)
 
 If `x` is a symbol, return an expression that instantiates it as a
-[`Variable`](@ref) if it is undefined in the caller's scope.
-If `isexpr(x, :\$)`, return an expression that instantiates it as a [`Constant`](@ref).
+variable if it is undefined in the caller's scope.
+If `isexpr(x, :\$)`, return an expression that instantiates it as a constant.
 If `x` is a different expression, traverse it with recursive calls to `atomize`.
 Otherise, return x.
 """
 atomize(x) =
-    if x isa Symbol; :((@isdefined $x) ? $x : $(Variable(x)))
+    if x isa Symbol; :((@isdefined $x) ? $x : $(AbstractSyntaxTree(x)))
     elseif x isa Expr
         if length(x.args) == 0 || (isexpr(x, :macrocall) && first(x.args) == Symbol("@atomize")) x
-        elseif isexpr(x, :$); load_or_error(:(PAndQ.Constant($(only(x.args)))))
+        elseif isexpr(x, :$); load_or_error(:(PAndQ.AbstractSyntaxTree(Some($(only(x.args))))))
         elseif isexpr(x, :kw) Expr(x.head, x.args[1], atomize(x.args[2]))
         elseif isexpr(x, (:struct, :where)) x # TODO
         else # TODO
@@ -299,7 +211,7 @@ distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(∧, [q, _distribute(
 end]), ∧, AbstractSyntaxTree[normalize(¬, p)])
 
 """
-    prune(p, atoms = Atom[], mapping = Dict{Atom, Int}())
+    prune(p, atoms = AbstractSyntaxTree[], mapping = Dict{Atom, Int}())
 """
 function prune(p, atoms = Atom[], mapping = Dict{Atom, Int}())
     clauses, qs, stack = Set{Set{Int}}(), AbstractSyntaxTree[], AbstractSyntaxTree[p]
@@ -354,8 +266,7 @@ end
     reconstruct(clauses, atoms)
 """
 reconstruct(clauses, atoms) = fold(clause -> fold(
-    literal -> (signbit(literal) ? (¬) : 𝒾)(atoms[abs(literal)]), (∨) => clause), (∧) => clauses)
-
+    literal -> (signbit(literal) ? (¬) : 𝒾)(AbstractSyntaxTree(atoms[abs(literal)])), (∨) => clause), (∧) => clauses)
 
 # Instantiation
 
@@ -399,7 +310,7 @@ Define variables and return a `Vector` containing them.
 Examples
 ```jldoctest
 julia> @variables p q
-2-element Vector{PAndQ.Variable}:
+2-element Vector{PAndQ.AbstractSyntaxTree}:
  p
  q
 
@@ -411,8 +322,8 @@ q
 ```
 """
 macro variables(ps...) esc(quote
-    $(map(p -> :($p = $(Variable(p))), ps)...)
-    $(load_or_error(:(PAndQ.Variable[$(ps...)])))
+    $(map(p -> :($p = $(AbstractSyntaxTree(p))), ps)...)
+    $(load_or_error(:(PAndQ.AbstractSyntaxTree[$(ps...)])))
 end) end
 
 """
@@ -425,17 +336,17 @@ See also [`identical`](@ref).
 # Examples
 ```jldoctest
 julia> constants(1:2)
-2-element Vector{PAndQ.Constant}:
+2-element Vector{PAndQ.AbstractSyntaxTree}:
  \$(1)
  \$(2)
 
 julia> constants(string, 1:2)
-2-element Vector{PAndQ.Constant}:
+2-element Vector{PAndQ.AbstractSyntaxTree}:
  \$("1")
  \$("2")
 ```
 """
-constants(f, xs) = map(Constant ∘ f, xs)
+constants(f, xs) = map(AbstractSyntaxTree ∘ Some ∘ f, xs)
 constants(xs) = constants(identity, xs)
 
 # Utility
@@ -471,7 +382,8 @@ function value(T, p)
     if isempty(_atoms) nothing
     else
         atom = first(_atoms)
-        atom isa Constant && atom == p ? Some(atom.value::T) : nothing
+        _atom = child(atom)
+        _atom isa Some && atom == p ? _atom : nothing
     end
 end
 value(p) = value(Any, p)
@@ -490,9 +402,10 @@ julia> @atomize map(atom -> \$(something(value(atom)) + 1), \$1 ∧ \$2)
 \$(2) ∧ \$(3)
 ```
 """
-map(f, p::Atom) = f(p)
 map(f, p::Union{NullaryOperator, AbstractSyntaxTree}) =
-    evaluation(nodevalue(p), map(child -> map(f, child), children(p)))
+    evaluation(nodevalue(p), map(q -> q isa Atom ? f(AbstractSyntaxTree(q)) : map(f, q), children(p)))
+
+_atoms(p) = Iterators.filter(leaf -> leaf isa Atom, Leaves(p))
 
 """
     atoms(p)
@@ -502,12 +415,12 @@ Return an iterator of each atomic proposition contained in `p`.
 # Examples
 ```jldoctest
 julia> @atomize collect(atoms(p ∧ q))
-2-element Vector{PAndQ.Variable}:
+2-element Vector{PAndQ.AbstractSyntaxTree}:
  p
  q
 ```
 """
-atoms(p) = Iterators.filter(leaf -> leaf isa Atom, Leaves(p))
+atoms(p) = Iterators.map(AbstractSyntaxTree, _atoms(p))
 
 """
     operators(p)
@@ -646,7 +559,7 @@ tseytin!(clauses, atoms, mapping, p) =
         push!(clauses, clause)
     end
 
-__tseytin(p) = (p isa Atom || (nodevalue(p) == 𝒾 && child(p) isa Atom)) ? p : Variable(gensym())
+__tseytin(p) = (p isa Atom || (nodevalue(p) == 𝒾 && child(p) isa Atom)) ? p : AbstractSyntaxTree(gensym())
 
 function _tseytin(p)
     clauses, atoms, mapping, qs = prune(p)

@@ -74,29 +74,8 @@ PAndQ.AndOr
 
 ### Types
 
-```@example
-import AbstractTrees: children # hide
-using AbstractTrees: print_tree # hide
-using InteractiveUtils: subtypes # hide
-using PAndQ: Proposition # hide
-
-children(x::Type) = subtypes(x) # hide
-print_tree(Proposition) # hide
-```
-
-#### Abstract
-
 ```@docs
 PAndQ.Proposition
-PAndQ.Atom
-PAndQ.Compound
-```
-
-#### Concrete
-
-```@docs
-PAndQ.Constant
-PAndQ.Variable
 PAndQ.AbstractSyntaxTree
 ```
 
@@ -106,8 +85,6 @@ PAndQ.AbstractSyntaxTree
 PAndQ.children
 PAndQ.nodevalue
 PAndQ.printnode
-PAndQ.NodeType
-PAndQ.nodetype
 ```
 
 ### Utility

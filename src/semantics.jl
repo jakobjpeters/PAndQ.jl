@@ -19,14 +19,14 @@ julia> collect(valuations(⊤))
 []
 
 julia> @atomize collect(valuations(p))
-2-element Vector{Vector{Pair{PAndQ.Variable, Bool}}}:
- [PAndQ.Variable(:p) => 1]
- [PAndQ.Variable(:p) => 0]
+2-element Vector{Vector{Pair{PAndQ.AbstractSyntaxTree, Bool}}}:
+ [identical(PAndQ.Proposition(:p)) => 1]
+ [identical(PAndQ.Proposition(:p)) => 0]
 
 julia> @atomize collect(valuations(p ∧ q))
-2×2 Matrix{Vector{Pair{PAndQ.Variable, Bool}}}:
- [Variable(:p)=>1, Variable(:q)=>1]  [Variable(:p)=>1, Variable(:q)=>0]
- [Variable(:p)=>0, Variable(:q)=>1]  [Variable(:p)=>0, Variable(:q)=>0]
+2×2 Matrix{Vector{Pair{PAndQ.AbstractSyntaxTree, Bool}}}:
+ [identical(Proposition(:p))=>1, identical(Proposition(:q))=>1]  …  [identical(Proposition(:p))=>1, identical(Proposition(:q))=>0]
+ [identical(Proposition(:p))=>0, identical(Proposition(:q))=>1]     [identical(Proposition(:p))=>0, identical(Proposition(:q))=>0]
 ```
 """
 function valuations(atoms)
@@ -51,13 +51,13 @@ No substitution is performed if an atom is not one of the dictionary's keys.
 julia> @atomize interpret(atom -> ⊤, ¬p)
 ¬⊤
 
-julia> @atomize interpret(p => ⊤, p ∧ q)
+julia> @atomize interpret([p => ⊤], p ∧ q)
 ⊤ ∧ q
 ```
 """
 interpret(valuation::Function, p) = map(valuation, p)
-interpret(valuation::Dict, p) = interpret(a -> get(valuation, a, a), p)
-interpret(valuation, p) = interpret(Dict(valuation), p)
+interpret(valuation::Dict, p) = interpret(a -> get(valuation, child(a), a), p)
+interpret(valuation, p) = interpret(Dict(Iterators.map(((key, value),) -> child(key) => value, valuation)), p)
 
 """
     interpretations(valuations, p)
@@ -84,7 +84,7 @@ julia> @atomize collect(interpretations(p ∧ q))
 ```
 """
 interpretations(valuations, p) = Iterators.map(valuation -> interpret(valuation, p), valuations)
-interpretations(p) = Iterators.map(valuation -> Bool(interpret(a -> Dict(valuation)[a], normalize(¬, p))), valuations(p))
+interpretations(p) = Iterators.map(valuation -> Bool(interpret(valuation, normalize(¬, p))), valuations(p))
 
 """
     solutions(p; solver = Z3)
@@ -104,7 +104,7 @@ See also [`interpret`](@ref) and [`tautology`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize solutions(p ∧ q)[1]
-2-element Vector{PAndQ.Atom}:
+2-element Vector{PAndQ.AbstractSyntaxTree}:
  q
  p
 
@@ -120,13 +120,13 @@ function solutions(p; solver = Z3)
     _atoms, x = Atom[], Dict{Int, Int}()
 
     for (i, atom) in enumerate(atoms)
-        if atom isa Constant || !startswith(string(atom.symbol), "##")
+        if atom isa Some || !startswith(string(atom), "##")
             push!(_atoms, atom)
             x[i] = length(x) + 1
         end
     end
 
-    _atoms, Iterators.map(valuation -> map(last, Iterators.filter(
+    map(AbstractSyntaxTree, _atoms), Iterators.map(valuation -> map(last, Iterators.filter(
         ((atom, assignment),) -> get(x, atom, 0) != 0, enumerate(valuation))), valuations)
 end
 
@@ -151,7 +151,7 @@ true
 ```
 """
 is_tautology(::typeof(⊤)) = true
-is_tautology(::Union{typeof(⊥), Atom}) = false
+is_tautology(::typeof(⊥)) = false
 is_tautology(p) = is_contradiction(¬p)
 
 """
@@ -196,7 +196,6 @@ false
 ```
 """
 is_truth(::NullaryOperator) = true
-is_truth(::Atom) = false
 is_truth(p) = is_tautology(p) || is_contradiction(p)
 
 """
@@ -319,12 +318,9 @@ julia> @atomize p == ¬p
 false
 ```
 """
-p::Constant == q::Constant = p.value == q.value
-p::Variable == q::Variable = p === q
-p::Atom == q::Atom = false
-p::Bool == q::Union{NullaryOperator, Proposition} = (p ? is_tautology : is_contradiction)(q)
-p::NullaryOperator == q::Union{Bool, Proposition} = Bool(p) == q
-p::Proposition == q::Union{Bool, NullaryOperator} = q == p
+p::Proposition == ::typeof(⊤) = is_tautology(p)
+p::Proposition == ::typeof(⊥) = is_contradiction(p)
+p::NullaryOperator == q::Proposition = q == p
 p::Proposition == q::Proposition = is_contradiction(p ↮ q)
 
 """
@@ -350,9 +346,11 @@ julia> ⊤ < ⊥
 false
 ```
 """
-p::Bool < q::Union{NullaryOperator, Proposition} = p ? false : is_satisfiable(q)
-p::NullaryOperator < q::Union{Bool, NullaryOperator, Proposition} = Bool(p) < q
-p::Proposition < q::Union{Bool, NullaryOperator} = ¬q < ¬p
+::typeof(⊥) < ::typeof(⊤) = true
+::NullaryOperator < ::NullaryOperator = false
+p::Proposition < ::typeof(⊤) = is_falsifiable(p)
+p::Proposition < ::typeof(⊥) = is_satisfiable(p)
+p::NullaryOperator < q::Proposition = q < p
 p::Proposition < q::Proposition =
     is_contradiction(p) ? is_satisfiable(q) : is_falsifiable(p) && is_tautology(q)
 
@@ -376,7 +374,7 @@ Bool(o::NullaryOperator) = convert(Bool, o)
 
 # Constructors
 
-Atom(p) = convert(Atom, p)
+Proposition(p) = convert(Proposition, p)
 AbstractSyntaxTree(p) = convert(AbstractSyntaxTree, p)
 
 # Utilities
@@ -391,15 +389,13 @@ See also [`Proposition`](@ref).
 """
 convert(::Type{AbstractSyntaxTree}, p::NullaryOperator) = AbstractSyntaxTree(p, Union{}[])
 convert(::Type{AbstractSyntaxTree}, p::Atom) = AbstractSyntaxTree(𝒾, [p])
-convert(::Type{Proposition}, p::NullaryOperator) = AbstractSyntaxTree(p)
+convert(::Type{Proposition}, p) = AbstractSyntaxTree(p)
 
 """
     promote_rule
 """
 promote_rule(::Type{Bool}, ::Type{<:NullaryOperator}) = Bool
-promote_rule(::Type{<:Atom}, ::Type{<:Atom}) = Atom
 promote_rule(::Type{NullaryOperator}, ::Type{Proposition}) = AbstractSyntaxTree
-promote_rule(::Type{Proposition}, ::Type{Proposition}) = AbstractSyntaxTree
 
 # Interface Implementation
 
@@ -448,8 +444,8 @@ is_commutative(::union_typeof((→, ↛, ←, ↚))) = false
 is_associative(::union_typeof((∧, ∨, ↮, ↔))) = true
 is_associative(::union_typeof((↑, ↓, →, ↛, ←, ↚))) = false
 
-evaluate_not(::typeof(¬), ps) = only(ps)
-evaluate_not(o, ps) = AbstractSyntaxTree(dual(o), map(¬, ps))
+evaluate_not(::typeof(¬), ps) = AbstractSyntaxTree(only(ps))
+evaluate_not(o, ps) = AbstractSyntaxTree(dual(o), map((¬) ∘ AbstractSyntaxTree, ps))
 
 ____evaluate_and_or(ao, o::NullaryOperator, ps, q) = _evaluate(ao, o, q)
 ____evaluate_and_or(ao, o, ps, q) = ao(q, AbstractSyntaxTree(o, ps))
@@ -473,7 +469,6 @@ _evaluate(o::NullaryOperator) = o
 _evaluate(::typeof(𝒾), p) = p
 _evaluate(::typeof(¬), p::Bool) = !p
 _evaluate(::typeof(¬), p::NullaryOperator) = dual(p)
-_evaluate(::typeof(¬), p::Atom) = ¬p
 _evaluate(::typeof(¬), p::AbstractSyntaxTree) = evaluate_not(nodevalue(p), children(p))
 _evaluate(::typeof(∧), p::Bool, q::Bool) = p && q
 _evaluate(::typeof(∨), p::Bool, q::Bool) = p || q
@@ -504,14 +499,13 @@ evaluate(::typeof(⋁), ps) = fold(𝒾, (∨) => ps)
 ___evaluation(::Eager, o, ps) = evaluate(o, ps)
 ___evaluation(::Lazy, o, ps) = _evaluation(o, ps)
 
-__evaluation(::typeof(𝒾), ps) = ¬only(ps)
+__evaluation(::typeof(𝒾), ps) = AbstractSyntaxTree(¬, ps)
 __evaluation(o, ps) = AbstractSyntaxTree(¬, [AbstractSyntaxTree(o, ps)])
 
 function _evaluation(::typeof(¬), ps::Vector{AbstractSyntaxTree})
     q = only(ps)
     __evaluation(nodevalue(q), children(q))
 end
-_evaluation(o::UnaryOperator, ps::Vector{<:Atom}) = AbstractSyntaxTree(o, [only(ps)])
 _evaluation(o, ps::Vector{AbstractSyntaxTree}) = AbstractSyntaxTree(o, ps)
 _evaluation(o, ps) = _evaluation(o, map(AbstractSyntaxTree, ps))
 
@@ -521,7 +515,7 @@ Evaluation(::Union{typeof(¬), BinaryOperator}) = Lazy
 evaluation(o, ps::Vector{Bool}) = evaluate(o, ps)
 evaluation(o, ps) = ___evaluation(Evaluation(o)(), o, ps)
 
-(o::Operator)(ps...) = evaluation(o, [ps...])
+(o::Operator)(ps::Union{Bool, NullaryOperator, Proposition}...) = evaluation(o, [ps...])
 
 __print_expression(io, o, ps) = _show(print_proposition, io, ps) do io
     print(io, " ")
@@ -555,12 +549,12 @@ print_expression(io, o::Union{NullaryOperator, UnaryOperator, BinaryOperator}, p
     dispatch((_o, qs...) -> _print_expression(io, _o, qs...), o, ps)
 
 _print_proposition(io, p::NullaryOperator) = show(io, "text/plain", p)
-function _print_proposition(io, p::Constant)
+function _print_proposition(io, p::Some)
     print(io, "\$(")
-    show(io, p.value)
+    show(io, something(p))
     print(io, ")")
 end
-_print_proposition(io, p::Variable) = print(io, p.symbol)
+_print_proposition(io, p::Symbol) = print(io, p)
 _print_proposition(io, p::AbstractSyntaxTree) = print_expression(io, nodevalue(p), children(p))
 
 print_proposition(io, p) = _print_proposition(IOContext(io, :root => false), p)

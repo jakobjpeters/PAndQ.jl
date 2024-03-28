@@ -68,7 +68,7 @@ Variables represent a proposition with an unknown value. Use the `@atomize` macr
 
 ```jldoctest 1
 julia> @variables p q
-2-element Vector{PAndQ.Variable}:
+2-element Vector{PAndQ.AbstractSyntaxTree}:
  p
  q
 
@@ -94,7 +94,7 @@ julia> ⊤ ∧ p
 Constants and variables are atomic propositions. Operators construct compound propositions from one or more atomic propositions. Each atom in a proposition can be assigned the valuation `true` or `false`. This results in an interpretation, which determines the truth value of the overall proposition. For example, assigning the valuation `true` to the atomic proposition "Logic is fun" determines that the compound proposition "Logic is not fun" is interpreted as `false`. Use the [`interpret`](@ref) function to assign truth values to atomic propositions.
 
 ```jldoctest 1
-julia> interpret(p => ⊤, p ∧ q)
+julia> interpret([p => ⊤], p ∧ q)
 ⊤ ∧ q
 
 julia> interpret([p => ⊤, q => ⊥], p ∧ q)
@@ -105,12 +105,12 @@ The [`solutions`](@ref) of a proposition are the [`valuations`](@ref) that resul
 
 ```jldoctest 1
 julia> collect(valuations(p ∧ q))
-2×2 Matrix{Vector{Pair{PAndQ.Variable, Bool}}}:
- [Variable(:p)=>1, Variable(:q)=>1]  [Variable(:p)=>1, Variable(:q)=>0]
- [Variable(:p)=>0, Variable(:q)=>1]  [Variable(:p)=>0, Variable(:q)=>0]
+2×2 Matrix{Vector{Pair{PAndQ.AbstractSyntaxTree, Bool}}}:
+ [identical(Proposition(:p))=>1, identical(Proposition(:q))=>1]  …  [identical(Proposition(:p))=>1, identical(Proposition(:q))=>0]
+ [identical(Proposition(:p))=>0, identical(Proposition(:q))=>1]     [identical(Proposition(:p))=>0, identical(Proposition(:q))=>0]
 
 julia> solutions(p ∧ q)[1]
-2-element Vector{PAndQ.Atom}:
+2-element Vector{PAndQ.AbstractSyntaxTree}:
  q
  p
 

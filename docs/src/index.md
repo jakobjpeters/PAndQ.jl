@@ -31,14 +31,14 @@ julia> @atomize p ∧ q → $1 ∨ $(1 + 1)
 (p ∧ q) → ($(1) ∨ $(2))
 
 julia> @variables p q
-2-element Vector{PAndQ.Variable}:
+2-element Vector{PAndQ.AbstractSyntaxTree}:
  p
  q
 
 julia> r = p ↔ q
 p ↔ q
 
-julia> interpret(p => ⊤, r)
+julia> interpret([p => ⊤], r)
 ⊤ ↔ q
 
 julia> collect(only(solutions(p ∧ q)[2]))

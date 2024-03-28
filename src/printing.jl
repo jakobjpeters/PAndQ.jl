@@ -54,27 +54,27 @@ struct TruthTable
 
     function TruthTable(@nospecialize ps)
         ps = collect(AbstractSyntaxTree, ps)
-        _atoms = unique(flatmap(atoms, ps))
-        ps = union(_atoms, ps)
-        _valuations = vec(collect(valuations(_atoms)))
+        __atoms = map(AbstractSyntaxTree, unique(flatmap(_atoms, ps)))
+        ps = union(__atoms, ps)
+        _valuations = vec(collect(valuations(__atoms)))
         _interpretations = Iterators.map(p -> vec(map(
-            valuation -> Bool(interpret(a -> Dict(valuation)[a], normalize(¬, p))),
+            valuation -> Bool(interpret(valuation, normalize(¬, p))),
         _valuations)), ps)
 
         truths_interpretations, atoms_interpretations, compounds_interpretations =
             Vector{Bool}[], Vector{Bool}[], Vector{Bool}[]
 
-        grouped_truths = Dict(map(truth -> repeat([truth], length(_valuations)) => Proposition[], (true, false)))
+        grouped_truths = Dict(map(truth -> repeat([truth], length(_valuations)) => AbstractSyntaxTree[], (true, false)))
         grouped_atoms = Dict(map(
-            p -> vec(map(Bool, interpretations(_valuations, p))) => Proposition[],
-            _atoms
+            p -> vec(map(Bool, interpretations(_valuations, p))) => AbstractSyntaxTree[],
+            __atoms
         ))
-        grouped_compounds = Dict{Vector{Bool}, Vector{Proposition}}()
+        grouped_compounds = Dict{Vector{Bool}, Vector{AbstractSyntaxTree}}()
 
         for (p, interpretation) in zip(ps, _interpretations)
             _union! = (key, group) -> begin
                 union!(key, [interpretation])
-                union!(get!(group, interpretation, Proposition[]), [p])
+                union!(get!(group, interpretation, AbstractSyntaxTree[]), [p])
             end
 
             if interpretation in keys(grouped_truths) _union!(truths_interpretations, grouped_truths)
@@ -91,7 +91,7 @@ struct TruthTable
             compounds_interpretations => grouped_compounds
         )
             for interpretation in _interpretations
-                xs = get(group, interpretation, Proposition[])
+                xs = get(group, interpretation, AbstractSyntaxTree[])
                 push!(header, join(unique!(map(x -> repr("text/plain", x), xs)), ", "))
                 push!(body, interpretation)
             end
@@ -213,6 +213,9 @@ print_table(io::IO, ps; kwargs...) = print_table(io, TruthTable(ps); kwargs...)
 print_table(io::IO, @nospecialize(ps::Union{Operator, Proposition}...); kwargs...) = print_table(io, collect(AbstractSyntaxTree, ps); kwargs...)
 print_table(@nospecialize(xs...); kwargs...) = print_table(stdout, xs...; kwargs...)
 
+_print_tree(io, p::Union{Operator, Proposition}) = printnode(io, p)
+_print_tree(io, p) = show(io, "text/plain", AbstractSyntaxTree(p))
+
 """
     print_tree(::IO = stdout, p; kwargs...)
 
@@ -246,7 +249,7 @@ julia> @atomize print_tree(normalize(∧, p ∧ q ∨ ¬s))
       └─ p
 ```
 """
-print_tree(io, p; kwargs...) = AbstractTrees.print_tree(io, p; kwargs...)
+print_tree(io, p; kwargs...) = AbstractTrees.print_tree(_print_tree, io, p; kwargs...)
 print_tree(p; kwargs...) = print_tree(stdout, p; kwargs...)
 
 """
@@ -363,19 +366,21 @@ Print the proposition verbosely.
 # Examples
 ```jldoctest
 julia> @atomize show(stdout, p ∧ q)
-and(identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q)))
+and(identical(PAndQ.Proposition(:p)), identical(PAndQ.Proposition(:q)))
 
-julia> and(identical(PAndQ.Variable(:p)), identical(PAndQ.Variable(:q)))
+julia> and(identical(PAndQ.Proposition(:p)), identical(PAndQ.Proposition(:q)))
 p ∧ q
 ```
 """
-function show(io::IO, p::Atom)
-    print(io, typeof(p), "(")
-    show(io, getfield(p, 1))
-    print(io, ")")
-end
 function show(io::IO, p::AbstractSyntaxTree)
-    print(io, nodevalue(p), "(")
-    _show(io -> print(io, ", "), show, io, children(p))
+    o, qs = deconstruct(p)
+    show(io, o)
+    print(io, "(")
+    if o == 𝒾 && only(qs) isa Atom
+        print(io, Proposition, "(")
+        show(io, only(qs))
+        print(io, ")")
+    else _show(io -> print(io, ", "), show, io, qs)
+    end
     print(io, ")")
 end
