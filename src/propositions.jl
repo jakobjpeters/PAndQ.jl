@@ -414,29 +414,6 @@ julia> @atomize collect(atoms(p ∧ q))
 atoms(p) = Iterators.filter(leaf -> leaf isa AbstractSyntaxTree && leaf.kind != operator, Leaves(p))
 
 """
-    operators(p)
-
-Return an iterator of each [operator]
-(@ref operators_operators) contained in `p`.
-
-# Examples
-```jldoctest
-julia> @atomize collect(operators(¬p))
-2-element Vector{PAndQ.Interface.Operator}:
- ¬
- 𝒾
-
-julia> @atomize collect(operators(¬p ∧ q))
-4-element Vector{PAndQ.Interface.Operator}:
- ∧
- ¬
- 𝒾
- 𝒾
-```
-"""
-operators(p) = nodevalues(PreOrderDFS(p))
-
-"""
     install_atomize_mode(;
         start_key = "\\M-a", prompt_text = "atomize> ", prompt_color = :cyan,
     kwargs...)

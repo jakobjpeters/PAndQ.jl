@@ -15,7 +15,6 @@ constants
 value
 map
 atoms
-operators
 install_atomize_mode
 ```
 
