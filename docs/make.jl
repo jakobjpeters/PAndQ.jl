@@ -1,9 +1,10 @@
 
 using Base: get_extension
-using Documenter: DocMeta.setdocmeta!, HTML, deploydocs, makedocs
+using Documenter: HTML, DocMeta.setdocmeta!, deploydocs, makedocs
 using Latexify
+using Luxor: Drawing, Point, finish, fontface, fontsize, placeimage, readsvg, text
 using PAndQ
-using PAndQ: Z3, PicoSAT
+using PAndQ: PicoSAT, Z3
 using Plots: bar, savefig
 
 include(joinpath("..", "benchmarks", "Benchmarks.jl"))
@@ -18,37 +19,33 @@ mkpath(directory)
 
 benchmark(joinpath(directory, "benchmarks.svg"))
 
-if !ispath(logo)
-    using Luxor: readsvg, Drawing, placeimage, fontface, fontsize, text, Point, finish
+#=
+`julia-dots.svg`
+Copyright (c) 2012-2022: Stefan Karpinski <stefan@karpinski.org>
 
-    #=
-    `julia-dots.svg`
-    Copyright (c) 2012-2022: Stefan Karpinski <stefan@karpinski.org>
+License
+https://github.com/JuliaLang/julia-logo-graphics/blob/master/LICENSE.md
 
-    License
-    https://github.com/JuliaLang/julia-logo-graphics/blob/master/LICENSE.md
+Modifications:
+`P ∧ Q` overlay
+=#
+const julia_dots = readsvg(download(
+    "https://raw.githubusercontent.com/JuliaLang/julia-logo-graphics/b5551ca7946b4a25746c045c15fbb8806610f8d0/images/julia-dots.svg"
+))
 
-    Modifications:
-    `P ∧ Q` overlay
-    =#
-    const julia_dots = readsvg(download(
-        "https://raw.githubusercontent.com/JuliaLang/julia-logo-graphics/b5551ca7946b4a25746c045c15fbb8806610f8d0/images/julia-dots.svg"
-    ))
+Drawing(julia_dots.width, julia_dots.height, :svg, logo)
+placeimage(julia_dots)
 
-    Drawing(julia_dots.width, julia_dots.height, :svg, logo)
-    placeimage(julia_dots)
+fontsize(128)
+fontface("JuliaMono")
 
-    fontsize(128)
-    fontface("JuliaMono")
-
-    for (character, (x, y)) in zip(("p", "∧", "q"), map(
-        i -> (julia_dots.width * i / 4, julia_dots.height * (iseven(i) ? 1 : 5) / 8),
-    1:3))
-        text(character, x, y; :halign => :center, :valign => :top)
-    end
-
-    finish()
+for (character, (x, y)) in zip(("p", "∧", "q"), map(
+    i -> (julia_dots.width * i / 4, julia_dots.height * (iseven(i) ? 1 : 5) / 8),
+1:3))
+    text(character, x, y; :halign => :center, :valign => :top)
 end
+
+finish()
 
 setdocmeta!(PAndQ, :DocTestSetup, :(using PAndQ); recursive = true)
 
