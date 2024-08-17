@@ -210,10 +210,10 @@ julia> @atomize print_table(p ∧ q)
 print_table(io::IO, t::TruthTable; backend = Val(:text), alignment = :l, kwargs...) =
     _print_table(backend, io, t; alignment, kwargs...)
 print_table(io::IO, ps; kwargs...) = print_table(io, TruthTable(ps); kwargs...)
-print_table(io::IO, @nospecialize(ps::Union{Operator, Proposition}...); kwargs...) = print_table(io, collect(AbstractSyntaxTree, ps); kwargs...)
+print_table(io::IO, @nospecialize(ps::Union{Operator, AbstractSyntaxTree}...); kwargs...) = print_table(io, collect(AbstractSyntaxTree, ps); kwargs...)
 print_table(@nospecialize(xs...); kwargs...) = print_table(stdout, xs...; kwargs...)
 
-_print_tree(io, p::Union{Operator, Proposition}) = printnode(io, p)
+_print_tree(io, p::Union{Operator, AbstractSyntaxTree}) = printnode(io, p)
 _print_tree(io, p) = show(io, "text/plain", AbstractSyntaxTree(p))
 
 """
@@ -321,7 +321,7 @@ julia> @atomize show(stdout, "text/plain", (p ∨ q) ∧ (r ∨ s))
 (p ∨ q) ∧ (r ∨ s)
 ```
 """
-show(io::IO, ::MIME"text/plain", p::Proposition) =
+show(io::IO, ::MIME"text/plain", p::AbstractSyntaxTree) =
     _print_proposition(IOContext(io, :root => true, map(key -> key => get(io, key, true), (:compact, :limit))...), p)
 
 """
@@ -366,9 +366,9 @@ Print the proposition verbosely.
 # Examples
 ```jldoctest
 julia> @atomize show(stdout, p ∧ q)
-and(identical(PAndQ.Proposition(:p)), identical(PAndQ.Proposition(:q)))
+and(identical(PAndQ.AbstractSyntaxTree(:p)), identical(PAndQ.AbstractSyntaxTree(:q)))
 
-julia> and(identical(PAndQ.Proposition(:p)), identical(PAndQ.Proposition(:q)))
+julia> and(identical(PAndQ.AbstractSyntaxTree(:p)), identical(PAndQ.AbstractSyntaxTree(:q)))
 p ∧ q
 ```
 """
@@ -377,7 +377,7 @@ function show(io::IO, p::AbstractSyntaxTree)
     show(io, o)
     print(io, "(")
     if o == 𝒾 && only(qs) isa Atom
-        print(io, Proposition, "(")
+        print(io, AbstractSyntaxTree, "(")
         show(io, only(qs))
         print(io, ")")
     else _show(io -> print(io, ", "), show, io, qs)

@@ -39,7 +39,7 @@ julia> ⊤ ∧ ⊥
 
 ## Propositions
 
-[Propositions](@ref propositions) are statements that can be either `true` or `false`. For example, "Logic is fun". This proposition has a known value, so it is a constant. Note that the proposition exists independently of whether it is known to be `true` or `false`. Constants can be instantiated inline with the [`@atomize`](@ref) macro and unwrapped with the [`value`](@ref) function.
+[Propositions]() are statements that can be either `true` or `false`. For example, "Logic is fun". This proposition has a known value, so it is a constant. Note that the proposition exists independently of whether it is known to be `true` or `false`. Constants can be instantiated inline with the [`@atomize`](@ref) macro and unwrapped with the [`value`](@ref) function.
 
 ```jldoctest 1
 julia> p = @atomize $"Logic is fun"
@@ -106,8 +106,8 @@ The [`solutions`](@ref) of a proposition are the [`valuations`](@ref) that resul
 ```jldoctest 1
 julia> collect(valuations(p ∧ q))
 2×2 Matrix{Vector{Pair{PAndQ.AbstractSyntaxTree, Bool}}}:
- [identical(Proposition(:p))=>1, identical(Proposition(:q))=>1]  …  [identical(Proposition(:p))=>1, identical(Proposition(:q))=>0]
- [identical(Proposition(:p))=>0, identical(Proposition(:q))=>1]     [identical(Proposition(:p))=>0, identical(Proposition(:q))=>0]
+ [identical(AbstractSyntaxTree(:p))=>1, identical(AbstractSyntaxTree(:q))=>1]  …  [identical(AbstractSyntaxTree(:p))=>1, identical(AbstractSyntaxTree(:q))=>0]
+ [identical(AbstractSyntaxTree(:p))=>0, identical(AbstractSyntaxTree(:q))=>1]     [identical(AbstractSyntaxTree(:p))=>0, identical(AbstractSyntaxTree(:q))=>0]
 
 julia> solutions(p ∧ q)[1]
 2-element Vector{PAndQ.AbstractSyntaxTree}:

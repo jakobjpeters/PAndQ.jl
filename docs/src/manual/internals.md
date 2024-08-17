@@ -75,7 +75,6 @@ PAndQ.AndOr
 ### Types
 
 ```@docs
-PAndQ.Proposition
 PAndQ.AbstractSyntaxTree
 ```
 

@@ -20,13 +20,13 @@ julia> collect(valuations(⊤))
 
 julia> @atomize collect(valuations(p))
 2-element Vector{Vector{Pair{PAndQ.AbstractSyntaxTree, Bool}}}:
- [identical(PAndQ.Proposition(:p)) => 1]
- [identical(PAndQ.Proposition(:p)) => 0]
+ [identical(PAndQ.AbstractSyntaxTree(:p)) => 1]
+ [identical(PAndQ.AbstractSyntaxTree(:p)) => 0]
 
 julia> @atomize collect(valuations(p ∧ q))
 2×2 Matrix{Vector{Pair{PAndQ.AbstractSyntaxTree, Bool}}}:
- [identical(Proposition(:p))=>1, identical(Proposition(:q))=>1]  …  [identical(Proposition(:p))=>1, identical(Proposition(:q))=>0]
- [identical(Proposition(:p))=>0, identical(Proposition(:q))=>1]     [identical(Proposition(:p))=>0, identical(Proposition(:q))=>0]
+ [identical(AbstractSyntaxTree(:p))=>1, identical(AbstractSyntaxTree(:q))=>1]  …  [identical(AbstractSyntaxTree(:p))=>1, identical(AbstractSyntaxTree(:q))=>0]
+ [identical(AbstractSyntaxTree(:p))=>0, identical(AbstractSyntaxTree(:q))=>1]     [identical(AbstractSyntaxTree(:p))=>0, identical(AbstractSyntaxTree(:q))=>0]
 ```
 """
 function valuations(atoms)
@@ -35,7 +35,7 @@ function valuations(atoms)
         product(repeated([true, false], length(unique_atoms))...)
     )
 end
-valuations(p::Union{NullaryOperator, Proposition}) = valuations(collect(atoms(p)))
+valuations(p::Union{NullaryOperator, AbstractSyntaxTree}) = valuations(collect(atoms(p)))
 
 """
     interpret(valuation, p)
@@ -318,10 +318,10 @@ julia> @atomize p == ¬p
 false
 ```
 """
-p::Proposition == ::typeof(⊤) = is_tautology(p)
-p::Proposition == ::typeof(⊥) = is_contradiction(p)
-p::NullaryOperator == q::Proposition = q == p
-p::Proposition == q::Proposition = is_contradiction(p ↮ q)
+p::AbstractSyntaxTree == ::typeof(⊤) = is_tautology(p)
+p::AbstractSyntaxTree == ::typeof(⊥) = is_contradiction(p)
+p::NullaryOperator == q::AbstractSyntaxTree = q == p
+p::AbstractSyntaxTree == q::AbstractSyntaxTree = is_contradiction(p ↮ q)
 
 """
     <(p, q)
@@ -348,10 +348,10 @@ false
 """
 ::typeof(⊥) < ::typeof(⊤) = true
 ::NullaryOperator < ::NullaryOperator = false
-p::Proposition < ::typeof(⊤) = is_falsifiable(p)
-p::Proposition < ::typeof(⊥) = is_satisfiable(p)
-p::NullaryOperator < q::Proposition = q < p
-p::Proposition < q::Proposition =
+p::AbstractSyntaxTree < ::typeof(⊤) = is_falsifiable(p)
+p::AbstractSyntaxTree < ::typeof(⊥) = is_satisfiable(p)
+p::NullaryOperator < q::AbstractSyntaxTree = q < p
+p::AbstractSyntaxTree < q::AbstractSyntaxTree =
     is_contradiction(p) ? is_satisfiable(q) : is_falsifiable(p) && is_tautology(q)
 
 # Operators
@@ -374,7 +374,6 @@ Bool(o::NullaryOperator) = convert(Bool, o)
 
 # Constructors
 
-Proposition(p) = convert(Proposition, p)
 AbstractSyntaxTree(p) = convert(AbstractSyntaxTree, p)
 
 # Utilities
@@ -383,19 +382,18 @@ convert(::Type{Bool}, ::typeof(⊤)) = true
 convert(::Type{Bool}, ::typeof(⊥)) = false
 
 """
-    convert(::Type{<:Proposition}, p)
+    convert(::Type{<:AbstractSytnaxTree}, p)
 
-See also [`Proposition`](@ref).
+See also [`AbstractSyntaxTree`](@ref).
 """
 convert(::Type{AbstractSyntaxTree}, p::NullaryOperator) = AbstractSyntaxTree(p, Union{}[])
 convert(::Type{AbstractSyntaxTree}, p::Atom) = AbstractSyntaxTree(𝒾, [p])
-convert(::Type{Proposition}, p) = AbstractSyntaxTree(p)
 
 """
     promote_rule
 """
 promote_rule(::Type{Bool}, ::Type{<:NullaryOperator}) = Bool
-promote_rule(::Type{NullaryOperator}, ::Type{Proposition}) = AbstractSyntaxTree
+promote_rule(::Type{NullaryOperator}, ::Type{AbstractSyntaxTree}) = AbstractSyntaxTree
 
 # Interface Implementation
 
@@ -515,7 +513,7 @@ Evaluation(::Union{typeof(¬), BinaryOperator}) = Lazy
 evaluation(o, ps::Vector{Bool}) = evaluate(o, ps)
 evaluation(o, ps) = ___evaluation(Evaluation(o)(), o, ps)
 
-(o::Operator)(ps::Union{Bool, NullaryOperator, Proposition}...) = evaluation(o, [ps...])
+(o::Operator)(ps::Union{Bool, NullaryOperator, AbstractSyntaxTree}...) = evaluation(o, [ps...])
 
 __print_expression(io, o, ps) = _show(print_proposition, io, ps) do io
     print(io, " ")

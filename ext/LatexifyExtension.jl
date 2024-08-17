@@ -3,9 +3,9 @@ module LatexifyExtension
 
 import PAndQ: formatter, _print_table
 using Latexify: Latexify, LaTeXString, @latexrecipe, latexify
-using PAndQ: Operator, Proposition, TruthTable, symbol, __print_table, print_table
+using PAndQ: AbstractSyntaxTree, Operator, TruthTable, symbol, __print_table, print_table
 
-@latexrecipe f(x::Union{Operator, Proposition}) = return Symbol(repr(MIME"text/plain"(), x))
+@latexrecipe f(x::Union{Operator, AbstractSyntaxTree}) = return Symbol(repr(MIME"text/plain"(), x))
 @latexrecipe f(t::TruthTable) = return LaTeXString(sprint(io -> print_table(io, t; backend = Val(:latex))))
 
 """

@@ -10,27 +10,13 @@ using ReplMaker: complete_julia, initrepl
 
 const Atom = Union{Symbol, Some}
 
-### Abstract
-
 """
-    Proposition
+    AbstractSyntaxTree(o, ps)
 
-A [proposition](https://en.wikipedia.org/wiki/Proposition).
-
-Supertype of [`AbstractSyntaxTree`](@ref).
-"""
-abstract type Proposition end
-
-### Concrete
-
-"""
-    AbstractSyntaxTree <: Proposition
-    AbstractSyntaxTree(::Operator, ::AbstractSyntaxTree)
-
-A proposition represented by an [abstract syntax tree]
+A [proposition](https://en.wikipedia.org/wiki/Proposition)
+represented by an [abstract syntax tree]
 (https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 
-Subtype of [`Proposition`](@ref).
 See also [`Operator`](@ref).
 
 # Examples
@@ -45,7 +31,7 @@ julia> @atomize PAndQ.AbstractSyntaxTree(and, [PAndQ.AbstractSyntaxTree(p), PAnd
 p ∧ q
 ```
 """
-struct AbstractSyntaxTree <: Proposition
+struct AbstractSyntaxTree
     operator::Operator
     propositions::Vector{<:Union{Atom, AbstractSyntaxTree}}
 
@@ -96,11 +82,11 @@ julia> @atomize PAndQ.nodevalue(p ∧ q)
 nodevalue(p::AbstractSyntaxTree) = p.operator
 
 """
-    printnode(::IO, ::Union{Operator, Proposition}; kwargs...)
+    printnode(::IO, ::Union{Operator, AbstractSyntaxTree}; kwargs...)
 
 Print the representation of the proposition's root node.
 
-See also [`Operator`](@ref Interface.Operator) and [`Proposition`](@ref).
+See also [`Operator`](@ref Interface.Operator) and [`AbstractSyntaxTree`](@ref).
 
 # Examples
 ```jldoctest
@@ -112,7 +98,7 @@ julia> @atomize PAndQ.printnode(stdout, p ∧ q)
 ∧
 ```
 """
-printnode(io::IO, p::Union{Operator, Proposition}) = show(io, "text/plain", nodevalue(p))
+printnode(io::IO, p::Union{Operator, AbstractSyntaxTree}) = show(io, "text/plain", nodevalue(p))
 
 ## Utilities
 
@@ -132,7 +118,7 @@ julia> @atomize PAndQ.deconstruct(¬p)
 (not, [:p])
 
 julia> @atomize PAndQ.deconstruct(p ∧ q)
-(and, PAndQ.AbstractSyntaxTree[identical(PAndQ.Proposition(:p)), identical(PAndQ.Proposition(:q))])
+(and, PAndQ.AbstractSyntaxTree[identical(PAndQ.AbstractSyntaxTree(:p)), identical(PAndQ.AbstractSyntaxTree(:q))])
 ```
 """
 deconstruct(p) = nodevalue(p), children(p)
