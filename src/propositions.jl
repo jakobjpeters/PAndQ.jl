@@ -93,14 +93,13 @@ See also [`Operator`](@ref Interface.Operator) and [`AbstractSyntaxTree`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize PAndQ.printnode(stdout, p)
-𝒾
+p
 julia> @atomize PAndQ.printnode(stdout, ¬p)
 ¬
 julia> @atomize PAndQ.printnode(stdout, p ∧ q)
 ∧
 ```
 """
-
 printnode(io::IO, p::AbstractSyntaxTree) = p.kind == operator ?
     show(io, "text/plain", nodevalue(p)) :
     show(io, "text/plain", p)
@@ -138,13 +137,6 @@ See also [`children`](@ref).
 child(x) = only(children(x))
 
 """
-    load_or_error(x)
-
-Return an expression that when `eval`uated returns `x` if `PAndQ` is defined and throws an `Exception` otherwise.
-"""
-load_or_error(x) = :((@isdefined PAndQ) ? $x : error("`PAndQ` must be loaded"))
-
-"""
     atomize(x)
 
 If `x` is a symbol, return an expression that instantiates it as a
@@ -157,7 +149,7 @@ atomize(x) =
     if x isa Symbol; :((@isdefined $x) ? $x : $(AbstractSyntaxTree(variable, x)))
     elseif x isa Expr
         if length(x.args) == 0 || (isexpr(x, :macrocall) && first(x.args) == Symbol("@atomize")) x
-        elseif isexpr(x, :$); load_or_error(:(PAndQ.AbstractSyntaxTree($variable, Some($(only(x.args))))))
+        elseif isexpr(x, :$); :($AbstractSyntaxTree($variable, Some($(only(x.args)))))
         elseif isexpr(x, :kw) Expr(x.head, x.args[1], atomize(x.args[2]))
         elseif isexpr(x, (:struct, :where)) x # TODO
         else # TODO
@@ -314,7 +306,7 @@ q
 """
 macro variables(ps...) esc(quote
     $(map(p -> :($p = $(AbstractSyntaxTree(variable, p))), ps)...)
-    $(load_or_error(:(PAndQ.AbstractSyntaxTree[$(ps...)])))
+    $(:($AbstractSyntaxTree[$(ps...)]))
 end) end
 
 """

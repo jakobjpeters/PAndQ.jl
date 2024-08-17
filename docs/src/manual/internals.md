@@ -91,7 +91,6 @@ PAndQ.printnode
 ```@docs
 PAndQ.deconstruct
 PAndQ.child
-PAndQ.load_or_error
 PAndQ.atomize
 PAndQ.distribute
 PAndQ.prune
