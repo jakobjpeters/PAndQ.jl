@@ -6,6 +6,8 @@ using Base.Iterators: Stateful
 using Base: isexpr
 using ReplMaker: complete_julia, initrepl
 
+@enum Kind constant operator variable
+
 ## Types
 
 const Atom = Union{Symbol, Some}
@@ -32,13 +34,13 @@ p ∧ q
 ```
 """
 struct AbstractSyntaxTree
-    operator::Operator
-    propositions::Vector{<:Union{Atom, AbstractSyntaxTree}}
-
-    AbstractSyntaxTree(o, ps::Vector{<:Union{Atom, AbstractSyntaxTree}}) = new(o, ps)
+    kind::Kind
+    value
+    branches::Vector{AbstractSyntaxTree}
 end
 
-AbstractSyntaxTree(o, ps) = AbstractSyntaxTree(o, map(AbstractSyntaxTree, ps))
+AbstractSyntaxTree(k::Kind, v) = AbstractSyntaxTree(k, v, AbstractSyntaxTree[])
+AbstractSyntaxTree(o::Operator{O}, ps) where O = AbstractSyntaxTree(operator, o, ps)
 
 ## AbstractTrees.jl
 
@@ -52,8 +54,8 @@ See also [`AbstractSyntaxTree`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize PAndQ.children(¬p)
-1-element Vector{Symbol}:
- :p
+1-element Vector{PAndQ.AbstractSyntaxTree}:
+ p
 
 julia> @atomize PAndQ.children(p ∧ q)
 2-element Vector{PAndQ.AbstractSyntaxTree}:
@@ -61,7 +63,7 @@ julia> @atomize PAndQ.children(p ∧ q)
  q
 ```
 """
-children(p::AbstractSyntaxTree) = p.propositions
+children(p::AbstractSyntaxTree) = p.branches
 
 """
     nodevalue(::AbstractSyntaxTree)
@@ -79,7 +81,7 @@ julia> @atomize PAndQ.nodevalue(p ∧ q)
 ∧
 ```
 """
-nodevalue(p::AbstractSyntaxTree) = p.operator
+nodevalue(p::AbstractSyntaxTree) = p.kind == operator ? p.value::Operator : 𝒾
 
 """
     printnode(::IO, ::Union{Operator, AbstractSyntaxTree}; kwargs...)
@@ -98,7 +100,10 @@ julia> @atomize PAndQ.printnode(stdout, p ∧ q)
 ∧
 ```
 """
-printnode(io::IO, p::Union{Operator, AbstractSyntaxTree}) = show(io, "text/plain", nodevalue(p))
+
+printnode(io::IO, p::AbstractSyntaxTree) = p.kind == operator ?
+    show(io, "text/plain", nodevalue(p)) :
+    show(io, "text/plain", p)
 
 ## Utilities
 
@@ -112,13 +117,13 @@ See also [`nodevalue`](@ref) and [`children`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize PAndQ.deconstruct(p)
-(identical, [:p])
+(identical, PAndQ.AbstractSyntaxTree[])
 
 julia> @atomize PAndQ.deconstruct(¬p)
-(not, [:p])
+(not, PAndQ.AbstractSyntaxTree[PAndQ.AbstractSyntaxTree(:p)])
 
 julia> @atomize PAndQ.deconstruct(p ∧ q)
-(and, PAndQ.AbstractSyntaxTree[identical(PAndQ.AbstractSyntaxTree(:p)), identical(PAndQ.AbstractSyntaxTree(:q))])
+(and, PAndQ.AbstractSyntaxTree[PAndQ.AbstractSyntaxTree(:p), PAndQ.AbstractSyntaxTree(:q)])
 ```
 """
 deconstruct(p) = nodevalue(p), children(p)
@@ -149,10 +154,10 @@ If `x` is a different expression, traverse it with recursive calls to `atomize`.
 Otherise, return x.
 """
 atomize(x) =
-    if x isa Symbol; :((@isdefined $x) ? $x : $(AbstractSyntaxTree(x)))
+    if x isa Symbol; :((@isdefined $x) ? $x : $(AbstractSyntaxTree(variable, x)))
     elseif x isa Expr
         if length(x.args) == 0 || (isexpr(x, :macrocall) && first(x.args) == Symbol("@atomize")) x
-        elseif isexpr(x, :$); load_or_error(:(PAndQ.AbstractSyntaxTree(Some($(only(x.args))))))
+        elseif isexpr(x, :$); load_or_error(:(PAndQ.AbstractSyntaxTree($variable, Some($(only(x.args))))))
         elseif isexpr(x, :kw) Expr(x.head, x.args[1], atomize(x.args[2]))
         elseif isexpr(x, (:struct, :where)) x # TODO
         else # TODO
@@ -220,8 +225,8 @@ function prune(p, atoms = Atom[], mapping = Dict{Atom, Int}())
                 _o, ts = deconstruct(s)
 
                 if _o == ⊥
-                elseif _o isa UnaryOperator && only(ts) isa Atom
-                    atom = only(ts)
+                elseif s.kind != operator || (_o isa UnaryOperator && only(ts).kind != operator)
+                    atom = s.kind == operator ? only(ts).value : s.value
                     literal = (_o == 𝒾 ? 1 : -1) * get!(mapping, atom) do
                         push!(atoms, atom)
                         length(mapping) + 1
@@ -308,7 +313,7 @@ q
 ```
 """
 macro variables(ps...) esc(quote
-    $(map(p -> :($p = $(AbstractSyntaxTree(p))), ps)...)
+    $(map(p -> :($p = $(AbstractSyntaxTree(variable, p))), ps)...)
     $(load_or_error(:(PAndQ.AbstractSyntaxTree[$(ps...)])))
 end) end
 
@@ -368,7 +373,7 @@ function value(T, p)
     if isempty(_atoms) nothing
     else
         atom = first(_atoms)
-        _atom = child(atom)
+        _atom = atom.value
         _atom isa Some && atom == p ? _atom : nothing
     end
 end
@@ -388,10 +393,10 @@ julia> @atomize map(atom -> \$(something(value(atom)) + 1), \$1 ∧ \$2)
 \$(2) ∧ \$(3)
 ```
 """
-map(f, p::Union{NullaryOperator, AbstractSyntaxTree}) =
-    evaluation(nodevalue(p), map(q -> q isa Atom ? f(AbstractSyntaxTree(q)) : map(f, q), children(p)))
-
-_atoms(p) = Iterators.filter(leaf -> leaf isa Atom, Leaves(p))
+map(f, p::NullaryOperator) = p
+map(f, p::AbstractSyntaxTree) = p.kind == operator ?
+    evaluation(nodevalue(p), map(q -> q.kind != operator ? f(q) : map(f, q), children(p))) :
+    f(p)
 
 """
     atoms(p)
@@ -406,7 +411,7 @@ julia> @atomize collect(atoms(p ∧ q))
  q
 ```
 """
-atoms(p) = Iterators.map(AbstractSyntaxTree, _atoms(p))
+atoms(p) = Iterators.filter(leaf -> leaf isa AbstractSyntaxTree && leaf.kind != operator, Leaves(p))
 
 """
     operators(p)
@@ -417,17 +422,19 @@ Return an iterator of each [operator]
 # Examples
 ```jldoctest
 julia> @atomize collect(operators(¬p))
-1-element Vector{PAndQ.Interface.Operator{:not}}:
+2-element Vector{PAndQ.Interface.Operator}:
  ¬
+ 𝒾
 
 julia> @atomize collect(operators(¬p ∧ q))
-3-element Vector{PAndQ.Interface.Operator}:
+4-element Vector{PAndQ.Interface.Operator}:
  ∧
  ¬
  𝒾
+ 𝒾
 ```
 """
-operators(p) = Iterators.filter(node -> !isa(node, Atom), nodevalues(PreOrderDFS(p)))
+operators(p) = nodevalues(PreOrderDFS(p))
 
 """
     install_atomize_mode(;
@@ -499,11 +506,12 @@ function normalize(::typeof(¬), p)
         q = pop!(input_stack)
         o, rs = deconstruct(q)
 
-        if o isa NullaryOperator || (o isa UnaryOperator && only(rs) isa Atom) push!(output_stack, q)
+        if o isa NullaryOperator || q.kind != operator || ((o == ¬) && only(rs).kind != operator) push!(output_stack, q)
         elseif o isa AndOr
             push!(operator_stack, length(input_stack) => o)
             append!(input_stack, rs)
-        else push!(input_stack, evaluate(o, rs))
+        else
+            push!(input_stack, evaluate(o, rs))
         end
     end
 
@@ -545,7 +553,7 @@ tseytin!(clauses, atoms, mapping, p) =
         push!(clauses, clause)
     end
 
-__tseytin(p) = (p isa Atom || (nodevalue(p) == 𝒾 && child(p) isa Atom)) ? p : AbstractSyntaxTree(gensym())
+__tseytin(p) = (p.kind != operator || (nodevalue(p) == 𝒾 && child(p).kind != operator)) ? p : AbstractSyntaxTree(gensym())
 
 function _tseytin(p)
     clauses, atoms, mapping, qs = prune(p)
@@ -562,8 +570,8 @@ function _tseytin(p)
             r, substitution = pop!(stack)
             o, ss = deconstruct(r)
             substitutions = map(__tseytin, ss)
-            append!(stack, Iterators.filter(((s, substitution),) -> !(s isa Atom), zip(ss, substitutions)))
-            (o == 𝒾 && only(ss) isa Atom) || tseytin!(clauses, atoms, mapping, substitution ↔ AbstractSyntaxTree(o, substitutions))
+            append!(stack, Iterators.filter(((s, substitution),) -> !(s.kind != operator), zip(ss, substitutions)))
+            (o == 𝒾 && only(ss).kind != operator) || tseytin!(clauses, atoms, mapping, substitution ↔ AbstractSyntaxTree(o, substitutions))
         end
     end
 

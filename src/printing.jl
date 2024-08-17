@@ -1,6 +1,6 @@
 
 import Base: Stateful, show
-using AbstractTrees: AbstractTrees, print_child_key
+using AbstractTrees: AbstractTrees
 using Base.Docs: HTML
 using Base.Iterators: flatmap
 using PrettyTables: pretty_table
@@ -54,7 +54,7 @@ struct TruthTable
 
     function TruthTable(@nospecialize ps)
         ps = collect(AbstractSyntaxTree, ps)
-        __atoms = map(AbstractSyntaxTree, unique(flatmap(_atoms, ps)))
+        __atoms = unique(p -> p.value, flatmap(atoms, ps))
         ps = union(__atoms, ps)
         _valuations = vec(collect(valuations(__atoms)))
         _interpretations = Iterators.map(p -> vec(map(
@@ -228,25 +228,21 @@ Keyword parameters are passed to [`AbstractTrees.print_tree`]
 julia> @atomize print_tree(p ∧ q ∨ ¬s)
 ∨
 ├─ ∧
-│  ├─ 𝒾
-│  │  └─ p
-│  └─ 𝒾
-│     └─ q
+│  ├─ p
+│  └─ q
 └─ ¬
    └─ s
 
 julia> @atomize print_tree(normalize(∧, p ∧ q ∨ ¬s))
 ∧
 ├─ ∨
-│  ├─ 𝒾
-│  │  └─ q
+│  ├─ q
 │  └─ ¬
 │     └─ s
 └─ ∨
    ├─ ¬
    │  └─ s
-   └─ 𝒾
-      └─ p
+   └─ p
 ```
 """
 print_tree(io, p; kwargs...) = AbstractTrees.print_tree(_print_tree, io, p; kwargs...)
@@ -366,21 +362,20 @@ Print the proposition verbosely.
 # Examples
 ```jldoctest
 julia> @atomize show(stdout, p ∧ q)
-and(identical(PAndQ.AbstractSyntaxTree(:p)), identical(PAndQ.AbstractSyntaxTree(:q)))
+and(PAndQ.AbstractSyntaxTree(:p), PAndQ.AbstractSyntaxTree(:q))
 
-julia> and(identical(PAndQ.AbstractSyntaxTree(:p)), identical(PAndQ.AbstractSyntaxTree(:q)))
+julia> and(PAndQ.AbstractSyntaxTree(:p), PAndQ.AbstractSyntaxTree(:q))
 p ∧ q
 ```
 """
-function show(io::IO, p::AbstractSyntaxTree)
-    o, qs = deconstruct(p)
-    show(io, o)
-    print(io, "(")
-    if o == 𝒾 && only(qs) isa Atom
-        print(io, AbstractSyntaxTree, "(")
-        show(io, only(qs))
+show(io::IO, p::AbstractSyntaxTree) =
+    if p.kind == operator
+        show(io, p.value::Operator)
+        print(io, "(")
+        _show(io -> print(io, ", "), show, io, children(p))
         print(io, ")")
-    else _show(io -> print(io, ", "), show, io, qs)
+    else
+        print(io, AbstractSyntaxTree, "(")
+        show(io, p.value)
+        print(io, ")")
     end
-    print(io, ")")
-end

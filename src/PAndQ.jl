@@ -80,26 +80,26 @@ export
     print_tree,
     print_dimacs
 
-@compile_workload for (p, q) in (@atomize([$:p, $:q]), @variables p q) redirect_stdout(devnull) do
-    rs = AbstractSyntaxTree[⊤, ⊥, 𝒾(p), ¬p, p ∧ q, p ∨ q, p → q, p ↮ q, p ← q, p ↑ q, p ↓ q, p ↛ q, p ↔ q, p ↚ q]
+# @compile_workload for (p, q) in (@atomize([$:p, $:q]), @variables p q) redirect_stdout(devnull) do
+#     rs = AbstractSyntaxTree[⊤, ⊥, 𝒾(p), ¬p, p ∧ q, p ∨ q, p → q, p ↮ q, p ← q, p ↑ q, p ↓ q, p ↛ q, p ↔ q, p ↚ q]
 
-    conjunction(rs)
-    disjunction(rs)
-    print_table(rs)
+#     conjunction(rs)
+#     disjunction(rs)
+#     print_table(rs)
 
-    for r in rs
-        collect(operators(r))
-        normalize(¬, r)
-        normalize(∨, r)
-        tseytin(r)
-        print_dimacs(r)
-        print_tree(r)
-        print(r)
+#     for r in rs
+#         collect(operators(r))
+#         normalize(¬, r)
+#         normalize(∨, r)
+#         tseytin(r)
+#         print_dimacs(r)
+#         print_tree(r)
+#         print(r)
 
-        for solution in solutions(r)
-            collect(solution)
-        end
-    end
-end end
+#         for solution in solutions(r)
+#             collect(solution)
+#         end
+#     end
+# end end
 
 end # PAndQ

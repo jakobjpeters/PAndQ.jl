@@ -20,13 +20,13 @@ julia> collect(valuations(⊤))
 
 julia> @atomize collect(valuations(p))
 2-element Vector{Vector{Pair{PAndQ.AbstractSyntaxTree, Bool}}}:
- [identical(PAndQ.AbstractSyntaxTree(:p)) => 1]
- [identical(PAndQ.AbstractSyntaxTree(:p)) => 0]
+ [PAndQ.AbstractSyntaxTree(:p) => 1]
+ [PAndQ.AbstractSyntaxTree(:p) => 0]
 
 julia> @atomize collect(valuations(p ∧ q))
 2×2 Matrix{Vector{Pair{PAndQ.AbstractSyntaxTree, Bool}}}:
- [identical(AbstractSyntaxTree(:p))=>1, identical(AbstractSyntaxTree(:q))=>1]  …  [identical(AbstractSyntaxTree(:p))=>1, identical(AbstractSyntaxTree(:q))=>0]
- [identical(AbstractSyntaxTree(:p))=>0, identical(AbstractSyntaxTree(:q))=>1]     [identical(AbstractSyntaxTree(:p))=>0, identical(AbstractSyntaxTree(:q))=>0]
+ [AbstractSyntaxTree(:p)=>1, AbstractSyntaxTree(:q)=>1]  …  [AbstractSyntaxTree(:p)=>1, AbstractSyntaxTree(:q)=>0]
+ [AbstractSyntaxTree(:p)=>0, AbstractSyntaxTree(:q)=>1]     [AbstractSyntaxTree(:p)=>0, AbstractSyntaxTree(:q)=>0]
 ```
 """
 function valuations(atoms)
@@ -56,8 +56,11 @@ julia> @atomize interpret([p => ⊤], p ∧ q)
 ```
 """
 interpret(valuation::Function, p) = map(valuation, p)
-interpret(valuation::Dict, p) = interpret(a -> get(valuation, child(a), a), p)
-interpret(valuation, p) = interpret(Dict(Iterators.map(((key, value),) -> child(key) => value, valuation)), p)
+interpret(valuation::Dict, p) = interpret(p) do a
+    value = a.value
+    get(valuation, value, value)
+end
+interpret(valuation, p) = interpret(Dict(Iterators.map(((key, value),) -> key.value => value, valuation)), p)
 
 """
     interpretations(valuations, p)
@@ -386,8 +389,9 @@ convert(::Type{Bool}, ::typeof(⊥)) = false
 
 See also [`AbstractSyntaxTree`](@ref).
 """
-convert(::Type{AbstractSyntaxTree}, p::NullaryOperator) = AbstractSyntaxTree(p, Union{}[])
-convert(::Type{AbstractSyntaxTree}, p::Atom) = AbstractSyntaxTree(𝒾, [p])
+convert(::Type{AbstractSyntaxTree}, p::NullaryOperator) = AbstractSyntaxTree(operator, p)
+convert(::Type{AbstractSyntaxTree}, p::Symbol) = AbstractSyntaxTree(variable, p)
+convert(::Type{AbstractSyntaxTree}, p::Some) = AbstractSyntaxTree(constant, p)
 
 """
     promote_rule
@@ -443,19 +447,21 @@ is_associative(::union_typeof((∧, ∨, ↮, ↔))) = true
 is_associative(::union_typeof((↑, ↓, →, ↛, ←, ↚))) = false
 
 evaluate_not(::typeof(¬), ps) = AbstractSyntaxTree(only(ps))
-evaluate_not(o, ps) = AbstractSyntaxTree(dual(o), map((¬) ∘ AbstractSyntaxTree, ps))
+evaluate_not(o, ps) = evaluate(dual(o), map((¬) ∘ AbstractSyntaxTree, ps))
 
 ____evaluate_and_or(ao, o::NullaryOperator, ps, q) = _evaluate(ao, o, q)
 ____evaluate_and_or(ao, o, ps, q) = ao(q, AbstractSyntaxTree(o, ps))
 
-___evaluate_and_or(ao, p::Atom, q) = ao(q, p)
-___evaluate_and_or(ao, p, q) = ____evaluate_and_or(ao, deconstruct(p)..., q)
+___evaluate_and_or(ao, p, q) = p.kind == operator ?
+    ____evaluate_and_or(ao, deconstruct(p)..., q) :
+    ao(q, p)
 
 __evaluate_and_or(ao, o::NullaryOperator, ps, q) = _evaluate(ao, o, q)
 __evaluate_and_or(ao, o, ps, q) = ___evaluate_and_or(ao, q, AbstractSyntaxTree(o, ps))
 
-_evaluate_and_or(ao, p::Atom, q) = ___evaluate_and_or(ao, q, p)
-_evaluate_and_or(ao, p, q) = __evaluate_and_or(ao, deconstruct(p)..., q)
+_evaluate_and_or(ao, p, q) = p.kind == operator ?
+    __evaluate_and_or(ao, deconstruct(p)..., q) :
+    ___evaluate_and_or(ao, q, p)
 
 evaluate_and_or(::typeof(∧), ::typeof(⊤), q) = q
 evaluate_and_or(::typeof(∧), ::typeof(⊥), q) = ⊥
@@ -497,13 +503,6 @@ evaluate(::typeof(⋁), ps) = fold(𝒾, (∨) => ps)
 ___evaluation(::Eager, o, ps) = evaluate(o, ps)
 ___evaluation(::Lazy, o, ps) = _evaluation(o, ps)
 
-__evaluation(::typeof(𝒾), ps) = AbstractSyntaxTree(¬, ps)
-__evaluation(o, ps) = AbstractSyntaxTree(¬, [AbstractSyntaxTree(o, ps)])
-
-function _evaluation(::typeof(¬), ps::Vector{AbstractSyntaxTree})
-    q = only(ps)
-    __evaluation(nodevalue(q), children(q))
-end
 _evaluation(o, ps::Vector{AbstractSyntaxTree}) = AbstractSyntaxTree(o, ps)
 _evaluation(o, ps) = _evaluation(o, map(AbstractSyntaxTree, ps))
 
@@ -553,6 +552,8 @@ function _print_proposition(io, p::Some)
     print(io, ")")
 end
 _print_proposition(io, p::Symbol) = print(io, p)
-_print_proposition(io, p::AbstractSyntaxTree) = print_expression(io, nodevalue(p), children(p))
+_print_proposition(io, p::AbstractSyntaxTree) = p.kind == operator ?
+    print_expression(io, nodevalue(p), children(p)) :
+    _print_proposition(io, p.value)
 
 print_proposition(io, p) = _print_proposition(IOContext(io, :root => false), p)

@@ -106,8 +106,8 @@ The [`solutions`](@ref) of a proposition are the [`valuations`](@ref) that resul
 ```jldoctest 1
 julia> collect(valuations(p ∧ q))
 2×2 Matrix{Vector{Pair{PAndQ.AbstractSyntaxTree, Bool}}}:
- [identical(AbstractSyntaxTree(:p))=>1, identical(AbstractSyntaxTree(:q))=>1]  …  [identical(AbstractSyntaxTree(:p))=>1, identical(AbstractSyntaxTree(:q))=>0]
- [identical(AbstractSyntaxTree(:p))=>0, identical(AbstractSyntaxTree(:q))=>1]     [identical(AbstractSyntaxTree(:p))=>0, identical(AbstractSyntaxTree(:q))=>0]
+ [AbstractSyntaxTree(:p)=>1, AbstractSyntaxTree(:q)=>1]  …  [AbstractSyntaxTree(:p)=>1, AbstractSyntaxTree(:q)=>0]
+ [AbstractSyntaxTree(:p)=>0, AbstractSyntaxTree(:q)=>1]     [AbstractSyntaxTree(:p)=>0, AbstractSyntaxTree(:q)=>0]
 
 julia> solutions(p ∧ q)[1]
 2-element Vector{PAndQ.AbstractSyntaxTree}:
