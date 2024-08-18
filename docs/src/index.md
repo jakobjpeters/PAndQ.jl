@@ -137,7 +137,7 @@ julia> print_table(p ∧ ¬p, ¬p, r, s)
     - Does not support the Windows operating system
 - [Z3.jl](https://github.com/ahumenberger/Z3.jl)
     - An interface to the [Z3 Theorem Prover](https://github.com/Z3Prover/z3) using z3_jll.jl
-    - Commits [type piracy](https://docs.julialang.org/en/v1/manual/style-guide/#Avoid-type-piracy)
+    - No documentation
 
 ##### Binaries
 
