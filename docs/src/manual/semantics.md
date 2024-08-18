@@ -38,6 +38,7 @@ The ordering is partial because the predicates [`==`](@ref) and [`is_truth`](@re
 ```@docs
 ==
 <
+hash
 ```
 
 ## Utilities

@@ -1,5 +1,5 @@
 
-import Base: Bool, Fix2, convert, promote_rule, ==, <
+import Base: Bool, Fix2, ==, <, convert, hash, promote_rule
 using Base.Iterators: product, repeated
 
 # Truths
@@ -56,11 +56,8 @@ julia> @atomize interpret([p => ⊤], p ∧ q)
 ```
 """
 interpret(valuation::Function, p) = map(valuation, p)
-interpret(valuation::Dict, p) = interpret(p) do a
-    value = a.value
-    get(valuation, value, value)
-end
-interpret(valuation, p) = interpret(Dict(Iterators.map(((key, value),) -> key.value => value, valuation)), p)
+interpret(valuation::Dict, p) = interpret(a -> get(valuation, a, a), p)
+interpret(valuation, p) = interpret(Dict(valuation), p)
 
 """
     interpretations(valuations, p)
@@ -120,16 +117,17 @@ julia> @atomize collect(only(solutions(p ∧ q)[2]))
 function solutions(p; solver = Z3)
     clauses, atoms = _tseytin(p)
     valuations = solver.Solutions(clauses, length(atoms))
-    _atoms, x = Atom[], Dict{Int, Int}()
+    _atoms, x = AbstractSyntaxTree[], Dict{Int, Int}()
 
     for (i, atom) in enumerate(atoms)
-        if atom isa Some || !startswith(string(atom), "##")
+        value = atom.value
+        if value isa Some || !startswith(string(value), "##")
             push!(_atoms, atom)
             x[i] = length(x) + 1
         end
     end
 
-    map(AbstractSyntaxTree, _atoms), Iterators.map(valuation -> map(last, Iterators.filter(
+    _atoms, Iterators.map(valuation -> map(last, Iterators.filter(
         ((atom, assignment),) -> get(x, atom, 0) != 0, enumerate(valuation))), valuations)
 end
 
@@ -356,6 +354,25 @@ p::AbstractSyntaxTree < ::typeof(⊥) = is_satisfiable(p)
 p::NullaryOperator < q::AbstractSyntaxTree = q < p
 p::AbstractSyntaxTree < q::AbstractSyntaxTree =
     is_contradiction(p) ? is_satisfiable(q) : is_falsifiable(p) && is_tautology(q)
+
+"""
+    hash(::Union{AbstractSyntaxTree, Operator}, ::UInt)
+
+Return `zero(UInt)`.
+
+Since `p == q` implies `hash(p) == hash(q)`, obtaining a better hash
+value would require finding the [`solutions`](@ref) in some form.
+Instead of using an NP-complete hash time, this instead opts for linear lookup time.
+An [`Operator`](@ref) may be logically equivalent to a proposition, and so is also in this case.
+
+# Examples
+
+```jldoctest
+julia> @atomize hash(p)
+0x0000000000000000
+```
+"""
+hash(::Union{AbstractSyntaxTree, Operator}, ::UInt) = zero(UInt)
 
 # Operators
 

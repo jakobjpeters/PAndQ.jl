@@ -53,9 +53,9 @@ struct TruthTable
     body::Matrix{Bool}
 
     function TruthTable(@nospecialize ps)
-        ps = collect(AbstractSyntaxTree, ps)
+        ps = collect(ps)
         __atoms = unique(p -> p.value, flatmap(atoms, ps))
-        ps = union(__atoms, ps)
+        ps = append!(ps, __atoms)
         _valuations = vec(collect(valuations(__atoms)))
         _interpretations = Iterators.map(p -> vec(map(
             valuation -> Bool(interpret(valuation, normalize(¬, p))),
@@ -74,7 +74,7 @@ struct TruthTable
         for (p, interpretation) in zip(ps, _interpretations)
             _union! = (key, group) -> begin
                 union!(key, [interpretation])
-                union!(get!(group, interpretation, AbstractSyntaxTree[]), [p])
+                push!(get!(group, interpretation, AbstractSyntaxTree[]), p)
             end
 
             if interpretation in keys(grouped_truths) _union!(truths_interpretations, grouped_truths)

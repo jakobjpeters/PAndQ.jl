@@ -10,8 +10,6 @@ using ReplMaker: complete_julia, initrepl
 
 ## Types
 
-const Atom = Union{Symbol, Some}
-
 """
     AbstractSyntaxTree(o, ps)
 
@@ -194,9 +192,9 @@ distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(∧, [q, _distribute(
 end]), ∧, AbstractSyntaxTree[normalize(¬, p)])
 
 """
-    prune(p, atoms = AbstractSyntaxTree[], mapping = Dict{Atom, Int}())
+    prune(p, atoms = AbstractSyntaxTree[], mapping = Dict{AbstractSyntaxTree, Int}())
 """
-function prune(p, atoms = Atom[], mapping = Dict{Atom, Int}())
+function prune(p, atoms = AbstractSyntaxTree[], mapping = Dict{Union{Some, Symbol}, Int}())
     clauses, qs, stack = Set{Set{Int}}(), AbstractSyntaxTree[], AbstractSyntaxTree[p]
 
     while !isempty(stack)
@@ -218,8 +216,8 @@ function prune(p, atoms = Atom[], mapping = Dict{Atom, Int}())
 
                 if _o == ⊥
                 elseif s.kind != operator || (_o isa UnaryOperator && only(ts).kind != operator)
-                    atom = s.kind == operator ? only(ts).value : s.value
-                    literal = (_o == 𝒾 ? 1 : -1) * get!(mapping, atom) do
+                    atom = s.kind == operator ? only(ts) : s
+                    literal = (_o == 𝒾 ? 1 : -1) * get!(mapping, atom.value) do
                         push!(atoms, atom)
                         length(mapping) + 1
                     end
