@@ -72,6 +72,10 @@ PAndQ.AndOr
 
 ## Propositions
 
+```@docs
+PAndQ.Kind
+```
+
 ### Types
 
 ```@docs

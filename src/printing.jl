@@ -370,7 +370,7 @@ p ∧ q
 """
 show(io::IO, p::AbstractSyntaxTree) =
     if p.kind == operator
-        show(io, p.value::Operator)
+        show(io, nodevalue(p))
         print(io, "(")
         _show(io -> print(io, ", "), show, io, children(p))
         print(io, ")")

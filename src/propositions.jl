@@ -6,12 +6,15 @@ using Base.Iterators: Stateful
 using Base: isexpr
 using ReplMaker: complete_julia, initrepl
 
+"""
+    Kind
+"""
 @enum Kind constant operator variable
 
 ## Types
 
 """
-    AbstractSyntaxTree(o, ps)
+    AbstractSyntaxTree
 
 A [proposition](https://en.wikipedia.org/wiki/Proposition)
 represented by an [abstract syntax tree]
@@ -38,7 +41,8 @@ struct AbstractSyntaxTree
 end
 
 AbstractSyntaxTree(k::Kind, v) = AbstractSyntaxTree(k, v, AbstractSyntaxTree[])
-AbstractSyntaxTree(o::Operator{O}, ps) where O = AbstractSyntaxTree(operator, o, ps)
+AbstractSyntaxTree(k::Kind, ::Operator{O}) where O = AbstractSyntaxTree(k, O)
+AbstractSyntaxTree(::Operator{O}, ps) where O = AbstractSyntaxTree(operator, O, ps)
 
 ## AbstractTrees.jl
 
@@ -79,7 +83,7 @@ julia> @atomize PAndQ.nodevalue(p ∧ q)
 ∧
 ```
 """
-nodevalue(p::AbstractSyntaxTree) = p.kind == operator ? p.value::Operator : 𝒾
+nodevalue(p::AbstractSyntaxTree) = p.kind == operator ? Operator{p.value::Symbol}() : p
 
 """
     printnode(::IO, ::Union{Operator, AbstractSyntaxTree}; kwargs...)
@@ -114,7 +118,7 @@ See also [`nodevalue`](@ref) and [`children`](@ref).
 # Examples
 ```jldoctest
 julia> @atomize PAndQ.deconstruct(p)
-(identical, PAndQ.AbstractSyntaxTree[])
+(PAndQ.AbstractSyntaxTree(:p), PAndQ.AbstractSyntaxTree[])
 
 julia> @atomize PAndQ.deconstruct(¬p)
 (not, PAndQ.AbstractSyntaxTree[PAndQ.AbstractSyntaxTree(:p)])
@@ -170,10 +174,11 @@ function _distribute(f, ao, stack)
         o, rs = deconstruct(q)
 
         if o isa NullaryOperator return AbstractSyntaxTree(o)
-        elseif o isa UnaryOperator p = _evaluate(ao, p, q)
+        elseif o isa Union{AbstractSyntaxTree, typeof(¬)} p = _evaluate(ao, p, q)
         elseif o == ao append!(stack, rs)
         else p = f(p, rs, stack)
         end
+
     end
 
     p
@@ -201,23 +206,23 @@ function prune(p, atoms = AbstractSyntaxTree[], mapping = Dict{Union{Some, Symbo
         r = pop!(stack)
         o = nodevalue(r)
 
-        if o == ⊤
-        elseif o == ⊥
+        if o === ⊤
+        elseif o === ⊥
             push!(empty!(clauses), Set{Int}())
             empty!(qs)
             break
         elseif o == (∧) append!(stack, children(r))
-        elseif o isa Union{UnaryOperator, typeof(∨)}
+        elseif o isa Union{AbstractSyntaxTree, union_typeof((¬, ∨))}
             clause, _stack = Set{Int}(), AbstractSyntaxTree[r]
 
             while !isempty(_stack)
                 s = pop!(_stack)
                 _o, ts = deconstruct(s)
 
-                if _o == ⊥
-                elseif s.kind != operator || (_o isa UnaryOperator && only(ts).kind != operator)
+                if _o === ⊥
+                elseif s.kind != operator || ((_o === ¬) && only(ts).kind != operator)
                     atom = s.kind == operator ? only(ts) : s
-                    literal = (_o == 𝒾 ? 1 : -1) * get!(mapping, atom.value) do
+                    literal = (_o isa AbstractSyntaxTree || _o == 𝒾 ? 1 : -1) * get!(mapping, atom.value) do
                         push!(atoms, atom)
                         length(mapping) + 1
                     end
@@ -240,6 +245,11 @@ function prune(p, atoms = AbstractSyntaxTree[], mapping = Dict{Union{Some, Symbo
         end
     end
 
+    # @show clauses
+    # @show atoms
+    # @show mapping
+    # @show qs
+    # @info ""
     clauses, atoms, mapping, qs
 end
 
@@ -477,8 +487,7 @@ function normalize(::typeof(¬), p)
         elseif o isa AndOr
             push!(operator_stack, length(input_stack) => o)
             append!(input_stack, rs)
-        else
-            push!(input_stack, evaluate(o, rs))
+        else push!(input_stack, evaluate(o, rs))
         end
     end
 
