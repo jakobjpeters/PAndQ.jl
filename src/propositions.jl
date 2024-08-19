@@ -174,7 +174,7 @@ function _distribute(f, ao, stack)
         o, rs = deconstruct(q)
 
         if o isa NullaryOperator return AbstractSyntaxTree(o)
-        elseif o isa Union{AbstractSyntaxTree, typeof(¬)} p = _evaluate(ao, p, q)
+        elseif o isa Union{AbstractSyntaxTree, typeof(¬)} p = evaluate(name(ao), [p, q])
         elseif o == ao append!(stack, rs)
         else p = f(p, rs, stack)
         end
@@ -189,8 +189,8 @@ end
 
 Given a proposition in negation normal form, return that proposition in conjunction normal form.
 """
-distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(∧, [q, _distribute(∨, map(AbstractSyntaxTree, rs)) do s, ts, disjuncts
-    u = evaluate(∨, [s, fold(identity, (∨) => disjuncts)])
+distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(:and, [q, _distribute(∨, map(AbstractSyntaxTree, rs)) do s, ts, disjuncts
+    u = evaluate(:or, [s, fold(identity, (∨) => disjuncts)])
     empty!(disjuncts)
     append!(conjuncts, map(t -> t ∨ u, ts))
     AbstractSyntaxTree(⊤)
@@ -245,11 +245,6 @@ function prune(p, atoms = AbstractSyntaxTree[], mapping = Dict{Union{Some, Symbo
         end
     end
 
-    # @show clauses
-    # @show atoms
-    # @show mapping
-    # @show qs
-    # @info ""
     clauses, atoms, mapping, qs
 end
 
@@ -395,7 +390,7 @@ julia> @atomize map(atom -> \$(something(value(atom)) + 1), \$1 ∧ \$2)
 """
 map(f, p::NullaryOperator) = p
 map(f, p::AbstractSyntaxTree) = p.kind == operator ?
-    evaluation(nodevalue(p), map(q -> q.kind != operator ? f(q) : map(f, q), children(p))) :
+    _evaluation(nodevalue(p), map(q -> q.kind != operator ? f(q) : map(f, q), children(p))) :
     f(p)
 
 """
@@ -426,12 +421,12 @@ The available `prompt_color`s are in `Base.text_colors`.
 """
 function install_atomize_mode(; start_key = "\\M-a", prompt_text = "atomize> ", prompt_color = :cyan, kwargs...)
     initrepl(atomize ∘ Meta.parse;
-        prompt_text,
-        start_key,
-        prompt_color,
         mode_name = :atomize,
         valid_input_checker = complete_julia,
         startup_text = false,
+        prompt_text,
+        start_key,
+        prompt_color,
         kwargs...
     )
     @info "The `atomize` REPL mode has been installed: press [$start_key] to enter and [Backspace] to exit"
@@ -487,7 +482,7 @@ function normalize(::typeof(¬), p)
         elseif o isa AndOr
             push!(operator_stack, length(input_stack) => o)
             append!(input_stack, rs)
-        else push!(input_stack, evaluate(o, rs))
+        else push!(input_stack, evaluate(name(o), rs))
         end
     end
 
@@ -504,7 +499,7 @@ function normalize(::typeof(¬), p)
         push!(input_stack,
             if _arity == 0 o()
             elseif _arity == 1 o(pop!(input_stack))
-            else evaluate(o, [pop!(input_stack), pop!(input_stack)])
+            else evaluate(name(o), [pop!(input_stack), pop!(input_stack)])
             end
         )
     end

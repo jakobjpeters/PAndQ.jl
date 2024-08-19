@@ -322,7 +322,8 @@ false
 p::AbstractSyntaxTree == ::typeof(⊤) = is_tautology(p)
 p::AbstractSyntaxTree == ::typeof(⊥) = is_contradiction(p)
 p::NullaryOperator == q::AbstractSyntaxTree = q == p
-p::AbstractSyntaxTree == q::AbstractSyntaxTree = is_contradiction(p ↮ q)
+p::AbstractSyntaxTree == q::AbstractSyntaxTree =
+    all(r -> r.kind != operator, [p, q]) ? p.value == q.value : is_contradiction(p ↮ q)
 
 """
     <(p, q)
@@ -463,46 +464,9 @@ is_commutative(::union_typeof((→, ↛, ←, ↚))) = false
 is_associative(::union_typeof((∧, ∨, ↮, ↔))) = true
 is_associative(::union_typeof((↑, ↓, →, ↛, ←, ↚))) = false
 
-evaluate_not(::typeof(¬), ps) = AbstractSyntaxTree(only(ps))
-evaluate_not(o, ps) = evaluate(dual(o), map((¬) ∘ AbstractSyntaxTree, ps))
+Base.Bool(p::AbstractSyntaxTree) = p.kind == operator ? Bool(Operator{p.value::Symbol}()) : error()
 
-____evaluate_and_or(ao, o::NullaryOperator, ps, q) = _evaluate(ao, o, q)
-____evaluate_and_or(ao, o, ps, q) = ao(q, AbstractSyntaxTree(o, ps))
-
-___evaluate_and_or(ao, p, q) = p.kind == operator ?
-    ____evaluate_and_or(ao, deconstruct(p)..., q) :
-    ao(q, p)
-
-__evaluate_and_or(ao, o::NullaryOperator, ps, q) = _evaluate(ao, o, q)
-__evaluate_and_or(ao, o, ps, q) = ___evaluate_and_or(ao, q, AbstractSyntaxTree(o, ps))
-
-_evaluate_and_or(ao, p, q) = p.kind == operator ?
-    __evaluate_and_or(ao, deconstruct(p)..., q) :
-    ___evaluate_and_or(ao, q, p)
-
-evaluate_and_or(::typeof(∧), ::typeof(⊤), q) = q
-evaluate_and_or(::typeof(∧), ::typeof(⊥), q) = ⊥
-evaluate_and_or(::typeof(∨), ::typeof(⊤), q) = ⊤
-evaluate_and_or(::typeof(∨), ::typeof(⊥), q) = q
-evaluate_and_or(ao, p, q) = _evaluate_and_or(ao, p, q)
-
-_evaluate(o::NullaryOperator) = o
-_evaluate(::typeof(𝒾), p) = p
-_evaluate(::typeof(¬), p::Bool) = !p
-_evaluate(::typeof(¬), p::NullaryOperator) = dual(p)
-_evaluate(::typeof(¬), p::AbstractSyntaxTree) = evaluate_not(nodevalue(p), children(p))
-_evaluate(::typeof(∧), p::Bool, q::Bool) = p && q
-_evaluate(::typeof(∨), p::Bool, q::Bool) = p || q
-_evaluate(o::AndOr, p, q) = evaluate_and_or(o, p, q)
-_evaluate(::typeof(→), p, q) = ¬p ∨ q
-_evaluate(::typeof(↮), p, q) = (p ∨ q) ∧ (p ↑ q)
-_evaluate(::typeof(←), p, q) = p ∨ ¬q
-_evaluate(::typeof(↑), p, q) = ¬(p ∧ q)
-_evaluate(::typeof(↓), p, q) = ¬p ∧ ¬q
-_evaluate(::typeof(↛), p, q) = p ∧ ¬q
-_evaluate(::typeof(↔), p, q) = (p ∧ q) ∨ (p ↓ q)
-_evaluate(::typeof(↚), p, q) = ¬p ∧ q
-
+dispatch(f, o::Symbol, ps) = dispatch(f, Operator{o}(), ps)
 function dispatch(f, o, ps)
     _arity = arity(o)
     _arity == length(ps) || error("write this error")
@@ -513,23 +477,64 @@ function dispatch(f, o, ps)
     end
 end
 
-evaluate(o::Union{NullaryOperator, UnaryOperator, BinaryOperator}, ps) = dispatch(_evaluate, o, ps)
-evaluate(::typeof(⋀), ps) = fold(𝒾, (∧) => ps)
-evaluate(::typeof(⋁), ps) = fold(𝒾, (∨) => ps)
+evaluate(o, ps) =
+    if o in [:tautology, :contradiction] AbstractSyntaxTree(operator, o)
+    elseif o == :not
+        q = only(ps)
+        branches, o_q = q.branches, nodevalue(q)
+        o_q == (¬) ? only(branches) : evaluate(name(dual(o_q)), map(¬, branches))
+    elseif o in [:and, :or]
+        q, r = ps
+        _initial_value, o_q = initial_value(Operator{o}()), nodevalue(q)
+        if o_q === _initial_value r
+        else
+            o_r = nodevalue(r)
+            if o_r === _initial_value q
+            else
+                dual_initial_value = dual(_initial_value)
+                any(o -> o === dual_initial_value, [o_q o_r]) ?
+                    AbstractSyntaxTree(operator, dual_initial_value, AbstractSyntaxTree[]) :
+                    AbstractSyntaxTree(operator, o, [q, r])
+            end
+        end
+    elseif o == :conjunction fold(𝒾, (∧) => ps)
+    elseif o == :disjunction fold(𝒾, (∨) => ps)
+    else o in keys(evaluate_dict) ?
+        interpret(map(((i, p),) -> @atomize($i => p), enumerate(ps)), evaluate_dict[o]) :
+        evaluate(Operator{o}(), ps...)
+    end
 
-___evaluation(::Eager, o, ps) = evaluate(o, ps)
-___evaluation(::Lazy, o, ps) = _evaluation(o, ps)
-
-_evaluation(o, ps::Vector{AbstractSyntaxTree}) = AbstractSyntaxTree(o, ps)
-_evaluation(o, ps) = _evaluation(o, map(AbstractSyntaxTree, ps))
+evaluation(::Eager, o, ps) = evaluate(name(o), ps)
+evaluation(::Lazy, o, ps) = AbstractSyntaxTree(o, ps)
 
 Evaluation(::Union{NullaryOperator, typeof(𝒾), NaryOperator}) = Eager
 Evaluation(::Union{typeof(¬), BinaryOperator}) = Lazy
 
-evaluation(o, ps::Vector{Bool}) = evaluate(o, ps)
-evaluation(o, ps) = ___evaluation(Evaluation(o)(), o, ps)
+_evaluation(o, ps::Vector{AbstractSyntaxTree}) = evaluation(Evaluation(o)(), o, ps)
+_evaluation(o, ps::Vector{Bool}) =
+    if o == ¬; !only(ps)
+    elseif o == ∧; all(ps)
+    elseif o == ∨; any(ps)
+    else evaluate(o, ps)
+    end
+_evaluation(o, ps) = _evaluation(o, map(AbstractSyntaxTree, ps))
 
-(o::Operator)(ps::Union{Bool, NullaryOperator, AbstractSyntaxTree}...) = evaluation(o, [ps...])
+(o::Operator)(ps::AbstractSyntaxTree...) = evaluation(Evaluation(o)(), o, [ps...])
+(o::Operator)(ps::Bool...) = _evaluation(o, [ps...])
+(o::Operator)() = _evaluation(o, AbstractSyntaxTree[])
+(o::Operator)(ps...) = o(map(AbstractSyntaxTree, ps)...)
+
+const evaluate_dict = @atomize Dict(map(((o, p),) -> name(o) => p, [
+    𝒾 => $1,
+    (→) => ¬$1 ∨ $2,
+    (↮) => ($1 ∨ $2) ∧ ($1 ↑ $2),
+    (←) => $1 ∨ ¬$2,
+    (↑) => ¬($1 ∧ $2),
+    (↓) => ¬($1 ∨ $2),
+    (↛) => $1 ∧ ¬$2,
+    (↔) => ($1 ∧ $2) ∨ ($1 ↓ $2),
+    (↚) => ¬$1 ∧ $2
+]))
 
 __print_expression(io, o, ps) = _show(print_proposition, io, ps) do io
     print(io, " ")

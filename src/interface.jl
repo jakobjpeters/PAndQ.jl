@@ -81,7 +81,7 @@ abstract type Evaluation end
 @interface Evaluation o
 
 """
-    evaluate(::Operator, ps)
+    evaluate(::Symbol, ps)
 
 Define the semantics of the [`Operator`](@ref Interface.Operator).
 
@@ -89,14 +89,14 @@ This method is required to [`normalize`](@ref) a proposition containing the give
 
 # Examples
 ```jldoctest
-julia> @atomize Interface.evaluate(¬, [¬p])
+julia> @atomize Interface.evaluate(:not, [¬p])
 p
 
-julia> @atomize Interface.evaluate(→, [p, q])
+julia> @atomize Interface.evaluate(:imply, [p, q])
 ¬p ∨ q
 ```
 """
-@interface evaluate o ps
+function evaluate end
 
 ## Folding
 
