@@ -151,7 +151,7 @@ atomize(x) =
     if x isa Symbol; :((@isdefined $x) ? $x : $(AbstractSyntaxTree(variable, x)))
     elseif x isa Expr
         if length(x.args) == 0 || (isexpr(x, :macrocall) && first(x.args) == Symbol("@atomize")) x
-        elseif isexpr(x, :$); :($AbstractSyntaxTree($variable, Some($(only(x.args)))))
+        elseif isexpr(x, :$); :($AbstractSyntaxTree($constant, Some($(only(x.args)))))
         elseif isexpr(x, :kw) Expr(x.head, x.args[1], atomize(x.args[2]))
         elseif isexpr(x, (:struct, :where)) x # TODO
         else # TODO

@@ -1,6 +1,7 @@
 
 import Base: Bool, Fix2, ==, <, convert, hash, promote_rule
 using Base.Iterators: product, repeated
+using Base: current_project
 
 # Truths
 
@@ -430,9 +431,7 @@ eval_pairs(f, pairs) = for pair in pairs
     end
 end
 
-arity(::NullaryOperator) = 0
-arity(::UnaryOperator) = 1
-arity(::BinaryOperator) = 2
+arity(o) = get(arities, name(o), nothing)
 
 initial_value(::union_typeof((∧, ↔, →, ←))) = ⊤
 initial_value(::union_typeof((∨, ↮, ↚, ↛))) = ⊥
@@ -458,24 +457,11 @@ eval_pairs(:dual, (
 converse(o::union_typeof((∧, ∨, ↑, ↓, ↔, ↮))) = o
 eval_pairs(:converse, ((→, ←), (↛, ↚)))
 
-is_commutative(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔))) = true
-is_commutative(::union_typeof((→, ↛, ←, ↚))) = false
+is_commutative(o) = name(o) in commutativities
 
-is_associative(::union_typeof((∧, ∨, ↮, ↔))) = true
-is_associative(::union_typeof((↑, ↓, →, ↛, ←, ↚))) = false
+is_associative(o) = name(o) in associativities
 
 Base.Bool(p::AbstractSyntaxTree) = p.kind == operator ? Bool(Operator{p.value::Symbol}()) : error()
-
-dispatch(f, o::Symbol, ps) = dispatch(f, Operator{o}(), ps)
-function dispatch(f, o, ps)
-    _arity = arity(o)
-    _arity == length(ps) || error("write this error")
-
-    if _arity == 0 f(o)
-    elseif _arity == 1 f(o, only(ps))
-    else f(o, first(ps), last(ps))
-    end
-end
 
 evaluate(o, ps) =
     if o in [:tautology, :contradiction] AbstractSyntaxTree(operator, o)
@@ -499,8 +485,8 @@ evaluate(o, ps) =
         end
     elseif o == :conjunction fold(𝒾, (∧) => ps)
     elseif o == :disjunction fold(𝒾, (∨) => ps)
-    else o in keys(evaluate_dict) ?
-        interpret(map(((i, p),) -> @atomize($i => p), enumerate(ps)), evaluate_dict[o]) :
+    else o in keys(evaluations) ?
+        interpret(map(((i, p),) -> @atomize($i => p), enumerate(ps)), evaluations[o]) :
         evaluate(Operator{o}(), ps...)
     end
 
@@ -524,58 +510,115 @@ _evaluation(o, ps) = _evaluation(o, map(AbstractSyntaxTree, ps))
 (o::Operator)() = _evaluation(o, AbstractSyntaxTree[])
 (o::Operator)(ps...) = o(map(AbstractSyntaxTree, ps)...)
 
-const evaluate_dict = @atomize Dict(map(((o, p),) -> name(o) => p, [
+print_expression(io, o, ps) =
+    if o in [:tautology, :contradiction, :not]
+        ns, ss = print_dict[o]
+
+        for (i, s) in enumerate(ss)
+            if i in ns
+                print_proposition(io, ps[parse(Int, s)])
+            else print(io, s)
+            end
+        end
+    elseif o in [:and, :or, :not_or, :not_and, :imply, :not_imply, :not_converse_imply, :exclusive_or, :not_exclusive_or, :converse_imply]
+        _o, qs, stack = Operator{o}(), AbstractSyntaxTree[], AbstractSyntaxTree[]
+
+        if is_associative(_o)
+            append!(stack, ps)
+
+            while !isempty(stack)
+                q = pop!(stack)
+                nodevalue(q) == _o ? append!(stack, (children(q))) : push!(qs, q)
+            end
+
+            reverse!(qs)
+        else append!(qs, ps)
+        end
+
+        _show(print_proposition, io, qs) do io
+            print(io, " ")
+            show(io, MIME"text/plain"(), _o)
+            print(io, " ")
+        end
+    else print_expression(io, Operator{o}(), ps)
+    end
+
+_print_proposition(io, p::AbstractSyntaxTree) =
+    if p.kind == variable print(io, p.value::Symbol)
+    elseif p.kind == constant
+        print(io, "\$(")
+        show(io, something(p.value))
+        print(io, ")")
+    else print_expression(io, name(nodevalue(p)), children(p))
+    end
+
+print_proposition(io, p) = _print_proposition(IOContext(io, :root => false), p)
+
+function _is_commutative(o::Operator)
+    p, q = map(o -> AbstractSyntaxTree(variable, o), (:p, :q))
+    o(p, q) == o(q, p)
+end
+
+const p, q, r = @variables p q r
+
+function __register_operator(name, _arity)
+    if _arity == 2
+        AbstractSyntaxTree(operator, name, [p, q]) == AbstractSyntaxTree(operator, name, [q, p]) && push!(commutativities, name)
+        AbstractSyntaxTree(operator, name, [AbstractSyntaxTree(operator, name, [p, q]), r]) == AbstractSyntaxTree(operator, name, [p, AbstractSyntaxTree(operator, name, [q, r])]) && push!(associativities, name)
+    end
+
+    Operator{name}()
+end
+
+function _register_operator(name, evaluation)
+    evaluations[name] = evaluation
+    arities[name] = length(unique(atoms(evaluations)))
+end
+
+register_operator(name::Symbol, evaluation::AbstractSyntaxTree) =
+    __register_operator(name, _register_operator(name, evaluation))
+
+const arities = Dict(:tautology => 0, :contradiction => 0, :not => 1, :and => 2, :or => 2)
+const evaluations = Dict{Symbol, AbstractSyntaxTree}()
+const associativities, commutativities = Set([:and, :or]), Set([:and, :or])
+
+const os_ps = map(((o, p),) -> name(o) => p, @atomize [
     𝒾 => $1,
     (→) => ¬$1 ∨ $2,
-    (↮) => ($1 ∨ $2) ∧ ($1 ↑ $2),
     (←) => $1 ∨ ¬$2,
     (↑) => ¬($1 ∧ $2),
     (↓) => ¬($1 ∨ $2),
     (↛) => $1 ∧ ¬$2,
-    (↔) => ($1 ∧ $2) ∨ ($1 ↓ $2),
-    (↚) => ¬$1 ∧ $2
-]))
+    (↚) => ¬$1 ∧ $2,
+    (↮) => ($1 ∨ $2) ∧ ($1 ↑ $2),
+    (↔) => ($1 ∧ $2) ∨ ($1 ↓ $2)
+])
 
-__print_expression(io, o, ps) = _show(print_proposition, io, ps) do io
-    print(io, " ")
-    show(io, "text/plain", o)
-    print(io, " ")
+for (o, p) in os_ps
+    _register_operator(o, p)
 end
 
-_print_expression(io, p::NullaryOperator) = print_proposition(io, p)
-_print_expression(io, ::typeof(𝒾), p) = print_proposition(io, p)
-function _print_expression(io, ::typeof(¬), p)
-    show(io, "text/plain", ¬)
-    print_proposition(io, p)
+for (o, _) in os_ps
+    __register_operator(o, arity(Operator{o}()))
 end
-function _print_expression(io, o::BinaryOperator, p, q)
-    rs, stack = AbstractSyntaxTree[], AbstractSyntaxTree[]
 
-    if is_associative(o)
-        push!(stack, q, p)
+const print_dict = Dict(map(append!(
+    Pair{Operator, String}[(¬) => "¬1"],
+    map(o -> o => "$(symbol(o))", [⊤, ⊥]),
+    map(o -> o => "1 $(symbol(o)) 2", [∧, ∨, →, ↮, ←, ↑, ↓, ↛, ↔, ↚]),
+)) do (o, s)
+    current, ns, ss = firstindex(s), Set{Int}(), SubstitutionString[]
 
-        while !isempty(stack)
-            r = pop!(stack)
-            nodevalue(r) == o ? append!(stack, reverse(children(r))) : push!(rs, r)
-        end
-    else push!(rs, p, q)
+    for match in eachmatch(r"(\d+)", s)
+        capture, offset = only(match.captures), match.offset
+        current < offset && push!(ss, s[current:prevind(s, offset)])
+        push!(ss, capture[begin:end])
+        push!(ns, length(ss))
+        current = offset + ncodeunits(capture)
     end
 
-    __print_expression(io, o, rs)
-end
+    last = lastindex(s)
+    current ≤ last && push!(ss, s[current:last])
 
-print_expression(io, o::Union{NullaryOperator, UnaryOperator, BinaryOperator}, ps) =
-    dispatch((_o, qs...) -> _print_expression(io, _o, qs...), o, ps)
-
-_print_proposition(io, p::NullaryOperator) = show(io, "text/plain", p)
-function _print_proposition(io, p::Some)
-    print(io, "\$(")
-    show(io, something(p))
-    print(io, ")")
-end
-_print_proposition(io, p::Symbol) = print(io, p)
-_print_proposition(io, p::AbstractSyntaxTree) = p.kind == operator ?
-    print_expression(io, nodevalue(p), children(p)) :
-    _print_proposition(io, p.value)
-
-print_proposition(io, p) = _print_proposition(IOContext(io, :root => false), p)
+    name(o), ns => ss
+end)

@@ -165,13 +165,13 @@ for a proposition `p` containing the given operator.
 
 # Examples
 ```jldoctest
-julia> @atomize Interface.print_expression(stdout, ⊤, [])
+julia> @atomize Interface.print_expression(stdout, Interface.name(⊤), [])
 ⊤
 
-julia> @atomize Interface.print_expression(stdout, ¬, [p])
+julia> @atomize Interface.print_expression(stdout, Interface.name(¬), [p])
 ¬p
 
-julia> @atomize Interface.print_expression(stdout, ∧, [p, q])
+julia> @atomize Interface.print_expression(stdout, Interface.name(∧), [p, q])
 p ∧ q
 ```
 """
@@ -327,7 +327,7 @@ julia> Interface.arity(∧)
 2
 ```
 """
-@interface arity o
+function arity end
 
 """
     converse(ℴ::Operator)
@@ -388,10 +388,7 @@ julia> Interface.is_associative(→)
 false
 ```
 """
-function is_associative(o::Operator)
-    p, q, r = map(Variable, (:p, :q, :r))
-    ℴ(ℴ(p, q), r) == ℴ(p, ℴ(q, r))
-end
+function is_associative end
 
 """
     is_commutative(ℴ::Operator)
@@ -410,9 +407,6 @@ julia> Interface.is_commutative(→)
 false
 ```
 """
-function is_commutative(o::Operator)
-    p, q = map(Variable, (:p, :q))
-    o(p, q) == o(q, p)
-end
+function is_commutative end
 
 end
