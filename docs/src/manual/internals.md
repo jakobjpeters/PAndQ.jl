@@ -108,7 +108,6 @@ PAndQ.reconstruct
 ## Semantics
 
 ```@docs
-PAndQ.eval_pairs
 convert
 promote_rule
 ```

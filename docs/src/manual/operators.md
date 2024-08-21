@@ -1,7 +1,7 @@
 
 # [Operators](@id operators_operators)
 
-Operators accept `Bool`s, [truth values](@ref nullary_operators), and [propositions](@ref propositions). However, boolean values cannot interoperate with truth values and propositions. Operations on boolean values is always eagerly evaluated, whereas operations on truth values and propositions is evaluated according to the operator's [`Evaluation`](@ref Interface.Evaluation) trait.
+Operators accept `Bool`s, [truth values](@ref nullary_operators), and [propositions](@ref propositions). However, boolean values cannot interoperate with truth values and propositions. Operations on boolean values is always eagerly evaluated, whereas operations on truth values and propositions is evaluated according to the operator's [`Evaluation`]() trait.
 
 !!! info
     Operations on propositions that have each been [`normalize`](@ref)d eagerly evaluate to another normalized proposition.
@@ -12,7 +12,7 @@ Typing symbols with tab completion is performed by typing `\`, followed by the g
 Operator associativity determines how operators with the same precedence group their operands. For example, `∧` is left associative. Therefore, `p ∧ q ∧ r` is equivalent to `(p ∧ q) ∧ r`. Operator precedence determines how expressions with distinct operators are grouped together. Higher precedence operators will group their operands before lower precedence operators. For example, `∧` has a higher precedence than `∨`. Therefore, `p ∨ q ∧ r` is equivalent to `p ∨ (q ∧ r)`, even though both operators are left associative. See also Julia's documentation on [Operator Precedence and Associativity](https://docs.julialang.org/en/v1/manual/mathematical-operations/#Operator-Precedence-and-Associativity).
 
 !!! info
-    This associativity is determined by Julia's parser and is distinct from the [`Associativity`](@ref) trait used to specify the direction an operator [`fold`](@ref)s.
+    This associativity is determined by Julia's parser and is distinct from the [`Associativity`]() trait used to specify the direction an operator [`fold`](@ref)s.
 
 !!! info
     `==` has a precedence of 7, which is higher than that of several binary operators. For those cases, you may need to use parentheses. For example, `p → q == r` parses as `p → (q == r)` rather than `(p → q) == r`.

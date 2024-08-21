@@ -6,8 +6,8 @@ using Base: isexpr
 using PAndQ
 
 export
-    Associativity, Eager, Evaluation, Lazy, Left, Operator, Right,
-    arity, converse, dual, evaluate, initial_value, is_associative, is_commutative,
+    Associativity, left, Operator, right,
+    arity, dual, evaluate, initial_value, is_associative, is_commutative,
     is_root, name, parenthesize, print_expression, print_proposition, symbol
 
 """
@@ -60,27 +60,6 @@ end
 ## Evaluation
 
 """
-    Evaluation(::Operator)
-
-A trait to specify the behavior of calling an [`Operator`](@ref Interface.Operator).
-
-This method is required to call the given operator.
-
-Supertype of [`Eager`](@ref) and [`Lazy`](@ref).
-
-# Examples
-```jldoctest
-julia> @atomize Interface.Evaluation(𝒾)
-PAndQ.Interface.Eager
-
-julia> @atomize Interface.Evaluation(¬)
-PAndQ.Interface.Lazy
-```
-"""
-abstract type Evaluation end
-@interface Evaluation o
-
-"""
     evaluate(::Symbol, ps)
 
 Define the semantics of the [`Operator`](@ref Interface.Operator).
@@ -101,7 +80,7 @@ function evaluate end
 ## Folding
 
 """
-    Associativity(::Operator)
+    Associativity
 
 A trait to specify the associativity of an [`Operator`](@ref Interface.Operator).
 
@@ -110,19 +89,9 @@ This method is required for calling [`fold`](@ref) over the operator.
 !!! note
     This trait is used internally and does not override how expressions are parsed.
 
-Supertype of [`Left`](@ref) and [`Right`](@ref).
-
-# Examples
-```jldoctest
-julia> Interface.Associativity(→)
-PAndQ.Interface.Left
-
-julia> Interface.Associativity(←)
-PAndQ.Interface.Right
-```
+Supertype of [`Left`]() and [`Right`]().
 """
-abstract type Associativity end
-@interface Associativity o
+@enum Associativity left right
 
 """
     initial_value(ℴ::Operator)
@@ -146,7 +115,7 @@ julia> Interface.initial_value(∨)
 julia> Interface.initial_value(↑)
 ```
 """
-@interface initial_value o
+function initial_value end
 
 ## Printing
 
@@ -203,50 +172,6 @@ julia> Interface.symbol(∧)
 @interface symbol o
 
 # Utilities
-
-## Evaluation
-
-"""
-    Eager <: Evaluation
-
-A trait to specify that an [`Operator`](@ref Interface.Operator) is eagerly evaluated.
-
-Eagerly evaluated operators return the expression specified by [`evaluate`](@ref Interface.evaluate).
-
-Subtype of [`Evaluation`](@ref).
-"""
-struct Eager <: Evaluation end
-
-"""
-    Lazy <: Evaluation
-
-A trait to specify that an [`Operator`](@ref Interface.Operator) is lazily evaluated.
-
-Lazily evaluated operators return a syntax tree with the operator and its propositions as the root node.
-
-Subtype of [`Evaluation`](@ref Interface.Evaluation).
-"""
-struct Lazy <: Evaluation end
-
-## Folding
-
-"""
-    Left <: Associativity
-
-A trait to specify that an [`Operator`](@ref Interface.Operator) is left-associative.
-
-Subtype of [`Associativity`](@ref Interface.Associativity).
-"""
-struct Left <: Associativity end
-
-"""
-    Right <: Associativity
-
-A trait to specify that an [`Operator`](@ref Interface.Operator) is right-associative.
-
-Subtype of [`Associativity`](@ref Interface.Associativity).
-"""
-struct Right <: Associativity end
 
 ## Printing
 
@@ -330,26 +255,6 @@ julia> Interface.arity(∧)
 function arity end
 
 """
-    converse(ℴ::Operator)
-
-Return a function such that `converse(ℴ)(p, q) == ℴ(q, p)`.
-
-If possible, this method should be implemented to return another [`Operator`](@ref Interface.Operator).
-
-See also [`==`](@ref).
-
-# Examples
-```jldoctest
-julia> Interface.converse(∧)
-∧
-
-julia> Interface.converse(→)
-←
-```
-"""
-converse(o::Operator) = (p, q) -> o(q, p)
-
-"""
     dual(ℴ::Operator)
 
 Return a function such that `dual(ℴ)(ps...) == ¬(ℴ(map(¬, ps)...))`.
@@ -367,7 +272,7 @@ julia> Interface.dual(imply)
 ↚
 ```
 """
-dual(o::Operator) = (ps...) -> map(¬, ¬normalize(∧, o(ps...)))
+function dual end
 
 ### Predicates
 
@@ -409,4 +314,4 @@ false
 """
 function is_commutative end
 
-end
+end # Interface

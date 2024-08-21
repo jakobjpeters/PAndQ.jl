@@ -27,10 +27,10 @@ export Z3
 include("interface.jl")
 
 import .Interface:
-    Associativity, Evaluation,
-    arity, converse, dual, evaluate, initial_value,
+    Associativity,
+    arity, dual, evaluate, initial_value,
     is_associative, is_commutative, print_expression, print_proposition, symbol
-using .Interface: Eager, Lazy, Left, Operator, Right, name, parenthesize
+using .Interface: left, Operator, right, name, parenthesize
 export Interface
 
 include("operators.jl")

@@ -372,15 +372,14 @@ const disjunction = ⋁ = Operator{:disjunction}()
 
 # Utilities
 
-____fold(::Left) = mapfoldl
-____fold(::Right) = mapfoldr
+____fold(associativity) = associativity == left ? mapfoldl : mapfoldr
 
 ___fold(mapfold, f, o, xs, ::Nothing) = mapfold(f, o, xs)
 ___fold(mapfold, f, o, xs, initial_value) =
     isempty(xs) ? AbstractSyntaxTree(initial_value) : mapfold(f, o, xs)
 
 __fold(f, o, xs) = g -> (args...) -> ___fold(
-    ____fold(Associativity(o)()), x -> f(g)(args..., x),
+    ____fold(associativities[name(o)]), x -> f(g)(args..., x),
 o, xs, initial_value(o))
 
 _fold() = identity

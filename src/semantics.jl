@@ -1,6 +1,7 @@
 
 import Base: Bool, convert, promote_rule
 using Base.Iterators: product, repeated
+using Base: operator_associativity
 
 # Truths
 
@@ -371,46 +372,25 @@ promote_rule(::Type{NullaryOperator}, ::Type{AbstractSyntaxTree}) = AbstractSynt
 
 # Interface Implementation
 
-"""
-    eval_pairs(f, pairs)
-
-Define `f(::typeof(left)) = right` and `f(::typeof(right)) = left` for each pair `left` and `right` in `pairs`.
-"""
-eval_pairs(f, pairs) = for pair in pairs
-    for (left, right) in (pair, reverse(pair))
-        @eval $f(::typeof($left)) = $right
-    end
-end
-
 arity(o) = get(arities, name(o), nothing)
 
-initial_value(::union_typeof((∧, ↔, →, ←))) = ⊤
-initial_value(::union_typeof((∨, ↮, ↚, ↛))) = ⊥
-initial_value(::union_typeof((↑, ↓))) = nothing
+initial_value(o) = name(o) in keys(initial_values) ? Operator{initial_values[name(o)].value::Symbol}() : nothing
 
 for o in (:⊤, :⊥, :𝒾, :¬, :∧, :↑, :↓, :∨, :↮, :↔, :→, :↛, :←, :↚, :⋀, :⋁)
     @eval symbol(::typeof($o)) = $(string(o))
 end
 
-Associativity(::union_typeof((∧, ↑, ↓, ∨, ↮, ↔, →, ↚))) = Left
-Associativity(::union_typeof((↛, ←))) = Right
+dual(o) = Operator{get(duals, name(o)) do
+    _arity = arity(o)
+    name(register_operator(gensym("dual_$(name(o))"), _arity, map(¬, ¬AbstractSyntaxTree(
+        operator, name(o), map(i -> @atomize($i), 1:_arity)))))
+end}()
 
-dual(o::UnaryOperator) = o
-eval_pairs(:dual, (
-    (⊤, ⊥),
-    (∧, ∨),
-    (↑, ↓),
-    (↔, ↮),
-    (→, ↚),
-    (←, ↛)
-))
+# inverse, contrapositive, converse
 
-converse(o::union_typeof((∧, ∨, ↑, ↓, ↔, ↮))) = o
-eval_pairs(:converse, ((→, ←), (↛, ↚)))
+is_commutative(o) = name(o) in commutatives
 
-is_commutative(o) = name(o) in commutativities
-
-is_associative(o) = name(o) in associativities
+is_associative(o) = name(o) in associatives
 
 Base.Bool(p::AbstractSyntaxTree) = p.kind == operator ? Bool(Operator{p.value::Symbol}()) : error()
 
@@ -430,7 +410,7 @@ evaluate(o, ps) =
             else
                 dual_initial_value = dual(_initial_value)
                 any(o -> o == dual_initial_value, [o_q o_r]) ?
-                    AbstractSyntaxTree(operator, dual_initial_value, AbstractSyntaxTree[]) :
+                    AbstractSyntaxTree(operator, name(dual_initial_value)) :
                     AbstractSyntaxTree(operator, o, [q, r])
             end
         end
@@ -441,13 +421,12 @@ evaluate(o, ps) =
         evaluate(Operator{o}(), ps...)
     end
 
-evaluation(::Eager, o, ps) = evaluate(name(o), ps)
-evaluation(::Lazy, o, ps) = AbstractSyntaxTree(o, ps)
+function evaluation(o, ps)
+    _name = name(o)
+    _name in lazies ? AbstractSyntaxTree(o, ps) : evaluate(_name, ps)
+end
 
-Evaluation(::Union{NullaryOperator, typeof(𝒾), NaryOperator}) = Eager
-Evaluation(::Union{typeof(¬), BinaryOperator}) = Lazy
-
-_evaluation(o, ps::Vector{AbstractSyntaxTree}) = evaluation(Evaluation(o)(), o, ps)
+_evaluation(o, ps::Vector{AbstractSyntaxTree}) = evaluation(o, ps)
 _evaluation(o, ps::Vector{Bool}) =
     if o == ¬; !only(ps)
     elseif o == ∧; all(ps)
@@ -456,14 +435,14 @@ _evaluation(o, ps::Vector{Bool}) =
     end
 _evaluation(o, ps) = _evaluation(o, map(AbstractSyntaxTree, ps))
 
-(o::Operator)(ps::AbstractSyntaxTree...) = evaluation(Evaluation(o)(), o, [ps...])
+(o::Operator)(ps::AbstractSyntaxTree...) = evaluation(o, [ps...])
 (o::Operator)(ps::Bool...) = _evaluation(o, [ps...])
 (o::Operator)() = _evaluation(o, AbstractSyntaxTree[])
 (o::Operator)(ps...) = o(map(AbstractSyntaxTree, ps)...)
 
 print_expression(io, o, ps) =
     if o in [:tautology, :contradiction, :not]
-        ns, ss = print_dict[o]
+        ns, ss = printings[o]
 
         for (i, s) in enumerate(ss)
             if i in ns
@@ -507,66 +486,131 @@ print_proposition(io, p) = _print_proposition(IOContext(io, :root => false), p)
 
 const p, q, r = @variables p q r
 
-function __register_operator(name, _arity)
+function ___register_operator(name, _arity)
     o = Operator{name}()
 
     if _arity == 2
-        is_equivalent(o(p, q), o(q, p)) && push!(commutativities, name)
-        is_equivalent(o(o(p, q), r), o(p, o(q, r))) && push!(associativities, name)
+        is_equivalent(o(p, q), o(q, p)) && push!(commutatives, name)
+        is_equivalent(o(o(p, q), r), o(p, o(q, r))) && push!(associatives, name)
     end
 
     o
 end
 
-function _register_operator(name, evaluation)
-    evaluations[name] = evaluation
-    arities[name] = length(unique(atoms(evaluations)))
+function register_binary(name, initial_value, associativity)
+    o = Operator{name}()
+    a, b, c, d = map(q -> is_equivalent(p, q), [o(⊤, p), o(p, ⊤), o(⊥, p), o(p, ⊥)])
+
+    is_equivalent(o(p, q), o(q, p)) && push!(commutatives, name)
+    is_equivalent(o(o(p, q), r), o(p, o(q, r))) && push!(associatives, name)
+
+    if isnothing(initial_value)
+        if a || b initial_values[name] = ⊤
+        elseif c || d initial_values[name] = ⊥
+        end
+    else initial_values[name] = initial_value
+    end
+
+    if isnothing(associativity)
+        _left, _right = a || c, b || d
+        if _left && _right associativities[name] = operator_associativity(name) == :right ? right : left
+        elseif _left associativities[name] = left
+        elseif _right associativities[name] = right
+        end
+    else associativities[name] = associativity
+    end
 end
 
-register_operator(name::Symbol, evaluation::AbstractSyntaxTree) =
-    __register_operator(name, _register_operator(name, evaluation))
+function register_printing(name, printing)
+    current, ns, ss = firstindex(printing), Set{Int}(), SubstitutionString[]
+    push!(lazies, name)
 
-const arities = Dict(:tautology => 0, :contradiction => 0, :not => 1, :and => 2, :or => 2)
-const evaluations = Dict{Symbol, AbstractSyntaxTree}()
-const associativities, commutativities = Set([:and, :or]), Set([:and, :or])
+    for match in eachmatch(r"(\d+)", printing)
+        capture, offset = only(match.captures), match.offset
+        current < offset && push!(ss, printing[current:prevind(printing, offset)])
+        push!(ss, capture[begin:end])
+        push!(ns, length(ss))
+        current = offset + ncodeunits(capture)
+    end
 
-const os_ps = map(((o, p),) -> name(o) => p, @atomize [
-    𝒾 => $1,
+    last = lastindex(printing)
+    current ≤ last && push!(ss, printing[current:last])
+
+    printings[name] = ns => ss
+end
+
+function _register_operator(name, arity, evaluation, initial_value, associativity, dual)
+    arities[name] = arity
+    arity == 2 && register_binary(name, initial_value, associativity)
+end
+
+function register_operator(name::Symbol, arity::Int, evaluation::AbstractSyntaxTree;
+    initial_value::Union{Nothing, AbstractSyntaxTree} = nothing,
+    associativity::Union{Nothing, Associativity} = nothing,
+    printing::Union{Nothing, SubstitutionString} = nothing,
+    dual::Union{Nothing, AbstractSyntaxTree} = nothing
+)
+    name in arities && error()
+    evaluations[name] = normalize(∧, evaluation)
+    isnothing(printing) || register_printing(name, printing)
+    _register_operator(name, arity, evaluation, initial_value, associativity, dual)
+
+    if isnothing(dual)
+        _keys = keys(duals)
+
+        for (_name, _evaluation) in evaluations
+            if is_equivalent(evaluation, map(¬, ¬_evaluation))
+                duals[name] = _name
+                if !in(_name, _keys)
+                    duals[_name] = name
+                end
+                break
+            end
+        end
+    else duals[name] = dual
+    end
+
+    Operator{name}()
+end
+
+const lazies = Set{Symbol}()
+const printings = Dict{Symbol, Pair{Set{Int}, Vector{SubstitutionString}}}()
+const arities = Dict(map(((o, i),) -> name(o) => i, [⊤ => 0, ⊥ => 0, (¬) => 1, (∧) => 2, (∨) => 2]))
+const associatives, commutatives = map(_ -> Set([:and, :or]), 1:2)
+const initial_values = Dict(:and => AbstractSyntaxTree(⊤), :or => AbstractSyntaxTree(⊥))
+const associativities = Dict(:and => left, :or => left)
+const duals = Dict(append!([:identical => :identical, :not => :not], map((
+    ⊤ => ⊥,
+    (∧) => (∨),
+    (↑) => (↓),
+    (↔) => (↮),
+    (→) => (↚),
+    (←) => (↛)
+)) do (o, _o)
+    names = name(o) => name(_o)
+    [names, reverse(names)]
+end...))
+
+for (name, printing) in map(((o, printing),) -> name(o) => printing, append!(
+    map(o -> o => "$(symbol(o))", [⊤, ⊥]),
+    Pair{Operator, String}[(¬) => "¬1"],
+    map(o -> o => "1 $(symbol(o)) 2", [∧, ∨, →, ←, ↑, ↓, ↛, ↚, ↮, ↔])
+))
+    register_printing(name, printing)
+end
+
+const evaluations = Dict(Iterators.map(((o, p),) -> name(o) => p, @atomize [
+    (𝒾) => $1,
     (→) => ¬$1 ∨ $2,
     (←) => $1 ∨ ¬$2,
     (↑) => ¬($1 ∧ $2),
     (↓) => ¬($1 ∨ $2),
     (↛) => $1 ∧ ¬$2,
     (↚) => ¬$1 ∧ $2,
-    (↮) => ($1 ∨ $2) ∧ ($1 ↑ $2),
-    (↔) => ($1 ∧ $2) ∨ ($1 ↓ $2)
-])
+    (↮) => ($1 ∨ $2) ∧ ¬($1 ∧ $2),
+    (↔) => ($1 ∧ $2) ∨ ¬($1 ∨ $2)
+]))
 
-for (o, p) in os_ps
-    _register_operator(o, p)
+for (name, evaluation) in evaluations
+    _register_operator(name, 1 + (name != :identical), evaluation, nothing, nothing, nothing)
 end
-
-for (o, _) in os_ps
-    __register_operator(o, arity(Operator{o}()))
-end
-
-const print_dict = Dict(map(append!(
-    Pair{Operator, String}[(¬) => "¬1"],
-    map(o -> o => "$(symbol(o))", [⊤, ⊥]),
-    map(o -> o => "1 $(symbol(o)) 2", [∧, ∨, →, ↮, ←, ↑, ↓, ↛, ↔, ↚]),
-)) do (o, s)
-    current, ns, ss = firstindex(s), Set{Int}(), SubstitutionString[]
-
-    for match in eachmatch(r"(\d+)", s)
-        capture, offset = only(match.captures), match.offset
-        current < offset && push!(ss, s[current:prevind(s, offset)])
-        push!(ss, capture[begin:end])
-        push!(ns, length(ss))
-        current = offset + ncodeunits(capture)
-    end
-
-    last = lastindex(s)
-    current ≤ last && push!(ss, s[current:last])
-
-    name(o), ns => ss
-end)

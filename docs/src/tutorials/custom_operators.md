@@ -47,7 +47,7 @@ truth
 truth()
 ```
 
-The error says to implement [`Evaluation`](@ref Interface.Evaluation). This function is used to specify whether an operator lazily or eagerly evaluates its arguments.
+The error says to implement [`Evaluation`](). This function is used to specify whether an operator lazily or eagerly evaluates its arguments.
 
 ```@setup 1
 Evaluation(::typeof(truth)) = Lazy

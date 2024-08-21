@@ -17,7 +17,6 @@ Interface.Operator
 ### Evaluation
 
 ```@docs
-Interface.Evaluation
 Interface.evaluate
 ```
 
@@ -39,20 +38,6 @@ Interface.symbol
 
 These functions may be necessary or useful for implementing the operator interface.
 
-### Evaluation
-
-```@docs
-Interface.Eager
-Interface.Lazy
-```
-
-### Associativity
-
-```@docs
-Interface.Left
-Interface.Right
-```
-
 ### Printing
 
 ```@docs
@@ -66,7 +51,6 @@ Interface.print_proposition
 
 ```@docs
 Interface.arity
-Interface.converse
 Interface.dual
 ```
 
