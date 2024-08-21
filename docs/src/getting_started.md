@@ -120,13 +120,13 @@ julia> collect(only(solutions(p ∧ q)[2]))
  1
 ```
 
-Two propositions are logically equivalent if their interpretation is equivalent for every possible valuation. Use [`==`](@ref) to check if two propositions are logically equivalent.
+Two propositions are logically equivalent if their interpretation is equivalent for every possible valuation. Use [`is_equivalent`](ref) to check if two propositions are logically equivalent.
 
 ```jldoctest 1
-julia> p ∧ ¬p == ⊥
+julia> is_equivalent(p ∧ ¬p, ⊥)
 true
 
-julia> p ∧ ¬p === ⊥
+julia> p ∧ ¬p == ⊥
 false
 ```
 

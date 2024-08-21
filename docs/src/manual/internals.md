@@ -93,6 +93,8 @@ PAndQ.printnode
 ### Utility
 
 ```@docs
+==
+hash
 PAndQ.deconstruct
 PAndQ.child
 PAndQ.atomize

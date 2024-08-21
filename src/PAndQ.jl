@@ -68,7 +68,7 @@ export
     is_tautology, is_contradiction,
     is_truth, is_contingency,
     is_satisfiable, is_falsifiable,
-    is_equisatisfiable
+    is_equisatisfiable, is_equivalent
 
 include("printing.jl")
 

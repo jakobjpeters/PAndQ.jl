@@ -1,7 +1,6 @@
 
-import Base: Bool, Fix2, ==, <, convert, hash, promote_rule
+import Base: Bool, convert, promote_rule
 using Base.Iterators: product, repeated
-using Base: current_project
 
 # Truths
 
@@ -289,11 +288,8 @@ true
 """
 is_equisatisfiable(p, q) = is_satisfiable(p) == is_satisfiable(q)
 
-## Ordering
-
 """
-    ==(p, q)
-    p == q
+    is_equivalent(p, q)
 
 Return a `Bool`ean indicating whether `p` and `q` are [logically equivalent]
 (https://en.wikipedia.org/wiki/Logical_equivalence).
@@ -307,74 +303,29 @@ Constants are equivalent only if their [`value`](@ref)s are equivalent.
 
 # Examples
 ```jldoctest
-julia> @atomize ⊥ == p ∧ ¬p
+julia> @atomize is_equivalent(⊥, p ∧ ¬p)
 true
 
-julia> @atomize (p ↔ q) == ¬(p ↮ q)
+julia> @atomize is_equivalent(p ↔ q, ¬(p ↮ q))
 true
 
-julia> @atomize \$1 == \$1
+julia> @atomize is_equivalent(\$1, \$1)
 true
 
-julia> @atomize p == ¬p
+julia> @atomize is_equivalent(p, ¬p)
 false
 ```
 """
-p::AbstractSyntaxTree == ::typeof(⊤) = is_tautology(p)
-p::AbstractSyntaxTree == ::typeof(⊥) = is_contradiction(p)
-p::NullaryOperator == q::AbstractSyntaxTree = q == p
-p::AbstractSyntaxTree == q::AbstractSyntaxTree =
-    all(r -> r.kind != operator, [p, q]) ? p.value == q.value : is_contradiction(p ↮ q)
-
-"""
-    <(p, q)
-    p < q
-
-Return a `Bool`ean indicating whether the arguments are ordered such that
-`r < s < t`, where `r`, `s`, and `t` satisfy [`is_contradiction`](@ref),
-[`is_contingency`](@ref), and [`is_tautology`](@ref), respectively.
-
-# Examples
-```jldoctest
-julia> @atomize ⊥ < p < ⊤
-true
-
-julia> @atomize p ∧ ¬p < p < p ∨ ¬p
-true
-
-julia> @atomize p < p
-false
-
-julia> ⊤ < ⊥
-false
-```
-"""
-::typeof(⊥) < ::typeof(⊤) = true
-::NullaryOperator < ::NullaryOperator = false
-p::AbstractSyntaxTree < ::typeof(⊤) = is_falsifiable(p)
-p::AbstractSyntaxTree < ::typeof(⊥) = is_satisfiable(p)
-p::NullaryOperator < q::AbstractSyntaxTree = q < p
-p::AbstractSyntaxTree < q::AbstractSyntaxTree =
-    is_contradiction(p) ? is_satisfiable(q) : is_falsifiable(p) && is_tautology(q)
-
-"""
-    hash(::Union{AbstractSyntaxTree, Operator}, ::UInt)
-
-Return `zero(UInt)`.
-
-Since `p == q` implies `hash(p) == hash(q)`, obtaining a better hash
-value would require finding the [`solutions`](@ref) in some form.
-Instead of using an NP-complete hash time, this instead opts for linear lookup time.
-An [`Operator`](@ref) may be logically equivalent to a proposition, and so is also in this case.
-
-# Examples
-
-```jldoctest
-julia> @atomize hash(p)
-0x0000000000000000
-```
-"""
-hash(::Union{AbstractSyntaxTree, Operator}, ::UInt) = zero(UInt)
+is_equivalent(p::AbstractSyntaxTree, ::typeof(⊤)) = is_tautology(p)
+is_equivalent(p::AbstractSyntaxTree, ::typeof(⊥)) = is_contradiction(p)
+is_equivalent(p::NullaryOperator, q::AbstractSyntaxTree) = is_equivalent(q, p)
+function is_equivalent(p::AbstractSyntaxTree, q::AbstractSyntaxTree)
+    kinds = [p.kind, q.kind]
+    if all(==(variable), kinds) p == q
+    elseif all(==(constant), kinds) p.value == q.value
+    else is_contradiction(p ↮ q)
+    end
+end
 
 # Operators
 
@@ -472,13 +423,13 @@ evaluate(o, ps) =
     elseif o in [:and, :or]
         q, r = ps
         _initial_value, o_q = initial_value(Operator{o}()), nodevalue(q)
-        if o_q === _initial_value r
+        if o_q == _initial_value r
         else
             o_r = nodevalue(r)
-            if o_r === _initial_value q
+            if o_r == _initial_value q
             else
                 dual_initial_value = dual(_initial_value)
-                any(o -> o === dual_initial_value, [o_q o_r]) ?
+                any(o -> o == dual_initial_value, [o_q o_r]) ?
                     AbstractSyntaxTree(operator, dual_initial_value, AbstractSyntaxTree[]) :
                     AbstractSyntaxTree(operator, o, [q, r])
             end
@@ -554,20 +505,17 @@ _print_proposition(io, p::AbstractSyntaxTree) =
 
 print_proposition(io, p) = _print_proposition(IOContext(io, :root => false), p)
 
-function _is_commutative(o::Operator)
-    p, q = map(o -> AbstractSyntaxTree(variable, o), (:p, :q))
-    o(p, q) == o(q, p)
-end
-
 const p, q, r = @variables p q r
 
 function __register_operator(name, _arity)
+    o = Operator{name}()
+
     if _arity == 2
-        AbstractSyntaxTree(operator, name, [p, q]) == AbstractSyntaxTree(operator, name, [q, p]) && push!(commutativities, name)
-        AbstractSyntaxTree(operator, name, [AbstractSyntaxTree(operator, name, [p, q]), r]) == AbstractSyntaxTree(operator, name, [p, AbstractSyntaxTree(operator, name, [q, r])]) && push!(associativities, name)
+        is_equivalent(o(p, q), o(q, p)) && push!(commutativities, name)
+        is_equivalent(o(o(p, q), r), o(p, o(q, r))) && push!(associativities, name)
     end
 
-    Operator{name}()
+    o
 end
 
 function _register_operator(name, evaluation)

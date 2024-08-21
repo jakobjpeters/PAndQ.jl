@@ -1,6 +1,6 @@
 
 import AbstractTrees: children, nodevalue, printnode
-import Base: map
+import Base: ==, hash, map
 using AbstractTrees: Leaves, PreOrderDFS, childtype, nodevalues
 using Base.Iterators: Stateful
 using Base: isexpr
@@ -109,6 +109,18 @@ printnode(io::IO, p::AbstractSyntaxTree) = p.kind == operator ?
 ## Utilities
 
 """
+    ::AbstractSyntaxTree == ::AbstractSyntaxTree
+"""
+==(p::AbstractSyntaxTree, q::AbstractSyntaxTree) =
+    p.kind == q.kind && p.value == q.value && p.branches == q.branches
+
+"""
+    hash(::AbstractSyntaxTree, ::UInt)
+"""
+hash(p::AbstractSyntaxTree, h::UInt) =
+    hash(AbstractSyntaxTree, hash(p.kind, hash(p.value, hash(p.branches, h))))
+
+"""
     deconstruct(p)
 
 Return `(nodevalue(p), children(p))`.
@@ -206,8 +218,8 @@ function prune(p, atoms = AbstractSyntaxTree[], mapping = Dict{Union{Some, Symbo
         r = pop!(stack)
         o = nodevalue(r)
 
-        if o === ⊤
-        elseif o === ⊥
+        if o == ⊤
+        elseif o == ⊥
             push!(empty!(clauses), Set{Int}())
             empty!(qs)
             break
@@ -219,8 +231,8 @@ function prune(p, atoms = AbstractSyntaxTree[], mapping = Dict{Union{Some, Symbo
                 s = pop!(_stack)
                 _o, ts = deconstruct(s)
 
-                if _o === ⊥
-                elseif s.kind != operator || ((_o === ¬) && only(ts).kind != operator)
+                if _o == ⊥
+                elseif s.kind != operator || ((_o == ¬) && only(ts).kind != operator)
                     atom = s.kind == operator ? only(ts) : s
                     literal = (_o isa AbstractSyntaxTree || _o == 𝒾 ? 1 : -1) * get!(mapping, atom.value) do
                         push!(atoms, atom)
