@@ -352,7 +352,7 @@ end
 """
     show(::IO, ::Operator)
 """
-show(io::IO, o::Operator) = print(io, name(o))
+show(io::IO, o::Operator) = print(io, o.name)
 
 """
     show(::IO, p)

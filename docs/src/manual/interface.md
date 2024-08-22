@@ -41,7 +41,6 @@ These functions may be necessary or useful for implementing the operator interfa
 ### Printing
 
 ```@docs
-Interface.name
 Interface.is_root
 Interface.parenthesize
 Interface.print_proposition

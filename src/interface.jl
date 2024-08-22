@@ -8,7 +8,7 @@ using PAndQ
 export
     Associativity, left, Operator, right,
     arity, dual, evaluate, initial_value, is_associative, is_commutative,
-    is_root, name, parenthesize, print_expression, print_proposition, symbol
+    is_root, parenthesize, print_expression, print_proposition, symbol
 
 """
     Operator{O}
@@ -22,7 +22,9 @@ If possible, an operator should be defined as
 
 This method is required to instantiate an operator.
 """
-struct Operator{O} end
+struct Operator
+    name::Symbol
+end
 
 # Internals
 
@@ -68,10 +70,10 @@ This method is required to [`normalize`](@ref) a proposition containing the give
 
 # Examples
 ```jldoctest
-julia> @atomize Interface.evaluate(:not, [¬p])
+julia> @atomize Interface.evaluate(¬, [¬p])
 p
 
-julia> @atomize Interface.evaluate(:imply, [p, q])
+julia> @atomize Interface.evaluate(→, [p, q])
 ¬p ∨ q
 ```
 """
@@ -134,17 +136,17 @@ for a proposition `p` containing the given operator.
 
 # Examples
 ```jldoctest
-julia> @atomize Interface.print_expression(stdout, Interface.name(⊤), [])
+julia> @atomize Interface.print_expression(stdout, ⊤, [])
 ⊤
 
-julia> @atomize Interface.print_expression(stdout, Interface.name(¬), [p])
+julia> @atomize Interface.print_expression(stdout, ¬, [p])
 ¬p
 
-julia> @atomize Interface.print_expression(stdout, Interface.name(∧), [p, q])
+julia> @atomize Interface.print_expression(stdout, ∧, [p, q])
 p ∧ q
 ```
 """
-@interface print_expression io o ps
+function print_expression end
 
 """
     symbol(ℴ::Operator)
@@ -160,39 +162,20 @@ See also [`show`](@ref).
 # Examples
 ```jldoctest
 julia> Interface.symbol(⊤)
-"⊤"
+:⊤
 
 julia> Interface.symbol(¬)
-"¬"
+:¬
 
 julia> Interface.symbol(∧)
-"∧"
+:∧
 ```
 """
-@interface symbol o
+function symbol end
 
 # Utilities
 
 ## Printing
-
-"""
-    name(::Operator{O})
-
-Return `O`, the name of the [`Operator`](@ref Interface.Operator).
-
-# Examples
-```jldoctest
-julia> Interface.name(⊤)
-:tautology
-
-julia> Interface.name(¬)
-:not
-
-julia> Interface.name(∧)
-:and
-```
-"""
-name(::Operator{O}) where O = O
 
 """
     is_root(io)

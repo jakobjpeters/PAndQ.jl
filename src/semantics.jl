@@ -1,6 +1,6 @@
 
 import Base: Bool, convert, promote_rule
-using Base.Iterators: product, repeated
+using Base.Iterators: flatten, product, repeated
 using Base: operator_associativity
 
 # Truths
@@ -36,7 +36,7 @@ function valuations(atoms)
         product(repeated([true, false], length(unique_atoms))...)
     )
 end
-valuations(p::Union{NullaryOperator, AbstractSyntaxTree}) = valuations(collect(atoms(p)))
+valuations(p::Union{Operator, AbstractSyntaxTree}) = valuations(collect(atoms(p)))
 
 """
     interpret(valuation, p)
@@ -152,8 +152,11 @@ julia> @atomize is_tautology(¬(p ∧ ¬p))
 true
 ```
 """
-is_tautology(::typeof(⊤)) = true
-is_tautology(::typeof(⊥)) = false
+is_tautology(o::Operator) =
+    if o == ⊤ true
+    elseif o == ⊥ false
+    else error()
+    end
 is_tautology(p) = is_contradiction(¬p)
 
 """
@@ -197,7 +200,6 @@ julia> @atomize is_truth(p ∧ q)
 false
 ```
 """
-is_truth(::NullaryOperator) = true
 is_truth(p) = is_tautology(p) || is_contradiction(p)
 
 """
@@ -317,9 +319,13 @@ julia> @atomize is_equivalent(p, ¬p)
 false
 ```
 """
-is_equivalent(p::AbstractSyntaxTree, ::typeof(⊤)) = is_tautology(p)
-is_equivalent(p::AbstractSyntaxTree, ::typeof(⊥)) = is_contradiction(p)
-is_equivalent(p::NullaryOperator, q::AbstractSyntaxTree) = is_equivalent(q, p)
+is_equivalent(p::Operator, q::Operator) = p in [⊤, ⊥] ? p == q : error()
+is_equivalent(p::AbstractSyntaxTree, q::Operator) =
+    if q == ⊤ is_tautology(p)
+    elseif q == ⊥ is_contradiction(p)
+    else error()
+    end
+is_equivalent(p::Operator, q::AbstractSyntaxTree) = is_equivalent(q, p)
 function is_equivalent(p::AbstractSyntaxTree, q::AbstractSyntaxTree)
     kinds = [p.kind, q.kind]
     if all(==(variable), kinds) p == q
@@ -344,7 +350,7 @@ julia> Bool(⊥)
 false
 ```
 """
-Bool(o::NullaryOperator) = convert(Bool, o)
+Bool(o::Operator) = convert(Bool, o)
 
 # Constructors
 
@@ -352,79 +358,84 @@ AbstractSyntaxTree(p) = convert(AbstractSyntaxTree, p)
 
 # Utilities
 
-convert(::Type{Bool}, ::typeof(⊤)) = true
-convert(::Type{Bool}, ::typeof(⊥)) = false
+convert(::Type{Bool}, o::Operator) =
+    if o == ⊤ true
+    elseif o == ⊥ false
+    else error()
+    end
 
 """
     convert(::Type{<:AbstractSytnaxTree}, p)
 
 See also [`AbstractSyntaxTree`](@ref).
 """
-convert(::Type{AbstractSyntaxTree}, p::NullaryOperator) = AbstractSyntaxTree(operator, p)
+convert(::Type{AbstractSyntaxTree}, p::Operator) = AbstractSyntaxTree(operator, p)
 convert(::Type{AbstractSyntaxTree}, p::Symbol) = AbstractSyntaxTree(variable, p)
 convert(::Type{AbstractSyntaxTree}, p::Some) = AbstractSyntaxTree(constant, p)
 
 """
     promote_rule
 """
-promote_rule(::Type{Bool}, ::Type{<:NullaryOperator}) = Bool
-promote_rule(::Type{NullaryOperator}, ::Type{AbstractSyntaxTree}) = AbstractSyntaxTree
+promote_rule(::Type{Bool}, ::Type{Operator}) = Bool
+promote_rule(::Type{Operator}, ::Type{AbstractSyntaxTree}) = AbstractSyntaxTree
 
 # Interface Implementation
 
-arity(o) = get(arities, name(o), nothing)
+arity(o) = get(arities, o, nothing)
 
-initial_value(o) = name(o) in keys(initial_values) ? Operator{initial_values[name(o)].value::Symbol}() : nothing
+initial_value(o) = o in keys(initial_values) ? initial_values[o] : nothing
 
-for o in (:⊤, :⊥, :𝒾, :¬, :∧, :↑, :↓, :∨, :↮, :↔, :→, :↛, :←, :↚, :⋀, :⋁)
-    @eval symbol(::typeof($o)) = $(string(o))
-end
+const symbols = Dict(
+    ⊤ => :⊤, ⊥ => :⊥,
+    𝒾 => :𝒾, (¬) => :¬,
+    (∧) => :∧, (↑) => :↑, (↓) => :↓, (∨) => :∨, (↮) => :↮, (↔) => :↔, (→) => :→, (↛) => :↛, (←) => :←, (↚) => :↚,
+    (⋀) => :⋀, (⋁) => :⋁
+)
 
-dual(o) = Operator{get(duals, name(o)) do
+symbol(o) = symbols[o]
+
+dual(o) = get(duals, o) do
     _arity = arity(o)
-    name(register_operator(gensym("dual_$(name(o))"), _arity, map(¬, ¬AbstractSyntaxTree(
-        operator, name(o), map(i -> @atomize($i), 1:_arity)))))
-end}()
+    register_operator(gensym("dual_$(o.name)"), _arity, map(¬, ¬AbstractSyntaxTree(
+        operator, o, map(i -> @atomize($i), 1:_arity))))
+end
 
 # inverse, contrapositive, converse
 
-is_commutative(o) = name(o) in commutatives
+is_commutative(o) = o in commutatives
 
-is_associative(o) = name(o) in associatives
+is_associative(o) = o in associatives
 
-Base.Bool(p::AbstractSyntaxTree) = p.kind == operator ? Bool(Operator{p.value::Symbol}()) : error()
+Base.Bool(p::AbstractSyntaxTree) = p.kind == operator ? Bool(p.value::Operator) : error()
 
 evaluate(o, ps) =
-    if o in [:tautology, :contradiction] AbstractSyntaxTree(operator, o)
-    elseif o == :not
+    if o in [⊤, ⊥] AbstractSyntaxTree(operator, o)
+    elseif o == ¬
         q = only(ps)
         branches, o_q = q.branches, nodevalue(q)
-        o_q == (¬) ? only(branches) : evaluate(name(dual(o_q)), map(¬, branches))
-    elseif o in [:and, :or]
+        o_q == (¬) ? only(branches) : evaluate(dual(o_q), map(¬, branches))
+    elseif o in [∧, ∨]
         q, r = ps
-        _initial_value, o_q = initial_value(Operator{o}()), nodevalue(q)
+        _initial_value, o_q = initial_value(o), nodevalue(q)
         if o_q == _initial_value r
         else
             o_r = nodevalue(r)
             if o_r == _initial_value q
             else
                 dual_initial_value = dual(_initial_value)
-                any(o -> o == dual_initial_value, [o_q o_r]) ?
-                    AbstractSyntaxTree(operator, name(dual_initial_value)) :
+                any(_o -> _o in AbstractSyntaxTree[⊤, ⊥], AbstractSyntaxTree[o_q, o_r]) ?
+                    AbstractSyntaxTree(operator, dual_initial_value) :
                     AbstractSyntaxTree(operator, o, [q, r])
             end
         end
-    elseif o == :conjunction fold(𝒾, (∧) => ps)
-    elseif o == :disjunction fold(𝒾, (∨) => ps)
+    elseif o == ⋀ fold(𝒾, (∧) => ps)
+    elseif o == ⋁ fold(𝒾, (∨) => ps)
     else o in keys(evaluations) ?
         interpret(map(((i, p),) -> @atomize($i => p), enumerate(ps)), evaluations[o]) :
-        evaluate(Operator{o}(), ps...)
+        error()
     end
 
-function evaluation(o, ps)
-    _name = name(o)
-    _name in lazies ? AbstractSyntaxTree(o, ps) : evaluate(_name, ps)
-end
+evaluation(o, ps) = o in lazies ? AbstractSyntaxTree(o, ps) : evaluate(o, ps)
 
 _evaluation(o, ps::Vector{AbstractSyntaxTree}) = evaluation(o, ps)
 _evaluation(o, ps::Vector{Bool}) =
@@ -441,7 +452,7 @@ _evaluation(o, ps) = _evaluation(o, map(AbstractSyntaxTree, ps))
 (o::Operator)(ps...) = o(map(AbstractSyntaxTree, ps)...)
 
 print_expression(io, o, ps) =
-    if o in [:tautology, :contradiction, :not]
+    if o in [⊤, ⊥, ¬]
         ns, ss = printings[o]
 
         for (i, s) in enumerate(ss)
@@ -450,15 +461,15 @@ print_expression(io, o, ps) =
             else print(io, s)
             end
         end
-    elseif o in [:and, :or, :not_or, :not_and, :imply, :not_imply, :not_converse_imply, :exclusive_or, :not_exclusive_or, :converse_imply]
-        _o, qs, stack = Operator{o}(), AbstractSyntaxTree[], AbstractSyntaxTree[]
+    elseif o in [∧, ∨, ↑, ↓, →, ↛, ←, ↚, ↔, ↮]
+        qs, stack = AbstractSyntaxTree[], AbstractSyntaxTree[]
 
-        if is_associative(_o)
+        if is_associative(o)
             append!(stack, ps)
 
             while !isempty(stack)
                 q = pop!(stack)
-                nodevalue(q) == _o ? append!(stack, (children(q))) : push!(qs, q)
+                nodevalue(q) == o ? append!(stack, (children(q))) : push!(qs, q)
             end
 
             reverse!(qs)
@@ -467,10 +478,10 @@ print_expression(io, o, ps) =
 
         _show(print_proposition, io, qs) do io
             print(io, " ")
-            show(io, MIME"text/plain"(), _o)
+            show(io, MIME"text/plain"(), o)
             print(io, " ")
         end
-    else print_expression(io, Operator{o}(), ps)
+    else print_expression(io, o, ps)
     end
 
 _print_proposition(io, p::AbstractSyntaxTree) =
@@ -479,51 +490,37 @@ _print_proposition(io, p::AbstractSyntaxTree) =
         print(io, "\$(")
         show(io, something(p.value))
         print(io, ")")
-    else print_expression(io, name(nodevalue(p)), children(p))
+    else print_expression(io, nodevalue(p), children(p))
     end
 
 print_proposition(io, p) = _print_proposition(IOContext(io, :root => false), p)
 
 const p, q, r = @variables p q r
 
-function ___register_operator(name, _arity)
-    o = Operator{name}()
-
-    if _arity == 2
-        is_equivalent(o(p, q), o(q, p)) && push!(commutatives, name)
-        is_equivalent(o(o(p, q), r), o(p, o(q, r))) && push!(associatives, name)
-    end
-
-    o
-end
-
-function register_binary(name, initial_value, associativity)
-    o = Operator{name}()
+function register_binary(o, initial_value, associativity)
     a, b, c, d = map(q -> is_equivalent(p, q), [o(⊤, p), o(p, ⊤), o(⊥, p), o(p, ⊥)])
 
-    is_equivalent(o(p, q), o(q, p)) && push!(commutatives, name)
-    is_equivalent(o(o(p, q), r), o(p, o(q, r))) && push!(associatives, name)
+    is_equivalent(o(p, q), o(q, p)) && push!(commutatives, o)
+    is_equivalent(o(o(p, q), r), o(p, o(q, r))) && push!(associatives, o)
 
     if isnothing(initial_value)
-        if a || b initial_values[name] = ⊤
-        elseif c || d initial_values[name] = ⊥
+        if a || b initial_values[o] = ⊤
+        elseif c || d initial_values[o] = ⊥
         end
-    else initial_values[name] = initial_value
+    else initial_values[o] = initial_value
     end
 
     if isnothing(associativity)
-        _left, _right = a || c, b || d
-        if _left && _right associativities[name] = operator_associativity(name) == :right ? right : left
-        elseif _left associativities[name] = left
-        elseif _right associativities[name] = right
+        if a || c associativities[o] = left
+        elseif b || d associativities[o] = right
         end
-    else associativities[name] = associativity
+    else associativities[o] = associativity
     end
 end
 
-function register_printing(name, printing)
+function register_printing(o, printing)
     current, ns, ss = firstindex(printing), Set{Int}(), SubstitutionString[]
-    push!(lazies, name)
+    push!(lazies, o)
 
     for match in eachmatch(r"(\d+)", printing)
         capture, offset = only(match.captures), match.offset
@@ -536,70 +533,67 @@ function register_printing(name, printing)
     last = lastindex(printing)
     current ≤ last && push!(ss, printing[current:last])
 
-    printings[name] = ns => ss
+    printings[o] = ns => ss
 end
 
-function _register_operator(name, arity, evaluation, initial_value, associativity, dual)
-    arities[name] = arity
-    arity == 2 && register_binary(name, initial_value, associativity)
+function _register_operator(o, arity, initial_value, associativity)
+    arities[o] = arity
+    arity == 2 && register_binary(o, initial_value, associativity)
 end
 
-function register_operator(name::Symbol, arity::Int, evaluation::AbstractSyntaxTree;
+function register_operator(o::Operator, arity::Int, evaluation::AbstractSyntaxTree;
     initial_value::Union{Nothing, AbstractSyntaxTree} = nothing,
     associativity::Union{Nothing, Associativity} = nothing,
     printing::Union{Nothing, SubstitutionString} = nothing,
     dual::Union{Nothing, AbstractSyntaxTree} = nothing
 )
-    name in arities && error()
-    evaluations[name] = normalize(∧, evaluation)
-    isnothing(printing) || register_printing(name, printing)
-    _register_operator(name, arity, evaluation, initial_value, associativity, dual)
+    o in arities && error()
+    evaluations[o] = normalize(∧, evaluation)
+    isnothing(printing) || register_printing(o, printing)
+    _register_operator(o, arity, initial_value, associativity)
 
     if isnothing(dual)
         _keys = keys(duals)
 
-        for (_name, _evaluation) in evaluations
+        for (_o, _evaluation) in evaluations
             if is_equivalent(evaluation, map(¬, ¬_evaluation))
-                duals[name] = _name
-                if !in(_name, _keys)
-                    duals[_name] = name
+                duals[o] = _o
+                if !in(_o, _keys)
+                    duals[_o] = o
                 end
                 break
             end
         end
-    else duals[name] = dual
+    else duals[o] = dual
     end
 
-    Operator{name}()
+    o
 end
 
-const lazies = Set{Symbol}()
-const printings = Dict{Symbol, Pair{Set{Int}, Vector{SubstitutionString}}}()
-const arities = Dict(map(((o, i),) -> name(o) => i, [⊤ => 0, ⊥ => 0, (¬) => 1, (∧) => 2, (∨) => 2]))
-const associatives, commutatives = map(_ -> Set([:and, :or]), 1:2)
-const initial_values = Dict(:and => AbstractSyntaxTree(⊤), :or => AbstractSyntaxTree(⊥))
-const associativities = Dict(:and => left, :or => left)
-const duals = Dict(append!([:identical => :identical, :not => :not], map((
+const lazies = Set{Operator}()
+const printings = Dict{Operator, Pair{Set{Int}, Vector{SubstitutionString}}}()
+const arities = Dict(⊤ => 0, ⊥ => 0, (¬) => 1, (∧) => 2, (∨) => 2)
+const associatives, commutatives = map(_ -> Set([∧, ∨]), 1:2)
+const initial_values = Dict((∧) => ⊤, (∨) => ⊥)
+const associativities = Dict((∧) => left, (∨) => left)
+const duals = Dict(append!([𝒾 => 𝒾, (¬) => (¬)], map(pair -> [pair, reverse(pair)], (
     ⊤ => ⊥,
     (∧) => (∨),
     (↑) => (↓),
     (↔) => (↮),
     (→) => (↚),
     (←) => (↛)
-)) do (o, _o)
-    names = name(o) => name(_o)
-    [names, reverse(names)]
-end...))
+))...))
 
-for (name, printing) in map(((o, printing),) -> name(o) => printing, append!(
+for (o, printing) in flatten([
     map(o -> o => "$(symbol(o))", [⊤, ⊥]),
     Pair{Operator, String}[(¬) => "¬1"],
     map(o -> o => "1 $(symbol(o)) 2", [∧, ∨, →, ←, ↑, ↓, ↛, ↚, ↮, ↔])
-))
-    register_printing(name, printing)
+])
+    register_printing(o, printing)
 end
 
-const evaluations = Dict(Iterators.map(((o, p),) -> name(o) => p, @atomize [
+const evaluations = @atomize Dict(
     (𝒾) => $1,
     (→) => ¬$1 ∨ $2,
     (←) => $1 ∨ ¬$2,
@@ -609,8 +603,8 @@ const evaluations = Dict(Iterators.map(((o, p),) -> name(o) => p, @atomize [
     (↚) => ¬$1 ∧ $2,
     (↮) => ($1 ∨ $2) ∧ ¬($1 ∧ $2),
     (↔) => ($1 ∧ $2) ∨ ¬($1 ∨ $2)
-]))
+)
 
-for (name, evaluation) in evaluations
-    _register_operator(name, 1 + (name != :identical), evaluation, nothing, nothing, nothing)
+for (o, evaluation) in evaluations
+    _register_operator(o, 1 + (o != 𝒾), nothing, nothing)
 end

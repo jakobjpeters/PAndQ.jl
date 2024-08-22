@@ -19,7 +19,7 @@ julia> print_table(⊤)
 └───┘
 ```
 """
-const tautology = ⊤ = Operator{:tautology}()
+const tautology = ⊤ = Operator(:tautology)
 
 """
     contradiction()
@@ -39,7 +39,7 @@ julia> print_table(⊥)
 └───┘
 ```
 """
-const contradiction = ⊥ = Operator{:contradiction}()
+const contradiction = ⊥ = Operator(:contradiction)
 
 # Unary Operators
 
@@ -60,7 +60,7 @@ julia> @atomize print_table(𝒾(p))
 └───┘
 ```
 """
-const identical = 𝒾 = Operator{:identical}()
+const identical = 𝒾 = Operator(:identical)
 
 """
     not(p)
@@ -81,7 +81,7 @@ julia> @atomize print_table(¬p)
 └───┴────┘
 ```
 """
-const not = ¬ = Operator{:not}()
+const not = ¬ = Operator(:not)
 
 # Binary Operators
 
@@ -107,7 +107,7 @@ julia> @atomize print_table(p ∧ q)
 └───┴───┴───────┘
 ```
 """
-const and = ∧ = Operator{:and}()
+const and = ∧ = Operator(:and)
 
 """
     or(p, q)
@@ -131,7 +131,7 @@ julia> @atomize print_table(p ∨ q)
 └───┴───┴───────┘
 ```
 """
-const or = ∨ = Operator{:or}()
+const or = ∨ = Operator(:or)
 
 """
     imply(p, q)
@@ -155,7 +155,7 @@ julia> @atomize print_table(p → q)
 └───┴───┴───────┘
 ```
 """
-const imply = → = Operator{:imply}()
+const imply = → = Operator(:imply)
 
 """
     exclusive_or(p, q)
@@ -179,7 +179,7 @@ julia> @atomize print_table(p ↮ q)
 └───┴───┴───────┘
 ```
 """
-const exclusive_or = ↮ = Operator{:exclusive_or}()
+const exclusive_or = ↮ = Operator(:exclusive_or)
 
 """
     converse_imply(p, q)
@@ -203,7 +203,7 @@ julia> @atomize print_table(p ← q)
 └───┴───┴───────┘
 ```
 """
-const converse_imply = ← = Operator{:converse_imply}()
+const converse_imply = ← = Operator(:converse_imply)
 
 """
     not_and(p, q)
@@ -227,7 +227,7 @@ julia> @atomize print_table(p ↑ q)
 └───┴───┴───────┘
 ```
 """
-const not_and = ↑ = Operator{:not_and}()
+const not_and = ↑ = Operator(:not_and)
 
 """
     not_or(p, q)
@@ -251,7 +251,7 @@ julia> @atomize print_table(p ↓ q)
 └───┴───┴───────┘
 ```
 """
-const not_or = ↓ = Operator{:not_or}()
+const not_or = ↓ = Operator(:not_or)
 
 """
     not_exclusive_or(p, q)
@@ -276,7 +276,7 @@ julia> @atomize print_table(p ↔ q)
 └───┴───┴───────┘
 ```
 """
-const not_exclusive_or = ↔ = Operator{:not_exclusive_or}()
+const not_exclusive_or = ↔ = Operator(:not_exclusive_or)
 
 """
     not_imply(p, q)
@@ -300,7 +300,7 @@ julia> @atomize print_table(p ↛ q)
 └───┴───┴───────┘
 ```
 """
-const not_imply = ↛ = Operator{:not_imply}()
+const not_imply = ↛ = Operator(:not_imply)
 
 """
     not_converse_imply(p, q)
@@ -324,7 +324,7 @@ julia> @atomize print_table(p ↚ q)
 └───┴───┴───────┘
 ```
 """
-const not_converse_imply = ↚ = Operator{:not_converse_imply}()
+const not_converse_imply = ↚ = Operator(:not_converse_imply)
 
 # Nary Operators
 
@@ -347,7 +347,7 @@ julia> @atomize ⋀(p, q, r, s)
 p ∧ q ∧ r ∧ s
 ```
 """
-const conjunction = ⋀ = Operator{:conjunction}()
+const conjunction = ⋀ = Operator(:conjunction)
 
 """
     disjunction(ps...)
@@ -368,7 +368,7 @@ julia> @atomize ⋁(p, q, r, s)
 p ∨ q ∨ r ∨ s
 ```
 """
-const disjunction = ⋁ = Operator{:disjunction}()
+const disjunction = ⋁ = Operator(:disjunction)
 
 # Utilities
 
@@ -379,7 +379,7 @@ ___fold(mapfold, f, o, xs, initial_value) =
     isempty(xs) ? AbstractSyntaxTree(initial_value) : mapfold(f, o, xs)
 
 __fold(f, o, xs) = g -> (args...) -> ___fold(
-    ____fold(associativities[name(o)]), x -> f(g)(args..., x),
+    ____fold(associativities[o]), x -> f(g)(args..., x),
 o, xs, initial_value(o))
 
 _fold() = identity

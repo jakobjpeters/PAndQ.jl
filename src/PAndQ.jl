@@ -7,12 +7,6 @@ using PrecompileTools: @compile_workload
     union_typeof(xs)
 
 Equivalent to `Union{map(typeof, xs)...}`.
-
-# Examples
-```jldoctest
-julia> PAndQ.union_typeof((⊤, ¬, ∧))
-Union{PAndQ.Interface.Operator{:tautology}, PAndQ.Interface.Operator{:not}, PAndQ.Interface.Operator{:and}}
-```
 """
 union_typeof(xs) = Union{map(typeof, xs)...}
 
@@ -30,7 +24,7 @@ import .Interface:
     Associativity,
     arity, dual, evaluate, initial_value,
     is_associative, is_commutative, print_expression, print_proposition, symbol
-using .Interface: left, Operator, right, name, parenthesize
+using .Interface: left, Operator, right, parenthesize
 export Interface
 
 include("operators.jl")

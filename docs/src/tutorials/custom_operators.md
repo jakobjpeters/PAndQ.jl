@@ -37,10 +37,6 @@ ERROR: InterfaceError: implement `symbol` for `Operator{:truth}()`
 
 If a required method is not implemented, a runtime error will display the function and operator that a method must be implemented for. The error says to implement [`symbol`](@ref Interface.symbol). This function is used to print an operator.
 
-```@setup 1
-const truth = Operator{:truth}()
-```
-
 ```@repl 1
 symbol(::typeof(truth)) = "truth";
 truth
@@ -48,10 +44,6 @@ truth()
 ```
 
 The error says to implement [`Evaluation`](). This function is used to specify whether an operator lazily or eagerly evaluates its arguments.
-
-```@setup 1
-Evaluation(::typeof(truth)) = Lazy
-```
 
 ```
 julia> Evaluation(::typeof(truth)) = Lazy;
