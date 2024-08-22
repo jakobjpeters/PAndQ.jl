@@ -54,8 +54,10 @@ mutable struct Solutions
         solver = Solver(context, "QF_FD")
 
         for clause in clauses
-            add_clause(context, solver, Iterators.map(
-                literal -> (signbit(literal) ? not : identity)(bool_const(context, string(abs(literal)))), clause))
+            add_clause(context, solver, Iterators.map(clause) do literal
+                atom = bool_const(context, string(abs(literal)))
+                signbit(literal) ? not(atom) : atom
+            end)
         end
 
         new(context, solver, Vector{ExprAllocated}(undef, n), false)
@@ -107,7 +109,7 @@ iterate(solutions::Solutions, solver = solutions.solver) = if !isdone(solutions,
         _atom = atom()
         __atom = parse(Int, strip(Library.string(_atom), '|'))
         assignment = is_true(get_const_interp(model, atom))
-        clause[__atom] = (assignment ? not : identity)(_atom)
+        clause[__atom] = assignment ? not(_atom) : _atom
         valuation[__atom] = assignment
     end
 
