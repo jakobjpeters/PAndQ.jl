@@ -548,8 +548,13 @@ function register_operator(o::Operator, arity::Int, evaluation::AbstractSyntaxTr
     dual::Union{Nothing, AbstractSyntaxTree} = nothing
 )
     o in arities && error()
-    evaluations[o] = normalize(∧, evaluation)
-    isnothing(printing) || register_printing(o, printing)
+
+    if isnothing(printing) evaluations[o] = evaluation
+    else
+        evaluations[o] = normalize(∧, evaluation)
+        register_printing(o, printing)
+    end
+
     _register_operator(o, arity, initial_value, associativity)
 
     if isnothing(dual)
