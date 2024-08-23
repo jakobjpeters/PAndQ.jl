@@ -188,14 +188,21 @@ function _distribute(f, ao, stack)
 
     while !isempty(stack)
         q = pop!(stack)
-        o, rs = deconstruct(q)
 
-        if o in [⊤, ⊥] return AbstractSyntaxTree(o)
-        elseif o isa AbstractSyntaxTree || o == (¬) p = evaluate(ao, [p, q])
-        elseif o == ao append!(stack, rs)
-        else p = f(p, rs, stack)
+        if q.kind == operator
+            o = q.value::Operator
+
+            if o in [⊤, ⊥] return AbstractSyntaxTree(o)
+            elseif o == (¬) p = evaluate(ao, [p, q])
+            else
+                branches = q.branches
+
+                if o == ao append!(stack, branches)
+                else p = f(p, branches, stack)
+                end
+            end
+        else p = evaluate(ao, [p, q])
         end
-
     end
 
     p
@@ -213,52 +220,59 @@ distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(∧, [q, _distribute(
     AbstractSyntaxTree(⊤)
 end]), ∧, AbstractSyntaxTree[normalize(¬, p)])
 
+function _prune(r, qs, clauses, atoms, mapping)
+    clause, _stack = Set{Int}(), AbstractSyntaxTree[r]
+
+    while !isempty(_stack)
+        s = pop!(_stack)
+        _o, ts = deconstruct(s)
+
+        if _o == ⊥
+        elseif s.kind != operator || ((_o == ¬) && only(ts).kind != operator)
+            atom = s.kind == operator ? only(ts) : s
+            literal = (_o isa AbstractSyntaxTree || _o == 𝒾 ? 1 : -1) * get!(mapping, atom) do
+                push!(atoms, atom)
+                length(mapping) + 1
+            end
+
+            if -literal in clause
+                empty!(clause)
+                break
+            else push!(clause, literal)
+            end
+        elseif _o == (∨) append!(_stack, ts)
+        else
+            push!(qs, r)
+            empty!(clause)
+            break
+        end
+    end
+
+    if !isempty(clause) push!(clauses, clause) end
+end
+
 """
     prune(p, atoms = AbstractSyntaxTree[], mapping = Dict{AbstractSyntaxTree, Int}())
 """
-function prune(p, atoms = AbstractSyntaxTree[], mapping = Dict{Union{Some, Symbol}, Int}())
+function prune(p, atoms = AbstractSyntaxTree[], mapping = Dict{AbstractSyntaxTree, Int}())
     clauses, qs, stack = Set{Set{Int}}(), AbstractSyntaxTree[], AbstractSyntaxTree[p]
 
     while !isempty(stack)
         r = pop!(stack)
-        o = nodevalue(r)
 
-        if o == ⊤
-        elseif o == ⊥
-            push!(empty!(clauses), Set{Int}())
-            empty!(qs)
-            break
-        elseif o == (∧) append!(stack, children(r))
-        elseif o isa AbstractSyntaxTree || o in [¬, ∨]
-            clause, _stack = Set{Int}(), AbstractSyntaxTree[r]
+        if r.kind == operator
+            o = r.value::Operator
 
-            while !isempty(_stack)
-                s = pop!(_stack)
-                _o, ts = deconstruct(s)
-
-                if _o == ⊥
-                elseif s.kind != operator || ((_o == ¬) && only(ts).kind != operator)
-                    atom = s.kind == operator ? only(ts) : s
-                    literal = (_o isa AbstractSyntaxTree || _o == 𝒾 ? 1 : -1) * get!(mapping, atom.value) do
-                        push!(atoms, atom)
-                        length(mapping) + 1
-                    end
-
-                    if -literal in clause
-                        empty!(clause)
-                        break
-                    else push!(clause, literal)
-                    end
-                elseif _o == (∨) append!(_stack, ts)
-                else
-                    push!(qs, r)
-                    empty!(clause)
-                    break
-                end
+            if o == ⊤
+            elseif o == ⊥
+                push!(empty!(clauses), Set{Int}())
+                empty!(qs)
+                break
+            elseif o == (∧) append!(stack, r.branches)
+            elseif o in [¬, ∨] _prune(r, qs, clauses, atoms, mapping)
+            else push!(qs, r)
             end
-
-            isempty(clause) || push!(clauses, clause)
-        else push!(qs, r)
+        else _prune(r, qs, clauses, atoms, mapping)
         end
     end
 
@@ -382,11 +396,10 @@ julia> @atomize something(value(Int, \$2))
 """
 function value(T, p)
     _atoms = atoms(p)
-    if isempty(_atoms) nothing
+    if isempty(_atoms)
     else
         atom = first(_atoms)
-        _atom = atom.value
-        _atom isa Some && atom == p ? _atom : nothing
+        atom.kind == constant && is_equivalent(p, atom) ? atom.value : nothing
     end
 end
 value(p) = value(Any, p)

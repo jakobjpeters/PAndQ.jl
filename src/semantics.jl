@@ -121,8 +121,7 @@ function solutions(p; solver = Z3)
     _atoms, x = AbstractSyntaxTree[], Dict{Int, Int}()
 
     for (i, atom) in enumerate(atoms)
-        value = atom.value
-        if value isa Some || !startswith(string(value), "##")
+        if atom.kind == constant || !startswith(string(atom.value::Symbol), "##")
             push!(_atoms, atom)
             x[i] = length(x) + 1
         end
