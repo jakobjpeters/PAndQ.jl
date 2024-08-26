@@ -168,7 +168,7 @@ atomize(x) =
     if x isa Symbol; :((@isdefined $x) ? $x : $(AbstractSyntaxTree(variable, x)))
     elseif x isa Expr
         if length(x.args) == 0 || (isexpr(x, :macrocall) && first(x.args) == Symbol("@atomize")) x
-        elseif isexpr(x, :$); :($AbstractSyntaxTree($constant, Some($(only(x.args)))))
+        elseif isexpr(x, :$); :($AbstractSyntaxTree($constant, $(only(x.args))))
         elseif isexpr(x, :kw) Expr(x.head, x.args[1], atomize(x.args[2]))
         elseif isexpr(x, (:struct, :where)) x # TODO
         else # TODO
@@ -363,7 +363,7 @@ julia> constants(string, 1:2)
  \$("2")
 ```
 """
-constants(f, xs) = map(AbstractSyntaxTree ∘ Some ∘ f, xs)
+constants(f, xs) = map(x -> AbstractSyntaxTree(constant, f(x)), xs)
 constants(xs) = constants(identity, xs)
 
 # Utility
@@ -394,14 +394,7 @@ julia> @atomize something(value(Int, \$2))
 2
 ```
 """
-function value(T, p)
-    _atoms = atoms(p)
-    if isempty(_atoms)
-    else
-        atom = first(_atoms)
-        atom.kind == constant && is_equivalent(p, atom) ? atom.value : nothing
-    end
-end
+value(T, p) = p.kind == constant ? Some(p.value::T) : nothing
 value(p) = value(Any, p)
 
 """

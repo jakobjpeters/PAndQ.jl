@@ -326,10 +326,15 @@ is_equivalent(p::AbstractSyntaxTree, q::Operator) =
     end
 is_equivalent(p::Operator, q::AbstractSyntaxTree) = is_equivalent(q, p)
 function is_equivalent(p::AbstractSyntaxTree, q::AbstractSyntaxTree)
-    kinds = [p.kind, q.kind]
-    if all(==(variable), kinds) p == q
-    elseif all(==(constant), kinds) p.value == q.value
-    else is_contradiction(p ↮ q)
+    p_kind, q_kind = p.kind, q.kind
+    p_variable, q_variable = p_kind == variable, q_kind == variable
+    if p_variable && q_variable p.value::Symbol == q.value::Symbol
+    else
+        p_constant, q_constant = p_kind == constant, q_kind == constant
+        if p_constant && q_constant p.value == q.value
+        elseif (p_variable && q_constant) || (p_constant && q_variable) false
+        else is_contradiction(p ↮ q)
+        end
     end
 end
 
@@ -370,7 +375,6 @@ See also [`AbstractSyntaxTree`](@ref).
 """
 convert(::Type{AbstractSyntaxTree}, p::Operator) = AbstractSyntaxTree(operator, p)
 convert(::Type{AbstractSyntaxTree}, p::Symbol) = AbstractSyntaxTree(variable, p)
-convert(::Type{AbstractSyntaxTree}, p::Some) = AbstractSyntaxTree(constant, p)
 
 """
     promote_rule
@@ -487,7 +491,7 @@ _print_proposition(io, p::AbstractSyntaxTree) =
     if p.kind == variable print(io, p.value::Symbol)
     elseif p.kind == constant
         print(io, "\$(")
-        show(io, something(p.value))
+        show(io, p.value)
         print(io, ")")
     else print_expression(io, nodevalue(p), children(p))
     end

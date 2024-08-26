@@ -102,8 +102,8 @@ struct TruthTable
 end
 
 for (T, f) in (
-    NullaryOperator => v -> v ? "⊤" : "⊥",
-    String => v -> nameof(v ? "tautology" : "contradiction"),
+    Operator => v -> v ? "⊤" : "⊥",
+    String => v -> v ? "tautology" : "contradiction",
     Char => v -> v == ⊤ ? "T" : "F",
     Bool => string,
     Int => string ∘ Int
@@ -116,15 +116,15 @@ end
 
 Use as the `formatters` keyword parameter in [`print_table`](@ref).
 
-| `T`               | `formatter(T)(true, _, _)` | `formatter(T)(false, _, _)` |
-| :---------------- | :------------------------- | :-------------------------- |
-| `NullaryOperator` | `"⊤"`                      | `"⊥"`                       |
-| `String`          | `"tautology"`              | `"contradiction"`           |
-| `Char`            | `"T"`                      | `"F"`                       |
-| `Bool`            | `"true"`                   | `"false"`                   |
-| `Int`             | `"1"`                      | `"0"`                       |
+| `T`        | `formatter(T)(true, _, _)` | `formatter(T)(false, _, _)` |
+| :--------- | :------------------------- | :-------------------------- |
+| `Operator` | `"⊤"`                      | `"⊥"`                       |
+| `String`   | `"tautology"`              | `"contradiction"`           |
+| `Char`     | `"T"`                      | `"F"`                       |
+| `Bool`     | `"true"`                   | `"false"`                   |
+| `Int`      | `"1"`                      | `"0"`                       |
 
-See also [Nullary Operators](@ref nullary_operators).
+See also [Operators]().
 
 # Examples
 ```jldoctest
