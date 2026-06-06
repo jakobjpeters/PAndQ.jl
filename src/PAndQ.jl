@@ -1,78 +1,108 @@
 
 module PAndQ
 
-using PrecompileTools: @compile_workload
+include("rewrite.jl")
+# using PrecompileTools: @compile_workload
 
-"""
-    union_typeof(xs)
+# include("solvers/PicoSAT.jl")
 
-Equivalent to `Union{map(typeof, xs)...}`.
-"""
-union_typeof(xs) = Union{map(typeof, xs)...}
+# export PicoSAT
 
-include("solvers/PicoSAT.jl")
+# include("solvers/Z3.jl")
 
-export PicoSAT
+# export Z3
 
-include("solvers/Z3.jl")
+# include("interface.jl")
 
-export Z3
+# import .Interface:
+#     Associativity,
+#     arity, dual, evaluate, initial_value,
+#     is_associative, is_commutative, print_expression, print_proposition, symbol
+# using .Interface: left, Operator, right, parenthesize
+# export Interface
 
-include("interface.jl")
+# """
+#     Kind
+# """
+# @enum Kind application constant operator variable
 
-import .Interface:
-    Associativity,
-    arity, dual, evaluate, initial_value,
-    is_associative, is_commutative, print_expression, print_proposition, symbol
-using .Interface: left, Operator, right, parenthesize
-export Interface
+# (k::Kind)(v) = AbstractSyntaxTree(k, v)
 
-include("operators.jl")
+# """
+#     AbstractSyntaxTree
 
-export
-    tautology, ⊤,
-    contradiction, ⊥,
-    identical, 𝒾,
-    not, ¬,
-    and, ∧,
-    or, ∨,
-    imply, →,
-    exclusive_or, ↮,
-    converse_imply, ←,
-    not_and, ↑,
-    not_or, ↓,
-    not_imply, ↛,
-    not_exclusive_or, ↔,
-    not_converse_imply, ↚,
-    conjunction, ⋀,
-    disjunction, ⋁,
-    fold
+# A [proposition](https://en.wikipedia.org/wiki/Proposition)
+# represented by an [abstract syntax tree]
+# (https://en.wikipedia.org/wiki/Abstract_syntax_tree).
 
-include("propositions.jl")
+# See also [`Operator`](@ref).
 
-export
-    @atomize, @variables, constants,
-    value, atoms, install_atomize_mode,
-    normalize, tseytin
+# # Examples
+# ```jldoctest
+# julia> PAndQ.AbstractSyntaxTree(⊤)
+# ⊤
 
-include("semantics.jl")
+# julia> @atomize PAndQ.AbstractSyntaxTree(¬, [p])
+# ¬p
 
-export
-    valuations, interpret, interpretations, solutions,
-    is_tautology, is_contradiction,
-    is_truth, is_contingency,
-    is_satisfiable, is_falsifiable,
-    is_equisatisfiable, is_equivalent
+# julia> @atomize PAndQ.AbstractSyntaxTree(and, [PAndQ.AbstractSyntaxTree(p), PAndQ.AbstractSyntaxTree(q)])
+# p ∧ q
+# ```
+# """
+# struct AbstractSyntaxTree
+#     kind::Kind
+#     value
+#     branches::Vector{AbstractSyntaxTree}
+# end
 
-include("printing.jl")
+# AbstractSyntaxTree(k::Kind, v) = AbstractSyntaxTree(k, v, AbstractSyntaxTree[])
 
-export
-    TruthTable,
-    formatter,
-    print_proposition,
-    print_table,
-    print_tree,
-    print_dimacs
+# include("operators.jl")
+
+# export
+#     tautology, ⊤,
+#     contradiction, ⊥,
+#     identical, 𝒾,
+#     not, ¬,
+#     and, ∧,
+#     or, ∨,
+#     imply, →,
+#     exclusive_or, ↮,
+#     converse_imply, ←,
+#     not_and, ↑,
+#     not_or, ↓,
+#     not_imply, ↛,
+#     not_exclusive_or, ↔,
+#     not_converse_imply, ↚,
+#     conjunction, ⋀,
+#     disjunction, ⋁,
+#     fold
+
+# include("propositions.jl")
+
+# export
+#     @atomize, @variables, constants,
+#     value, atoms, install_atomize_mode,
+#     normalize, tseytin
+
+# include("semantics.jl")
+
+# export
+#     valuations, interpret, interpretations, solutions,
+#     is_tautology, is_contradiction,
+#     is_truth, is_contingency,
+#     is_satisfiable, is_falsifiable,
+#     is_equisatisfiable, is_equivalent
+
+# include("printing.jl")
+
+# export
+#     TruthTable,
+#     formatter,
+#     print_proposition,
+#     print_table,
+#     print_tree,
+#     print_dimacs
 
 # @compile_workload for (p, q) in (@atomize([$:p, $:q]), @variables p q) redirect_stdout(devnull) do
 #     rs = AbstractSyntaxTree[⊤, ⊥, 𝒾(p), ¬p, p ∧ q, p ∨ q, p → q, p ↮ q, p ← q, p ↑ q, p ↓ q, p ↛ q, p ↔ q, p ↚ q]

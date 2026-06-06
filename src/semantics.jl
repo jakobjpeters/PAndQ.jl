@@ -36,7 +36,7 @@ function valuations(atoms)
         product(repeated([true, false], length(unique_atoms))...)
     )
 end
-valuations(p::Union{Operator, AbstractSyntaxTree}) = valuations(collect(atoms(p)))
+valuations(p::AbstractSyntaxTree) = valuations(collect(atoms(p)))
 
 """
     interpret(valuation, p)
@@ -151,11 +151,6 @@ julia> @atomize is_tautology(¬(p ∧ ¬p))
 true
 ```
 """
-is_tautology(o::Operator) =
-    if o == ⊤ true
-    elseif o == ⊥ false
-    else error()
-    end
 is_tautology(p) = is_contradiction(¬p)
 
 """
@@ -318,13 +313,6 @@ julia> @atomize is_equivalent(p, ¬p)
 false
 ```
 """
-is_equivalent(p::Operator, q::Operator) = p in [⊤, ⊥] ? p == q : error()
-is_equivalent(p::AbstractSyntaxTree, q::Operator) =
-    if q == ⊤ is_tautology(p)
-    elseif q == ⊥ is_contradiction(p)
-    else error()
-    end
-is_equivalent(p::Operator, q::AbstractSyntaxTree) = is_equivalent(q, p)
 function is_equivalent(p::AbstractSyntaxTree, q::AbstractSyntaxTree)
     p_kind, q_kind = p.kind, q.kind
     p_variable, q_variable = p_kind == variable, q_kind == variable
@@ -333,54 +321,12 @@ function is_equivalent(p::AbstractSyntaxTree, q::AbstractSyntaxTree)
         p_constant, q_constant = p_kind == constant, q_kind == constant
         if p_constant && q_constant p.value == q.value
         elseif (p_variable && q_constant) || (p_constant && q_variable) false
-        else is_contradiction(p ↮ q)
+        elseif application in [p_kind, q_kind] is_contradiction(p ↮ q)
         end
     end
 end
 
 # Operators
-
-"""
-    Bool(truth_value)
-
-Return a `Bool`ean corresponding to the given [truth value](@ref nullary_operators).
-
-# Examples
-```jldoctest
-julia> Bool(⊤)
-true
-
-julia> Bool(⊥)
-false
-```
-"""
-Bool(o::Operator) = convert(Bool, o)
-
-# Constructors
-
-AbstractSyntaxTree(p) = convert(AbstractSyntaxTree, p)
-
-# Utilities
-
-convert(::Type{Bool}, o::Operator) =
-    if o == ⊤ true
-    elseif o == ⊥ false
-    else error()
-    end
-
-"""
-    convert(::Type{<:AbstractSytnaxTree}, p)
-
-See also [`AbstractSyntaxTree`](@ref).
-"""
-convert(::Type{AbstractSyntaxTree}, p::Operator) = AbstractSyntaxTree(operator, p)
-convert(::Type{AbstractSyntaxTree}, p::Symbol) = AbstractSyntaxTree(variable, p)
-
-"""
-    promote_rule
-"""
-promote_rule(::Type{Bool}, ::Type{Operator}) = Bool
-promote_rule(::Type{Operator}, ::Type{AbstractSyntaxTree}) = AbstractSyntaxTree
 
 # Interface Implementation
 
@@ -399,8 +345,7 @@ symbol(o) = symbols[o]
 
 dual(o) = get(duals, o) do
     _arity = arity(o)
-    register_operator(gensym("dual_$(o.name)"), _arity, map(¬, ¬AbstractSyntaxTree(
-        operator, o, map(i -> @atomize($i), 1:_arity))))
+    register_operator(gensym("dual_$(o.name)"), _arity, map(¬, ¬application(o, map(i -> @atomize($i), 1:_arity))))
 end
 
 # inverse, contrapositive, converse
@@ -409,10 +354,8 @@ is_commutative(o) = o in commutatives
 
 is_associative(o) = o in associatives
 
-Base.Bool(p::AbstractSyntaxTree) = p.kind == operator ? Bool(p.value::Operator) : error()
-
 evaluate(o, ps) =
-    if o in [⊤, ⊥] AbstractSyntaxTree(operator, o)
+    if o in [⊤, ⊥] o
     elseif o == ¬
         q = only(ps)
         branches, o_q = q.branches, nodevalue(q)
@@ -427,8 +370,8 @@ evaluate(o, ps) =
             else
                 dual_initial_value = dual(_initial_value)
                 any(_o -> _o in AbstractSyntaxTree[⊤, ⊥], AbstractSyntaxTree[o_q, o_r]) ?
-                    AbstractSyntaxTree(operator, dual_initial_value) :
-                    AbstractSyntaxTree(operator, o, [q, r])
+                    application(dual_initial_value) :
+                    AbstractSyntaxTree(application, o, [q, r])
             end
         end
     elseif o == ⋀ fold(𝒾, (∧) => ps)
@@ -438,7 +381,7 @@ evaluate(o, ps) =
         error()
     end
 
-evaluation(o, ps) = o in lazies ? AbstractSyntaxTree(o, ps) : evaluate(o, ps)
+evaluation(o, ps) = o in lazies ? AbstractSyntaxTree(application, o, ps) : evaluate(o, ps)
 
 _evaluation(o, ps::Vector{AbstractSyntaxTree}) = evaluation(o, ps)
 _evaluation(o, ps::Vector{Bool}) =
@@ -452,7 +395,6 @@ _evaluation(o, ps) = _evaluation(o, map(AbstractSyntaxTree, ps))
 (o::Operator)(ps::AbstractSyntaxTree...) = evaluation(o, [ps...])
 (o::Operator)(ps::Bool...) = _evaluation(o, [ps...])
 (o::Operator)() = _evaluation(o, AbstractSyntaxTree[])
-(o::Operator)(ps...) = o(map(AbstractSyntaxTree, ps)...)
 
 print_expression(io, o, ps) =
     if o in [⊤, ⊥, ¬]
@@ -544,12 +486,13 @@ function _register_operator(o, arity, initial_value, associativity)
     arity == 2 && register_binary(o, initial_value, associativity)
 end
 
-function register_operator(o::Operator, arity::Int, evaluation::AbstractSyntaxTree;
+function register_operator(name::Symbol, arity::Int, evaluation::AbstractSyntaxTree;
     initial_value::Union{Nothing, AbstractSyntaxTree} = nothing,
     associativity::Union{Nothing, Associativity} = nothing,
     printing::Union{Nothing, SubstitutionString} = nothing,
     dual::Union{Nothing, AbstractSyntaxTree} = nothing
 )
+    o = operator(name)
     o in arities && error()
 
     if isnothing(printing) evaluations[o] = evaluation
@@ -578,7 +521,7 @@ function register_operator(o::Operator, arity::Int, evaluation::AbstractSyntaxTr
     o
 end
 
-const lazies = Set{Operator}()
+const lazies = Set{AbstractSyntaxTree}()
 const printings = Dict{Operator, Pair{Set{Int}, Vector{SubstitutionString}}}()
 const arities = Dict(⊤ => 0, ⊥ => 0, (¬) => 1, (∧) => 2, (∨) => 2)
 const associatives, commutatives = map(_ -> Set([∧, ∨]), 1:2)
@@ -595,7 +538,7 @@ const duals = Dict(append!([𝒾 => 𝒾, (¬) => (¬)], map(pair -> [pair, reve
 
 for (o, printing) in flatten([
     map(o -> o => "$(symbol(o))", [⊤, ⊥]),
-    Pair{Operator, String}[(¬) => "¬1"],
+    Pair{AbstractSyntaxTree, String}[(¬) => "¬1"],
     map(o -> o => "1 $(symbol(o)) 2", [∧, ∨, →, ←, ↑, ↓, ↛, ↚, ↮, ↔])
 ])
     register_printing(o, printing)
@@ -614,5 +557,5 @@ const evaluations = @atomize Dict(
 )
 
 for (o, evaluation) in evaluations
-    _register_operator(o, 1 + (o != 𝒾), nothing, nothing)
+    _register_operator(o.value::Symbol, 1 + (o != 𝒾), nothing, nothing)
 end

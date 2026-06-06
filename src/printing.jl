@@ -102,7 +102,6 @@ struct TruthTable
 end
 
 for (T, f) in (
-    Operator => v -> v ? "⊤" : "⊥",
     String => v -> v ? "tautology" : "contradiction",
     Char => v -> v == ⊤ ? "T" : "F",
     Bool => string,
@@ -118,7 +117,6 @@ Use as the `formatters` keyword parameter in [`print_table`](@ref).
 
 | `T`        | `formatter(T)(true, _, _)` | `formatter(T)(false, _, _)` |
 | :--------- | :------------------------- | :-------------------------- |
-| `Operator` | `"⊤"`                      | `"⊥"`                       |
 | `String`   | `"tautology"`              | `"contradiction"`           |
 | `Char`     | `"T"`                      | `"F"`                       |
 | `Bool`     | `"true"`                   | `"false"`                   |
@@ -165,7 +163,7 @@ __print_table(
 __print_table(backend::Union{Val{:markdown}, Val{:html}}, io, body; kwargs...) =
     pretty_table(io, body; backend, kwargs...)
 
-_print_table(backend, io, t; formatters = formatter(NullaryOperator), kwargs...) =
+_print_table(backend, io, t; formatters = v -> v ? "⊤" : "⊥", kwargs...) =
     __print_table(backend, io, t.body; header = t.header, formatters, kwargs...)
 
 """
@@ -210,11 +208,11 @@ julia> @atomize print_table(p ∧ q)
 print_table(io::IO, t::TruthTable; backend = Val(:text), alignment = :l, kwargs...) =
     _print_table(backend, io, t; alignment, kwargs...)
 print_table(io::IO, ps; kwargs...) = print_table(io, TruthTable(ps); kwargs...)
-print_table(io::IO, @nospecialize(ps::Union{Operator, AbstractSyntaxTree}...); kwargs...) = print_table(io, collect(AbstractSyntaxTree, ps); kwargs...)
+print_table(io::IO, @nospecialize(ps::AbstractSyntaxTree...); kwargs...) = print_table(io, collect(AbstractSyntaxTree, ps); kwargs...)
 print_table(@nospecialize(xs...); kwargs...) = print_table(stdout, xs...; kwargs...)
 
-_print_tree(io, p::Union{Operator, AbstractSyntaxTree}) = printnode(io, p)
-_print_tree(io, p) = show(io, "text/plain", AbstractSyntaxTree(p))
+_print_tree(io, p::AbstractSyntaxTree) = printnode(io, p)
+_print_tree(io, p) = show(io, MIME"text/plain"(), AbstractSyntaxTree(p))
 
 """
     print_tree(::IO = stdout, p; kwargs...)
@@ -282,25 +280,6 @@ print_dimacs(p) = print_dimacs(stdout, p)
 # `show`
 
 """
-    show(::IO, ::MIME"text/plain", ::Operator)
-
-Print the operator's [`symbol`](@ref Interface.symbol).
-
-# Examples
-```jldoctest
-julia> show(stdout, "text/plain", ⊤)
-⊤
-
-julia> show(stdout, "text/plain", ¬)
-¬
-
-julia> show(stdout, "text/plain", ∧)
-∧
-```
-"""
-show(io::IO, ::MIME"text/plain", o::Operator) = print(io, symbol(o))
-
-"""
     show(::IO, ::MIME"text/plain", p)
 
 Print the proposition in logical syntax format.
@@ -348,11 +327,6 @@ _show(f, g, io, ps) = parenthesize(io) do
         isempty(qs) || f(io)
     end
 end
-
-"""
-    show(::IO, ::Operator)
-"""
-show(io::IO, o::Operator) = print(io, o.name)
 
 """
     show(::IO, p)

@@ -6,43 +6,6 @@ using Base.Iterators: Stateful
 using Base: isexpr
 using ReplMaker: complete_julia, initrepl
 
-"""
-    Kind
-"""
-@enum Kind constant operator variable
-
-## Types
-
-"""
-    AbstractSyntaxTree
-
-A [proposition](https://en.wikipedia.org/wiki/Proposition)
-represented by an [abstract syntax tree]
-(https://en.wikipedia.org/wiki/Abstract_syntax_tree).
-
-See also [`Operator`](@ref).
-
-# Examples
-```jldoctest
-julia> PAndQ.AbstractSyntaxTree(⊤)
-⊤
-
-julia> @atomize PAndQ.AbstractSyntaxTree(¬, [p])
-¬p
-
-julia> @atomize PAndQ.AbstractSyntaxTree(and, [PAndQ.AbstractSyntaxTree(p), PAndQ.AbstractSyntaxTree(q)])
-p ∧ q
-```
-"""
-struct AbstractSyntaxTree
-    kind::Kind
-    value
-    branches::Vector{AbstractSyntaxTree}
-end
-
-AbstractSyntaxTree(k::Kind, v) = AbstractSyntaxTree(k, v, AbstractSyntaxTree[])
-AbstractSyntaxTree(o::Operator, ps) = AbstractSyntaxTree(operator, o, ps)
-
 ## AbstractTrees.jl
 
 """
@@ -69,7 +32,7 @@ children(p::AbstractSyntaxTree) = p.branches
 """
     nodevalue(::AbstractSyntaxTree)
 
-Return the [`Operator`](@ref Interface.Operator) of the proposition's root node.
+Return the [`Operator`]() of the proposition's root node.
 
 See also [`AbstractSyntaxTree`](@ref).
 
@@ -82,10 +45,10 @@ julia> @atomize PAndQ.nodevalue(p ∧ q)
 ∧
 ```
 """
-nodevalue(p::AbstractSyntaxTree) = p.kind == operator ? p.value : p
+nodevalue(p::AbstractSyntaxTree) = p.kind == operator ? p.value::Symbol : p
 
 """
-    printnode(::IO, ::Union{Operator, AbstractSyntaxTree}; kwargs...)
+    printnode(::IO, ::AbstractSyntaxTree; kwargs...)
 
 Print the representation of the proposition's root node.
 
@@ -113,17 +76,16 @@ printnode(io::IO, p::AbstractSyntaxTree) = p.kind == operator ?
 function ==(p::AbstractSyntaxTree, q::AbstractSyntaxTree)
     p_kind, q_kind = p.kind, q.kind
     p_kind == q_kind && p.branches == q.branches &&
-        if p_kind == variable p.value::Symbol == q.value::Symbol
-        elseif p_kind == operator p.value::Operator == q.value::Operator
-        else p.value == q.value
-        end
+        p_kind in [operator, variable] ? p.value::Symbol == q.value::Symbol : p.value == q.value
 end
 
 """
     hash(::AbstractSyntaxTree, ::UInt)
 """
-hash(p::AbstractSyntaxTree, h::UInt) =
-    hash(AbstractSyntaxTree, hash(p.kind, hash(p.value, hash(p.branches, h))))
+function hash(p::AbstractSyntaxTree, h::UInt)
+    kind = p.kind
+    hash(AbstractSyntaxTree, hash(p.branches, hash(p.kind, kind == constant ? hash(p.value, h) : hash(p.value::Symbol, h)))
+end
 
 """
     deconstruct(p)
@@ -165,10 +127,10 @@ If `x` is a different expression, traverse it with recursive calls to `atomize`.
 Otherise, return x.
 """
 atomize(x) =
-    if x isa Symbol; :((@isdefined $x) ? $x : $(AbstractSyntaxTree(variable, x)))
+    if x isa Symbol; :((@isdefined $x) ? $x : $(variable(x)))
     elseif x isa Expr
         if length(x.args) == 0 || (isexpr(x, :macrocall) && first(x.args) == Symbol("@atomize")) x
-        elseif isexpr(x, :$); :($AbstractSyntaxTree($constant, $(only(x.args))))
+        elseif isexpr(x, :$); :($constant($(only(x.args))))
         elseif isexpr(x, :kw) Expr(x.head, x.args[1], atomize(x.args[2]))
         elseif isexpr(x, (:struct, :where)) x # TODO
         else # TODO
@@ -184,16 +146,16 @@ atomize(x) =
     end
 
 function _distribute(f, ao, stack)
-    p = AbstractSyntaxTree(initial_value(ao))
+    p = application(initial_value(ao))
 
     while !isempty(stack)
         q = pop!(stack)
 
-        if q.kind == operator
-            o = q.value::Operator
+        if q.kind == application
+            o = q.value::Symbol
 
-            if o in [⊤, ⊥] return AbstractSyntaxTree(o)
-            elseif o == (¬) p = evaluate(ao, [p, q])
+            if o in [:tautology, :contradiction] return application(o)
+            elseif o == :not p = evaluate(ao, [p, q])
             else
                 branches = q.branches
 
@@ -213,12 +175,12 @@ end
 
 Given a proposition in negation normal form, return that proposition in conjunction normal form.
 """
-distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(∧, [q, _distribute(∨, map(AbstractSyntaxTree, rs)) do s, ts, disjuncts
+distribute(p) = _distribute((q, rs, conjuncts) -> evaluate(∧, [q, _distribute(∨, rs) do s, ts, disjuncts
     u = evaluate(∨, [s, fold(identity, (∨) => disjuncts)])
     empty!(disjuncts)
     append!(conjuncts, map(t -> t ∨ u, ts))
-    AbstractSyntaxTree(⊤)
-end]), ∧, AbstractSyntaxTree[normalize(¬, p)])
+    application(⊤)
+end]), ∧, [normalize(¬, p)])
 
 function _prune(r, qs, clauses, atoms, mapping)
     clause, _stack = Set{Int}(), AbstractSyntaxTree[r]
@@ -339,7 +301,7 @@ q
 ```
 """
 macro variables(ps...) esc(quote
-    $(map(p -> :($p = $(AbstractSyntaxTree(variable, p))), ps)...)
+    $(map(p -> :($p = $variable(p)), ps)...)
     $(:($AbstractSyntaxTree[$(ps...)]))
 end) end
 
@@ -363,7 +325,7 @@ julia> constants(string, 1:2)
  \$("2")
 ```
 """
-constants(f, xs) = map(x -> AbstractSyntaxTree(constant, f(x)), xs)
+constants(f, xs) = map(constant ∘ f, xs)
 constants(xs) = constants(identity, xs)
 
 # Utility
@@ -411,7 +373,6 @@ julia> @atomize map(atom -> \$(something(value(atom)) + 1), \$1 ∧ \$2)
 \$(2) ∧ \$(3)
 ```
 """
-map(f, p::Operator) = p
 map(f, p::AbstractSyntaxTree) = p.kind == operator ?
     _evaluation(nodevalue(p), map(q -> q.kind != operator ? f(q) : map(f, q), children(p))) :
     f(p)
@@ -429,7 +390,7 @@ julia> @atomize collect(atoms(p ∧ q))
  q
 ```
 """
-atoms(p) = Iterators.filter(leaf -> leaf isa AbstractSyntaxTree && leaf.kind != operator, Leaves(p))
+atoms(p) = Iterators.filter(leaf -> leaf.kind in [constant, variable], Leaves(p))
 
 """
     install_atomize_mode(;

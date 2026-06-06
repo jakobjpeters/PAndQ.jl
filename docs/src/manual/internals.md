@@ -62,14 +62,6 @@ Interface.@interface
 
 ## [Operators](@id internals_operators)
 
-```@docs
-PAndQ.NullaryOperator
-PAndQ.UnaryOperator
-PAndQ.BinaryOperator
-PAndQ.NaryOperator
-PAndQ.AndOr
-```
-
 ## Propositions
 
 ```@docs
